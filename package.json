@@ -1,0 +1,14 @@
+{
+  "name": "blueworx-labs-clubhouse",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Blueworx Labs Clubhouse WordPress plugin.",
+  "scripts": {
+    "lint": "echo \"No lint configured yet\" && exit 0",
+    "build": "echo \"No build configured yet\" && exit 0",
+    "test": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.49.0"
+  }
+}

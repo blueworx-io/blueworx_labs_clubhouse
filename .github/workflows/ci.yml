@@ -1,0 +1,9 @@
+name: CI
+on: pull_request
+jobs:
+  guardrails:
+    uses: blueworx-io/bluegroup_core_foundation/.github/workflows/ci-wordpress.yml@main
+    with:
+      # TODO: replace with the real staging/preview URL once one exists.
+      preview_url: https://staging.example.com
+      plugin_slug: blueworx-labs-clubhouse
