@@ -11,7 +11,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-// Core primitives (added by later tasks), e.g.:
+// Core primitives. Interface must load before its implementor.
 require_once __DIR__ . '/core/interface-storage.php';
 require_once __DIR__ . '/core/class-options-storage.php';
 require_once __DIR__ . '/core/class-registry.php';
