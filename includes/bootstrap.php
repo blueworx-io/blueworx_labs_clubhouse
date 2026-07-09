@@ -12,4 +12,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Core primitives (added by later tasks), e.g.:
+require_once __DIR__ . '/core/interface-storage.php';
+require_once __DIR__ . '/core/class-options-storage.php';
 require_once __DIR__ . '/core/class-registry.php';
