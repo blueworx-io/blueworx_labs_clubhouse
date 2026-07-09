@@ -15,3 +15,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 require_once __DIR__ . '/core/interface-storage.php';
 require_once __DIR__ . '/core/class-options-storage.php';
 require_once __DIR__ . '/core/class-registry.php';
+
+// Content
+require_once __DIR__ . '/content/class-content-store.php';
