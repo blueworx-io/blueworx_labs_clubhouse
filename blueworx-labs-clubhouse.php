@@ -26,6 +26,8 @@ define( 'BLUEWORX_LABS_CLUBHOUSE_FILE', __FILE__ );
 define( 'BLUEWORX_LABS_CLUBHOUSE_DIR', plugin_dir_path( __FILE__ ) );
 define( 'BLUEWORX_LABS_CLUBHOUSE_URL', plugin_dir_url( __FILE__ ) );
 
+require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/bootstrap.php';
+
 /**
  * Boot the plugin.
  *
