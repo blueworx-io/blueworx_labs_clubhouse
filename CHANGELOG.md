@@ -5,6 +5,15 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] - 2026-07-09
+
+### Added
+
+- Engine core & content foundation: PHP unit test harness (PHPUnit, dev-only),
+  runtime class loader, base `Registry`, `Storage` interface with an autoloaded
+  WordPress options adapter, `Content_Store` for singular section content, and
+  page/section `Visibility` — all dependency-injected and unit-tested.
+
 ## [0.1.1] - 2026-07-09
 
 ### Added
