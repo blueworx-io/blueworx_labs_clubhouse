@@ -191,6 +191,14 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				),
 			) );
 		}
+		if ( $visibility->is_section_visible( 'home', 'info' ) ) {
+			$out .= Blueworx_Clubhouse_Sections::info_strip( array(
+				array( 'label' => 'Location', 'lines' => array( '12 Riverside Lane', 'Marlow, SL7 1AA' ), 'link_label' => '', 'link_href' => '' ),
+				array( 'label' => 'Opening hours', 'lines' => array( 'Mon–Sun', '7:00am – 10:00pm' ), 'link_label' => '', 'link_href' => '' ),
+				array( 'label' => 'Contact', 'lines' => array( 'hello@clubhouse.example', '01628 000 000' ), 'link_label' => '', 'link_href' => '' ),
+				array( 'label' => 'Find us', 'lines' => array(), 'link_label' => 'Open in Maps', 'link_href' => '#' ),
+			) );
+		}
 		if ( $visibility->is_section_visible( 'home', 'footer' ) ) {
 			$out .= Blueworx_Clubhouse_Sections::footer( array(
 				'club_name' => $club,

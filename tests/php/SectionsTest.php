@@ -203,4 +203,16 @@ final class SectionsTest extends TestCase {
 		$this->assertStringContainsString( 'From the clubhouse', $html );
 		$this->assertStringNotContainsString( 'style=', $html );
 	}
+
+	public function test_info_strip_renders_columns_and_optional_link(): void {
+		$html = Blueworx_Clubhouse_Sections::info_strip( array(
+			array( 'label' => 'Location', 'lines' => array( '12 Riverside Lane', 'Marlow' ), 'link_label' => '', 'link_href' => '' ),
+			array( 'label' => 'Find us', 'lines' => array(), 'link_label' => 'Open in Maps', 'link_href' => '#' ),
+		) );
+		$this->assertStringContainsString( 'class="ch-info"', $html );
+		$this->assertSame( 2, substr_count( $html, 'ch-info__col' ) );
+		$this->assertStringContainsString( '12 Riverside Lane', $html );
+		$this->assertStringContainsString( 'Open in Maps', $html );
+		$this->assertStringNotContainsString( 'style=', $html );
+	}
 }

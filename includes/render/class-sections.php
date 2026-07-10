@@ -264,6 +264,22 @@ final class Blueworx_Clubhouse_Sections {
 			. '<div class="ch-news">' . $cards . '</div></div></section>';
 	}
 
+	/** @param array<int,array{label:string,lines:array<int,string>,link_label:string,link_href:string}> $cols */
+	public static function info_strip( array $cols ): string {
+		$out = '';
+		foreach ( $cols as $c ) {
+			$lines = '';
+			foreach ( $c['lines'] as $line ) {
+				$lines .= '<span class="ch-info__line">' . self::e( $line ) . '</span>';
+			}
+			$link = '' !== $c['link_label']
+				? '<a class="ch-info__link" href="' . self::e( $c['link_href'] ) . '">' . self::e( $c['link_label'] ) . ' →</a>' : '';
+			$out .= '<div class="ch-info__col"><div class="ch-info__label">' . self::e( $c['label'] ) . '</div>'
+				. '<div class="ch-info__body">' . $lines . $link . '</div></div>';
+		}
+		return '<section class="ch-info"><div class="ch-wrap ch-info__in">' . $out . '</div></section>';
+	}
+
 	/** @param array{club_name:string,tagline:string} $data */
 	public static function footer( array $data ): string {
 		return '<footer class="ch-footer"><div class="ch-wrap">'
