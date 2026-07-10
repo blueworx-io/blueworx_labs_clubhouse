@@ -365,4 +365,18 @@ final class Blueworx_Clubhouse_Sections {
 			. '<h2 class="ch-sec__title">' . self::e( $data['heading'] ) . '</h2>'
 			. '<div class="ch-people">' . $people . '</div></div></section>';
 	}
+
+	/** @param array{eyebrow:string,heading:string,milestones:array<int,array{year:string,title:string,desc:string}>} $data */
+	public static function timeline( array $data ): string {
+		$rows = '';
+		foreach ( $data['milestones'] as $m ) {
+			$rows .= '<div class="ch-milestone"><div class="ch-milestone__year">' . self::e( $m['year'] ) . '</div>'
+				. '<div class="ch-milestone__body"><h3 class="ch-milestone__title">' . self::e( $m['title'] ) . '</h3>'
+				. '<p class="ch-milestone__desc">' . self::e( $m['desc'] ) . '</p></div></div>';
+		}
+		return '<section class="ch-sec"><div class="ch-wrap">'
+			. '<span class="ch-eyebrow">' . self::e( $data['eyebrow'] ) . '</span>'
+			. '<h2 class="ch-sec__title">' . self::e( $data['heading'] ) . '</h2>'
+			. '<div class="ch-timeline">' . $rows . '</div></div></section>';
+	}
 }

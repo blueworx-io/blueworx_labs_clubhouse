@@ -314,4 +314,19 @@ final class SectionsTest extends TestCase {
 		$this->assertNoHexColour( $html );
 		$this->assertStringNotContainsString( 'style=', $html );
 	}
+
+	public function test_timeline_renders_each_milestone(): void {
+		$html = Blueworx_Clubhouse_Sections::timeline( array(
+			'eyebrow' => 'Our story', 'heading' => 'From one pitch to nine sports',
+			'milestones' => array(
+				array( 'year' => '1974', 'title' => 'One pitch, one team', 'desc' => 'A handful of players lease a field.' ),
+				array( 'year' => '2024', 'title' => 'A modern home', 'desc' => 'A full clubhouse refurbishment.' ),
+			),
+		) );
+		$this->assertStringContainsString( 'class="ch-timeline"', $html );
+		$this->assertSame( 2, substr_count( $html, 'ch-milestone"' ) );
+		$this->assertStringContainsString( '1974', $html );
+		$this->assertNoHexColour( $html );
+		$this->assertStringNotContainsString( 'style=', $html );
+	}
 }
