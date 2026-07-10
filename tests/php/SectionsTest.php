@@ -5,6 +5,12 @@ use PHPUnit\Framework\TestCase;
 
 final class SectionsTest extends TestCase {
 
+	/** No raw hex colour literal in markup — but ignore HTML numeric entities like &#039;. */
+	private function assertNoHexColour( string $html ): void {
+		$stripped = preg_replace( '/&#\d+;/', '', $html );
+		$this->assertDoesNotMatchRegularExpression( '/#[0-9a-fA-F]{3,6}\b/', $stripped );
+	}
+
 	public function test_header_renders_banner_nav_active_and_dual_cta(): void {
 		$html = Blueworx_Clubhouse_Sections::header( array(
 			'club_name'   => 'ClubHouse',
@@ -25,7 +31,7 @@ final class SectionsTest extends TestCase {
 		$this->assertStringContainsString( 'ch-nav__link--active', $html );
 		$this->assertStringContainsString( 'Log in', $html );
 		$this->assertStringContainsString( 'Join the Club', $html );
-		$this->assertDoesNotMatchRegularExpression( '/#[0-9a-fA-F]{3,6}\b/', $html );
+		$this->assertNoHexColour( $html );
 		$this->assertStringNotContainsString( 'style=', $html );
 	}
 
@@ -56,7 +62,7 @@ final class SectionsTest extends TestCase {
 		$this->assertStringContainsString( 'class="ch-hero__hl"', $html );
 		$this->assertStringContainsString( 'class="ch-hero__media"', $html );
 		$this->assertStringContainsString( 'Saturday, floodlights on', $html );
-		$this->assertDoesNotMatchRegularExpression( '/#[0-9a-fA-F]{3,6}\b/', $html );
+		$this->assertNoHexColour( $html );
 		$this->assertStringNotContainsString( 'style=', $html );
 	}
 
@@ -97,7 +103,7 @@ final class SectionsTest extends TestCase {
 		$this->assertStringContainsString( 'ch-footer__social', $html );
 		$this->assertStringContainsString( 'Stay in the loop', $html );
 		$this->assertStringContainsString( 'Privacy', $html );
-		$this->assertDoesNotMatchRegularExpression( '/#[0-9a-fA-F]{3,6}\b/', $html );
+		$this->assertNoHexColour( $html );
 		$this->assertStringNotContainsString( 'style=', $html );
 	}
 
@@ -109,7 +115,7 @@ final class SectionsTest extends TestCase {
 		$this->assertStringContainsString( 'class="ch-tiles"', $html );
 		$this->assertSame( 2, substr_count( $html, 'ch-tiles__tile' ) );
 		$this->assertStringContainsString( 'Membership', $html );
-		$this->assertDoesNotMatchRegularExpression( '/#[0-9a-fA-F]{3,6}\b/', $html );
+		$this->assertNoHexColour( $html );
 		$this->assertStringNotContainsString( 'style=', $html );
 	}
 
@@ -137,7 +143,7 @@ final class SectionsTest extends TestCase {
 		$this->assertSame( 2, substr_count( $html, 'ch-card"' ) );
 		$this->assertStringContainsString( 'Pick your game.', $html );
 		$this->assertStringContainsString( 'Rugby', $html );
-		$this->assertDoesNotMatchRegularExpression( '/#[0-9a-fA-F]{3,6}\b/', $html );
+		$this->assertNoHexColour( $html );
 		$this->assertStringNotContainsString( 'style=', $html );
 	}
 
@@ -151,7 +157,7 @@ final class SectionsTest extends TestCase {
 		$this->assertStringContainsString( 'class="ch-band-img"', $html );
 		$this->assertStringContainsString( 'A home ground for every team', $html );
 		$this->assertStringContainsString( 'Visit us', $html );
-		$this->assertDoesNotMatchRegularExpression( '/#[0-9a-fA-F]{3,6}\b/', $html );
+		$this->assertNoHexColour( $html );
 		$this->assertStringNotContainsString( 'style=', $html );
 	}
 
@@ -164,7 +170,7 @@ final class SectionsTest extends TestCase {
 		) );
 		// Skin-agnostic: sections must not hard-code colours or inline styles.
 		// (href="#" is fine — we forbid hex colours and style attributes.)
-		$this->assertDoesNotMatchRegularExpression( '/#[0-9a-fA-F]{3,6}\b/', $html );
+		$this->assertNoHexColour( $html );
 		$this->assertStringNotContainsString( 'style=', $html );
 	}
 
@@ -192,7 +198,7 @@ final class SectionsTest extends TestCase {
 		$this->assertSame( 2, substr_count( $html, 'ch-tier"' ) + substr_count( $html, 'ch-tier ch-tier--pop"' ) );
 		$this->assertStringContainsString( 'ch-tier--pop', $html );
 		$this->assertStringContainsString( 'Any section', $html );
-		$this->assertDoesNotMatchRegularExpression( '/#[0-9a-fA-F]{3,6}\b/', $html );
+		$this->assertNoHexColour( $html );
 	}
 
 	public function test_activity_tabs_render_all_three_panels(): void {
@@ -204,12 +210,29 @@ final class SectionsTest extends TestCase {
 			'events'   => array( array( 'tag' => 'Open day', 'date' => 'Sat 26 Jul', 'title' => 'Club Open Day', 'detail' => '10:00–14:00' ) ),
 		) );
 		$this->assertStringContainsString( 'class="ch-tabs"', $html );
-		$this->assertSame( 3, substr_count( $html, 'ch-tabs__panel' ) );
 		$this->assertStringContainsString( 'data-ch-tab="fixtures"', $html );
+		$this->assertStringContainsString( 'data-ch-tab="results"', $html );
+		$this->assertStringContainsString( 'data-ch-tab="events"', $html );
 		$this->assertStringContainsString( 'ClubHouse vs Riverside', $html );
 		$this->assertStringContainsString( 'ch-badge--w', $html );
-		$this->assertDoesNotMatchRegularExpression( '/#[0-9a-fA-F]{3,6}\b/', $html );
+		$this->assertNoHexColour( $html );
 		$this->assertStringNotContainsString( 'style=', $html );
+	}
+
+	public function test_activity_result_badge_maps_each_outcome(): void {
+		$mk = static function ( string $outcome ): string {
+			return Blueworx_Clubhouse_Sections::activity_tabs( array(
+				'eyebrow'  => 'x', 'heading' => 'x',
+				'fixtures' => array(),
+				'results'  => array( array( 'date' => 'JUL 1', 'home' => 'A', 'away' => 'B', 'score' => '1-0', 'outcome' => $outcome ) ),
+				'events'   => array(),
+			) );
+		};
+		$this->assertStringContainsString( 'ch-badge--w', $mk( 'W' ) );
+		$this->assertStringContainsString( 'ch-badge--l', $mk( 'L' ) );
+		$this->assertStringContainsString( 'ch-badge--d', $mk( 'D' ) );
+		// Unknown outcome falls back to the draw modifier.
+		$this->assertStringContainsString( 'ch-badge--d', $mk( 'X' ) );
 	}
 
 	public function test_news_cards_render_each_post(): void {
