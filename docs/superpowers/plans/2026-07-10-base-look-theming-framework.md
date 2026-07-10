@@ -562,6 +562,8 @@ final class ColorEngineDeriveTest extends TestCase {
 	private const LIGHT_INK = '#1c1b18';
 	private const DARK_BG   = '#17181a';
 	private const DARK_INK  = '#f4f2ec';
+	private const MID_BG    = '#808080'; // mid grey — luminance ~0.22, the AA danger band
+	private const MID_INK   = '#ffffff';
 
 	/** @return array<string,string> */
 	private function derive( string $accent, bool $dark = false ): array {
@@ -619,12 +621,33 @@ final class ColorEngineDeriveTest extends TestCase {
 		);
 	}
 
-	/** Same guarantee must hold on a DARK look (re-skin safety). */
-	public function test_accent_deep_clears_AA_on_dark_shell(): void {
-		$t = $this->derive( '#1f7a4d', true );
+	/**
+	 * Same guarantee on a DARK look (re-skin safety), full hue range.
+	 *
+	 * @dataProvider hues
+	 */
+	public function test_accent_deep_clears_AA_on_dark_shell( string $accent ): void {
+		$t = $this->derive( $accent, true );
 		$this->assertGreaterThanOrEqual(
 			4.5,
-			Blueworx_Clubhouse_Color_Engine::contrast_ratio( $t['--color-accent-deep'], self::DARK_BG )
+			Blueworx_Clubhouse_Color_Engine::contrast_ratio( $t['--color-accent-deep'], self::DARK_BG ),
+			"accent-deep for {$accent} fails AA on the dark shell"
+		);
+	}
+
+	/**
+	 * Hardest case: a MID-TONE shell (luminance in the band where a pure white
+	 * text pole is not trivially safe) must still yield AA-legible accent-deep
+	 * for every hue — regression guard for pole selection.
+	 *
+	 * @dataProvider hues
+	 */
+	public function test_accent_deep_clears_AA_on_mid_tone_shell( string $accent ): void {
+		$t = Blueworx_Clubhouse_Color_Engine::derive( $accent, self::MID_BG, self::MID_INK );
+		$this->assertGreaterThanOrEqual(
+			4.5,
+			Blueworx_Clubhouse_Color_Engine::contrast_ratio( $t['--color-accent-deep'], self::MID_BG ),
+			"accent-deep for {$accent} fails AA on the mid-tone shell"
 		);
 	}
 
@@ -673,17 +696,22 @@ Insert this method into `class Blueworx_Clubhouse_Color_Engine` (before the clos
 			? self::normalize_hex( $shell_ink )
 			: '#ffffff';
 
-		// Accent-as-text on the shell: blend toward the opposite pole until AA.
-		$shell_is_light = self::relative_luminance( $shell_bg ) >= 0.5;
-		$pole           = $shell_is_light ? '#141410' : '#ffffff';
-		$deep           = $accent;
-		for ( $w = 1.0; $w >= 0.0; $w -= 0.05 ) {
-			$candidate = self::mix( $accent, $pole, $w );
+		// Accent-as-text on the shell: blend toward whichever pole (black or
+		// white) contrasts MORE with the shell. For any shell luminance at least
+		// one pole clears AA (worst case ~4.58 at L≈0.179), so the loop always
+		// ends on a legible value. Integer stepping guarantees the pure pole
+		// (i = 0) is actually evaluated; break on first pass keeps the deep colour
+		// as close to the brand accent as legibility allows.
+		$pole = self::contrast_ratio( '#000000', $shell_bg ) >= self::contrast_ratio( '#ffffff', $shell_bg )
+			? '#000000'
+			: '#ffffff';
+		$deep = $pole;
+		for ( $i = 20; $i >= 0; $i-- ) {
+			$candidate = self::mix( $accent, $pole, $i / 20 );
 			if ( self::contrast_ratio( $candidate, $shell_bg ) >= 4.5 ) {
 				$deep = $candidate;
 				break;
 			}
-			$deep = $candidate; // last (w=0 pole) is guaranteed to pass.
 		}
 
 		return array(
