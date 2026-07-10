@@ -1,0 +1,40 @@
+/* Court Side — look stylesheet. Consumes engine custom properties; the accent is
+   always var(--color-accent*) so any club re-themes by swapping one colour. */
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--color-bg);color:var(--color-ink);font-family:var(--font-body);font-size:17px;line-height:1.6;-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+.ch-wrap{max-width:1200px;margin-inline:auto;padding-inline:28px}
+
+.ch-eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--color-ink);background:var(--color-accent);padding:7px 14px;border-radius:999px}
+
+.ch-btn{display:inline-flex;align-items:center;gap:.5em;font-family:var(--font-body);font-weight:600;font-size:15px;padding:15px 28px;border-radius:999px;transition:transform .14s ease}
+.ch-btn:active{transform:scale(.96)}
+.ch-btn--accent{background:var(--color-accent);color:var(--color-accent-ink)}
+.ch-btn--ink{background:var(--color-ink);color:var(--color-bg)}
+.ch-btn--ghost{border:1.5px solid var(--color-ink);color:var(--color-ink)}
+.ch-btn--ghost:hover{background:var(--color-ink);color:var(--color-bg)}
+
+.ch-nav{position:sticky;top:0;z-index:40;background:color-mix(in oklab,var(--color-bg) 85%,transparent);backdrop-filter:blur(10px)}
+.ch-nav__in{display:flex;align-items:center;justify-content:space-between;height:80px}
+.ch-brand{font-family:var(--font-display);font-weight:800;font-size:25px;letter-spacing:-.03em;display:flex;align-items:center;gap:10px}
+.ch-brand__mark{width:36px;height:36px;border-radius:12px;background:var(--color-accent);color:var(--color-accent-ink);display:grid;place-items:center;font-size:18px;font-weight:800}
+.ch-nav__links{display:flex;gap:28px;font-size:15px;font-weight:500;color:var(--color-ink-soft)}
+.ch-nav__link:hover{color:var(--color-ink)}
+@media(max-width:900px){.ch-nav__links{display:none}}
+
+.ch-hero{padding:64px 0 32px}
+.ch-hero__title{font-family:var(--font-display);font-weight:800;font-size:clamp(52px,10vw,132px);letter-spacing:-.03em;line-height:.95}
+.ch-hero__hl{background:var(--color-accent);color:var(--color-accent-ink);padding:0 .12em;border-radius:14px;display:inline-block;transform:rotate(-1.5deg)}
+.ch-hero__sub{display:flex;justify-content:space-between;align-items:end;gap:30px;margin-top:26px;flex-wrap:wrap}
+.ch-hero__lede{max-width:40ch;font-size:19px;color:var(--color-ink-soft)}
+.ch-hero__cta{display:flex;gap:12px;flex-wrap:wrap}
+
+.ch-stats{padding:24px 0}
+.ch-stats__in{display:flex;gap:14px;flex-wrap:wrap}
+.ch-stats__item{flex:1 1 200px;background:var(--color-paper);border:1px solid var(--color-line);border-radius:var(--radius-lg);padding:26px 28px}
+.ch-stats__item:nth-child(2){background:var(--color-ink);color:var(--color-bg)}
+.ch-stats__value{font-family:var(--font-display);font-weight:800;font-size:44px;display:block;letter-spacing:-.03em}
+.ch-stats__label{font-size:13px;font-weight:600;color:var(--color-ink-soft)}
+
+.ch-footer{margin-top:40px;padding:64px 0 48px;border-top:1px solid var(--color-line)}
+.ch-footer__tagline{color:var(--color-ink-soft);max-width:30ch;margin-top:12px;font-size:15px}
