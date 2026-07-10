@@ -19,3 +19,6 @@ require_once __DIR__ . '/core/class-registry.php';
 // Content
 require_once __DIR__ . '/content/class-content-store.php';
 require_once __DIR__ . '/content/class-visibility.php';
+
+// Theme
+require_once __DIR__ . '/theme/interface-base-look.php';
