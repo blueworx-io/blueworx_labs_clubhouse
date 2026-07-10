@@ -5,6 +5,28 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.0] - 2026-07-10
+
+### Members' House — second Base Look
+
+The first re-skin. A refined, editorial Base Look that reuses the engine and every
+skin-agnostic section unchanged — swapping the active look changes only the tokens,
+fonts, and stylesheet.
+
+- **New Base Look `members-house`** (`Blueworx_Clubhouse_Members_House`): warm parchment
+  shell, warm near-black ink, small crisp radii (10/7/4px), Fraunces (display) + Mulish
+  (body). Accent stays engine-derived — the look defines no accent tokens.
+- **Refined-editorial stylesheet** (`assets/looks/members-house.css`): every `ch-*` hook
+  restyled in a restrained idiom — hairline rules, rectangular buttons, an accent
+  underline on the hero highlight (no rotated block), quiet accent-wash bands, and fine
+  accent marks. Accent is referenced only via `var(--color-accent*)`, so a club still
+  re-themes by swapping one colour. All accessibility and motion behaviour (skip link,
+  focus indicator, no-JS nav drawer, ticker pause, scroll-reveal, reduced-motion) is
+  preserved through the shared section markup.
+- **Preview look switch**: `preview/index.php` registers both looks and takes `?look=`
+  (default Court Side), with a toggle to flip between them; the accent swatches derive
+  from the active look's shell so they stay AA-correct per look.
+
 ## [0.8.0] - 2026-07-10
 
 ### Login page, hover motion, and design polish
