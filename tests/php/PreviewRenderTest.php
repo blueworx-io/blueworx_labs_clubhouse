@@ -17,4 +17,17 @@ final class PreviewRenderTest extends TestCase {
 		$this->assertStringContainsString( 'data-ch-palettes', $html );
 		$this->assertStringContainsString( '--color-accent-ink', $html );
 	}
+
+	public function test_preview_defaults_to_home_and_routes_by_page_param(): void {
+		require_once dirname( __DIR__, 2 ) . '/preview/index.php';
+		$b   = new Blueworx_Clubhouse_Branding( new Blueworx_Clubhouse_Fake_Storage() );
+		$vis = new Blueworx_Clubhouse_Visibility( new Blueworx_Clubhouse_Fake_Storage() );
+
+		$home = blueworx_clubhouse_preview_body( 'home', $b, $vis );
+		$this->assertStringContainsString( 'class="ch-hero"', $home );
+
+		// Unknown page falls back to Home rather than erroring.
+		$other = blueworx_clubhouse_preview_body( 'about', $b, $vis );
+		$this->assertStringContainsString( 'class="ch-nav"', $other );
+	}
 }
