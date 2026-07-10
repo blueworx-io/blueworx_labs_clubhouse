@@ -207,8 +207,35 @@ final class Blueworx_Clubhouse_Page_Renderer {
 		}
 		if ( $visibility->is_section_visible( 'home', 'footer' ) ) {
 			$out .= Blueworx_Clubhouse_Sections::footer( array(
-				'club_name' => $club,
-				'tagline'   => 'A home ground for every team, and everyone who follows them.',
+				'club_name'  => $club,
+				'tagline'    => 'Nine sports, one club. A home ground for every team, and everyone who follows them.',
+				'socials'    => array( 'Facebook', 'Instagram', 'Community', 'Share' ),
+				'columns'    => array(
+					array( 'title' => 'Club', 'links' => array(
+						array( 'label' => 'About', 'href' => '?page=about' ),
+						array( 'label' => 'Sports', 'href' => '?page=sports' ),
+						array( 'label' => 'Teams', 'href' => '?page=teams' ),
+						array( 'label' => 'Events', 'href' => '?page=events' ),
+					) ),
+					array( 'title' => 'Get involved', 'links' => array(
+						array( 'label' => 'Membership', 'href' => '?page=membership' ),
+						array( 'label' => 'Calendar', 'href' => '?page=calendar' ),
+						array( 'label' => 'Volunteer', 'href' => '?page=contact' ),
+						array( 'label' => 'Contact', 'href' => '?page=contact' ),
+					) ),
+				),
+				'newsletter' => array(
+					'heading'     => 'Stay in the loop',
+					'lede'        => 'Fixtures, results and club news — one email a month.',
+					'placeholder' => 'Your email',
+					'cta'         => 'Subscribe',
+				),
+				'legal'      => array(
+					array( 'label' => 'Privacy Policy', 'href' => '#' ),
+					array( 'label' => 'Terms', 'href' => '#' ),
+					array( 'label' => 'Club Rules', 'href' => '#' ),
+					array( 'label' => 'Safeguarding', 'href' => '#' ),
+				),
 			) );
 		}
 		return $out;

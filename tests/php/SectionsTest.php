@@ -72,11 +72,33 @@ final class SectionsTest extends TestCase {
 
 	public function test_output_is_escaped(): void {
 		$html = Blueworx_Clubhouse_Sections::footer( array(
-			'club_name' => 'A & B <script>',
-			'tagline'   => 'x',
+			'club_name'  => 'A & B <script>',
+			'tagline'    => 'x',
+			'socials'    => array(),
+			'columns'    => array(),
+			'newsletter' => array( 'heading' => 'h', 'lede' => 'l', 'placeholder' => 'p', 'cta' => 'Subscribe' ),
+			'legal'      => array(),
 		) );
 		$this->assertStringContainsString( 'A &amp; B &lt;script&gt;', $html );
-		$this->assertStringNotContainsString( '<script>', $html );
+		$this->assertStringNotContainsString( '<script>A', $html );
+	}
+
+	public function test_footer_renders_columns_socials_and_newsletter(): void {
+		$html = Blueworx_Clubhouse_Sections::footer( array(
+			'club_name'  => 'ClubHouse', 'tagline' => 'A home ground for every team.',
+			'socials'    => array( 'Facebook', 'Instagram' ),
+			'columns'    => array(
+				array( 'title' => 'Club', 'links' => array( array( 'label' => 'About', 'href' => '?page=about' ) ) ),
+			),
+			'newsletter' => array( 'heading' => 'Stay in the loop', 'lede' => 'Club news, monthly.', 'placeholder' => 'Your email', 'cta' => 'Subscribe' ),
+			'legal'      => array( array( 'label' => 'Privacy', 'href' => '#' ) ),
+		) );
+		$this->assertStringContainsString( 'class="ch-footer"', $html );
+		$this->assertStringContainsString( 'ch-footer__social', $html );
+		$this->assertStringContainsString( 'Stay in the loop', $html );
+		$this->assertStringContainsString( 'Privacy', $html );
+		$this->assertDoesNotMatchRegularExpression( '/#[0-9a-fA-F]{3,6}\b/', $html );
+		$this->assertStringNotContainsString( 'style=', $html );
 	}
 
 	public function test_quick_tiles_render_each_link(): void {

@@ -292,11 +292,43 @@ final class Blueworx_Clubhouse_Sections {
 			. '<div class="ch-sponsors">' . $tiles . '</div></div></section>';
 	}
 
-	/** @param array{club_name:string,tagline:string} $data */
+	/**
+	 * @param array{club_name:string,tagline:string,socials:array<int,string>,
+	 *   columns:array<int,array{title:string,links:array<int,array{label:string,href:string}>}>,
+	 *   newsletter:array{heading:string,lede:string,placeholder:string,cta:string},
+	 *   legal:array<int,array{label:string,href:string}>} $data
+	 */
 	public static function footer( array $data ): string {
+		$socials = '';
+		foreach ( $data['socials'] as $name ) {
+			$glyph    = self::e( mb_substr( $name, 0, 1 ) );
+			$socials .= '<a class="ch-footer__social" href="#" aria-label="' . self::e( $name ) . '"><span aria-hidden="true">' . $glyph . '</span></a>';
+		}
+		$cols = '';
+		foreach ( $data['columns'] as $col ) {
+			$links = '';
+			foreach ( $col['links'] as $l ) {
+				$links .= '<a class="ch-footer__link" href="' . self::e( $l['href'] ) . '">' . self::e( $l['label'] ) . '</a>';
+			}
+			$cols .= '<div class="ch-footer__col"><h4 class="ch-footer__h">' . self::e( $col['title'] ) . '</h4>' . $links . '</div>';
+		}
+		$nl = '<div class="ch-footer__col ch-footer__nl"><h4 class="ch-footer__h">' . self::e( $data['newsletter']['heading'] ) . '</h4>'
+			. '<p class="ch-footer__lede">' . self::e( $data['newsletter']['lede'] ) . '</p>'
+			. '<form class="ch-footer__form" onsubmit="return false">'
+			. '<input class="ch-footer__input" type="email" placeholder="' . self::e( $data['newsletter']['placeholder'] ) . '" aria-label="Email address">'
+			. '<button class="ch-btn ch-btn--accent" type="submit">' . self::e( $data['newsletter']['cta'] ) . '</button></form></div>';
+		$legal = '';
+		foreach ( $data['legal'] as $l ) {
+			$legal .= '<a class="ch-footer__legal-link" href="' . self::e( $l['href'] ) . '">' . self::e( $l['label'] ) . '</a>';
+		}
 		return '<footer class="ch-footer"><div class="ch-wrap">'
-			. '<a class="ch-brand" href="#"><span class="ch-brand__mark">C</span>' . self::e( $data['club_name'] ) . '</a>'
+			. '<div class="ch-footer__grid">'
+			. '<div class="ch-footer__brand-col">'
+			. '<a class="ch-brand" href="?page=home"><span class="ch-brand__mark">C</span>' . self::e( $data['club_name'] ) . '</a>'
 			. '<p class="ch-footer__tagline">' . self::e( $data['tagline'] ) . '</p>'
+			. '<div class="ch-footer__socials">' . $socials . '</div></div>'
+			. $cols . $nl . '</div>'
+			. '<div class="ch-footer__legal">' . $legal . '</div>'
 			. '</div></footer>';
 	}
 }
