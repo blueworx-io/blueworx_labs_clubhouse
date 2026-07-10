@@ -280,6 +280,18 @@ final class Blueworx_Clubhouse_Sections {
 		return '<section class="ch-info"><div class="ch-wrap ch-info__in">' . $out . '</div></section>';
 	}
 
+	/** @param array{heading:string,link_label:string,link_href:string,names:array<int,string>} $data */
+	public static function sponsors( array $data ): string {
+		$tiles = '';
+		foreach ( $data['names'] as $name ) {
+			$tiles .= '<div class="ch-sponsors__tile">' . self::e( $name ) . '</div>';
+		}
+		return '<section class="ch-sec"><div class="ch-wrap">'
+			. '<div class="ch-sec__head"><h2 class="ch-sec__title ch-sec__title--sm">' . self::e( $data['heading'] ) . '</h2>'
+			. '<a class="ch-link" href="' . self::e( $data['link_href'] ) . '">' . self::e( $data['link_label'] ) . ' →</a></div>'
+			. '<div class="ch-sponsors">' . $tiles . '</div></div></section>';
+	}
+
 	/** @param array{club_name:string,tagline:string} $data */
 	public static function footer( array $data ): string {
 		return '<footer class="ch-footer"><div class="ch-wrap">'

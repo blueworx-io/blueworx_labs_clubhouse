@@ -215,4 +215,15 @@ final class SectionsTest extends TestCase {
 		$this->assertStringContainsString( 'Open in Maps', $html );
 		$this->assertStringNotContainsString( 'style=', $html );
 	}
+
+	public function test_sponsors_render_each_tile(): void {
+		$html = Blueworx_Clubhouse_Sections::sponsors( array(
+			'heading' => 'Our sponsors & partners', 'link_label' => 'Become a sponsor', 'link_href' => '#',
+			'names'   => array( 'Sponsor 01', 'Sponsor 02', 'Sponsor 03' ),
+		) );
+		$this->assertStringContainsString( 'class="ch-sponsors"', $html );
+		$this->assertSame( 3, substr_count( $html, 'ch-sponsors__tile' ) );
+		$this->assertStringContainsString( 'Become a sponsor', $html );
+		$this->assertStringNotContainsString( 'style=', $html );
+	}
 }

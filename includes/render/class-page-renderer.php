@@ -199,6 +199,12 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				array( 'label' => 'Find us', 'lines' => array(), 'link_label' => 'Open in Maps', 'link_href' => '#' ),
 			) );
 		}
+		if ( $visibility->is_section_visible( 'home', 'sponsors' ) ) {
+			$out .= Blueworx_Clubhouse_Sections::sponsors( array(
+				'heading' => 'Our sponsors & partners', 'link_label' => 'Become a sponsor', 'link_href' => '#',
+				'names'   => array( 'Sponsor 01', 'Sponsor 02', 'Sponsor 03', 'Sponsor 04', 'Sponsor 05', 'Sponsor 06' ),
+			) );
+		}
 		if ( $visibility->is_section_visible( 'home', 'footer' ) ) {
 			$out .= Blueworx_Clubhouse_Sections::footer( array(
 				'club_name' => $club,

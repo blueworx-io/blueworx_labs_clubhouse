@@ -161,3 +161,10 @@ a{color:inherit;text-decoration:none}
 .ch-info__body{display:flex;flex-direction:column;gap:2px;font-size:16px;line-height:1.5}
 .ch-info__link{color:var(--color-accent);font-weight:600;font-size:13px;text-transform:uppercase;letter-spacing:.08em;margin-top:6px}
 .ch-info__link:hover{color:var(--color-bg)}
+
+.ch-sec__title--sm{font-size:clamp(28px,3.8vw,38px)}
+.ch-link{font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--color-ink);border-bottom:2px solid var(--color-accent);padding-bottom:4px}
+.ch-link:hover{color:var(--color-accent-deep)}
+.ch-sponsors{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px}
+.ch-sponsors__tile{height:88px;background:var(--color-paper);border:1px solid var(--color-line);border-radius:var(--radius-md);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:var(--color-ink-soft);text-transform:uppercase;letter-spacing:.08em;text-align:center;padding:8px;transition:background .25s ease,color .25s ease}
+.ch-sponsors__tile:hover{background:var(--color-ink);color:var(--color-bg)}
