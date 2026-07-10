@@ -19,17 +19,41 @@ final class Blueworx_Clubhouse_Sections {
 		return htmlspecialchars( $s, ENT_QUOTES, 'UTF-8' );
 	}
 
-	/** @param array{club_name:string,nav:array<int,string>,cta:string} $data */
+	/** Image slot that degrades to a tonal placeholder when no URL is given. */
+	private static function media( string $url, string $alt, string $modifier ): string {
+		$cls = 'ch-media' . ( '' !== $modifier ? ' ' . $modifier : '' );
+		$img = '' !== $url
+			? '<img class="ch-media__img" src="' . self::e( $url ) . '" alt="' . self::e( $alt ) . '">'
+			: '';
+		return '<div class="' . $cls . '">' . $img . '</div>';
+	}
+
+	/**
+	 * @param array{club_name:string,banner:string,banner_href:string,
+	 *   nav:array<int,array{label:string,href:string}>,active:string,
+	 *   login:string,join:string,join_href:string} $data
+	 */
 	public static function header( array $data ): string {
-		$links = '';
-		foreach ( $data['nav'] as $label ) {
-			$links .= '<a class="ch-nav__link" href="#">' . self::e( $label ) . '</a>';
+		$banner = '';
+		if ( '' !== $data['banner'] ) {
+			$banner = '<div class="ch-banner"><div class="ch-wrap ch-banner__in">'
+				. '<a class="ch-banner__link" href="' . self::e( $data['banner_href'] ) . '">'
+				. self::e( $data['banner'] ) . '</a></div></div>';
 		}
-		return '<header class="ch-nav"><div class="ch-wrap ch-nav__in">'
-			. '<a class="ch-brand" href="#"><span class="ch-brand__mark">C</span>' . self::e( $data['club_name'] ) . '</a>'
+		$links = '';
+		foreach ( $data['nav'] as $item ) {
+			$active  = $item['href'] === $data['active'] ? ' ch-nav__link--active' : '';
+			$links  .= '<a class="ch-nav__link' . $active . '" href="' . self::e( $item['href'] ) . '">'
+				. self::e( $item['label'] ) . '</a>';
+		}
+		return $banner
+			. '<header class="ch-nav"><div class="ch-wrap ch-nav__in">'
+			. '<a class="ch-brand" href="?page=home"><span class="ch-brand__mark">C</span>' . self::e( $data['club_name'] ) . '</a>'
 			. '<nav class="ch-nav__links">' . $links . '</nav>'
-			. '<a class="ch-btn ch-btn--ink" href="#">' . self::e( $data['cta'] ) . '</a>'
-			. '</div></header>';
+			. '<div class="ch-nav__cta">'
+			. '<a class="ch-btn ch-btn--ghost" href="#">' . self::e( $data['login'] ) . '</a>'
+			. '<a class="ch-btn ch-btn--ink" href="' . self::e( $data['join_href'] ) . '">' . self::e( $data['join'] ) . '</a>'
+			. '</div></div></header>';
 	}
 
 	/** @param array{eyebrow:string,title_lead:string,title_highlight:string,lede:string,cta_primary:string,cta_secondary:string} $data */

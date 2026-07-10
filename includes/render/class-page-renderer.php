@@ -56,9 +56,23 @@ final class Blueworx_Clubhouse_Page_Renderer {
 
 		if ( $visibility->is_section_visible( 'home', 'header' ) ) {
 			$out .= Blueworx_Clubhouse_Sections::header( array(
-				'club_name' => $club,
-				'nav'       => array( 'Membership', 'Sports', 'Teams', 'Events', 'About' ),
-				'cta'       => 'Join the Club',
+				'club_name'   => $club,
+				'banner'      => 'Summer sign-ups are open — register your interest for 2026/27 →',
+				'banner_href' => '?page=membership',
+				'nav'         => array(
+					array( 'label' => 'Home', 'href' => '?page=home' ),
+					array( 'label' => 'About', 'href' => '?page=about' ),
+					array( 'label' => 'Sports', 'href' => '?page=sports' ),
+					array( 'label' => 'Teams', 'href' => '?page=teams' ),
+					array( 'label' => 'Membership', 'href' => '?page=membership' ),
+					array( 'label' => 'Events', 'href' => '?page=events' ),
+					array( 'label' => 'Calendar', 'href' => '?page=calendar' ),
+					array( 'label' => 'Contact', 'href' => '?page=contact' ),
+				),
+				'active'      => '?page=home',
+				'login'       => 'Log in',
+				'join'        => 'Join the Club',
+				'join_href'   => '?page=membership',
 			) );
 		}
 		if ( $visibility->is_section_visible( 'home', 'hero' ) ) {

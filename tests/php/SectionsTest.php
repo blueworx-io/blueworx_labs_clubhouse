@@ -5,16 +5,37 @@ use PHPUnit\Framework\TestCase;
 
 final class SectionsTest extends TestCase {
 
-	public function test_header_renders_brand_nav_and_cta(): void {
+	public function test_header_renders_banner_nav_active_and_dual_cta(): void {
 		$html = Blueworx_Clubhouse_Sections::header( array(
-			'club_name' => 'ClubHouse',
-			'nav'       => array( 'Membership', 'Sports' ),
-			'cta'       => 'Join the Club',
+			'club_name'   => 'ClubHouse',
+			'banner'      => 'Summer sign-ups are open →',
+			'banner_href' => '?page=membership',
+			'nav'         => array(
+				array( 'label' => 'Home', 'href' => '?page=home' ),
+				array( 'label' => 'Membership', 'href' => '?page=membership' ),
+			),
+			'active'      => '?page=home',
+			'login'       => 'Log in',
+			'join'        => 'Join the Club',
+			'join_href'   => '?page=membership',
 		) );
+		$this->assertStringContainsString( 'class="ch-banner"', $html );
+		$this->assertStringContainsString( 'Summer sign-ups are open', $html );
 		$this->assertStringContainsString( 'class="ch-nav"', $html );
-		$this->assertStringContainsString( 'ClubHouse', $html );
-		$this->assertStringContainsString( 'Membership', $html );
+		$this->assertStringContainsString( 'ch-nav__link--active', $html );
+		$this->assertStringContainsString( 'Log in', $html );
 		$this->assertStringContainsString( 'Join the Club', $html );
+		$this->assertDoesNotMatchRegularExpression( '/#[0-9a-fA-F]{3,6}\b/', $html );
+		$this->assertStringNotContainsString( 'style=', $html );
+	}
+
+	public function test_header_hides_banner_when_empty(): void {
+		$html = Blueworx_Clubhouse_Sections::header( array(
+			'club_name' => 'ClubHouse', 'banner' => '', 'banner_href' => '',
+			'nav' => array(), 'active' => '', 'login' => 'Log in',
+			'join' => 'Join', 'join_href' => '#',
+		) );
+		$this->assertStringNotContainsString( 'class="ch-banner"', $html );
 	}
 
 	public function test_hero_highlights_the_accent_span(): void {
