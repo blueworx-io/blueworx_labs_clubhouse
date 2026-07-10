@@ -5,6 +5,14 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.1] - 2026-07-10
+
+### Accessibility & fixes
+
+- **List semantics across all grids.** Every grid of repeated items — quick tiles, stats, sports cards, membership tiers (and their feature lists), fixtures/results/events, news, info columns, sponsors, benefits, committee/directory people, the history timeline, the included/excluded/policies split and the how-to-join steps — now carries `role="list"` / `role="listitem"`. This restores list semantics for screen readers, including on WebKit where `list-style:none` silently strips the implicit roles from `<ul>` grids.
+- `list_split` column headers (previously the hard-coded English "Included / Not included / Good to know") are now passed in as data, so a non-English club can relabel them.
+- The Contact info card's `tel:` link now strips whitespace from the number so it dials correctly (`tel:01628000000`); the visible number keeps its spacing.
+
 ## [0.6.0] - 2026-07-10
 
 ### Added

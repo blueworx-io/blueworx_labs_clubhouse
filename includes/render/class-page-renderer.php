@@ -385,8 +385,11 @@ final class Blueworx_Clubhouse_Page_Renderer {
 		}
 		if ( $visibility->is_section_visible( 'membership', 'detail' ) ) {
 			$out .= Blueworx_Clubhouse_Sections::list_split( array(
-				'eyebrow'      => 'The detail',
-				'heading'      => 'What is included',
+				'eyebrow'            => 'The detail',
+				'heading'            => 'What is included',
+				'included_label'     => 'Included',
+				'not_included_label' => 'Not included',
+				'policies_label'     => 'Good to know',
 				'included'     => array( "Access to all your section's training", 'League match fees', 'Clubhouse & bar membership', 'Member events & socials' ),
 				'not_included' => array( 'Individual coaching (available separately)', 'Tournament entry fees', 'Club kit (discounted, not free)' ),
 				'policies'     => array(

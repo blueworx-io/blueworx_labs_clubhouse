@@ -6,3 +6,7 @@ node_modules/
 /vendor/
 composer.lock
 .phpunit.result.cache
+
+# Local verification artifacts (Playwright MCP snapshots + preview screenshots)
+.playwright-mcp/
+/*.png

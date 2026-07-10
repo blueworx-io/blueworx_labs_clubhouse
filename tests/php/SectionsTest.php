@@ -11,6 +11,17 @@ final class SectionsTest extends TestCase {
 		$this->assertDoesNotMatchRegularExpression( '/#[0-9a-fA-F]{3,6}\b/', $stripped );
 	}
 
+	/**
+	 * Grids of repeated peer items must expose list semantics — `role="list"` on the
+	 * container(s), `role="listitem"` on each child. WebKit drops the implicit list role
+	 * when `list-style:none` is set, so this is the fix for `<ul>` grids too. The two
+	 * markers are distinct substrings (`role="list"` never matches inside `role="listitem"`).
+	 */
+	private function assertListSemantics( string $html, int $lists, int $items ): void {
+		$this->assertSame( $lists, substr_count( $html, 'role="list"' ), 'role="list" container count' );
+		$this->assertSame( $items, substr_count( $html, 'role="listitem"' ), 'role="listitem" item count' );
+	}
+
 	public function test_header_renders_banner_nav_active_and_dual_cta(): void {
 		$html = Blueworx_Clubhouse_Sections::header( array(
 			'club_name'   => 'ClubHouse',
@@ -84,6 +95,7 @@ final class SectionsTest extends TestCase {
 		) );
 		$this->assertStringContainsString( 'class="ch-stats"', $html );
 		$this->assertSame( 2, substr_count( $html, 'ch-stats__item' ) );
+		$this->assertListSemantics( $html, 1, 2 );
 		$this->assertStringContainsString( '900+', $html );
 	}
 
@@ -125,6 +137,7 @@ final class SectionsTest extends TestCase {
 		) );
 		$this->assertStringContainsString( 'class="ch-tiles"', $html );
 		$this->assertSame( 2, substr_count( $html, 'ch-tiles__tile' ) );
+		$this->assertListSemantics( $html, 1, 2 );
 		$this->assertStringContainsString( 'Membership', $html );
 		$this->assertNoHexColour( $html );
 		$this->assertStringNotContainsString( 'style=', $html );
@@ -152,6 +165,7 @@ final class SectionsTest extends TestCase {
 		) );
 		$this->assertStringContainsString( 'class="ch-cards"', $html );
 		$this->assertSame( 2, substr_count( $html, 'ch-card"' ) );
+		$this->assertListSemantics( $html, 1, 2 );
 		$this->assertStringContainsString( 'Pick your game.', $html );
 		$this->assertStringContainsString( 'Rugby', $html );
 		$this->assertNoHexColour( $html );
@@ -208,6 +222,8 @@ final class SectionsTest extends TestCase {
 		) );
 		$this->assertSame( 2, substr_count( $html, 'ch-tier"' ) + substr_count( $html, 'ch-tier ch-tier--pop"' ) );
 		$this->assertStringContainsString( 'ch-tier--pop', $html );
+		// 1 tier grid + 2 feature lists; 2 tier cards + 3 feature items (2 + 1).
+		$this->assertListSemantics( $html, 3, 5 );
 		$this->assertStringContainsString( 'Any section', $html );
 		$this->assertNoHexColour( $html );
 	}
@@ -226,6 +242,8 @@ final class SectionsTest extends TestCase {
 		$this->assertStringContainsString( 'data-ch-tab="events"', $html );
 		$this->assertStringContainsString( 'ClubHouse vs Riverside', $html );
 		$this->assertStringContainsString( 'ch-badge--w', $html );
+		// Fixtures / results / events are three lists of one item each.
+		$this->assertListSemantics( $html, 3, 3 );
 		$this->assertNoHexColour( $html );
 		$this->assertStringNotContainsString( 'style=', $html );
 	}
@@ -256,6 +274,7 @@ final class SectionsTest extends TestCase {
 		) );
 		$this->assertStringContainsString( 'class="ch-news"', $html );
 		$this->assertSame( 2, substr_count( $html, 'ch-news__card' ) );
+		$this->assertListSemantics( $html, 1, 2 );
 		$this->assertStringContainsString( 'From the clubhouse', $html );
 		$this->assertStringNotContainsString( 'style=', $html );
 	}
@@ -267,6 +286,7 @@ final class SectionsTest extends TestCase {
 		) );
 		$this->assertStringContainsString( 'class="ch-info"', $html );
 		$this->assertSame( 2, substr_count( $html, 'ch-info__col' ) );
+		$this->assertListSemantics( $html, 1, 2 );
 		$this->assertStringContainsString( '12 Riverside Lane', $html );
 		$this->assertStringContainsString( 'Open in Maps', $html );
 		$this->assertStringNotContainsString( 'style=', $html );
@@ -279,6 +299,7 @@ final class SectionsTest extends TestCase {
 		) );
 		$this->assertStringContainsString( 'class="ch-sponsors"', $html );
 		$this->assertSame( 3, substr_count( $html, 'ch-sponsors__tile' ) );
+		$this->assertListSemantics( $html, 1, 3 );
 		$this->assertStringContainsString( 'Become a sponsor', $html );
 		$this->assertStringNotContainsString( 'style=', $html );
 	}
@@ -293,6 +314,7 @@ final class SectionsTest extends TestCase {
 		) );
 		$this->assertStringContainsString( 'class="ch-benefits"', $html );
 		$this->assertSame( 2, substr_count( $html, 'ch-benefit"' ) );
+		$this->assertListSemantics( $html, 1, 2 );
 		$this->assertStringContainsString( 'All training included', $html );
 		$this->assertNoHexColour( $html );
 		$this->assertStringNotContainsString( 'style=', $html );
@@ -308,6 +330,7 @@ final class SectionsTest extends TestCase {
 		) );
 		$this->assertStringContainsString( 'class="ch-people"', $html );
 		$this->assertSame( 2, substr_count( $html, 'ch-person"' ) );
+		$this->assertListSemantics( $html, 1, 2 );
 		$this->assertStringContainsString( 'Priya Nair', $html );
 		$this->assertStringContainsString( 'mailto:membership@clubhouse.example', $html );
 		$this->assertSame( 1, substr_count( $html, 'ch-person__email' ) ); // only the one with an email
@@ -325,6 +348,7 @@ final class SectionsTest extends TestCase {
 		) );
 		$this->assertStringContainsString( 'class="ch-timeline"', $html );
 		$this->assertSame( 2, substr_count( $html, 'ch-milestone"' ) );
+		$this->assertListSemantics( $html, 1, 2 );
 		$this->assertStringContainsString( '1974', $html );
 		$this->assertNoHexColour( $html );
 		$this->assertStringNotContainsString( 'style=', $html );
@@ -333,6 +357,7 @@ final class SectionsTest extends TestCase {
 	public function test_list_split_renders_three_columns(): void {
 		$html = Blueworx_Clubhouse_Sections::list_split( array(
 			'eyebrow' => 'The detail', 'heading' => 'What is included',
+			'included_label' => 'Included', 'not_included_label' => 'Not included', 'policies_label' => 'Good to know',
 			'included'     => array( 'All training', 'Match fees' ),
 			'not_included' => array( 'Individual coaching' ),
 			'policies'     => array( array( 'title' => 'Free trial', 'desc' => 'Your first session is on us.' ) ),
@@ -340,9 +365,27 @@ final class SectionsTest extends TestCase {
 		$this->assertStringContainsString( 'class="ch-splits"', $html );
 		$this->assertSame( 2, substr_count( $html, 'ch-split__yes' ) );
 		$this->assertSame( 1, substr_count( $html, 'ch-split__no' ) );
+		// 2 include/exclude lists + 1 policies list; 2 + 1 items + 1 policy.
+		$this->assertListSemantics( $html, 3, 4 );
 		$this->assertStringContainsString( 'Free trial', $html );
 		$this->assertNoHexColour( $html );
 		$this->assertStringNotContainsString( 'style=', $html );
+	}
+
+	public function test_list_split_column_headers_come_from_data(): void {
+		$html = Blueworx_Clubhouse_Sections::list_split( array(
+			'eyebrow' => 'Le détail', 'heading' => 'Ce qui est inclus',
+			'included_label' => 'Inclus', 'not_included_label' => 'Non inclus', 'policies_label' => 'Bon à savoir',
+			'included'     => array( 'Tout l\'entraînement' ),
+			'not_included' => array( 'Coaching individuel' ),
+			'policies'     => array(),
+		) );
+		$this->assertStringContainsString( 'Inclus', $html );
+		$this->assertStringContainsString( 'Non inclus', $html );
+		$this->assertStringContainsString( 'Bon à savoir', $html );
+		// No English column headers are baked into the renderer.
+		$this->assertStringNotContainsString( '>Included<', $html );
+		$this->assertStringNotContainsString( '>Good to know<', $html );
 	}
 
 	public function test_step_grid_renders_numbered_steps(): void {
@@ -355,6 +398,7 @@ final class SectionsTest extends TestCase {
 		) );
 		$this->assertStringContainsString( 'class="ch-steps"', $html );
 		$this->assertSame( 2, substr_count( $html, 'ch-step"' ) );
+		$this->assertListSemantics( $html, 1, 2 );
 		$this->assertStringContainsString( 'Pick your section', $html );
 		$this->assertNoHexColour( $html );
 		$this->assertStringNotContainsString( 'style=', $html );
@@ -392,6 +436,10 @@ final class SectionsTest extends TestCase {
 		$this->assertStringContainsString( 'onsubmit="return false"', $html );
 		$this->assertSame( 2, substr_count( $html, '<option' ) );
 		$this->assertStringContainsString( 'mailto:hello@clubhouse.example', $html );
+		// tel: href strips whitespace so it dials; the visible number keeps its spacing.
+		$this->assertStringContainsString( 'href="tel:01628000000"', $html );
+		$this->assertStringNotContainsString( 'tel:01628 000 000', $html );
+		$this->assertStringContainsString( '01628 000 000', $html );
 		$this->assertSame( 2, substr_count( $html, 'ch-contact__social' ) );
 		$this->assertNoHexColour( $html );
 		$this->assertStringNotContainsString( 'style=', $html );
