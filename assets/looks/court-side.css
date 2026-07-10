@@ -92,3 +92,25 @@ a{color:inherit;text-decoration:none}
 .ch-band-img__scrim{position:absolute;inset:0;background:linear-gradient(to top,color-mix(in oklab,var(--color-ink) 80%,transparent),transparent 65%)}
 .ch-band-img__in{position:relative;z-index:2;display:flex;justify-content:space-between;align-items:end;gap:24px;flex-wrap:wrap;padding-bottom:48px;width:100%;color:var(--color-bg)}
 .ch-band-img__title{font-family:var(--font-display);font-weight:800;font-size:clamp(30px,4.6vw,54px);letter-spacing:-.03em;max-width:18ch;margin-top:14px;line-height:1.03}
+
+.ch-band-wrap{padding-top:40px}
+.ch-band{border-radius:var(--radius-xl);padding:64px 52px;text-align:center}
+.ch-band--accent{background:var(--color-accent);color:var(--color-accent-ink)}
+.ch-band--ink{background:var(--color-ink);color:var(--color-bg)}
+.ch-eyebrow--band{background:var(--color-ink);color:var(--color-accent)}
+.ch-band--ink .ch-eyebrow--band{background:var(--color-accent);color:var(--color-accent-ink)}
+.ch-band__title{font-family:var(--font-display);font-weight:800;font-size:clamp(34px,6vw,80px);letter-spacing:-.03em;margin-top:16px;line-height:.98}
+.ch-band__lede{max-width:46ch;margin:18px auto 0;opacity:.85;font-size:19px}
+.ch-band .ch-btn{margin-top:28px}
+.ch-tiers{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:22px}
+.ch-tier{background:var(--color-paper);border:1px solid var(--color-line);border-radius:var(--radius-lg);padding:28px;display:flex;flex-direction:column}
+.ch-tier--pop{border:2px solid var(--color-ink)}
+.ch-tier__k{font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--color-ink-soft)}
+.ch-tier__name{font-family:var(--font-display);font-weight:800;font-size:30px;margin:6px 0 12px}
+.ch-tier__amt{font-family:var(--font-display);font-weight:800;font-size:40px}
+.ch-tier__amt small{font-family:var(--font-body);font-weight:500;font-size:15px;color:var(--color-ink-soft)}
+.ch-tier__feats{list-style:none;margin:18px 0 22px;display:grid;gap:9px}
+.ch-tier__feat{font-size:15px;color:var(--color-ink-soft);display:flex;gap:9px;align-items:center}
+.ch-tier__feat::before{content:"";width:16px;height:16px;border-radius:50%;background:var(--color-accent);flex:none}
+.ch-tier__cta{width:100%;justify-content:center;margin-top:auto}
+@media(max-width:820px){.ch-tiers{grid-template-columns:1fr}}

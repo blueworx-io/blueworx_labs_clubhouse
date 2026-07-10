@@ -40,6 +40,7 @@ final class PageRendererTest extends TestCase {
 		$this->assertStringContainsString( 'class="ch-tiles"', $body );
 		$this->assertStringContainsString( 'class="ch-stats"', $body );
 		$this->assertStringContainsString( 'class="ch-cards"', $body );
+		$this->assertStringContainsString( 'class="ch-tiers"', $body );
 		$this->assertStringContainsString( 'class="ch-footer"', $body );
 	}
 

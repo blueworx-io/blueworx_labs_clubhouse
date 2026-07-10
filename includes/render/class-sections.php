@@ -151,6 +151,48 @@ final class Blueworx_Clubhouse_Sections {
 			. '</div></section>';
 	}
 
+	/**
+	 * @param array{variant:string,eyebrow:string,heading:string,lede:string,
+	 *   cta_label:string,cta_href:string} $data variant: 'accent' | 'ink'
+	 */
+	public static function band( array $data ): string {
+		$mod     = 'ink' === $data['variant'] ? 'ch-band--ink' : 'ch-band--accent';
+		$btn     = 'ink' === $data['variant'] ? 'ch-btn--accent' : 'ch-btn--ink';
+		$eyebrow = '' !== $data['eyebrow']
+			? '<span class="ch-eyebrow ch-eyebrow--band">' . self::e( $data['eyebrow'] ) . '</span>' : '';
+		$lede    = '' !== $data['lede'] ? '<p class="ch-band__lede">' . self::e( $data['lede'] ) . '</p>' : '';
+		return '<section class="ch-wrap ch-band-wrap"><div class="ch-band ' . $mod . '">'
+			. $eyebrow
+			. '<h2 class="ch-band__title">' . self::e( $data['heading'] ) . '</h2>'
+			. $lede
+			. '<a class="ch-btn ' . $btn . '" href="' . self::e( $data['cta_href'] ) . '">' . self::e( $data['cta_label'] ) . '</a>'
+			. '</div></section>';
+	}
+
+	/**
+	 * @param array<int,array{eyebrow:string,name:string,price:string,period:string,
+	 *   features:array<int,string>,recommended:bool,cta_label:string,cta_href:string}> $tiers
+	 */
+	public static function tier_grid( array $tiers ): string {
+		$cards = '';
+		foreach ( $tiers as $t ) {
+			$cls   = $t['recommended'] ? 'ch-tier ch-tier--pop' : 'ch-tier';
+			$btn   = $t['recommended'] ? 'ch-btn--accent' : 'ch-btn--ghost';
+			$feats = '';
+			foreach ( $t['features'] as $f ) {
+				$feats .= '<li class="ch-tier__feat">' . self::e( $f ) . '</li>';
+			}
+			$cards .= '<div class="' . $cls . '">'
+				. '<span class="ch-tier__k">' . self::e( $t['eyebrow'] ) . '</span>'
+				. '<h3 class="ch-tier__name">' . self::e( $t['name'] ) . '</h3>'
+				. '<div class="ch-tier__amt">' . self::e( $t['price'] ) . '<small>' . self::e( $t['period'] ) . '</small></div>'
+				. '<ul class="ch-tier__feats">' . $feats . '</ul>'
+				. '<a class="ch-btn ' . $btn . ' ch-tier__cta" href="' . self::e( $t['cta_href'] ) . '">' . self::e( $t['cta_label'] ) . '</a>'
+				. '</div>';
+		}
+		return '<section class="ch-wrap"><div class="ch-tiers">' . $cards . '</div></section>';
+	}
+
 	/** @param array{club_name:string,tagline:string} $data */
 	public static function footer( array $data ): string {
 		return '<footer class="ch-footer"><div class="ch-wrap">'

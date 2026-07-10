@@ -138,6 +138,27 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'cta_label' => 'Visit us', 'cta_href' => '?page=contact',
 			) );
 		}
+		if ( $visibility->is_section_visible( 'home', 'membership' ) ) {
+			$out .= Blueworx_Clubhouse_Sections::band( array(
+				'variant'   => 'accent',
+				'eyebrow'   => 'Membership',
+				'heading'   => 'Open to everyone, from £28/month.',
+				'lede'      => 'From first-timers to county players — every tier includes clubhouse access, discounted events and a free trial session.',
+				'cta_label' => 'Choose your tier →',
+				'cta_href'  => '?page=membership',
+			) );
+			$out .= Blueworx_Clubhouse_Sections::tier_grid( array(
+				array( 'eyebrow' => 'Full playing', 'name' => 'Adult', 'price' => '£28', 'period' => '/mo',
+					'features' => array( 'Any section, any level', 'League affiliation', 'Clubhouse & socials' ),
+					'recommended' => false, 'cta_label' => 'Join', 'cta_href' => '?page=membership' ),
+				array( 'eyebrow' => 'Best value', 'name' => 'Family', 'price' => '£45', 'period' => '/mo',
+					'features' => array( 'Up to 5 members', 'Any sections', 'Priority event booking' ),
+					'recommended' => true, 'cta_label' => 'Join', 'cta_href' => '?page=membership' ),
+				array( 'eyebrow' => 'Off the pitch', 'name' => 'Social', 'price' => '£12', 'period' => '/mo',
+					'features' => array( 'Full clubhouse access', 'Member events', 'Support your club' ),
+					'recommended' => false, 'cta_label' => 'Join', 'cta_href' => '?page=membership' ),
+			) );
+		}
 		if ( $visibility->is_section_visible( 'home', 'footer' ) ) {
 			$out .= Blueworx_Clubhouse_Sections::footer( array(
 				'club_name' => $club,

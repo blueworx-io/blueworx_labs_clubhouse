@@ -145,4 +145,31 @@ final class SectionsTest extends TestCase {
 		$this->assertDoesNotMatchRegularExpression( '/#[0-9a-fA-F]{3,6}\b/', $html );
 		$this->assertStringNotContainsString( 'style=', $html );
 	}
+
+	public function test_band_accent_variant_renders_modifier(): void {
+		$html = Blueworx_Clubhouse_Sections::band( array(
+			'variant' => 'accent', 'eyebrow' => 'Membership',
+			'heading' => 'Open to everyone, from £28/month.',
+			'lede' => 'Every tier includes clubhouse access.',
+			'cta_label' => 'Choose your tier', 'cta_href' => '?page=membership',
+		) );
+		$this->assertStringContainsString( 'ch-band--accent', $html );
+		$this->assertStringContainsString( 'Open to everyone', $html );
+		$this->assertStringNotContainsString( 'style=', $html );
+	}
+
+	public function test_tier_grid_marks_recommended_and_lists_features(): void {
+		$html = Blueworx_Clubhouse_Sections::tier_grid( array(
+			array( 'eyebrow' => 'Full playing', 'name' => 'Adult', 'price' => '£28', 'period' => '/mo',
+				'features' => array( 'Any section', 'League affiliation' ), 'recommended' => false,
+				'cta_label' => 'Join', 'cta_href' => '?page=membership' ),
+			array( 'eyebrow' => 'Best value', 'name' => 'Family', 'price' => '£45', 'period' => '/mo',
+				'features' => array( 'Up to 5 members' ), 'recommended' => true,
+				'cta_label' => 'Join', 'cta_href' => '?page=membership' ),
+		) );
+		$this->assertSame( 2, substr_count( $html, 'ch-tier"' ) + substr_count( $html, 'ch-tier ch-tier--pop"' ) );
+		$this->assertStringContainsString( 'ch-tier--pop', $html );
+		$this->assertStringContainsString( 'Any section', $html );
+		$this->assertDoesNotMatchRegularExpression( '/#[0-9a-fA-F]{3,6}\b/', $html );
+	}
 }
