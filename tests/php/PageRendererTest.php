@@ -37,6 +37,7 @@ final class PageRendererTest extends TestCase {
 		$body = Blueworx_Clubhouse_Page_Renderer::home( $this->branding(), $vis );
 		$this->assertStringContainsString( 'class="ch-nav"', $body );
 		$this->assertStringContainsString( 'class="ch-hero"', $body );
+		$this->assertStringContainsString( 'class="ch-tiles"', $body );
 		$this->assertStringContainsString( 'class="ch-stats"', $body );
 		$this->assertStringContainsString( 'class="ch-footer"', $body );
 	}

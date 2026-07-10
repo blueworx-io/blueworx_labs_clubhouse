@@ -90,6 +90,16 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'image_caption'      => 'Saturday, floodlights on',
 			) );
 		}
+		if ( $visibility->is_section_visible( 'home', 'quick_tiles' ) ) {
+			$out .= Blueworx_Clubhouse_Sections::quick_tiles( array(
+				array( 'label' => 'Join / Membership', 'href' => '?page=membership' ),
+				array( 'label' => 'Sports & Sections', 'href' => '?page=sports' ),
+				array( 'label' => 'Fixtures & Results', 'href' => '?page=calendar' ),
+				array( 'label' => 'Events', 'href' => '?page=events' ),
+				array( 'label' => 'Contact', 'href' => '?page=contact' ),
+				array( 'label' => 'Member Login', 'href' => '#' ),
+			) );
+		}
 		if ( $visibility->is_section_visible( 'home', 'stats' ) ) {
 			$out .= Blueworx_Clubhouse_Sections::stat_strip( array(
 				array( 'value' => '900+', 'label' => 'Members' ),

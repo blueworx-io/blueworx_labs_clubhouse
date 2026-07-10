@@ -79,6 +79,18 @@ final class SectionsTest extends TestCase {
 		$this->assertStringNotContainsString( '<script>', $html );
 	}
 
+	public function test_quick_tiles_render_each_link(): void {
+		$html = Blueworx_Clubhouse_Sections::quick_tiles( array(
+			array( 'label' => 'Membership', 'href' => '?page=membership' ),
+			array( 'label' => 'Sports', 'href' => '?page=sports' ),
+		) );
+		$this->assertStringContainsString( 'class="ch-tiles"', $html );
+		$this->assertSame( 2, substr_count( $html, 'ch-tiles__tile' ) );
+		$this->assertStringContainsString( 'Membership', $html );
+		$this->assertDoesNotMatchRegularExpression( '/#[0-9a-fA-F]{3,6}\b/', $html );
+		$this->assertStringNotContainsString( 'style=', $html );
+	}
+
 	public function test_no_colour_literals_leak_into_markup(): void {
 		$html = Blueworx_Clubhouse_Sections::hero( array(
 			'eyebrow' => 'e', 'title_lead' => 't ', 'title_highlight' => 'h',

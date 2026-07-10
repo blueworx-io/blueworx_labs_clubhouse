@@ -90,6 +90,17 @@ final class Blueworx_Clubhouse_Sections {
 		return '<section class="ch-stats"><div class="ch-wrap ch-stats__in">' . $items . '</div></section>';
 	}
 
+	/** @param array<int,array{label:string,href:string}> $tiles */
+	public static function quick_tiles( array $tiles ): string {
+		$items = '';
+		foreach ( $tiles as $t ) {
+			$items .= '<a class="ch-tiles__tile" href="' . self::e( $t['href'] ) . '">'
+				. '<span class="ch-tiles__label">' . self::e( $t['label'] ) . '</span>'
+				. '<span class="ch-tiles__arrow" aria-hidden="true">→</span></a>';
+		}
+		return '<section class="ch-tiles-sec"><div class="ch-wrap"><div class="ch-tiles">' . $items . '</div></div></section>';
+	}
+
 	/** @param array{club_name:string,tagline:string} $data */
 	public static function footer( array $data ): string {
 		return '<footer class="ch-footer"><div class="ch-wrap">'
