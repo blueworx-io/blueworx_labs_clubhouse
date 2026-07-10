@@ -117,7 +117,7 @@ a{color:inherit;text-decoration:none}
 .ch-band__title{font-family:var(--font-display);font-weight:800;font-size:clamp(34px,6vw,80px);letter-spacing:-.03em;margin-top:16px;line-height:.98}
 .ch-band__lede{max-width:46ch;margin:18px auto 0;opacity:.85;font-size:19px}
 .ch-band .ch-btn{margin-top:28px}
-.ch-tiers{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:22px}
+.ch-tiers{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-top:22px}
 .ch-tier{background:var(--color-paper);border:1px solid var(--color-line);border-radius:var(--radius-lg);padding:28px;display:flex;flex-direction:column}
 .ch-tier--pop{border:2px solid var(--color-ink)}
 .ch-tier__k{font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--color-ink-soft)}

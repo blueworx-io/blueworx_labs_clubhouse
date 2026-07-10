@@ -332,4 +332,106 @@ final class Blueworx_Clubhouse_Page_Renderer {
 		$out .= self::shell_footer( $club );
 		return $out;
 	}
+
+	public static function membership(
+		Blueworx_Clubhouse_Branding $branding,
+		Blueworx_Clubhouse_Visibility $visibility
+	): string {
+		$club = $branding->get_club_name();
+		$out  = self::shell_header( $club, '?page=membership' );
+
+		if ( $visibility->is_section_visible( 'membership', 'hero' ) ) {
+			$out .= Blueworx_Clubhouse_Sections::hero( array(
+				'eyebrow'            => 'Membership',
+				'title_lead'         => 'Join in five minutes. ',
+				'title_highlight'    => 'Play for years.',
+				'lede'               => 'From first-timers to county players, there is a category for you — every membership includes clubhouse access, discounted events and a free trial.',
+				'cta_primary'        => 'Register interest',
+				'cta_primary_href'   => '?page=contact',
+				'cta_secondary'      => 'Ask a question',
+				'cta_secondary_href' => '?page=contact',
+				'image'              => '',
+				'image_alt'          => 'ClubHouse members warming up',
+				'image_caption'      => '',
+			) );
+		}
+		if ( $visibility->is_section_visible( 'membership', 'why' ) ) {
+			$out .= Blueworx_Clubhouse_Sections::benefit_grid( array(
+				'eyebrow' => 'Why join',
+				'heading' => 'More than a membership',
+				'cards'   => array(
+					array( 'title' => 'All training included', 'description' => 'Access every session for your section, all season.' ),
+					array( 'title' => 'Discounted events', 'description' => 'Members save on tournaments, socials and camps.' ),
+					array( 'title' => 'Clubhouse & socials', 'description' => 'The bar, the terrace, and a calendar of member events.' ),
+					array( 'title' => 'Kit discounts', 'description' => 'Save on team kit at our partner suppliers.' ),
+				),
+			) );
+		}
+		if ( $visibility->is_section_visible( 'membership', 'tiers' ) ) {
+			$out .= Blueworx_Clubhouse_Sections::tier_grid( array(
+				array( 'eyebrow' => 'Under 18', 'name' => 'Junior', 'price' => '£12', 'period' => '/mo',
+					'features' => array( 'Any junior section', 'Coaching included', 'Holiday camp discounts' ),
+					'recommended' => false, 'cta_label' => 'Join', 'cta_href' => '?page=contact' ),
+				array( 'eyebrow' => 'Full playing', 'name' => 'Adult', 'price' => '£28', 'period' => '/mo',
+					'features' => array( 'Any section, any level', 'League affiliation', 'Clubhouse & socials' ),
+					'recommended' => false, 'cta_label' => 'Join', 'cta_href' => '?page=contact' ),
+				array( 'eyebrow' => 'Best value', 'name' => 'Family', 'price' => '£45', 'period' => '/mo',
+					'features' => array( 'Up to 5 members', 'Any sections', 'Priority event booking' ),
+					'recommended' => true, 'cta_label' => 'Join', 'cta_href' => '?page=contact' ),
+				array( 'eyebrow' => 'Off the pitch', 'name' => 'Social', 'price' => '£12', 'period' => '/mo',
+					'features' => array( 'Full clubhouse access', 'Member events', 'Support your club' ),
+					'recommended' => false, 'cta_label' => 'Join', 'cta_href' => '?page=contact' ),
+			) );
+		}
+		if ( $visibility->is_section_visible( 'membership', 'detail' ) ) {
+			$out .= Blueworx_Clubhouse_Sections::list_split( array(
+				'eyebrow'      => 'The detail',
+				'heading'      => 'What is included',
+				'included'     => array( "Access to all your section's training", 'League match fees', 'Clubhouse & bar membership', 'Member events & socials' ),
+				'not_included' => array( 'Individual coaching (available separately)', 'Tournament entry fees', 'Club kit (discounted, not free)' ),
+				'policies'     => array(
+					array( 'title' => 'Free trial', 'desc' => 'Your first session is on us — try before you join.' ),
+					array( 'title' => 'Juniors', 'desc' => 'Under-18s pay a reduced rate; safeguarding applies to all youth sections.' ),
+					array( 'title' => 'Family cap', 'desc' => 'Family membership covers up to five people at one address.' ),
+				),
+			) );
+		}
+		if ( $visibility->is_section_visible( 'membership', 'steps' ) ) {
+			$out .= Blueworx_Clubhouse_Sections::step_grid( array(
+				'eyebrow' => 'How to join',
+				'heading' => 'Four steps to playing',
+				'steps'   => array(
+					array( 'number' => '01', 'title' => 'Pick your section', 'description' => 'Browse sports and find where you fit.' ),
+					array( 'number' => '02', 'title' => 'Choose a tier', 'description' => 'Adult, family, junior or social.' ),
+					array( 'number' => '03', 'title' => 'Register interest', 'description' => 'Fill in a short form — no payment yet.' ),
+					array( 'number' => '04', 'title' => 'Come and play', 'description' => 'We will match you to a coach and a session.' ),
+				),
+			) );
+		}
+		if ( $visibility->is_section_visible( 'membership', 'faq' ) ) {
+			$out .= Blueworx_Clubhouse_Sections::faq( array(
+				'eyebrow' => 'Questions',
+				'heading' => 'Frequently asked',
+				'items'   => array(
+					array( 'question' => 'Do I have to commit for a season?', 'answer' => 'No — you can join any time and pay monthly.', 'open' => true ),
+					array( 'question' => 'Can I try before I join?', 'answer' => 'Yes, your first session is a free trial.', 'open' => false ),
+					array( 'question' => 'Do you have junior sections?', 'answer' => 'Every sport runs junior pathways from age 5 upward.', 'open' => false ),
+					array( 'question' => 'Is there a family rate?', 'answer' => 'Family membership covers up to five people at one address.', 'open' => false ),
+					array( 'question' => 'How do I pay?', 'answer' => 'Payment details are arranged once your interest is confirmed.', 'open' => false ),
+				),
+			) );
+		}
+		if ( $visibility->is_section_visible( 'membership', 'cta' ) ) {
+			$out .= Blueworx_Clubhouse_Sections::band( array(
+				'variant'   => 'ink',
+				'eyebrow'   => 'Ready?',
+				'heading'   => 'Register your interest',
+				'lede'      => 'Tell us a little about you and we will be in touch within a few days.',
+				'cta_label' => 'Register interest →',
+				'cta_href'  => '?page=contact',
+			) );
+		}
+		$out .= self::shell_footer( $club );
+		return $out;
+	}
 }

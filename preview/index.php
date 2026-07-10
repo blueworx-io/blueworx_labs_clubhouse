@@ -67,6 +67,8 @@ function blueworx_clubhouse_preview_body(
 	switch ( $page ) {
 		case 'about':
 			return Blueworx_Clubhouse_Page_Renderer::about( $branding, $visibility );
+		case 'membership':
+			return Blueworx_Clubhouse_Page_Renderer::membership( $branding, $visibility );
 		case 'home':
 		default:
 			return Blueworx_Clubhouse_Page_Renderer::home( $branding, $visibility );

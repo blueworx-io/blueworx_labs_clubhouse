@@ -64,4 +64,15 @@ final class PageRendererTest extends TestCase {
 		$this->assertStringContainsString( 'class="ch-footer"', $body );
 		$this->assertStringContainsString( 'ch-nav__link--active', $body );
 	}
+
+	public function test_membership_composes_its_sections(): void {
+		$vis  = new Blueworx_Clubhouse_Visibility( new Blueworx_Clubhouse_Fake_Storage() );
+		$body = Blueworx_Clubhouse_Page_Renderer::membership( $this->branding(), $vis );
+		$this->assertStringContainsString( 'class="ch-benefits"', $body );
+		$this->assertStringContainsString( 'class="ch-tiers"', $body );
+		$this->assertStringContainsString( 'class="ch-splits"', $body );
+		$this->assertStringContainsString( 'class="ch-steps"', $body );
+		$this->assertStringContainsString( 'class="ch-faq"', $body );
+		$this->assertSame( 4, substr_count( $body, 'ch-tier"' ) + substr_count( $body, 'ch-tier ch-tier--pop"' ) );
+	}
 }
