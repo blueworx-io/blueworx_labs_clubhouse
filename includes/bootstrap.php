@@ -22,3 +22,4 @@ require_once __DIR__ . '/content/class-visibility.php';
 
 // Theme
 require_once __DIR__ . '/theme/interface-base-look.php';
+require_once __DIR__ . '/theme/class-base-look-registry.php';
