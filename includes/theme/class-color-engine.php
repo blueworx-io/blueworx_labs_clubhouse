@@ -65,4 +65,38 @@ class Blueworx_Clubhouse_Color_Engine {
 		$blend = static fn ( int $x, int $y ): int => (int) round( $x * $weight_a + $y * ( 1 - $weight_a ) );
 		return self::to_hex( $blend( $ar, $br ), $blend( $ag, $bg ), $blend( $ab, $bb ) );
 	}
+
+	/**
+	 * Derive the legible accent token set for a look's shell.
+	 *
+	 * @return array{'--color-accent':string,'--color-accent-ink':string,'--color-accent-deep':string,'--color-accent-wash':string}
+	 */
+	public static function derive( string $accent, string $shell_bg, string $shell_ink ): array {
+		$accent = self::normalize_hex( $accent );
+
+		// Ink on the accent: better-contrasting of the look ink vs white.
+		$ink = self::contrast_ratio( $shell_ink, $accent ) >= self::contrast_ratio( '#ffffff', $accent )
+			? self::normalize_hex( $shell_ink )
+			: '#ffffff';
+
+		// Accent-as-text on the shell: blend toward the opposite pole until AA.
+		$shell_is_light = self::relative_luminance( $shell_bg ) >= 0.5;
+		$pole           = $shell_is_light ? '#141410' : '#ffffff';
+		$deep           = $accent;
+		for ( $w = 1.0; $w >= 0.0; $w -= 0.05 ) {
+			$candidate = self::mix( $accent, $pole, $w );
+			if ( self::contrast_ratio( $candidate, $shell_bg ) >= 4.5 ) {
+				$deep = $candidate;
+				break;
+			}
+			$deep = $candidate; // last (w=0 pole) is guaranteed to pass.
+		}
+
+		return array(
+			'--color-accent'      => $accent,
+			'--color-accent-ink'  => $ink,
+			'--color-accent-deep' => $deep,
+			'--color-accent-wash' => self::mix( $accent, self::normalize_hex( $shell_bg ), 0.12 ),
+		);
+	}
 }
