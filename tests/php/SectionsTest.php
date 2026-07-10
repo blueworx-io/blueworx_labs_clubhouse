@@ -344,4 +344,19 @@ final class SectionsTest extends TestCase {
 		$this->assertNoHexColour( $html );
 		$this->assertStringNotContainsString( 'style=', $html );
 	}
+
+	public function test_step_grid_renders_numbered_steps(): void {
+		$html = Blueworx_Clubhouse_Sections::step_grid( array(
+			'eyebrow' => 'How to join', 'heading' => 'Four steps to playing',
+			'steps'   => array(
+				array( 'number' => '01', 'title' => 'Pick your section', 'description' => 'Find where you fit.' ),
+				array( 'number' => '02', 'title' => 'Choose a tier', 'description' => 'Adult, family or junior.' ),
+			),
+		) );
+		$this->assertStringContainsString( 'class="ch-steps"', $html );
+		$this->assertSame( 2, substr_count( $html, 'ch-step"' ) );
+		$this->assertStringContainsString( 'Pick your section', $html );
+		$this->assertNoHexColour( $html );
+		$this->assertStringNotContainsString( 'style=', $html );
+	}
 }

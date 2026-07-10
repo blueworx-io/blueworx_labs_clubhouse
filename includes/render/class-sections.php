@@ -407,4 +407,18 @@ final class Blueworx_Clubhouse_Sections {
 			. '<div class="ch-split"><h3 class="ch-split__h">Good to know</h3><div class="ch-policies">' . $pol . '</div></div>'
 			. '</div></div></section>';
 	}
+
+	/** @param array{eyebrow:string,heading:string,steps:array<int,array{number:string,title:string,description:string}>} $data */
+	public static function step_grid( array $data ): string {
+		$steps = '';
+		foreach ( $data['steps'] as $s ) {
+			$steps .= '<article class="ch-step"><span class="ch-step__num">' . self::e( $s['number'] ) . '</span>'
+				. '<h3 class="ch-step__title">' . self::e( $s['title'] ) . '</h3>'
+				. '<p class="ch-step__desc">' . self::e( $s['description'] ) . '</p></article>';
+		}
+		return '<section class="ch-sec"><div class="ch-wrap">'
+			. '<span class="ch-eyebrow">' . self::e( $data['eyebrow'] ) . '</span>'
+			. '<h2 class="ch-sec__title">' . self::e( $data['heading'] ) . '</h2>'
+			. '<div class="ch-steps">' . $steps . '</div></div></section>';
+	}
 }
