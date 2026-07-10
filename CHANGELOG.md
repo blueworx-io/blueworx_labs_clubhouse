@@ -5,6 +5,13 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0] - 2026-07-10
+
+### Added
+
+- Full Court Side **Home page**: upgraded header (promo banner, Login + Join CTAs, active nav) and 4-column footer (social pills + newsletter form + legal bar), plus quick-access tiles, a reduced-motion-safe news ticker, sports card grid, clubhouse image band, membership band + tier grid, tabbed club-activity (fixtures/results/events), news cards, dark info strip, and sponsors grid — all skin-agnostic `ch-*` section renderers styled by the Court Side pack.
+- `?page=` routing in the DB-free localhost preview so the site is navigable.
+
 ## [0.4.0] - 2026-07-10
 
 ### Added
