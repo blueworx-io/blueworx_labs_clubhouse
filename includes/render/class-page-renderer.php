@@ -44,7 +44,27 @@ final class Blueworx_Clubhouse_Page_Renderer {
 			. '<link rel="stylesheet" href="' . $font . '">'
 			. '<link rel="stylesheet" href="' . $sheet . '">'
 			. '<style>' . $css . '</style>'
-			. '</head><body>' . $body . '</body></html>';
+			. '</head><body>' . $body . self::reveal_script() . '</body></html>';
+	}
+
+	/**
+	 * Progressive-enhancement scroll reveal: adds .ch-reveal to each top-level block
+	 * (skipping the hero, which has its own CSS load-in), then .is-in as it enters the
+	 * viewport. Bails out with content fully visible when IntersectionObserver is absent
+	 * or the user prefers reduced motion, so nothing is ever hidden without JS. Vanilla
+	 * JS by design — no dependency; GSAP stays reserved for genuinely complex animation.
+	 */
+	private static function reveal_script(): string {
+		return '<script>(function(){'
+			. 'if(!("IntersectionObserver" in window)||matchMedia("(prefers-reduced-motion:reduce)").matches)return;'
+			. 'var els=document.querySelectorAll(".ch-main > *:not(.ch-hero)");'
+			. 'if(!els.length)return;'
+			. 'els.forEach(function(el){el.classList.add("ch-reveal")});'
+			. 'var io=new IntersectionObserver(function(es){es.forEach(function(e){'
+			. 'if(e.isIntersecting){e.target.classList.add("is-in");io.unobserve(e.target)}})},'
+			. '{rootMargin:"0px 0px -10% 0px",threshold:.08});'
+			. 'els.forEach(function(el){io.observe(el)});'
+			. '})();</script>';
 	}
 
 	private static function shell_header( string $club, string $active ): string {
@@ -64,6 +84,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 			),
 			'active'      => $active,
 			'login'       => 'Log in',
+			'login_href'  => '?page=login',
 			'join'        => 'Join the Club',
 			'join_href'   => '?page=membership',
 		) );
@@ -113,6 +134,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 		if ( $visibility->is_section_visible( 'home', 'header' ) ) {
 			$out .= self::shell_header( $club, '?page=home' );
 		}
+		$out .= '<main class="ch-main" id="ch-main" tabindex="-1">';
 		if ( $visibility->is_section_visible( 'home', 'hero' ) ) {
 			$out .= Blueworx_Clubhouse_Sections::hero( array(
 				'eyebrow'            => 'Est. 1974 · Marlow, UK',
@@ -129,13 +151,12 @@ final class Blueworx_Clubhouse_Page_Renderer {
 			) );
 		}
 		if ( $visibility->is_section_visible( 'home', 'quick_tiles' ) ) {
+			// Task-oriented shortcuts (verb-first), deliberately not a mirror of the nav.
 			$out .= Blueworx_Clubhouse_Sections::quick_tiles( array(
-				array( 'label' => 'Join / Membership', 'href' => '?page=membership' ),
-				array( 'label' => 'Sports & Sections', 'href' => '?page=sports' ),
-				array( 'label' => 'Fixtures & Results', 'href' => '?page=calendar' ),
-				array( 'label' => 'Events', 'href' => '?page=events' ),
-				array( 'label' => 'Contact', 'href' => '?page=contact' ),
-				array( 'label' => 'Member Login', 'href' => '#' ),
+				array( 'label' => 'Join the club', 'href' => '?page=membership' ),
+				array( 'label' => 'Take a tour', 'href' => '?page=about' ),
+				array( 'label' => 'See fixtures', 'href' => '?page=calendar' ),
+				array( 'label' => 'Get in touch', 'href' => '?page=contact' ),
 			) );
 		}
 		if ( $visibility->is_section_visible( 'home', 'ticker' ) ) {
@@ -148,7 +169,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 		}
 		if ( $visibility->is_section_visible( 'home', 'stats' ) ) {
 			$out .= Blueworx_Clubhouse_Sections::stat_strip( array(
-				array( 'value' => '900+', 'label' => 'Members' ),
+				array( 'value' => '900+', 'label' => 'Members', 'featured' => true ),
 				array( 'value' => '9', 'label' => 'Sports' ),
 				array( 'value' => '24', 'label' => 'Teams' ),
 				array( 'value' => '1974', 'label' => 'Founded' ),
@@ -243,6 +264,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'names'   => array( 'Sponsor 01', 'Sponsor 02', 'Sponsor 03', 'Sponsor 04', 'Sponsor 05', 'Sponsor 06' ),
 			) );
 		}
+		$out .= '</main>';
 		if ( $visibility->is_section_visible( 'home', 'footer' ) ) {
 			$out .= self::shell_footer( $club );
 		}
@@ -254,7 +276,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 		Blueworx_Clubhouse_Visibility $visibility
 	): string {
 		$club = $branding->get_club_name();
-		$out  = self::shell_header( $club, '?page=about' );
+		$out  = self::shell_header( $club, '?page=about' ) . '<main class="ch-main" id="ch-main" tabindex="-1">';
 
 		if ( $visibility->is_section_visible( 'about', 'hero' ) ) {
 			$out .= Blueworx_Clubhouse_Sections::hero( array(
@@ -329,7 +351,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'cta_href'  => '?page=membership',
 			) );
 		}
-		$out .= self::shell_footer( $club );
+		$out .= '</main>' . self::shell_footer( $club );
 		return $out;
 	}
 
@@ -338,7 +360,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 		Blueworx_Clubhouse_Visibility $visibility
 	): string {
 		$club = $branding->get_club_name();
-		$out  = self::shell_header( $club, '?page=membership' );
+		$out  = self::shell_header( $club, '?page=membership' ) . '<main class="ch-main" id="ch-main" tabindex="-1">';
 
 		if ( $visibility->is_section_visible( 'membership', 'hero' ) ) {
 			$out .= Blueworx_Clubhouse_Sections::hero( array(
@@ -434,7 +456,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'cta_href'  => '?page=contact',
 			) );
 		}
-		$out .= self::shell_footer( $club );
+		$out .= '</main>' . self::shell_footer( $club );
 		return $out;
 	}
 
@@ -443,7 +465,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 		Blueworx_Clubhouse_Visibility $visibility
 	): string {
 		$club = $branding->get_club_name();
-		$out  = self::shell_header( $club, '?page=contact' );
+		$out  = self::shell_header( $club, '?page=contact' ) . '<main class="ch-main" id="ch-main" tabindex="-1">';
 
 		if ( $visibility->is_section_visible( 'contact', 'hero' ) ) {
 			$out .= Blueworx_Clubhouse_Sections::hero( array(
@@ -491,7 +513,34 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				),
 			) );
 		}
-		$out .= self::shell_footer( $club );
+		$out .= '</main>' . self::shell_footer( $club );
+		return $out;
+	}
+
+	public static function login(
+		Blueworx_Clubhouse_Branding $branding,
+		Blueworx_Clubhouse_Visibility $visibility
+	): string {
+		$club = $branding->get_club_name();
+		$out  = self::shell_header( $club, '?page=login' ) . '<main class="ch-main" id="ch-main" tabindex="-1">';
+
+		if ( $visibility->is_section_visible( 'login', 'form' ) ) {
+			$out .= Blueworx_Clubhouse_Sections::auth( array(
+				'eyebrow'        => 'Members',
+				'heading'        => 'Log in to your account',
+				'lede'           => 'Access your membership, bookings and club events.',
+				'email_label'    => 'Email',
+				'password_label' => 'Password',
+				'remember_label' => 'Remember me',
+				'forgot_label'   => 'Forgot password?',
+				'forgot_href'    => '#',
+				'submit_label'   => 'Log in',
+				'join_prompt'    => 'Not a member yet?',
+				'join_label'     => 'Join the club',
+				'join_href'      => '?page=membership',
+			) );
+		}
+		$out .= '</main>' . self::shell_footer( $club );
 		return $out;
 	}
 }

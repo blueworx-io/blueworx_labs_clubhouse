@@ -5,6 +5,72 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.0] - 2026-07-10
+
+### Login page, hover motion, and design polish
+
+Second design-review pass on the Court Side site.
+
+#### New
+
+- **Member login page** (`?page=login`). A centred sign-in card — email/password with autocomplete, remember-me, forgot-password link, and a "not a member yet? Join the club" prompt — rendered by a new skin-agnostic `auth()` section. The header's "Log in" (bar and mobile drawer) now routes here instead of `#`.
+
+#### Spacing
+
+- **Fixed inline-title sections butting against their content.** Sections that render the eyebrow + title directly above a grid (benefits, news, directory, timeline, included/excluded, steps, FAQ, contact, activity tabs) had no gap between the heading and the grid below — the title's descenders touched the first row. Added the same 34px gap the header-variant sections already get from `.ch-sec__head`.
+- **FAQ now shares the one 1200px content column** with every other section. It was capped at 820px and centred, which read as a misaligned island against the full-width sections above and below; answers keep their own 64ch cap for readability.
+
+#### Layout
+
+- **Directory (contact page) caps at three across** instead of packing six narrow columns, so names and emails keep room to breathe; steps to two, then one, as the viewport tightens.
+
+#### Motion
+
+- **Hover animations across the previously-inert surfaces.** Primary CTAs (accent/ink buttons) now lift and deepen on hover — before, only the ghost outline responded; the paper cards (benefits, tiers, steps) lift with an accent edge; directory people and their avatars, and FAQ questions, respond too. All hover transforms respect `prefers-reduced-motion`.
+- **Entrance motion** on scroll — the hero rises in on load and each section reveals as it enters the viewport, via CSS plus a tiny IntersectionObserver (no runtime dependency; per the foundation guidance, GSAP is reserved for genuinely complex animation). Content stays fully visible without JS and when reduced motion is preferred.
+
+#### Tooling
+
+- **PHP linting is now real.** Added PHP_CodeSniffer with a curated, tab-aware ruleset (`phpcs.xml.dist`) tuned to the project's WordPress-flavoured style; run locally with `composer lint` and enforced by the shared CI PHPCS step. The previous `npm run lint` was a placeholder that always passed. Synced `package.json` to the plugin version so the CI version-sync check passes.
+
+## [0.7.0] - 2026-07-10
+
+### Design review fixes (responsiveness, navigation, spacing, accessibility)
+
+Actioned a principal-designer UX/accessibility review of the Court Side site.
+
+#### Navigation
+
+- **Mobile & tablet navigation restored.** Below 900px the primary nav was previously hidden with no replacement, leaving those users unable to reach any page. Added a no-JS `<details>` disclosure (hamburger → drawer) carrying every nav link plus Log in; the persistent Join CTA stays in the bar on tablet and moves into the drawer on phones so the header always fits.
+
+#### Responsiveness
+
+- **Eliminated horizontal scroll on mobile** across all pages: hero and section/band titles now wrap long words (`overflow-wrap`), the hero highlight is width-capped, the accent band pads down on small screens, and every auto-fit grid uses `minmax(min(…,100%),1fr)` so a track can never force overflow. Verified clean from 320px to desktop.
+- Hero type scaled down slightly so the primary CTA isn't pushed off-screen; buttons no longer wrap mid-label.
+
+#### Spacing
+
+- Introduced a shared spacing scale (`--space-*`) and a **flow-based rhythm**: one consistent gap between every top-level block (`--flow-lg`, 88px desktop / 52px mobile) and one tight gap inside the hero utility cluster and between a band and its cards (`--flow-sm`, 24px / 20px). Spacing now lives in a single margin rule instead of ad-hoc per-section paddings, so adjacent paddings can never double up and every section gap is identical. Background-bearing sections keep their own internal padding. Fixed the brand/nav gap.
+
+#### Placeholder images & gradients
+
+- **Every empty image slot now renders an intentional gradient placeholder** with a centred photo icon (hero media, sports cards, the clubhouse image band, news thumbnails and the contact map); people/committee avatars use a gradient behind their initials. Image bands get a dark gradient placeholder so their white heading stays legible. Placeholders are engine-derived, so they re-theme with the club accent, with subtle per-position variation so a grid doesn't read as identical.
+- **Wider gradient usage** for depth: the membership accent band (radial highlight), the featured stat card, the dark info strip and ink CTA band, and a soft ambient wash behind the hero — all derived from the accent tokens.
+
+#### Hierarchy & clarity
+
+- The emphasised stat is now chosen by data (a `featured` flag) instead of DOM position.
+- Home quick tiles reframed as task-oriented shortcuts (Join the club / Take a tour / See fixtures / Get in touch) rather than a second, mismatched copy of the nav.
+- Photo-less people avatars render initials, and empty image slots show a subtle patterned placeholder instead of a flat-grey block; committee/directory names reserve two lines so a wrapped name doesn't break row alignment.
+
+#### Accessibility
+
+- Added a skip link and a `<main id="ch-main">` landmark to every page.
+- One branded, guaranteed-contrast `:focus-visible` indicator for all interactive elements (previously only form inputs had a focus style).
+- The news ticker gained an accessible, no-JS pause control (WCAG 2.2.2).
+- Active nav link now signals the current page with full-contrast ink text and an accent underline (colour alone previously measured ~4.3:1).
+- Footer links, legal links and social icons raised to ≥44px touch targets.
+
 ## [0.6.1] - 2026-07-10
 
 ### Accessibility & fixes

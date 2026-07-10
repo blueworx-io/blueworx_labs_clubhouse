@@ -1,0 +1,44 @@
+<?xml version="1.0"?>
+<ruleset name="BlueworxLabsClubhouse">
+	<description>
+		Pragmatic PHP linting for the Clubhouse plugin. High-signal formatting and
+		modern-PHP hygiene sniffs tuned to this project's tab-indented, WordPress-
+		flavoured style. Deliberately NOT full WordPress Coding Standards: the
+		escaping/i18n sniffs don't understand the custom template engine's e()
+		wrapper and would flag escaped output as unescaped, so they're omitted to
+		keep findings actionable. Escalate to WPCS later if that trade changes.
+	</description>
+
+	<!-- Only lint php files, show sniff codes (s) and progress (p). -->
+	<arg name="extensions" value="php"/>
+	<arg name="colors"/>
+	<arg value="sp"/>
+
+	<!-- Runtime + preview harness. Tests and vendor are out of scope for now. -->
+	<file>blueworx-labs-clubhouse.php</file>
+	<file>includes</file>
+	<file>preview</file>
+
+	<exclude-pattern>*/vendor/*</exclude-pattern>
+	<exclude-pattern>*/node_modules/*</exclude-pattern>
+
+	<!-- Whitespace & file hygiene: tabs for indent (project convention), no stray
+	     trailing whitespace, one structure per file, trailing newline, no BOM. -->
+	<rule ref="Generic.WhiteSpace.DisallowSpaceIndent"/>
+	<rule ref="Squiz.WhiteSpace.SuperfluousWhitespace"/>
+	<rule ref="Generic.Files.OneObjectStructurePerFile"/>
+	<rule ref="PSR2.Files.EndFileNewline"/>
+	<rule ref="Generic.Files.ByteOrderMark"/>
+
+	<!-- Modern-PHP hygiene: canonical tags, lowercase keywords/constants/types,
+	     upper-case constant names, one statement per line, no dead statements. -->
+	<rule ref="Generic.PHP.DisallowShortOpenTag"/>
+	<rule ref="Generic.PHP.DisallowAlternativePHPTags"/>
+	<rule ref="Generic.PHP.LowerCaseKeyword"/>
+	<rule ref="Generic.PHP.LowerCaseConstant"/>
+	<rule ref="Generic.PHP.LowerCaseType"/>
+	<rule ref="Generic.NamingConventions.UpperCaseConstantName"/>
+	<rule ref="Generic.Formatting.DisallowMultipleStatements"/>
+	<rule ref="Generic.CodeAnalysis.EmptyStatement"/>
+	<rule ref="Generic.CodeAnalysis.ForLoopWithTestFunctionCall"/>
+</ruleset>

@@ -19,22 +19,35 @@ final class Blueworx_Clubhouse_Sections {
 		return htmlspecialchars( $s, ENT_QUOTES, 'UTF-8' );
 	}
 
-	/** Image slot that degrades to a tonal placeholder when no URL is given. */
+	/** Image slot that degrades to a patterned placeholder when no URL is given. */
 	private static function media( string $url, string $alt, string $modifier ): string {
-		$cls = 'ch-media' . ( '' !== $modifier ? ' ' . $modifier : '' );
-		$img = '' !== $url
+		$empty = '' === $url;
+		$cls   = 'ch-media' . ( $empty ? ' ch-media--empty' : '' ) . ( '' !== $modifier ? ' ' . $modifier : '' );
+		$img   = ! $empty
 			? '<img class="ch-media__img" src="' . self::e( $url ) . '" alt="' . self::e( $alt ) . '">'
 			: '';
 		return '<div class="' . $cls . '">' . $img . '</div>';
 	}
 
+	/** Up-to-two-letter initials for a photo-less avatar (first + last word). */
+	private static function initials( string $name ): string {
+		$parts = array_values( array_filter( preg_split( '/\s+/', trim( $name ) ) ?: array() ) );
+		if ( array() === $parts ) {
+			return '';
+		}
+		$first = mb_substr( $parts[0], 0, 1 );
+		$last  = count( $parts ) > 1 ? mb_substr( $parts[ count( $parts ) - 1 ], 0, 1 ) : '';
+		return mb_strtoupper( $first . $last );
+	}
+
 	/**
 	 * @param array{club_name:string,banner:string,banner_href:string,
 	 *   nav:array<int,array{label:string,href:string}>,active:string,
-	 *   login:string,join:string,join_href:string} $data
+	 *   login:string,login_href?:string,join:string,join_href:string} $data
 	 */
 	public static function header( array $data ): string {
-		$banner = '';
+		$login_href = $data['login_href'] ?? '#';
+		$banner     = '';
 		if ( '' !== $data['banner'] ) {
 			$banner = '<div class="ch-banner"><div class="ch-wrap ch-banner__in">'
 				. '<a class="ch-banner__link" href="' . self::e( $data['banner_href'] ) . '">'
@@ -46,13 +59,22 @@ final class Blueworx_Clubhouse_Sections {
 			$links  .= '<a class="ch-nav__link' . $active . '" href="' . self::e( $item['href'] ) . '">'
 				. self::e( $item['label'] ) . '</a>';
 		}
-		return $banner
+		return '<a class="ch-skip" href="#ch-main">Skip to content</a>'
+			. $banner
 			. '<header class="ch-nav"><div class="ch-wrap ch-nav__in">'
 			. '<a class="ch-brand" href="?page=home"><span class="ch-brand__mark">C</span>' . self::e( $data['club_name'] ) . '</a>'
-			. '<nav class="ch-nav__links">' . $links . '</nav>'
+			. '<nav class="ch-nav__links" aria-label="Primary">' . $links . '</nav>'
 			. '<div class="ch-nav__cta">'
-			. '<a class="ch-btn ch-btn--ghost" href="#">' . self::e( $data['login'] ) . '</a>'
+			. '<a class="ch-btn ch-btn--ghost" href="' . self::e( $login_href ) . '">' . self::e( $data['login'] ) . '</a>'
 			. '<a class="ch-btn ch-btn--ink" href="' . self::e( $data['join_href'] ) . '">' . self::e( $data['join'] ) . '</a>'
+			// No-JS disclosure menu — the same links, revealed by the hamburger below 900px.
+			. '<details class="ch-nav__disc">'
+			. '<summary class="ch-nav__burger" aria-label="Menu"><span class="ch-nav__burger-bars" aria-hidden="true"></span></summary>'
+			. '<nav class="ch-nav__drawer" aria-label="Menu">'
+			. '<a class="ch-btn ch-btn--accent ch-nav__drawer-join" href="' . self::e( $data['join_href'] ) . '">' . self::e( $data['join'] ) . '</a>'
+			. $links
+			. '<a class="ch-nav__link ch-nav__drawer-login" href="' . self::e( $login_href ) . '">' . self::e( $data['login'] ) . '</a>'
+			. '</nav></details>'
 			. '</div></div></header>';
 	}
 
@@ -83,11 +105,12 @@ final class Blueworx_Clubhouse_Sections {
 			. '</div></section>';
 	}
 
-	/** @param array<int,array{value:string,label:string}> $stats */
+	/** @param array<int,array{value:string,label:string,featured?:bool}> $stats */
 	public static function stat_strip( array $stats ): string {
 		$items = '';
 		foreach ( $stats as $stat ) {
-			$items .= '<div class="ch-stats__item" role="listitem"><b class="ch-stats__value">' . self::e( $stat['value'] )
+			$feature = ! empty( $stat['featured'] ) ? ' ch-stats__item--feature' : '';
+			$items  .= '<div class="ch-stats__item' . $feature . '" role="listitem"><b class="ch-stats__value">' . self::e( $stat['value'] )
 				. '</b><span class="ch-stats__label">' . self::e( $stat['label'] ) . '</span></div>';
 		}
 		return '<section class="ch-stats"><div class="ch-wrap ch-stats__in" role="list">' . $items . '</div></section>';
@@ -114,7 +137,12 @@ final class Blueworx_Clubhouse_Sections {
 			return $out . '</div>';
 		};
 		return '<section class="ch-ticker"><div class="ch-ticker__label">Club news</div>'
-			. '<div class="ch-ticker__viewport">' . $build( false ) . $build( true ) . '</div></section>';
+			. '<input type="checkbox" class="ch-ticker__pause-cb" id="ch-ticker-pause" aria-label="Pause the news ticker">'
+			. '<div class="ch-ticker__viewport">' . $build( false ) . $build( true ) . '</div>'
+			. '<label class="ch-ticker__pause" for="ch-ticker-pause">'
+			. '<span class="ch-ticker__ico-pause" aria-hidden="true">&#10073;&#10073;</span>'
+			. '<span class="ch-ticker__ico-play" aria-hidden="true">&#9654;</span></label>'
+			. '</section>';
 	}
 
 	/**
@@ -193,7 +221,7 @@ final class Blueworx_Clubhouse_Sections {
 				. '<a class="ch-btn ' . $btn . ' ch-tier__cta" href="' . self::e( $t['cta_href'] ) . '">' . self::e( $t['cta_label'] ) . '</a>'
 				. '</div>';
 		}
-		return '<section class="ch-wrap"><div class="ch-tiers" role="list">' . $cards . '</div></section>';
+		return '<section class="ch-wrap ch-tiers-sec"><div class="ch-tiers" role="list">' . $cards . '</div></section>';
 	}
 
 	/**
@@ -356,7 +384,7 @@ final class Blueworx_Clubhouse_Sections {
 			$email = '' !== $p['email']
 				? '<a class="ch-person__email" href="mailto:' . self::e( $p['email'] ) . '">' . self::e( $p['email'] ) . '</a>' : '';
 			$people .= '<article class="ch-person" role="listitem">'
-				. self::media( '', $p['name'], 'ch-person__avatar' )
+				. '<div class="ch-person__avatar ch-avatar" aria-hidden="true">' . self::e( self::initials( $p['name'] ) ) . '</div>'
 				. '<span class="ch-person__role">' . self::e( $p['role'] ) . '</span>'
 				. '<h3 class="ch-person__name">' . self::e( $p['name'] ) . '</h3>' . $email . '</article>';
 		}
@@ -480,5 +508,35 @@ final class Blueworx_Clubhouse_Sections {
 			. '<span class="ch-eyebrow">' . self::e( $data['eyebrow'] ) . '</span>'
 			. '<h2 class="ch-sec__title">' . self::e( $data['heading'] ) . '</h2>'
 			. '<div class="ch-contact">' . $form . $info . '</div></div></section>';
+	}
+
+	/**
+	 * Member sign-in — a single centred card. Unlike a content section, a narrow
+	 * centred column is the expected shape for an auth form, so the width cap is
+	 * deliberate here (it is the only thing on the page). The heading is an <h1>:
+	 * this page has no hero, so the card carries the page's main heading.
+	 *
+	 * @param array{eyebrow:string,heading:string,lede:string,email_label:string,
+	 *   password_label:string,remember_label:string,forgot_label:string,forgot_href:string,
+	 *   submit_label:string,join_prompt:string,join_label:string,join_href:string} $data
+	 */
+	public static function auth( array $data ): string {
+		$form = '<form class="ch-auth__form" onsubmit="return false">'
+			. '<label class="ch-field"><span class="ch-field__label">' . self::e( $data['email_label'] ) . '</span>'
+			. '<input class="ch-field__input" type="email" name="email" autocomplete="email"></label>'
+			. '<label class="ch-field"><span class="ch-field__label">' . self::e( $data['password_label'] ) . '</span>'
+			. '<input class="ch-field__input" type="password" name="password" autocomplete="current-password"></label>'
+			. '<div class="ch-auth__row">'
+			. '<label class="ch-auth__remember"><input type="checkbox" name="remember"><span>' . self::e( $data['remember_label'] ) . '</span></label>'
+			. '<a class="ch-auth__forgot" href="' . self::e( $data['forgot_href'] ) . '">' . self::e( $data['forgot_label'] ) . '</a></div>'
+			. '<button class="ch-btn ch-btn--accent ch-auth__submit" type="submit">' . self::e( $data['submit_label'] ) . '</button></form>';
+		return '<section class="ch-sec"><div class="ch-wrap ch-auth-wrap"><div class="ch-auth">'
+			. '<span class="ch-eyebrow">' . self::e( $data['eyebrow'] ) . '</span>'
+			. '<h1 class="ch-auth__title">' . self::e( $data['heading'] ) . '</h1>'
+			. '<p class="ch-auth__lede">' . self::e( $data['lede'] ) . '</p>'
+			. $form
+			. '<p class="ch-auth__alt">' . self::e( $data['join_prompt'] ) . ' '
+			. '<a class="ch-auth__alt-link" href="' . self::e( $data['join_href'] ) . '">' . self::e( $data['join_label'] ) . '</a></p>'
+			. '</div></div></section>';
 	}
 }

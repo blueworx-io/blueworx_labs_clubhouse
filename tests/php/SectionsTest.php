@@ -42,6 +42,13 @@ final class SectionsTest extends TestCase {
 		$this->assertStringContainsString( 'ch-nav__link--active', $html );
 		$this->assertStringContainsString( 'Log in', $html );
 		$this->assertStringContainsString( 'Join the Club', $html );
+		// Skip link is the first focusable element and targets the main landmark.
+		$this->assertStringContainsString( '<a class="ch-skip" href="#ch-main">', $html );
+		$this->assertSame( 0, strpos( $html, '<a class="ch-skip"' ) );
+		// No-JS mobile disclosure carries the same links so navigation survives below 900px.
+		$this->assertStringContainsString( 'ch-nav__disc', $html );
+		$this->assertStringContainsString( 'ch-nav__burger', $html );
+		$this->assertStringContainsString( 'ch-nav__drawer', $html );
 		$this->assertNoHexColour( $html );
 		$this->assertStringNotContainsString( 'style=', $html );
 	}
@@ -99,6 +106,17 @@ final class SectionsTest extends TestCase {
 		$this->assertStringContainsString( '900+', $html );
 	}
 
+	public function test_stat_strip_marks_featured_by_data_not_position(): void {
+		$html = Blueworx_Clubhouse_Sections::stat_strip( array(
+			array( 'value' => '900+', 'label' => 'Members', 'featured' => true ),
+			array( 'value' => '9', 'label' => 'Sports' ),
+		) );
+		// The emphasis is data-driven: exactly the flagged stat gets the modifier.
+		$this->assertSame( 1, substr_count( $html, 'ch-stats__item--feature' ) );
+		$this->assertStringContainsString( 'ch-stats__item--feature" role="listitem"><b class="ch-stats__value">900+', $html );
+		$this->assertStringNotContainsString( 'style=', $html );
+	}
+
 	public function test_output_is_escaped(): void {
 		$html = Blueworx_Clubhouse_Sections::footer( array(
 			'club_name'  => 'A & B <script>',
@@ -149,6 +167,10 @@ final class SectionsTest extends TestCase {
 		$this->assertStringContainsString( 'News one', $html );
 		// The track is duplicated so the CSS marquee loops seamlessly.
 		$this->assertSame( 2, substr_count( $html, 'ch-ticker__track' ) );
+		// Accessible, no-JS pause control (WCAG 2.2.2) — a labelled checkbox toggle.
+		$this->assertStringContainsString( 'ch-ticker__pause-cb', $html );
+		$this->assertStringContainsString( 'aria-label="Pause the news ticker"', $html );
+		$this->assertStringContainsString( '<label class="ch-ticker__pause" for="ch-ticker-pause">', $html );
 		$this->assertStringNotContainsString( 'style=', $html );
 	}
 
@@ -334,6 +356,10 @@ final class SectionsTest extends TestCase {
 		$this->assertStringContainsString( 'Priya Nair', $html );
 		$this->assertStringContainsString( 'mailto:membership@clubhouse.example', $html );
 		$this->assertSame( 1, substr_count( $html, 'ch-person__email' ) ); // only the one with an email
+		// Photo-less avatars degrade to first+last initials, not an empty grey box.
+		$this->assertSame( 2, substr_count( $html, 'ch-avatar' ) );
+		$this->assertStringContainsString( '<div class="ch-person__avatar ch-avatar" aria-hidden="true">PN</div>', $html );
+		$this->assertStringContainsString( '<div class="ch-person__avatar ch-avatar" aria-hidden="true">DR</div>', $html );
 		$this->assertNoHexColour( $html );
 		$this->assertStringNotContainsString( 'style=', $html );
 	}
@@ -441,6 +467,33 @@ final class SectionsTest extends TestCase {
 		$this->assertStringNotContainsString( 'tel:01628 000 000', $html );
 		$this->assertStringContainsString( '01628 000 000', $html );
 		$this->assertSame( 2, substr_count( $html, 'ch-contact__social' ) );
+		$this->assertNoHexColour( $html );
+		$this->assertStringNotContainsString( 'style=', $html );
+	}
+
+	public function test_auth_renders_login_card_with_fields_and_join_link(): void {
+		$html = Blueworx_Clubhouse_Sections::auth( array(
+			'eyebrow'        => 'Members',
+			'heading'        => 'Log in to your account',
+			'lede'           => 'Access your membership.',
+			'email_label'    => 'Email',
+			'password_label' => 'Password',
+			'remember_label' => 'Remember me',
+			'forgot_label'   => 'Forgot password?',
+			'forgot_href'    => '#',
+			'submit_label'   => 'Log in',
+			'join_prompt'    => 'Not a member yet?',
+			'join_label'     => 'Join the club',
+			'join_href'      => '?page=membership',
+		) );
+		$this->assertStringContainsString( 'class="ch-auth"', $html );
+		// The card carries the page's main heading (no hero on the login page).
+		$this->assertStringContainsString( '<h1 class="ch-auth__title">Log in to your account</h1>', $html );
+		$this->assertStringContainsString( 'type="email"', $html );
+		$this->assertStringContainsString( 'type="password"', $html );
+		$this->assertStringContainsString( 'autocomplete="current-password"', $html );
+		$this->assertStringContainsString( 'onsubmit="return false"', $html );
+		$this->assertStringContainsString( 'href="?page=membership"', $html );
 		$this->assertNoHexColour( $html );
 		$this->assertStringNotContainsString( 'style=', $html );
 	}
