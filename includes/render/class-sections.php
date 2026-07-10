@@ -348,4 +348,21 @@ final class Blueworx_Clubhouse_Sections {
 			. '<h2 class="ch-sec__title">' . self::e( $data['heading'] ) . '</h2>'
 			. '<div class="ch-benefits">' . $cards . '</div></div></section>';
 	}
+
+	/** @param array{eyebrow:string,heading:string,people:array<int,array{name:string,role:string,email:string}>} $data */
+	public static function people_grid( array $data ): string {
+		$people = '';
+		foreach ( $data['people'] as $p ) {
+			$email = '' !== $p['email']
+				? '<a class="ch-person__email" href="mailto:' . self::e( $p['email'] ) . '">' . self::e( $p['email'] ) . '</a>' : '';
+			$people .= '<article class="ch-person">'
+				. self::media( '', $p['name'], 'ch-person__avatar' )
+				. '<span class="ch-person__role">' . self::e( $p['role'] ) . '</span>'
+				. '<h3 class="ch-person__name">' . self::e( $p['name'] ) . '</h3>' . $email . '</article>';
+		}
+		return '<section class="ch-sec"><div class="ch-wrap">'
+			. '<span class="ch-eyebrow">' . self::e( $data['eyebrow'] ) . '</span>'
+			. '<h2 class="ch-sec__title">' . self::e( $data['heading'] ) . '</h2>'
+			. '<div class="ch-people">' . $people . '</div></div></section>';
+	}
 }

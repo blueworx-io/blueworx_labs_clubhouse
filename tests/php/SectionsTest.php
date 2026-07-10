@@ -297,4 +297,21 @@ final class SectionsTest extends TestCase {
 		$this->assertNoHexColour( $html );
 		$this->assertStringNotContainsString( 'style=', $html );
 	}
+
+	public function test_people_grid_renders_optional_email(): void {
+		$html = Blueworx_Clubhouse_Sections::people_grid( array(
+			'eyebrow' => 'Who to contact', 'heading' => 'The directory',
+			'people'  => array(
+				array( 'name' => 'Priya Nair', 'role' => 'Chair', 'email' => '' ),
+				array( 'name' => 'Daniel Reed', 'role' => 'Membership', 'email' => 'membership@clubhouse.example' ),
+			),
+		) );
+		$this->assertStringContainsString( 'class="ch-people"', $html );
+		$this->assertSame( 2, substr_count( $html, 'ch-person"' ) );
+		$this->assertStringContainsString( 'Priya Nair', $html );
+		$this->assertStringContainsString( 'mailto:membership@clubhouse.example', $html );
+		$this->assertSame( 1, substr_count( $html, 'ch-person__email' ) ); // only the one with an email
+		$this->assertNoHexColour( $html );
+		$this->assertStringNotContainsString( 'style=', $html );
+	}
 }
