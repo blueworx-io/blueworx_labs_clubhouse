@@ -66,6 +66,17 @@ final class SectionsTest extends TestCase {
 		$this->assertStringNotContainsString( 'style=', $html );
 	}
 
+	public function test_hero_without_media_when_no_image_or_caption(): void {
+		$html = Blueworx_Clubhouse_Sections::hero( array(
+			'eyebrow' => 'Contact', 'title_lead' => 'We will point you to ', 'title_highlight' => 'the right person.',
+			'lede' => 'Start here.', 'cta_primary' => 'Email us', 'cta_primary_href' => '#',
+			'cta_secondary' => 'Call us', 'cta_secondary_href' => '#',
+			'image' => '', 'image_alt' => '', 'image_caption' => '',
+		) );
+		$this->assertStringContainsString( 'class="ch-hero"', $html );
+		$this->assertStringNotContainsString( 'ch-hero__media', $html );
+	}
+
 	public function test_stat_strip_renders_each_stat(): void {
 		$html = Blueworx_Clubhouse_Sections::stat_strip( array(
 			array( 'value' => '900+', 'label' => 'Members' ),

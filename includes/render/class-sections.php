@@ -65,7 +65,10 @@ final class Blueworx_Clubhouse_Sections {
 		$caption = '' !== $data['image_caption']
 			? '<div class="ch-hero__pill"><i class="ch-hero__pill-dot"></i>' . self::e( $data['image_caption'] ) . '</div>'
 			: '';
-		$media = '<div class="ch-hero__media">' . self::media( $data['image'], $data['image_alt'], '' ) . $caption . '</div>';
+		$has_media = '' !== $data['image'] || '' !== $data['image_alt'] || '' !== $data['image_caption'];
+		$media     = $has_media
+			? '<div class="ch-hero__media">' . self::media( $data['image'], $data['image_alt'], '' ) . $caption . '</div>'
+			: '';
 		return '<section class="ch-hero"><div class="ch-wrap">'
 			. '<span class="ch-eyebrow">' . self::e( $data['eyebrow'] ) . '</span>'
 			. '<h1 class="ch-hero__title">' . self::e( $data['title_lead'] )
