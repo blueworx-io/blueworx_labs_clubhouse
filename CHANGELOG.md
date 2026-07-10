@@ -5,6 +5,12 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.0] - 2026-07-10
+
+### Added
+
+- **About**, **Membership** and **Contact** pages under the Court Side look: new skin-agnostic section renderers — benefit grid, people/committee grid, history timeline, included/excluded list split, how-to-join steps, a native-`<details>` FAQ (works with no JS), and a presentational contact form with an info card. Shared header/footer extracted into `shell_header`/`shell_footer` helpers; the hero renders its media block only when an image or caption is present. Preview routes `?page=about|membership|contact`.
+
 ## [0.5.0] - 2026-07-10
 
 ### Added
