@@ -100,6 +100,14 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				array( 'label' => 'Member Login', 'href' => '#' ),
 			) );
 		}
+		if ( $visibility->is_section_visible( 'home', 'ticker' ) ) {
+			$out .= Blueworx_Clubhouse_Sections::ticker( array(
+				'1st XV promoted to Div 3 South',
+				'Open Day — Sat 26 Jul, 10:00–14:00',
+				'Clubhouse refurbishment complete',
+				'Summer Football Camp · 4–8 Aug',
+			) );
+		}
 		if ( $visibility->is_section_visible( 'home', 'stats' ) ) {
 			$out .= Blueworx_Clubhouse_Sections::stat_strip( array(
 				array( 'value' => '900+', 'label' => 'Members' ),

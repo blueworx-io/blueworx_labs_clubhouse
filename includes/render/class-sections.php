@@ -101,6 +101,19 @@ final class Blueworx_Clubhouse_Sections {
 		return '<section class="ch-tiles-sec"><div class="ch-wrap"><div class="ch-tiles">' . $items . '</div></div></section>';
 	}
 
+	/** @param array<int,string> $items */
+	public static function ticker( array $items ): string {
+		$build = static function ( bool $hidden ) use ( $items ): string {
+			$out = '<div class="ch-ticker__track"' . ( $hidden ? ' aria-hidden="true"' : '' ) . '>';
+			foreach ( $items as $item ) {
+				$out .= '<span class="ch-ticker__item"><i class="ch-ticker__dot"></i>' . self::e( $item ) . '</span>';
+			}
+			return $out . '</div>';
+		};
+		return '<section class="ch-ticker"><div class="ch-ticker__label">Club news</div>'
+			. '<div class="ch-ticker__viewport">' . $build( false ) . $build( true ) . '</div></section>';
+	}
+
 	/** @param array{club_name:string,tagline:string} $data */
 	public static function footer( array $data ): string {
 		return '<footer class="ch-footer"><div class="ch-wrap">'

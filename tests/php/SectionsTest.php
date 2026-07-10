@@ -91,6 +91,15 @@ final class SectionsTest extends TestCase {
 		$this->assertStringNotContainsString( 'style=', $html );
 	}
 
+	public function test_ticker_repeats_items_for_marquee(): void {
+		$html = Blueworx_Clubhouse_Sections::ticker( array( 'News one', 'News two' ) );
+		$this->assertStringContainsString( 'class="ch-ticker"', $html );
+		$this->assertStringContainsString( 'News one', $html );
+		// The track is duplicated so the CSS marquee loops seamlessly.
+		$this->assertSame( 2, substr_count( $html, 'ch-ticker__track' ) );
+		$this->assertStringNotContainsString( 'style=', $html );
+	}
+
 	public function test_no_colour_literals_leak_into_markup(): void {
 		$html = Blueworx_Clubhouse_Sections::hero( array(
 			'eyebrow' => 'e', 'title_lead' => 't ', 'title_highlight' => 'h',
