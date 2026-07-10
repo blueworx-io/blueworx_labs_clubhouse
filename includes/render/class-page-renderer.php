@@ -248,4 +248,88 @@ final class Blueworx_Clubhouse_Page_Renderer {
 		}
 		return $out;
 	}
+
+	public static function about(
+		Blueworx_Clubhouse_Branding $branding,
+		Blueworx_Clubhouse_Visibility $visibility
+	): string {
+		$club = $branding->get_club_name();
+		$out  = self::shell_header( $club, '?page=about' );
+
+		if ( $visibility->is_section_visible( 'about', 'hero' ) ) {
+			$out .= Blueworx_Clubhouse_Sections::hero( array(
+				'eyebrow'            => 'About the club',
+				'title_lead'         => 'Fifty-two years of ',
+				'title_highlight'    => 'community sport.',
+				'lede'               => 'From one rugby pitch in 1974 to nine sports and twenty-four teams — ClubHouse has always been about more than the game.',
+				'cta_primary'        => 'Join the club',
+				'cta_primary_href'   => '?page=membership',
+				'cta_secondary'      => 'Meet the committee',
+				'cta_secondary_href' => '?page=contact',
+				'image'              => '',
+				'image_alt'          => 'ClubHouse members on the terrace',
+				'image_caption'      => '',
+			) );
+		}
+		if ( $visibility->is_section_visible( 'about', 'history' ) ) {
+			$out .= Blueworx_Clubhouse_Sections::timeline( array(
+				'eyebrow'    => 'Our story',
+				'heading'    => 'From one pitch to nine sports',
+				'milestones' => array(
+					array( 'year' => '1974', 'title' => 'One pitch, one team', 'desc' => 'A handful of rugby players lease a field by the river.' ),
+					array( 'year' => '1982', 'title' => 'Cricket joins', 'desc' => 'Summer cricket takes over the square; the first pavilion goes up.' ),
+					array( 'year' => '1991', 'title' => 'Juniors take root', 'desc' => 'Minis and colts sections launch across rugby and cricket.' ),
+					array( 'year' => '2003', 'title' => 'Courts & clubhouse', 'desc' => 'Four tennis courts and the current clubhouse open.' ),
+					array( 'year' => '2015', 'title' => 'Nine sports', 'desc' => 'Hockey, netball and squash complete the multi-sport club.' ),
+					array( 'year' => '2024', 'title' => 'A modern home', 'desc' => 'A full clubhouse refurbishment for the next generation.' ),
+				),
+			) );
+		}
+		if ( $visibility->is_section_visible( 'about', 'values' ) ) {
+			$out .= Blueworx_Clubhouse_Sections::benefit_grid( array(
+				'eyebrow' => 'What we stand for',
+				'heading' => 'Our values',
+				'cards'   => array(
+					array( 'title' => 'Everyone plays', 'description' => 'Beginners and county players train side by side, every age welcome.' ),
+					array( 'title' => 'Volunteer-run', 'description' => 'Coaches, committee and bar staff give their time so the club thrives.' ),
+					array( 'title' => 'Community first', 'description' => 'The clubhouse is a place to belong, on and off the pitch.' ),
+					array( 'title' => 'Play for life', 'description' => 'Pathways from minis to vets — a home for the whole journey.' ),
+				),
+			) );
+		}
+		if ( $visibility->is_section_visible( 'about', 'committee' ) ) {
+			$out .= Blueworx_Clubhouse_Sections::people_grid( array(
+				'eyebrow' => 'Who runs the club',
+				'heading' => 'The committee',
+				'people'  => array(
+					array( 'name' => 'Priya Nair', 'role' => 'Chair', 'email' => '' ),
+					array( 'name' => 'Tom Ellison', 'role' => 'Treasurer', 'email' => '' ),
+					array( 'name' => 'Grace Okafor', 'role' => 'Secretary', 'email' => '' ),
+					array( 'name' => 'Daniel Reed', 'role' => 'Membership', 'email' => '' ),
+					array( 'name' => 'Aisha Khan', 'role' => 'Safeguarding', 'email' => '' ),
+					array( 'name' => 'Mark Bailey', 'role' => 'Grounds', 'email' => '' ),
+				),
+			) );
+		}
+		if ( $visibility->is_section_visible( 'about', 'facilities' ) ) {
+			$out .= Blueworx_Clubhouse_Sections::image_band( array(
+				'eyebrow'   => 'The facilities',
+				'heading'   => 'Five pitches, four courts, one clubhouse',
+				'image'     => '', 'image_alt' => 'ClubHouse grounds from the air',
+				'cta_label' => 'Book a visit', 'cta_href' => '?page=contact',
+			) );
+		}
+		if ( $visibility->is_section_visible( 'about', 'cta' ) ) {
+			$out .= Blueworx_Clubhouse_Sections::band( array(
+				'variant'   => 'ink',
+				'eyebrow'   => 'Get involved',
+				'heading'   => 'Want to be part of it?',
+				'lede'      => 'Play, volunteer, or just come for the atmosphere.',
+				'cta_label' => 'Join the club →',
+				'cta_href'  => '?page=membership',
+			) );
+		}
+		$out .= self::shell_footer( $club );
+		return $out;
+	}
 }

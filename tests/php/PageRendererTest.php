@@ -52,4 +52,16 @@ final class PageRendererTest extends TestCase {
 		$this->assertStringNotContainsString( 'class="ch-stats"', $body );
 		$this->assertStringContainsString( 'class="ch-hero"', $body ); // others still present
 	}
+
+	public function test_about_composes_its_sections(): void {
+		$vis  = new Blueworx_Clubhouse_Visibility( new Blueworx_Clubhouse_Fake_Storage() );
+		$body = Blueworx_Clubhouse_Page_Renderer::about( $this->branding(), $vis );
+		$this->assertStringContainsString( 'class="ch-nav"', $body );
+		$this->assertStringContainsString( 'class="ch-timeline"', $body );
+		$this->assertStringContainsString( 'class="ch-benefits"', $body );
+		$this->assertStringContainsString( 'class="ch-people"', $body );
+		$this->assertStringContainsString( 'class="ch-band-img"', $body );
+		$this->assertStringContainsString( 'class="ch-footer"', $body );
+		$this->assertStringContainsString( 'ch-nav__link--active', $body );
+	}
 }
