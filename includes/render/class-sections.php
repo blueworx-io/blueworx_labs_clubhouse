@@ -193,6 +193,58 @@ final class Blueworx_Clubhouse_Sections {
 		return '<section class="ch-wrap"><div class="ch-tiers">' . $cards . '</div></section>';
 	}
 
+	/**
+	 * @param array{eyebrow:string,heading:string,
+	 *   fixtures:array<int,array{month:string,day:string,competition:string,time:string,matchup:string}>,
+	 *   results:array<int,array{date:string,home:string,away:string,score:string,outcome:string}>,
+	 *   events:array<int,array{tag:string,date:string,title:string,detail:string}>} $data
+	 */
+	public static function activity_tabs( array $data ): string {
+		$fx = '';
+		foreach ( $data['fixtures'] as $f ) {
+			$fx .= '<div class="ch-fx"><div class="ch-fx__date"><b>' . self::e( $f['day'] ) . '</b><span>' . self::e( $f['month'] ) . '</span></div>'
+				. '<div class="ch-fx__body"><span class="ch-fx__comp">' . self::e( $f['competition'] ) . '</span>'
+				. '<span class="ch-fx__match">' . self::e( $f['matchup'] ) . '</span></div>'
+				. '<span class="ch-fx__time">' . self::e( $f['time'] ) . '</span></div>';
+		}
+		$rs = '';
+		foreach ( $data['results'] as $r ) {
+			$o    = strtolower( $r['outcome'] );
+			$mod  = in_array( $o, array( 'w', 'l', 'd' ), true ) ? $o : 'd';
+			$rs  .= '<div class="ch-res"><span class="ch-res__date">' . self::e( $r['date'] ) . '</span>'
+				. '<span class="ch-res__teams">' . self::e( $r['home'] ) . ' v ' . self::e( $r['away'] ) . '</span>'
+				. '<span class="ch-res__score">' . self::e( $r['score'] ) . '</span>'
+				. '<span class="ch-badge ch-badge--' . $mod . '">' . self::e( $r['outcome'] ) . '</span></div>';
+		}
+		$ev = '';
+		foreach ( $data['events'] as $e ) {
+			$ev .= '<div class="ch-evt"><div class="ch-evt__meta"><span class="ch-evt__tag">' . self::e( $e['tag'] ) . '</span>'
+				. '<span class="ch-evt__date">' . self::e( $e['date'] ) . '</span></div>'
+				. '<h3 class="ch-evt__title">' . self::e( $e['title'] ) . '</h3>'
+				. '<p class="ch-evt__detail">' . self::e( $e['detail'] ) . '</p></div>';
+		}
+		$tabs = '';
+		foreach ( array( 'fixtures' => 'Fixtures', 'results' => 'Results', 'events' => 'Events' ) as $key => $label ) {
+			$on    = 'fixtures' === $key ? ' ch-tabs__btn--on' : '';
+			$tabs .= '<button type="button" class="ch-tabs__btn' . $on . '" data-ch-tabbtn="' . $key . '">' . self::e( $label ) . '</button>';
+		}
+		return '<section class="ch-sec ch-sec--alt"><div class="ch-wrap">'
+			. '<span class="ch-eyebrow">' . self::e( $data['eyebrow'] ) . '</span>'
+			. '<h2 class="ch-sec__title">' . self::e( $data['heading'] ) . '</h2>'
+			. '<div class="ch-tabs" data-ch-tabs>'
+			. '<div class="ch-tabs__bar">' . $tabs . '</div>'
+			. '<div data-ch-tab="fixtures"><div class="ch-fx-list">' . $fx . '</div></div>'
+			. '<div class="ch-tabs__panel--off" data-ch-tab="results"><div class="ch-res-list">' . $rs . '</div></div>'
+			. '<div class="ch-tabs__panel--off" data-ch-tab="events"><div class="ch-evt-grid">' . $ev . '</div></div>'
+			. '</div></div>'
+			. '<script>(function(){var r=document.querySelector("[data-ch-tabs]");if(!r)return;'
+			. 'r.querySelectorAll("[data-ch-tabbtn]").forEach(function(b){b.addEventListener("click",function(){'
+			. 'var k=b.getAttribute("data-ch-tabbtn");'
+			. 'r.querySelectorAll("[data-ch-tabbtn]").forEach(function(x){x.classList.toggle("ch-tabs__btn--on",x===b)});'
+			. 'r.querySelectorAll("[data-ch-tab]").forEach(function(p){p.classList.toggle("ch-tabs__panel--off",p.getAttribute("data-ch-tab")!==k)});'
+			. '})})})();</script></section>';
+	}
+
 	/** @param array{club_name:string,tagline:string} $data */
 	public static function footer( array $data ): string {
 		return '<footer class="ch-footer"><div class="ch-wrap">'

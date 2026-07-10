@@ -159,6 +159,27 @@ final class Blueworx_Clubhouse_Page_Renderer {
 					'recommended' => false, 'cta_label' => 'Join', 'cta_href' => '?page=membership' ),
 			) );
 		}
+		if ( $visibility->is_section_visible( 'home', 'activity' ) ) {
+			$out .= Blueworx_Clubhouse_Sections::activity_tabs( array(
+				'eyebrow'  => 'Club activity',
+				'heading'  => "What\u{2019}s happening",
+				'fixtures' => array(
+					array( 'month' => 'JUL', 'day' => '12', 'competition' => 'Rugby · 1st XV', 'time' => '14:00', 'matchup' => 'ClubHouse vs Riverside RFC' ),
+					array( 'month' => 'JUL', 'day' => '13', 'competition' => 'Netball · Div 2', 'time' => '11:00', 'matchup' => 'ClubHouse vs Castlebridge' ),
+					array( 'month' => 'JUL', 'day' => '19', 'competition' => 'Hockey · Ladies 1s', 'time' => '15:30', 'matchup' => 'ClubHouse vs Elmwood' ),
+				),
+				'results'  => array(
+					array( 'date' => 'JUL 5', 'home' => 'ClubHouse 1st XI', 'away' => 'Hartfield CC', 'score' => '+34', 'outcome' => 'W' ),
+					array( 'date' => 'JUN 28', 'home' => 'ClubHouse 2nd XV', 'away' => 'Dunmore', 'score' => '18–24', 'outcome' => 'L' ),
+					array( 'date' => 'JUL 2', 'home' => 'J. Patel', 'away' => 'R. Osei', 'score' => '2–0', 'outcome' => 'W' ),
+				),
+				'events'   => array(
+					array( 'tag' => 'Open day', 'date' => 'Sat 26 Jul', 'title' => 'Club Open Day', 'detail' => '10:00–14:00 · Clubhouse & grounds' ),
+					array( 'tag' => 'Junior football', 'date' => '4–8 Aug', 'title' => 'Summer Football Camp', 'detail' => 'Ages 5–12 · book via Events' ),
+					array( 'tag' => 'Social', 'date' => 'Fri 12 Sep', 'title' => 'Annual Awards Night', 'detail' => '19:00 · Clubhouse function room' ),
+				),
+			) );
+		}
 		if ( $visibility->is_section_visible( 'home', 'footer' ) ) {
 			$out .= Blueworx_Clubhouse_Sections::footer( array(
 				'club_name' => $club,

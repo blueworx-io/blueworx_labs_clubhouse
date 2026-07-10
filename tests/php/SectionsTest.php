@@ -172,4 +172,21 @@ final class SectionsTest extends TestCase {
 		$this->assertStringContainsString( 'Any section', $html );
 		$this->assertDoesNotMatchRegularExpression( '/#[0-9a-fA-F]{3,6}\b/', $html );
 	}
+
+	public function test_activity_tabs_render_all_three_panels(): void {
+		$html = Blueworx_Clubhouse_Sections::activity_tabs( array(
+			'eyebrow'  => 'Club activity',
+			'heading'  => "What\u{2019}s happening",
+			'fixtures' => array( array( 'month' => 'JUL', 'day' => '12', 'competition' => 'Rugby · 1st XV', 'time' => '14:00', 'matchup' => 'ClubHouse vs Riverside' ) ),
+			'results'  => array( array( 'date' => 'JUL 5', 'home' => 'ClubHouse 1st XI', 'away' => 'Hartfield', 'score' => '+34', 'outcome' => 'W' ) ),
+			'events'   => array( array( 'tag' => 'Open day', 'date' => 'Sat 26 Jul', 'title' => 'Club Open Day', 'detail' => '10:00–14:00' ) ),
+		) );
+		$this->assertStringContainsString( 'class="ch-tabs"', $html );
+		$this->assertSame( 3, substr_count( $html, 'ch-tabs__panel' ) );
+		$this->assertStringContainsString( 'data-ch-tab="fixtures"', $html );
+		$this->assertStringContainsString( 'ClubHouse vs Riverside', $html );
+		$this->assertStringContainsString( 'ch-badge--w', $html );
+		$this->assertDoesNotMatchRegularExpression( '/#[0-9a-fA-F]{3,6}\b/', $html );
+		$this->assertStringNotContainsString( 'style=', $html );
+	}
 }
