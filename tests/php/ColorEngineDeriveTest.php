@@ -9,6 +9,8 @@ final class ColorEngineDeriveTest extends TestCase {
 	private const LIGHT_INK = '#1c1b18';
 	private const DARK_BG   = '#17181a';
 	private const DARK_INK  = '#f4f2ec';
+	private const MID_BG  = '#808080'; // mid grey — luminance ~0.22, the AA danger band
+	private const MID_INK = '#ffffff';
 
 	/** @return array<string,string> */
 	private function derive( string $accent, bool $dark = false ): array {
@@ -66,12 +68,34 @@ final class ColorEngineDeriveTest extends TestCase {
 		);
 	}
 
-	/** Same guarantee must hold on a DARK look (re-skin safety). */
-	public function test_accent_deep_clears_AA_on_dark_shell(): void {
-		$t = $this->derive( '#1f7a4d', true );
+	/**
+	 * accent-deep must clear AA as text on a DARK shell for the full hue range
+	 * (re-skin safety).
+	 *
+	 * @dataProvider hues
+	 */
+	public function test_accent_deep_clears_AA_on_dark_shell( string $accent ): void {
+		$t = $this->derive( $accent, true );
 		$this->assertGreaterThanOrEqual(
 			4.5,
-			Blueworx_Clubhouse_Color_Engine::contrast_ratio( $t['--color-accent-deep'], self::DARK_BG )
+			Blueworx_Clubhouse_Color_Engine::contrast_ratio( $t['--color-accent-deep'], self::DARK_BG ),
+			"accent-deep for {$accent} fails AA on the dark shell"
+		);
+	}
+
+	/**
+	 * The hardest case: a MID-TONE shell (luminance in the band where a pure
+	 * white text pole is NOT trivially safe) must still yield an AA-legible
+	 * accent-deep for every hue — the regression guard for the pole-selection fix.
+	 *
+	 * @dataProvider hues
+	 */
+	public function test_accent_deep_clears_AA_on_mid_tone_shell( string $accent ): void {
+		$t = Blueworx_Clubhouse_Color_Engine::derive( $accent, self::MID_BG, self::MID_INK );
+		$this->assertGreaterThanOrEqual(
+			4.5,
+			Blueworx_Clubhouse_Color_Engine::contrast_ratio( $t['--color-accent-deep'], self::MID_BG ),
+			"accent-deep for {$accent} fails AA on the mid-tone shell"
 		);
 	}
 

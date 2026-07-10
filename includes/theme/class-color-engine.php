@@ -79,17 +79,22 @@ class Blueworx_Clubhouse_Color_Engine {
 			? self::normalize_hex( $shell_ink )
 			: '#ffffff';
 
-		// Accent-as-text on the shell: blend toward the opposite pole until AA.
-		$shell_is_light = self::relative_luminance( $shell_bg ) >= 0.5;
-		$pole           = $shell_is_light ? '#141410' : '#ffffff';
-		$deep           = $accent;
-		for ( $w = 1.0; $w >= 0.0; $w -= 0.05 ) {
-			$candidate = self::mix( $accent, $pole, $w );
+		// Accent-as-text on the shell: blend toward whichever pole (black or
+		// white) contrasts MORE with the shell. For any shell luminance at least
+		// one pole clears AA, so the loop always ends on a legible value. Integer
+		// stepping guarantees the pure pole (i = 0) is actually evaluated, and we
+		// break on the first pass to keep the deep colour as close to the brand
+		// accent as legibility allows.
+		$pole = self::contrast_ratio( '#000000', $shell_bg ) >= self::contrast_ratio( '#ffffff', $shell_bg )
+			? '#000000'
+			: '#ffffff';
+		$deep = $pole;
+		for ( $i = 20; $i >= 0; $i-- ) {
+			$candidate = self::mix( $accent, $pole, $i / 20 );
 			if ( self::contrast_ratio( $candidate, $shell_bg ) >= 4.5 ) {
 				$deep = $candidate;
 				break;
 			}
-			$deep = $candidate; // last (w=0 pole) is guaranteed to pass.
 		}
 
 		return array(
