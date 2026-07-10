@@ -246,8 +246,9 @@ final class SectionsTest extends TestCase {
 			'eyebrow' => 'e', 'title_lead' => 't ', 'title_highlight' => 'h',
 			'lede' => 'l', 'cta_primary' => 'a', 'cta_secondary' => 'b',
 		) );
-		// Skin-agnostic: sections must not hard-code colours or styles.
-		$this->assertStringNotContainsString( '#', $html );
+		// Skin-agnostic: sections must not hard-code colours or inline styles.
+		// (href="#" is fine — we forbid hex colours and style attributes.)
+		$this->assertDoesNotMatchRegularExpression( '/#[0-9a-fA-F]{3,6}\b/', $html );
 		$this->assertStringNotContainsString( 'style=', $html );
 	}
 }
