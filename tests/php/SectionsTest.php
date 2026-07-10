@@ -375,4 +375,25 @@ final class SectionsTest extends TestCase {
 		$this->assertNoHexColour( $html );
 		$this->assertStringNotContainsString( 'style=', $html );
 	}
+
+	public function test_contact_form_renders_fields_select_and_info(): void {
+		$html = Blueworx_Clubhouse_Sections::contact_form( array(
+			'eyebrow' => 'Get in touch', 'heading' => 'Send us a message',
+			'name_label' => 'Full name', 'email_label' => 'Email',
+			'enquiry_label' => 'Enquiry type', 'enquiry_options' => array( 'General', 'Membership' ),
+			'message_label' => 'Message', 'submit_label' => 'Send message',
+			'info' => array(
+				'heading' => 'Find us', 'address' => array( '12 Riverside Lane', 'Marlow' ),
+				'email' => 'hello@clubhouse.example', 'phone' => '01628 000 000',
+				'socials' => array( 'Facebook', 'Instagram' ),
+			),
+		) );
+		$this->assertStringContainsString( 'class="ch-contact"', $html );
+		$this->assertStringContainsString( 'onsubmit="return false"', $html );
+		$this->assertSame( 2, substr_count( $html, '<option' ) );
+		$this->assertStringContainsString( 'mailto:hello@clubhouse.example', $html );
+		$this->assertSame( 2, substr_count( $html, 'ch-contact__social' ) );
+		$this->assertNoHexColour( $html );
+		$this->assertStringNotContainsString( 'style=', $html );
+	}
 }

@@ -436,4 +436,45 @@ final class Blueworx_Clubhouse_Sections {
 			. '<h2 class="ch-sec__title">' . self::e( $data['heading'] ) . '</h2>'
 			. '<div class="ch-faq">' . $items . '</div></div></section>';
 	}
+
+	/**
+	 * @param array{eyebrow:string,heading:string,name_label:string,email_label:string,enquiry_label:string,
+	 *   enquiry_options:array<int,string>,message_label:string,submit_label:string,
+	 *   info:array{heading:string,address:array<int,string>,email:string,phone:string,socials:array<int,string>}} $data
+	 */
+	public static function contact_form( array $data ): string {
+		$opts = '';
+		foreach ( $data['enquiry_options'] as $o ) {
+			$opts .= '<option>' . self::e( $o ) . '</option>';
+		}
+		$addr = '';
+		foreach ( $data['info']['address'] as $line ) {
+			$addr .= '<span class="ch-contact__line">' . self::e( $line ) . '</span>';
+		}
+		$socials = '';
+		foreach ( $data['info']['socials'] as $name ) {
+			$socials .= '<a class="ch-contact__social" href="#" aria-label="' . self::e( $name ) . '">'
+				. '<span aria-hidden="true">' . self::e( mb_substr( $name, 0, 1 ) ) . '</span></a>';
+		}
+		$form = '<form class="ch-contact__form" onsubmit="return false">'
+			. '<label class="ch-field"><span class="ch-field__label">' . self::e( $data['name_label'] ) . '</span>'
+			. '<input class="ch-field__input" type="text" name="name"></label>'
+			. '<label class="ch-field"><span class="ch-field__label">' . self::e( $data['email_label'] ) . '</span>'
+			. '<input class="ch-field__input" type="email" name="email"></label>'
+			. '<label class="ch-field"><span class="ch-field__label">' . self::e( $data['enquiry_label'] ) . '</span>'
+			. '<select class="ch-field__input" name="enquiry">' . $opts . '</select></label>'
+			. '<label class="ch-field"><span class="ch-field__label">' . self::e( $data['message_label'] ) . '</span>'
+			. '<textarea class="ch-field__input" name="message" rows="5"></textarea></label>'
+			. '<button class="ch-btn ch-btn--accent" type="submit">' . self::e( $data['submit_label'] ) . '</button></form>';
+		$info = '<aside class="ch-contact__info"><h3 class="ch-contact__h">' . self::e( $data['info']['heading'] ) . '</h3>'
+			. self::media( '', 'Map of ClubHouse', 'ch-contact__map' )
+			. '<div class="ch-contact__lines">' . $addr . '</div>'
+			. '<a class="ch-contact__link" href="mailto:' . self::e( $data['info']['email'] ) . '">' . self::e( $data['info']['email'] ) . '</a>'
+			. '<a class="ch-contact__link" href="tel:' . self::e( $data['info']['phone'] ) . '">' . self::e( $data['info']['phone'] ) . '</a>'
+			. '<div class="ch-contact__connect">' . $socials . '</div></aside>';
+		return '<section class="ch-sec"><div class="ch-wrap">'
+			. '<span class="ch-eyebrow">' . self::e( $data['eyebrow'] ) . '</span>'
+			. '<h2 class="ch-sec__title">' . self::e( $data['heading'] ) . '</h2>'
+			. '<div class="ch-contact">' . $form . $info . '</div></div></section>';
+	}
 }

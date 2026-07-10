@@ -231,3 +231,20 @@ a{color:inherit;text-decoration:none}
 .ch-faq__mark::after{transform:rotate(90deg);transition:transform .2s ease}
 .ch-faq__item[open] .ch-faq__mark::after{transform:rotate(0)}
 .ch-faq__a{padding:0 0 22px;color:var(--color-ink-soft);max-width:64ch}
+
+.ch-contact{display:grid;grid-template-columns:1.4fr 1fr;gap:32px;align-items:start}
+.ch-contact__form{display:grid;gap:16px}
+.ch-field{display:grid;gap:6px}
+.ch-field__label{font-size:13px;font-weight:600;color:var(--color-ink-soft)}
+.ch-field__input{font-family:var(--font-body);font-size:15px;color:var(--color-ink);background:var(--color-paper);border:1px solid var(--color-line);border-radius:var(--radius-md);padding:13px 16px}
+.ch-field__input:focus{outline:2px solid var(--color-accent-deep);outline-offset:1px}
+.ch-contact__info{background:var(--color-ink);color:var(--color-bg);border-radius:var(--radius-lg);padding:28px}
+.ch-contact__h{font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--color-accent);margin-bottom:16px}
+.ch-contact__map{aspect-ratio:4/3;border-radius:var(--radius-md);margin-bottom:18px}
+.ch-contact__lines{display:flex;flex-direction:column;gap:2px;margin-bottom:14px}
+.ch-contact__link{display:block;color:var(--color-accent);font-size:15px;margin-bottom:6px}
+.ch-contact__link:hover{color:var(--color-bg)}
+.ch-contact__connect{display:flex;gap:8px;margin-top:14px}
+.ch-contact__social{width:36px;height:36px;border-radius:50%;border:1px solid color-mix(in oklab,var(--color-bg) 30%,transparent);display:grid;place-items:center;font-weight:700}
+.ch-contact__social:hover{background:var(--color-accent);color:var(--color-accent-ink);border-color:var(--color-accent)}
+@media(max-width:760px){.ch-contact{grid-template-columns:1fr}}
