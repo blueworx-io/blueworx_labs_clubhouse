@@ -34,8 +34,7 @@ final class Blueworx_Clubhouse_Preview_Storage implements Blueworx_Clubhouse_Sto
 }
 
 /** @return array<int,array{name:string,c:string,ink:string,deep:string,wash:string}> */
-function blueworx_clubhouse_preview_palettes(): array {
-	$look    = new Blueworx_Clubhouse_Court_Side();
+function blueworx_clubhouse_preview_palettes( Blueworx_Clubhouse_Base_Look $look ): array {
 	$tokens  = $look->tokens();
 	$accents = array(
 		'Volt Lime'     => '#c6f24e',
@@ -83,12 +82,18 @@ function blueworx_clubhouse_preview_document(): string {
 	$storage  = new Blueworx_Clubhouse_Preview_Storage();
 	$registry = new Blueworx_Clubhouse_Base_Look_Registry( $storage );
 	$registry->register( new Blueworx_Clubhouse_Court_Side() );
+	$registry->register( new Blueworx_Clubhouse_Members_House() );
+	$look_slug = isset( $_GET['look'] ) && is_string( $_GET['look'] ) ? preg_replace( '/[^a-z-]/', '', $_GET['look'] ) : 'court-side';
+	if ( ! $registry->has( (string) $look_slug ) ) {
+		$look_slug = 'court-side';
+	}
+	$registry->set_active( (string) $look_slug );
 	$branding   = new Blueworx_Clubhouse_Branding( $storage );
 	$visibility = new Blueworx_Clubhouse_Visibility( $storage );
 
 	$page      = isset( $_GET['page'] ) && is_string( $_GET['page'] ) ? preg_replace( '/[^a-z]/', '', $_GET['page'] ) : 'home';
 	$body      = blueworx_clubhouse_preview_body( (string) $page, $branding, $visibility );
-	$palettes  = blueworx_clubhouse_preview_palettes();
+	$palettes  = blueworx_clubhouse_preview_palettes( $registry->active() );
 	$switcher   = '<div class="ch-switcher" data-ch-palettes=\''
 		. htmlspecialchars( json_encode( $palettes ), ENT_QUOTES, 'UTF-8' ) . '\'></div>'
 		. '<script>(function(){'
@@ -104,11 +109,16 @@ function blueworx_clubhouse_preview_document(): string {
 		. '})();</script>';
 	$style     = '<style>.ch-switcher{position:fixed;right:16px;bottom:16px;z-index:90;background:#fff;border:1px solid #e9e4d8;border-radius:16px;padding:8px;display:flex;flex-wrap:wrap;max-width:150px}</style>';
 
+	$other      = 'court-side' === $look_slug ? 'members-house' : 'court-side';
+	$other_name = 'court-side' === $look_slug ? "Members' House" : 'Court Side';
+	$look_toggle = '<a class="ch-look-toggle" href="?look=' . rawurlencode( $other ) . '&page=' . rawurlencode( (string) $page ) . '">Look: ' . htmlspecialchars( $other_name, ENT_QUOTES, 'UTF-8' ) . ' &rarr;</a>';
+	$style      .= '<style>.ch-look-toggle{position:fixed;left:16px;bottom:16px;z-index:90;background:#201c15;color:#fff;font:600 13px/1 system-ui,sans-serif;padding:12px 16px;border-radius:8px;text-decoration:none}</style>';
+
 	// Served with docroot = plugin root, so the look stylesheet resolves from '/'.
 	return Blueworx_Clubhouse_Page_Renderer::document(
 		$registry->active(),
 		$branding,
-		$body . $switcher . $style,
+		$body . $switcher . $look_toggle . $style,
 		'/'
 	);
 }

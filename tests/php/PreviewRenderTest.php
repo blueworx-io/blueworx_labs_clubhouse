@@ -30,4 +30,25 @@ final class PreviewRenderTest extends TestCase {
 		$other = blueworx_clubhouse_preview_body( 'about', $b, $vis );
 		$this->assertStringContainsString( 'class="ch-nav"', $other );
 	}
+
+	public function test_look_param_switches_to_members_house(): void {
+		require_once dirname( __DIR__, 2 ) . '/preview/index.php';
+		$_GET['look'] = 'members-house';
+		$html = blueworx_clubhouse_preview_document();
+		unset( $_GET['look'] );
+
+		$this->assertStringContainsString( 'members-house.css', $html );
+		$this->assertStringContainsString( 'family=Fraunces', $html );
+		$this->assertStringContainsString( 'family=Mulish', $html );
+		// Parchment shell token made it into the emitted :root.
+		$this->assertStringContainsString( '#f2ece0', $html );
+	}
+
+	public function test_default_look_is_still_court_side(): void {
+		require_once dirname( __DIR__, 2 ) . '/preview/index.php';
+		unset( $_GET['look'] );
+		$html = blueworx_clubhouse_preview_document();
+		$this->assertStringContainsString( 'court-side.css', $html );
+		$this->assertStringNotContainsString( 'members-house.css', $html );
+	}
 }
