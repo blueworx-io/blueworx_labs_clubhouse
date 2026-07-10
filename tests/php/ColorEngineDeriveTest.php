@@ -2,6 +2,7 @@
 // tests/php/ColorEngineDeriveTest.php
 
 use PHPUnit\Framework\TestCase;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 final class ColorEngineDeriveTest extends TestCase {
 
@@ -54,11 +55,26 @@ final class ColorEngineDeriveTest extends TestCase {
 	}
 
 	/**
+	 * Ink placed ON the accent fill must clear AA for the saturated brand hues
+	 * clubs actually use. (Mid-luminance desaturated accents can't reach AA with
+	 * any text colour — those are rejected at accent-selection time in the admin
+	 * UI, not here.)
+	 */
+	#[DataProvider('hues')]
+	public function test_accent_ink_clears_AA_across_saturated_hues( string $accent ): void {
+		$t = $this->derive( $accent );
+		$this->assertGreaterThanOrEqual(
+			4.5,
+			Blueworx_Clubhouse_Color_Engine::contrast_ratio( $t['--color-accent-ink'], $accent ),
+			"accent-ink for {$accent} fails AA on the accent fill"
+		);
+	}
+
+	/**
 	 * accent-deep must be legible AS TEXT on the shell for the full hue range —
 	 * this is the core multi-client guarantee.
-	 *
-	 * @dataProvider hues
 	 */
+	#[DataProvider('hues')]
 	public function test_accent_deep_clears_AA_on_light_shell( string $accent ): void {
 		$t = $this->derive( $accent );
 		$this->assertGreaterThanOrEqual(
@@ -71,9 +87,8 @@ final class ColorEngineDeriveTest extends TestCase {
 	/**
 	 * accent-deep must clear AA as text on a DARK shell for the full hue range
 	 * (re-skin safety).
-	 *
-	 * @dataProvider hues
 	 */
+	#[DataProvider('hues')]
 	public function test_accent_deep_clears_AA_on_dark_shell( string $accent ): void {
 		$t = $this->derive( $accent, true );
 		$this->assertGreaterThanOrEqual(
@@ -87,9 +102,8 @@ final class ColorEngineDeriveTest extends TestCase {
 	 * The hardest case: a MID-TONE shell (luminance in the band where a pure
 	 * white text pole is NOT trivially safe) must still yield an AA-legible
 	 * accent-deep for every hue — the regression guard for the pole-selection fix.
-	 *
-	 * @dataProvider hues
 	 */
+	#[DataProvider('hues')]
 	public function test_accent_deep_clears_AA_on_mid_tone_shell( string $accent ): void {
 		$t = Blueworx_Clubhouse_Color_Engine::derive( $accent, self::MID_BG, self::MID_INK );
 		$this->assertGreaterThanOrEqual(

@@ -14,7 +14,11 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class Blueworx_Clubhouse_Color_Engine {
 
-	/** Normalise '#rgb' / 'rgb' / '#rrggbb' / 'rrggbb' to lowercase '#rrggbb'. */
+	/**
+	 * Normalise '#rgb' / 'rgb' / '#rrggbb' / 'rrggbb' to lowercase '#rrggbb'.
+	 *
+	 * Invalid input (bad length or non-hex chars) falls back to '#000000'.
+	 */
 	protected static function normalize_hex( string $hex ): string {
 		$hex = strtolower( ltrim( trim( $hex ), '#' ) );
 		if ( strlen( $hex ) === 3 ) {
@@ -74,7 +78,13 @@ class Blueworx_Clubhouse_Color_Engine {
 	public static function derive( string $accent, string $shell_bg, string $shell_ink ): array {
 		$accent = self::normalize_hex( $accent );
 
-		// Ink on the accent: better-contrasting of the look ink vs white.
+		// Ink ON the accent fill: the better-contrasting of the look ink vs
+		// white. This is the mathematical best case — black and white are the
+		// contrast extremes, so if neither clears AA against the accent, no text
+		// colour can (a desaturated mid-luminance accent, e.g. #767676, tops out
+		// ~4.2). Such accents are rejected at accent-selection time in the admin
+		// UI; for the saturated brand colours clubs use, this pick clears AA
+		// (asserted by test_accent_ink_clears_AA_across_saturated_hues).
 		$ink = self::contrast_ratio( $shell_ink, $accent ) >= self::contrast_ratio( '#ffffff', $accent )
 			? self::normalize_hex( $shell_ink )
 			: '#ffffff';
