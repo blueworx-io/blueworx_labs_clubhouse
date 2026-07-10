@@ -282,4 +282,19 @@ final class SectionsTest extends TestCase {
 		$this->assertStringContainsString( 'Become a sponsor', $html );
 		$this->assertStringNotContainsString( 'style=', $html );
 	}
+
+	public function test_benefit_grid_renders_each_card(): void {
+		$html = Blueworx_Clubhouse_Sections::benefit_grid( array(
+			'eyebrow' => 'Why join', 'heading' => 'More than a membership',
+			'cards'   => array(
+				array( 'title' => 'All training included', 'description' => 'Every session, all season.' ),
+				array( 'title' => 'Discounted events', 'description' => 'Members save on tournaments.' ),
+			),
+		) );
+		$this->assertStringContainsString( 'class="ch-benefits"', $html );
+		$this->assertSame( 2, substr_count( $html, 'ch-benefit"' ) );
+		$this->assertStringContainsString( 'All training included', $html );
+		$this->assertNoHexColour( $html );
+		$this->assertStringNotContainsString( 'style=', $html );
+	}
 }

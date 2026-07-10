@@ -334,4 +334,18 @@ final class Blueworx_Clubhouse_Sections {
 			. '<div class="ch-footer__legal">' . $legal . '</div>'
 			. '</div></footer>';
 	}
+
+	/** @param array{eyebrow:string,heading:string,cards:array<int,array{title:string,description:string}>} $data */
+	public static function benefit_grid( array $data ): string {
+		$cards = '';
+		foreach ( $data['cards'] as $c ) {
+			$cards .= '<article class="ch-benefit"><span class="ch-benefit__dot" aria-hidden="true"></span>'
+				. '<h3 class="ch-benefit__title">' . self::e( $c['title'] ) . '</h3>'
+				. '<p class="ch-benefit__desc">' . self::e( $c['description'] ) . '</p></article>';
+		}
+		return '<section class="ch-sec"><div class="ch-wrap">'
+			. '<span class="ch-eyebrow">' . self::e( $data['eyebrow'] ) . '</span>'
+			. '<h2 class="ch-sec__title">' . self::e( $data['heading'] ) . '</h2>'
+			. '<div class="ch-benefits">' . $cards . '</div></div></section>';
+	}
 }
