@@ -58,7 +58,7 @@ function blueworx_clubhouse_preview_palettes(): array {
 	return $out;
 }
 
-/** Route a page slug to its renderer. Only Home is built this plan; others fall back. */
+/** Route a page slug to its renderer. Unrouted slugs fall back to Home. */
 function blueworx_clubhouse_preview_body(
 	string $page,
 	Blueworx_Clubhouse_Branding $branding,
@@ -69,6 +69,8 @@ function blueworx_clubhouse_preview_body(
 			return Blueworx_Clubhouse_Page_Renderer::about( $branding, $visibility );
 		case 'membership':
 			return Blueworx_Clubhouse_Page_Renderer::membership( $branding, $visibility );
+		case 'contact':
+			return Blueworx_Clubhouse_Page_Renderer::contact( $branding, $visibility );
 		case 'home':
 		default:
 			return Blueworx_Clubhouse_Page_Renderer::home( $branding, $visibility );

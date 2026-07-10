@@ -434,4 +434,61 @@ final class Blueworx_Clubhouse_Page_Renderer {
 		$out .= self::shell_footer( $club );
 		return $out;
 	}
+
+	public static function contact(
+		Blueworx_Clubhouse_Branding $branding,
+		Blueworx_Clubhouse_Visibility $visibility
+	): string {
+		$club = $branding->get_club_name();
+		$out  = self::shell_header( $club, '?page=contact' );
+
+		if ( $visibility->is_section_visible( 'contact', 'hero' ) ) {
+			$out .= Blueworx_Clubhouse_Sections::hero( array(
+				'eyebrow'            => 'Contact',
+				'title_lead'         => 'We will point you to ',
+				'title_highlight'    => 'the right person.',
+				'lede'               => 'Questions about joining, playing, or hiring the clubhouse? Start here.',
+				'cta_primary'        => 'Email the club',
+				'cta_primary_href'   => 'mailto:hello@clubhouse.example',
+				'cta_secondary'      => 'Call 01628 000 000',
+				'cta_secondary_href' => 'tel:01628000000',
+				'image'              => '', 'image_alt' => '', 'image_caption' => '',
+			) );
+		}
+		if ( $visibility->is_section_visible( 'contact', 'form' ) ) {
+			$out .= Blueworx_Clubhouse_Sections::contact_form( array(
+				'eyebrow'         => 'Get in touch',
+				'heading'         => 'Send us a message',
+				'name_label'      => 'Full name',
+				'email_label'     => 'Email',
+				'enquiry_label'   => 'Enquiry type',
+				'enquiry_options' => array( 'General enquiry', 'Membership', 'Coaching', 'Venue hire', 'Volunteering', 'Something else' ),
+				'message_label'   => 'Message',
+				'submit_label'    => 'Send message',
+				'info'            => array(
+					'heading' => 'Find us',
+					'address' => array( '12 Riverside Lane', 'Marlow, SL7 1AA' ),
+					'email'   => 'hello@clubhouse.example',
+					'phone'   => '01628 000 000',
+					'socials' => array( 'Facebook', 'Instagram', 'Community', 'Share' ),
+				),
+			) );
+		}
+		if ( $visibility->is_section_visible( 'contact', 'directory' ) ) {
+			$out .= Blueworx_Clubhouse_Sections::people_grid( array(
+				'eyebrow' => 'Who to contact',
+				'heading' => 'The directory',
+				'people'  => array(
+					array( 'name' => 'Daniel Reed', 'role' => 'Membership', 'email' => 'membership@clubhouse.example' ),
+					array( 'name' => 'Aisha Khan', 'role' => 'Juniors & safeguarding', 'email' => 'safeguarding@clubhouse.example' ),
+					array( 'name' => 'Grace Okafor', 'role' => 'Venue hire', 'email' => 'hire@clubhouse.example' ),
+					array( 'name' => 'Tom Ellison', 'role' => 'Sponsorship', 'email' => 'sponsors@clubhouse.example' ),
+					array( 'name' => 'Priya Nair', 'role' => 'Press', 'email' => 'press@clubhouse.example' ),
+					array( 'name' => 'The club office', 'role' => 'General', 'email' => 'hello@clubhouse.example' ),
+				),
+			) );
+		}
+		$out .= self::shell_footer( $club );
+		return $out;
+	}
 }

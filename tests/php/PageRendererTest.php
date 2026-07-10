@@ -75,4 +75,13 @@ final class PageRendererTest extends TestCase {
 		$this->assertStringContainsString( 'class="ch-faq"', $body );
 		$this->assertSame( 4, substr_count( $body, 'ch-tier"' ) + substr_count( $body, 'ch-tier ch-tier--pop"' ) );
 	}
+
+	public function test_contact_composes_form_and_directory_without_cta_band(): void {
+		$vis  = new Blueworx_Clubhouse_Visibility( new Blueworx_Clubhouse_Fake_Storage() );
+		$body = Blueworx_Clubhouse_Page_Renderer::contact( $this->branding(), $vis );
+		$this->assertStringContainsString( 'class="ch-contact"', $body );
+		$this->assertStringContainsString( 'class="ch-people"', $body );
+		$this->assertStringContainsString( 'class="ch-footer"', $body );
+		$this->assertStringNotContainsString( 'ch-band--ink', $body ); // no CTA band on Contact
+	}
 }
