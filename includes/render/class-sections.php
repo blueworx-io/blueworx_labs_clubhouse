@@ -56,8 +56,16 @@ final class Blueworx_Clubhouse_Sections {
 			. '</div></div></header>';
 	}
 
-	/** @param array{eyebrow:string,title_lead:string,title_highlight:string,lede:string,cta_primary:string,cta_secondary:string} $data */
+	/**
+	 * @param array{eyebrow:string,title_lead:string,title_highlight:string,lede:string,
+	 *   cta_primary:string,cta_primary_href:string,cta_secondary:string,
+	 *   cta_secondary_href:string,image:string,image_alt:string,image_caption:string} $data
+	 */
 	public static function hero( array $data ): string {
+		$caption = '' !== $data['image_caption']
+			? '<div class="ch-hero__pill"><i class="ch-hero__pill-dot"></i>' . self::e( $data['image_caption'] ) . '</div>'
+			: '';
+		$media = '<div class="ch-hero__media">' . self::media( $data['image'], $data['image_alt'], '' ) . $caption . '</div>';
 		return '<section class="ch-hero"><div class="ch-wrap">'
 			. '<span class="ch-eyebrow">' . self::e( $data['eyebrow'] ) . '</span>'
 			. '<h1 class="ch-hero__title">' . self::e( $data['title_lead'] )
@@ -65,9 +73,11 @@ final class Blueworx_Clubhouse_Sections {
 			. '<div class="ch-hero__sub">'
 			. '<p class="ch-hero__lede">' . self::e( $data['lede'] ) . '</p>'
 			. '<div class="ch-hero__cta">'
-			. '<a class="ch-btn ch-btn--accent" href="#">' . self::e( $data['cta_primary'] ) . '</a>'
-			. '<a class="ch-btn ch-btn--ghost" href="#">' . self::e( $data['cta_secondary'] ) . '</a>'
-			. '</div></div></div></section>';
+			. '<a class="ch-btn ch-btn--accent" href="' . self::e( $data['cta_primary_href'] ) . '">' . self::e( $data['cta_primary'] ) . '</a>'
+			. '<a class="ch-btn ch-btn--ghost" href="' . self::e( $data['cta_secondary_href'] ) . '">' . self::e( $data['cta_secondary'] ) . '</a>'
+			. '</div></div>'
+			. $media
+			. '</div></section>';
 	}
 
 	/** @param array<int,array{value:string,label:string}> $stats */

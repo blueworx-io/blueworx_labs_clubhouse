@@ -38,19 +38,26 @@ final class SectionsTest extends TestCase {
 		$this->assertStringNotContainsString( 'class="ch-banner"', $html );
 	}
 
-	public function test_hero_highlights_the_accent_span(): void {
+	public function test_hero_highlights_accent_and_renders_media(): void {
 		$html = Blueworx_Clubhouse_Sections::hero( array(
-			'eyebrow'         => 'Est. 1974',
-			'title_lead'      => 'Every sport. Every age. ',
-			'title_highlight' => 'One community.',
-			'lede'            => 'Nine sports, twenty-four teams.',
-			'cta_primary'     => 'Explore membership',
-			'cta_secondary'   => 'Take a tour',
+			'eyebrow'            => 'Est. 1974',
+			'title_lead'         => 'Every sport. Every age. ',
+			'title_highlight'    => 'One community.',
+			'lede'               => 'Nine sports, twenty-four teams.',
+			'cta_primary'        => 'Explore membership',
+			'cta_primary_href'   => '?page=membership',
+			'cta_secondary'      => 'Take a tour',
+			'cta_secondary_href' => '#',
+			'image'              => '',
+			'image_alt'          => '',
+			'image_caption'      => 'Saturday, floodlights on',
 		) );
 		$this->assertStringContainsString( 'class="ch-hero"', $html );
 		$this->assertStringContainsString( 'class="ch-hero__hl"', $html );
-		$this->assertStringContainsString( 'One community.', $html );
-		$this->assertStringContainsString( 'Explore membership', $html );
+		$this->assertStringContainsString( 'class="ch-hero__media"', $html );
+		$this->assertStringContainsString( 'Saturday, floodlights on', $html );
+		$this->assertDoesNotMatchRegularExpression( '/#[0-9a-fA-F]{3,6}\b/', $html );
+		$this->assertStringNotContainsString( 'style=', $html );
 	}
 
 	public function test_stat_strip_renders_each_stat(): void {
@@ -76,6 +83,8 @@ final class SectionsTest extends TestCase {
 		$html = Blueworx_Clubhouse_Sections::hero( array(
 			'eyebrow' => 'e', 'title_lead' => 't ', 'title_highlight' => 'h',
 			'lede' => 'l', 'cta_primary' => 'a', 'cta_secondary' => 'b',
+			'cta_primary_href' => '', 'cta_secondary_href' => '',
+			'image' => '', 'image_alt' => '', 'image_caption' => '',
 		) );
 		// Skin-agnostic: sections must not hard-code colours or inline styles.
 		// (href="#" is fine — we forbid hex colours and style attributes.)

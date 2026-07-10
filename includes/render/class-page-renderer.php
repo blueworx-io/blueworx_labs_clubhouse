@@ -77,12 +77,17 @@ final class Blueworx_Clubhouse_Page_Renderer {
 		}
 		if ( $visibility->is_section_visible( 'home', 'hero' ) ) {
 			$out .= Blueworx_Clubhouse_Sections::hero( array(
-				'eyebrow'         => 'Est. 1974 · Marlow, UK',
-				'title_lead'      => 'Every sport. Every age. ',
-				'title_highlight' => 'One community.',
-				'lede'            => "Nine sports, twenty-four teams, and a clubhouse that's always open.",
-				'cta_primary'     => 'Explore membership',
-				'cta_secondary'   => 'Take a tour',
+				'eyebrow'            => 'Est. 1974 · Marlow, UK',
+				'title_lead'         => 'Every sport. Every age. ',
+				'title_highlight'    => 'One community.',
+				'lede'               => "Nine sports, twenty-four teams, and a clubhouse that's always open. Come for the game — stay for the people.",
+				'cta_primary'        => 'Explore membership',
+				'cta_primary_href'   => '?page=membership',
+				'cta_secondary'      => 'Take a tour →',
+				'cta_secondary_href' => '?page=about',
+				'image'              => '',
+				'image_alt'          => 'ClubHouse floodlit pitch on a Saturday',
+				'image_caption'      => 'Saturday, floodlights on',
 			) );
 		}
 		if ( $visibility->is_section_visible( 'home', 'stats' ) ) {
