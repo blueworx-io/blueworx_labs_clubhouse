@@ -329,4 +329,19 @@ final class SectionsTest extends TestCase {
 		$this->assertNoHexColour( $html );
 		$this->assertStringNotContainsString( 'style=', $html );
 	}
+
+	public function test_list_split_renders_three_columns(): void {
+		$html = Blueworx_Clubhouse_Sections::list_split( array(
+			'eyebrow' => 'The detail', 'heading' => 'What is included',
+			'included'     => array( 'All training', 'Match fees' ),
+			'not_included' => array( 'Individual coaching' ),
+			'policies'     => array( array( 'title' => 'Free trial', 'desc' => 'Your first session is on us.' ) ),
+		) );
+		$this->assertStringContainsString( 'class="ch-splits"', $html );
+		$this->assertSame( 2, substr_count( $html, 'ch-split__yes' ) );
+		$this->assertSame( 1, substr_count( $html, 'ch-split__no' ) );
+		$this->assertStringContainsString( 'Free trial', $html );
+		$this->assertNoHexColour( $html );
+		$this->assertStringNotContainsString( 'style=', $html );
+	}
 }

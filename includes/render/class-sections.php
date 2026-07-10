@@ -379,4 +379,32 @@ final class Blueworx_Clubhouse_Sections {
 			. '<h2 class="ch-sec__title">' . self::e( $data['heading'] ) . '</h2>'
 			. '<div class="ch-timeline">' . $rows . '</div></div></section>';
 	}
+
+	/**
+	 * @param array{eyebrow:string,heading:string,included:array<int,string>,not_included:array<int,string>,
+	 *   policies:array<int,array{title:string,desc:string}>} $data
+	 */
+	public static function list_split( array $data ): string {
+		$yes = '';
+		foreach ( $data['included'] as $item ) {
+			$yes .= '<li class="ch-split__yes">' . self::e( $item ) . '</li>';
+		}
+		$no = '';
+		foreach ( $data['not_included'] as $item ) {
+			$no .= '<li class="ch-split__no">' . self::e( $item ) . '</li>';
+		}
+		$pol = '';
+		foreach ( $data['policies'] as $p ) {
+			$pol .= '<div class="ch-policy"><h4 class="ch-policy__title">' . self::e( $p['title'] ) . '</h4>'
+				. '<p class="ch-policy__desc">' . self::e( $p['desc'] ) . '</p></div>';
+		}
+		return '<section class="ch-sec"><div class="ch-wrap">'
+			. '<span class="ch-eyebrow">' . self::e( $data['eyebrow'] ) . '</span>'
+			. '<h2 class="ch-sec__title">' . self::e( $data['heading'] ) . '</h2>'
+			. '<div class="ch-splits">'
+			. '<div class="ch-split"><h3 class="ch-split__h">Included</h3><ul class="ch-split__list">' . $yes . '</ul></div>'
+			. '<div class="ch-split"><h3 class="ch-split__h">Not included</h3><ul class="ch-split__list">' . $no . '</ul></div>'
+			. '<div class="ch-split"><h3 class="ch-split__h">Good to know</h3><div class="ch-policies">' . $pol . '</div></div>'
+			. '</div></div></section>';
+	}
 }
