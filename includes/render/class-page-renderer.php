@@ -130,6 +130,14 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				),
 			) );
 		}
+		if ( $visibility->is_section_visible( 'home', 'clubhouse' ) ) {
+			$out .= Blueworx_Clubhouse_Sections::image_band( array(
+				'eyebrow'   => 'The clubhouse',
+				'heading'   => 'A home ground for every team, and everyone who follows them',
+				'image'     => '', 'image_alt' => 'ClubHouse pavilion at dusk',
+				'cta_label' => 'Visit us', 'cta_href' => '?page=contact',
+			) );
+		}
 		if ( $visibility->is_section_visible( 'home', 'footer' ) ) {
 			$out .= Blueworx_Clubhouse_Sections::footer( array(
 				'club_name' => $club,

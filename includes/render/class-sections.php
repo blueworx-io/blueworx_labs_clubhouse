@@ -136,6 +136,21 @@ final class Blueworx_Clubhouse_Sections {
 			. '<div class="ch-cards">' . $cards . '</div></div></section>';
 	}
 
+	/**
+	 * @param array{eyebrow:string,heading:string,image:string,image_alt:string,
+	 *   cta_label:string,cta_href:string} $data
+	 */
+	public static function image_band( array $data ): string {
+		return '<section class="ch-band-img">'
+			. self::media( $data['image'], $data['image_alt'], 'ch-band-img__media' )
+			. '<div class="ch-band-img__scrim"></div>'
+			. '<div class="ch-wrap ch-band-img__in"><div>'
+			. '<span class="ch-eyebrow">' . self::e( $data['eyebrow'] ) . '</span>'
+			. '<h2 class="ch-band-img__title">' . self::e( $data['heading'] ) . '</h2></div>'
+			. '<a class="ch-btn ch-btn--accent" href="' . self::e( $data['cta_href'] ) . '">' . self::e( $data['cta_label'] ) . '</a>'
+			. '</div></section>';
+	}
+
 	/** @param array{club_name:string,tagline:string} $data */
 	public static function footer( array $data ): string {
 		return '<footer class="ch-footer"><div class="ch-wrap">'

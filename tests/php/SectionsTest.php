@@ -119,6 +119,20 @@ final class SectionsTest extends TestCase {
 		$this->assertStringNotContainsString( 'style=', $html );
 	}
 
+	public function test_image_band_renders_overlay_heading_and_cta(): void {
+		$html = Blueworx_Clubhouse_Sections::image_band( array(
+			'eyebrow'   => 'The clubhouse',
+			'heading'   => 'A home ground for every team',
+			'image'     => '', 'image_alt' => '',
+			'cta_label' => 'Visit us', 'cta_href' => '?page=contact',
+		) );
+		$this->assertStringContainsString( 'class="ch-band-img"', $html );
+		$this->assertStringContainsString( 'A home ground for every team', $html );
+		$this->assertStringContainsString( 'Visit us', $html );
+		$this->assertDoesNotMatchRegularExpression( '/#[0-9a-fA-F]{3,6}\b/', $html );
+		$this->assertStringNotContainsString( 'style=', $html );
+	}
+
 	public function test_no_colour_literals_leak_into_markup(): void {
 		$html = Blueworx_Clubhouse_Sections::hero( array(
 			'eyebrow' => 'e', 'title_lead' => 't ', 'title_highlight' => 'h',
