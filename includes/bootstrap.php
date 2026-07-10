@@ -25,3 +25,4 @@ require_once __DIR__ . '/theme/interface-base-look.php';
 require_once __DIR__ . '/theme/class-base-look-registry.php';
 require_once __DIR__ . '/theme/class-color-engine.php';
 require_once __DIR__ . '/theme/class-branding.php';
+require_once __DIR__ . '/theme/class-theme-css.php';
