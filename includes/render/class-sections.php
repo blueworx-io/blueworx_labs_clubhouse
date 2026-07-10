@@ -245,6 +245,25 @@ final class Blueworx_Clubhouse_Sections {
 			. '})})})();</script></section>';
 	}
 
+	/**
+	 * @param array{eyebrow:string,heading:string,
+	 *   cards:array<int,array{image:string,image_alt:string,tag:string,date:string,title:string}>} $data
+	 */
+	public static function news_cards( array $data ): string {
+		$cards = '';
+		foreach ( $data['cards'] as $c ) {
+			$cards .= '<a class="ch-news__card" href="#">'
+				. self::media( $c['image'], $c['image_alt'], 'ch-news__media' )
+				. '<div class="ch-news__meta"><span class="ch-news__tag">' . self::e( $c['tag'] ) . '</span>'
+				. '<span class="ch-news__date">' . self::e( $c['date'] ) . '</span></div>'
+				. '<h3 class="ch-news__title">' . self::e( $c['title'] ) . '</h3></a>';
+		}
+		return '<section class="ch-sec"><div class="ch-wrap">'
+			. '<span class="ch-eyebrow">' . self::e( $data['eyebrow'] ) . '</span>'
+			. '<h2 class="ch-sec__title">' . self::e( $data['heading'] ) . '</h2>'
+			. '<div class="ch-news">' . $cards . '</div></div></section>';
+	}
+
 	/** @param array{club_name:string,tagline:string} $data */
 	public static function footer( array $data ): string {
 		return '<footer class="ch-footer"><div class="ch-wrap">'

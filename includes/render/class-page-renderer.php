@@ -180,6 +180,17 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				),
 			) );
 		}
+		if ( $visibility->is_section_visible( 'home', 'news' ) ) {
+			$out .= Blueworx_Clubhouse_Sections::news_cards( array(
+				'eyebrow' => 'Latest news',
+				'heading' => 'From the clubhouse',
+				'cards'   => array(
+					array( 'image' => '', 'image_alt' => 'Clubhouse interior', 'tag' => 'Club news', 'date' => '2 Jul', 'title' => 'Clubhouse refurbishment complete' ),
+					array( 'image' => '', 'image_alt' => 'Junior footballers', 'tag' => 'Sections', 'date' => '28 Jun', 'title' => 'Junior Football signs 40 new players' ),
+					array( 'image' => '', 'image_alt' => 'Volunteers', 'tag' => 'Volunteering', 'date' => '24 Jun', 'title' => 'Volunteers needed for the Open Day' ),
+				),
+			) );
+		}
 		if ( $visibility->is_section_visible( 'home', 'footer' ) ) {
 			$out .= Blueworx_Clubhouse_Sections::footer( array(
 				'club_name' => $club,

@@ -189,4 +189,18 @@ final class SectionsTest extends TestCase {
 		$this->assertDoesNotMatchRegularExpression( '/#[0-9a-fA-F]{3,6}\b/', $html );
 		$this->assertStringNotContainsString( 'style=', $html );
 	}
+
+	public function test_news_cards_render_each_post(): void {
+		$html = Blueworx_Clubhouse_Sections::news_cards( array(
+			'eyebrow' => 'Latest news', 'heading' => 'From the clubhouse',
+			'cards'   => array(
+				array( 'image' => '', 'image_alt' => '', 'tag' => 'Club news', 'date' => '2 Jul', 'title' => 'Refurbishment complete' ),
+				array( 'image' => '', 'image_alt' => '', 'tag' => 'Sections', 'date' => '28 Jun', 'title' => '40 new players' ),
+			),
+		) );
+		$this->assertStringContainsString( 'class="ch-news"', $html );
+		$this->assertSame( 2, substr_count( $html, 'ch-news__card' ) );
+		$this->assertStringContainsString( 'From the clubhouse', $html );
+		$this->assertStringNotContainsString( 'style=', $html );
+	}
 }
