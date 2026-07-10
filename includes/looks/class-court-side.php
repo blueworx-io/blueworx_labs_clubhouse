@@ -1,5 +1,4 @@
 <?php
-// includes/looks/class-court-side.php
 declare(strict_types=1);
 
 if ( ! defined( 'ABSPATH' ) ) {
