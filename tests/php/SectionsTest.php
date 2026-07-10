@@ -100,6 +100,25 @@ final class SectionsTest extends TestCase {
 		$this->assertStringNotContainsString( 'style=', $html );
 	}
 
+	public function test_card_grid_renders_head_and_overlay_cards(): void {
+		$html = Blueworx_Clubhouse_Sections::card_grid( array(
+			'eyebrow'    => 'Our sports',
+			'heading'    => 'Pick your game.',
+			'link_label' => 'All sections →',
+			'link_href'  => '?page=sports',
+			'cards'      => array(
+				array( 'image' => '', 'image_alt' => '', 'tag' => 'Sat', 'title' => 'Rugby', 'subtitle' => 'Senior · colts · touch' ),
+				array( 'image' => '', 'image_alt' => '', 'tag' => 'Daily', 'title' => 'Tennis', 'subtitle' => 'Four courts · coaching' ),
+			),
+		) );
+		$this->assertStringContainsString( 'class="ch-cards"', $html );
+		$this->assertSame( 2, substr_count( $html, 'ch-card"' ) );
+		$this->assertStringContainsString( 'Pick your game.', $html );
+		$this->assertStringContainsString( 'Rugby', $html );
+		$this->assertDoesNotMatchRegularExpression( '/#[0-9a-fA-F]{3,6}\b/', $html );
+		$this->assertStringNotContainsString( 'style=', $html );
+	}
+
 	public function test_no_colour_literals_leak_into_markup(): void {
 		$html = Blueworx_Clubhouse_Sections::hero( array(
 			'eyebrow' => 'e', 'title_lead' => 't ', 'title_highlight' => 'h',

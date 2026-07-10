@@ -116,6 +116,20 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				array( 'value' => '1974', 'label' => 'Founded' ),
 			) );
 		}
+		if ( $visibility->is_section_visible( 'home', 'sports' ) ) {
+			$out .= Blueworx_Clubhouse_Sections::card_grid( array(
+				'eyebrow'    => 'Our sports',
+				'heading'    => 'Pick your game.',
+				'link_label' => 'All sections →',
+				'link_href'  => '?page=sports',
+				'cards'      => array(
+					array( 'image' => '', 'image_alt' => 'Rugby', 'tag' => 'Sat', 'title' => 'Rugby', 'subtitle' => 'Senior · colts · touch' ),
+					array( 'image' => '', 'image_alt' => 'Tennis', 'tag' => 'Daily', 'title' => 'Tennis', 'subtitle' => 'Four courts · coaching' ),
+					array( 'image' => '', 'image_alt' => 'Cricket', 'tag' => 'Summer', 'title' => 'Cricket', 'subtitle' => 'Youth → senior league' ),
+					array( 'image' => '', 'image_alt' => 'Football', 'tag' => 'Sun', 'title' => 'Football', 'subtitle' => 'Juniors · ages 5–16' ),
+				),
+			) );
+		}
 		if ( $visibility->is_section_visible( 'home', 'footer' ) ) {
 			$out .= Blueworx_Clubhouse_Sections::footer( array(
 				'club_name' => $club,

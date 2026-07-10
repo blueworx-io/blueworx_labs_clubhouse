@@ -114,6 +114,28 @@ final class Blueworx_Clubhouse_Sections {
 			. '<div class="ch-ticker__viewport">' . $build( false ) . $build( true ) . '</div></section>';
 	}
 
+	/**
+	 * @param array{eyebrow:string,heading:string,link_label:string,link_href:string,
+	 *   cards:array<int,array{image:string,image_alt:string,tag:string,title:string,subtitle:string}>} $data
+	 */
+	public static function card_grid( array $data ): string {
+		$cards = '';
+		foreach ( $data['cards'] as $c ) {
+			$cards .= '<article class="ch-card">'
+				. self::media( $c['image'], $c['image_alt'], 'ch-card__media' )
+				. '<div class="ch-card__scrim"></div>'
+				. '<span class="ch-card__tag">' . self::e( $c['tag'] ) . '</span>'
+				. '<div class="ch-card__body"><h3 class="ch-card__title">' . self::e( $c['title'] ) . '</h3>'
+				. '<p class="ch-card__sub">' . self::e( $c['subtitle'] ) . '</p></div></article>';
+		}
+		return '<section class="ch-sec"><div class="ch-wrap">'
+			. '<div class="ch-sec__head"><div>'
+			. '<span class="ch-eyebrow">' . self::e( $data['eyebrow'] ) . '</span>'
+			. '<h2 class="ch-sec__title">' . self::e( $data['heading'] ) . '</h2></div>'
+			. '<a class="ch-btn ch-btn--ghost" href="' . self::e( $data['link_href'] ) . '">' . self::e( $data['link_label'] ) . '</a></div>'
+			. '<div class="ch-cards">' . $cards . '</div></div></section>';
+	}
+
 	/** @param array{club_name:string,tagline:string} $data */
 	public static function footer( array $data ): string {
 		return '<footer class="ch-footer"><div class="ch-wrap">'
