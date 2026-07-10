@@ -108,15 +108,22 @@ legible. Solution: **one brand accent per club; everything else derived.**
 - The **neutral shell is fixed per Base Look** (Court Side = warm near-white + soft ink). Clubs
   never touch it. This is why nothing is "black-focused": the base is light and warm.
 - The club sets **one accent** (`--color-accent`). From it the engine derives:
-  - **`--color-accent-ink`** — text/glyphs placed *on* the accent. Chosen **automatically** as
-    dark or light by the accent's relative luminance, so any client colour keeps AA contrast.
-  - **`--color-accent-deep`** — a darkened accent for accent-*as-text* on the light shell
-    (eyebrows, links), guaranteeing legibility of pale accents (e.g. lime) on near-white.
+  - **`--color-accent-ink`** — text/glyphs placed *on* the accent fill. The **mathematically best
+    case**: the better-contrasting of dark-ink vs white (black/white are the contrast extremes, so
+    nothing beats them on a fixed fill). AA-guaranteed for saturated brand colours; a *desaturated
+    mid-luminance* accent (e.g. `#767676`) cannot reach AA with any text colour, so such accents
+    are **rejected at accent-selection time in the admin UI** (see §10 admin flow) rather than
+    silently shipped illegible. This boundary is tested (AA asserted across the saturated hues).
+  - **`--color-accent-deep`** — accent-*as-text* on the shell: blended toward whichever pole
+    (black/white) contrasts more with the shell until it clears AA. **Guaranteed** for the full
+    hue range on light, dark, and mid-tone shells (re-skin safety) — worst-case pole contrast
+    ≈4.58 ≥ 4.5.
   - **`--color-accent-wash`** — a faint tint for subtle highlight zones.
-- Derivation runs **once at save time** (admin) and is stored, so the frontend just inlines final
-  values in `:root` — no runtime colour math, cache-friendly.
-- **Guardrail:** the derivation must produce AA-contrast pairings for the full hue range. This is
-  a tested unit (given accent X → correct ink choice + deep/wash within contrast bounds).
+- Derivation is **pure**; the composed `:root` string is cached by the WP wrapper (later plan) and
+  inlined, so there is no per-request colour math — cache-friendly.
+- **Guardrail:** the derivation must produce AA-contrast pairings for the full hue range. Tested
+  units: `accent-deep` AA across light/dark/mid-tone shells × 7 hues; `accent-ink` AA across the
+  saturated hues; ink dark/light selection by luminance.
 
 The "second colour" every club effectively gets is the shell's warm ink — deliberate, not a
 limitation. A true second brand accent is a **future** enhancement, explicitly out of v1 scope.
@@ -214,7 +221,17 @@ Indicative decomposition (finalised by the planning step):
 4. **Concrete sections & pages** — the §5 inventory as registered sections/pages, semantic markup.
 5. **Collections** — the six CPTs + their admin.
 6. **Admin setup flow** — Base Look picker → accent/branding → content, bespoke UI (no ACF).
+   Includes **accent-contrast validation**: warn/reject an accent when neither black nor white
+   text clears AA on the fill (a desaturated mid-luminance colour), so `accent-ink` is never
+   silently illegible (see §4). Also validates the accent is a real hex (the engine falls back to
+   `#000000` on malformed input — the UI should catch it first).
 7. **Local preview harness** + Playwright wiring; then A & B packs as re-skins.
+
+> **Status — framework built (0.3.0).** Sequencing steps 1–2 are implemented on branch
+> `base-look-theming-framework` (plan `docs/superpowers/plans/2026-07-10-base-look-theming-framework.md`):
+> Base Look interface + registry, colour engine (`derive()` with AA-guaranteed `accent-deep` on
+> light/dark/mid shells and best-effort `accent-ink`), branding store, and `:root` composition —
+> 76 PHPUnit tests, no WP runtime. Steps 3–7 remain.
 
 ---
 
