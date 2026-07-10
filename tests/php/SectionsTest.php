@@ -359,4 +359,20 @@ final class SectionsTest extends TestCase {
 		$this->assertNoHexColour( $html );
 		$this->assertStringNotContainsString( 'style=', $html );
 	}
+
+	public function test_faq_renders_details_and_marks_open(): void {
+		$html = Blueworx_Clubhouse_Sections::faq( array(
+			'eyebrow' => 'Questions', 'heading' => 'Frequently asked',
+			'items'   => array(
+				array( 'question' => 'Do I have to commit?', 'answer' => 'No, join any time.', 'open' => true ),
+				array( 'question' => 'Can I try first?', 'answer' => 'Yes, free trial.', 'open' => false ),
+			),
+		) );
+		$this->assertStringContainsString( 'class="ch-faq"', $html );
+		$this->assertSame( 2, substr_count( $html, '<details class="ch-faq__item"' ) );
+		$this->assertSame( 1, substr_count( $html, '<details class="ch-faq__item" open>' ) );
+		$this->assertStringContainsString( 'Do I have to commit?', $html );
+		$this->assertNoHexColour( $html );
+		$this->assertStringNotContainsString( 'style=', $html );
+	}
 }

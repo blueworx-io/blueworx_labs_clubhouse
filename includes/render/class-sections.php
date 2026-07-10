@@ -421,4 +421,19 @@ final class Blueworx_Clubhouse_Sections {
 			. '<h2 class="ch-sec__title">' . self::e( $data['heading'] ) . '</h2>'
 			. '<div class="ch-steps">' . $steps . '</div></div></section>';
 	}
+
+	/** @param array{eyebrow:string,heading:string,items:array<int,array{question:string,answer:string,open:bool}>} $data */
+	public static function faq( array $data ): string {
+		$items = '';
+		foreach ( $data['items'] as $it ) {
+			$open   = ! empty( $it['open'] ) ? ' open' : '';
+			$items .= '<details class="ch-faq__item"' . $open . '>'
+				. '<summary class="ch-faq__q">' . self::e( $it['question'] ) . '<span class="ch-faq__mark" aria-hidden="true"></span></summary>'
+				. '<p class="ch-faq__a">' . self::e( $it['answer'] ) . '</p></details>';
+		}
+		return '<section class="ch-sec"><div class="ch-wrap ch-faq-wrap">'
+			. '<span class="ch-eyebrow">' . self::e( $data['eyebrow'] ) . '</span>'
+			. '<h2 class="ch-sec__title">' . self::e( $data['heading'] ) . '</h2>'
+			. '<div class="ch-faq">' . $items . '</div></div></section>';
+	}
 }
