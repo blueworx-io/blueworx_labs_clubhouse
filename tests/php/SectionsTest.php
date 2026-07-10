@@ -80,7 +80,7 @@ final class SectionsTest extends TestCase {
 			'legal'      => array(),
 		) );
 		$this->assertStringContainsString( 'A &amp; B &lt;script&gt;', $html );
-		$this->assertStringNotContainsString( '<script>A', $html );
+		$this->assertStringNotContainsString( '<script>', $html );
 	}
 
 	public function test_footer_renders_columns_socials_and_newsletter(): void {
