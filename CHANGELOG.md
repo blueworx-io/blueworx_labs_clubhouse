@@ -5,6 +5,18 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.10.0] - 2026-07-11
+
+### Floodlight Base Look
+
+A bold, dark, night-match re-skin covering every `ch-*` hook.
+
+#### New
+
+- **Floodlight — third Base Look.** A bold, dark, night-match re-skin (Bricolage Grotesque display, warm-ink canvas, crisp 16/12/8 radii, accent spent as glow) covering every `ch-*` hook. Adds `includes/looks/class-floodlight.php` and `assets/looks/floodlight.css`, registers the look in the DB-free preview, and cycles looks via `?look=`. Pure re-skin: no changes to section renderers or the theme engine. On the dark shell all accent text/marks route through the engine's AA-guaranteed `--color-accent-deep`; the engine's `accent-ink`-on-dark limitation is sidestepped by the glow idiom, not triggered.
+
+> Note: `0.9.0` is the Members' House Base Look, delivered on its own sibling branch/PR; Floodlight takes `0.10.0` so the two do not collide when both merge into `base-look-theming-design`.
+
 ## [0.8.0] - 2026-07-10
 
 ### Login page, hover motion, and design polish
