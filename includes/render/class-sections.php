@@ -633,4 +633,37 @@ final class Blueworx_Clubhouse_Sections {
 			. '<a class="ch-auth__alt-link" href="' . self::e( $data['join_href'] ) . '">' . self::e( $data['join_label'] ) . '</a></p>'
 			. '</div></div></section>';
 	}
+
+	/**
+	 * @param array{eyebrow:string,heading:string,
+	 *   months:array<int,array{label:string,rows:array<int,array{date:string,competition:string,
+	 *   matchup:string,detail:string,outcome:string}>}>} $data
+	 */
+	public static function calendar_months( array $data ): string {
+		$months = '';
+		foreach ( $data['months'] as $m ) {
+			$rows = '';
+			foreach ( $m['rows'] as $r ) {
+				if ( '' === $r['outcome'] ) {
+					$status = '<span class="ch-cal__soon">Upcoming</span>';
+				} else {
+					$o      = strtolower( $r['outcome'] );
+					$mod    = in_array( $o, array( 'w', 'l', 'd' ), true ) ? $o : 'd';
+					$status = '<span class="ch-badge ch-badge--' . $mod . '">' . self::e( $r['outcome'] ) . '</span>';
+				}
+				$rows .= '<div class="ch-cal__row" role="listitem">'
+					. '<span class="ch-cal__date">' . self::e( $r['date'] ) . '</span>'
+					. '<div class="ch-cal__body"><span class="ch-cal__comp">' . self::e( $r['competition'] ) . '</span>'
+					. '<span class="ch-cal__match">' . self::e( $r['matchup'] ) . '</span></div>'
+					. '<span class="ch-cal__detail">' . self::e( $r['detail'] ) . '</span>'
+					. $status . '</div>';
+			}
+			$months .= '<div class="ch-cal__month"><h3 class="ch-cal__mlabel">' . self::e( $m['label'] ) . '</h3>'
+				. '<div class="ch-cal__rows" role="list">' . $rows . '</div></div>';
+		}
+		return '<section class="ch-sec"><div class="ch-wrap">'
+			. '<span class="ch-eyebrow">' . self::e( $data['eyebrow'] ) . '</span>'
+			. '<h2 class="ch-sec__title">' . self::e( $data['heading'] ) . '</h2>'
+			. '<div class="ch-cal">' . $months . '</div></div></section>';
+	}
 }

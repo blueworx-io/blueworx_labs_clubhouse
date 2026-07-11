@@ -596,4 +596,41 @@ final class SectionsTest extends TestCase {
 		$this->assertNoHexColour( $html );
 		$this->assertStringNotContainsString( 'style=', $html );
 	}
+
+	public function test_calendar_months_groups_rows_and_badges_outcomes(): void {
+		$html = Blueworx_Clubhouse_Sections::calendar_months( array(
+			'eyebrow' => 'Season', 'heading' => 'Fixtures & results',
+			'months'  => array(
+				array( 'label' => 'July', 'rows' => array(
+					array( 'date' => 'Sat 12', 'competition' => 'Rugby · 1st XV', 'matchup' => 'ClubHouse vs Riverside', 'detail' => 'Home · 14:00', 'outcome' => '' ),
+					array( 'date' => 'Sat 5', 'competition' => 'Cricket · 1st XI', 'matchup' => 'ClubHouse vs Hartfield', 'detail' => 'Won by 34', 'outcome' => 'W' ),
+				) ),
+				array( 'label' => 'June', 'rows' => array(
+					array( 'date' => 'Sat 28', 'competition' => 'Rugby · 2nd XV', 'matchup' => 'ClubHouse vs Dunmore', 'detail' => 'Lost 18–24', 'outcome' => 'L' ),
+				) ),
+			),
+		) );
+		$this->assertStringContainsString( 'class="ch-cal"', $html );
+		$this->assertSame( 2, substr_count( $html, 'ch-cal__month' ) );
+		$this->assertStringContainsString( '>July<', $html );
+		$this->assertStringContainsString( '>June<', $html );
+		// Upcoming row → soon tag; result rows → W/L badges.
+		$this->assertSame( 1, substr_count( $html, 'ch-cal__soon' ) );
+		$this->assertStringContainsString( 'ch-badge--w', $html );
+		$this->assertStringContainsString( 'ch-badge--l', $html );
+		// One list per month; 3 rows total (2 + 1).
+		$this->assertListSemantics( $html, 2, 3 );
+		$this->assertNoHexColour( $html );
+		$this->assertStringNotContainsString( 'style=', $html );
+	}
+
+	public function test_calendar_unknown_outcome_falls_back_to_draw_badge(): void {
+		$html = Blueworx_Clubhouse_Sections::calendar_months( array(
+			'eyebrow' => 'x', 'heading' => 'y',
+			'months'  => array( array( 'label' => 'Aug', 'rows' => array(
+				array( 'date' => 'Sat 1', 'competition' => 'c', 'matchup' => 'm', 'detail' => 'd', 'outcome' => 'X' ),
+			) ) ),
+		) );
+		$this->assertStringContainsString( 'ch-badge--d', $html );
+	}
 }
