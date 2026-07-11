@@ -559,4 +559,41 @@ final class SectionsTest extends TestCase {
 		$this->assertNoHexColour( $html );
 		$this->assertStringNotContainsString( 'style=', $html );
 	}
+
+	public function test_event_grid_renders_upcoming_cards_with_optional_cta(): void {
+		$html = Blueworx_Clubhouse_Sections::event_grid( array(
+			'eyebrow' => 'Upcoming', 'heading' => 'What is on',
+			'cards'   => array(
+				array( 'tag' => 'Open day', 'date' => 'Sat 26 Jul', 'title' => 'Club Open Day',
+					'detail' => '10:00–14:00 · Clubhouse & grounds', 'cta_label' => 'Book a place', 'cta_href' => '#' ),
+				array( 'tag' => 'Social', 'date' => 'Fri 12 Sep', 'title' => 'Annual Awards Night',
+					'detail' => '19:00 · Function room', 'cta_label' => '', 'cta_href' => '' ),
+			),
+		) );
+		$this->assertStringContainsString( 'class="ch-events"', $html );
+		$this->assertSame( 2, substr_count( $html, 'ch-event"' ) );
+		$this->assertListSemantics( $html, 1, 2 );
+		$this->assertStringContainsString( 'Club Open Day', $html );
+		// Only the first card has a CTA.
+		$this->assertSame( 1, substr_count( $html, 'ch-event__cta' ) );
+		$this->assertNoHexColour( $html );
+		$this->assertStringNotContainsString( 'style=', $html );
+	}
+
+	public function test_event_archive_renders_past_rows(): void {
+		$html = Blueworx_Clubhouse_Sections::event_archive( array(
+			'heading' => 'Past events',
+			'rows'    => array(
+				array( 'date' => 'Jun 2026', 'tag' => 'Social', 'title' => 'Summer BBQ' ),
+				array( 'date' => 'May 2026', 'tag' => 'Tournament', 'title' => 'Spring Sevens' ),
+				array( 'date' => 'Apr 2026', 'tag' => 'Club', 'title' => 'AGM' ),
+			),
+		) );
+		$this->assertStringContainsString( 'class="ch-archive"', $html );
+		$this->assertSame( 3, substr_count( $html, 'ch-archive__row' ) );
+		$this->assertListSemantics( $html, 1, 3 );
+		$this->assertStringContainsString( 'Spring Sevens', $html );
+		$this->assertNoHexColour( $html );
+		$this->assertStringNotContainsString( 'style=', $html );
+	}
 }

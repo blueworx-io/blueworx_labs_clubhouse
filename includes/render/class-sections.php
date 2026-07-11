@@ -350,6 +350,45 @@ final class Blueworx_Clubhouse_Sections {
 			. '<div class="ch-news" role="list">' . $cards . '</div></div></section>';
 	}
 
+	/**
+	 * @param array{eyebrow:string,heading:string,
+	 *   cards:array<int,array{tag:string,date:string,title:string,detail:string,cta_label:string,cta_href:string}>} $data
+	 */
+	public static function event_grid( array $data ): string {
+		$cards = '';
+		foreach ( $data['cards'] as $c ) {
+			$cta = '' !== $c['cta_label']
+				? '<a class="ch-btn ch-btn--ghost ch-event__cta" href="' . self::e( $c['cta_href'] ) . '">' . self::e( $c['cta_label'] ) . '</a>'
+				: '';
+			$cards .= '<article class="ch-event" role="listitem">'
+				. '<div class="ch-event__meta"><span class="ch-event__tag">' . self::e( $c['tag'] ) . '</span>'
+				. '<span class="ch-event__date">' . self::e( $c['date'] ) . '</span></div>'
+				. '<h3 class="ch-event__title">' . self::e( $c['title'] ) . '</h3>'
+				. '<p class="ch-event__detail">' . self::e( $c['detail'] ) . '</p>'
+				. $cta . '</article>';
+		}
+		return '<section class="ch-sec"><div class="ch-wrap">'
+			. '<span class="ch-eyebrow">' . self::e( $data['eyebrow'] ) . '</span>'
+			. '<h2 class="ch-sec__title">' . self::e( $data['heading'] ) . '</h2>'
+			. '<div class="ch-events" role="list">' . $cards . '</div></div></section>';
+	}
+
+	/**
+	 * @param array{heading:string,rows:array<int,array{date:string,tag:string,title:string}>} $data
+	 */
+	public static function event_archive( array $data ): string {
+		$rows = '';
+		foreach ( $data['rows'] as $r ) {
+			$rows .= '<div class="ch-archive__row" role="listitem">'
+				. '<span class="ch-archive__date">' . self::e( $r['date'] ) . '</span>'
+				. '<span class="ch-archive__tag">' . self::e( $r['tag'] ) . '</span>'
+				. '<span class="ch-archive__title">' . self::e( $r['title'] ) . '</span></div>';
+		}
+		return '<section class="ch-sec ch-sec--alt"><div class="ch-wrap">'
+			. '<h2 class="ch-sec__title ch-sec__title--sm">' . self::e( $data['heading'] ) . '</h2>'
+			. '<div class="ch-archive" role="list">' . $rows . '</div></div></section>';
+	}
+
 	/** @param array<int,array{label:string,lines:array<int,string>,link_label:string,link_href:string}> $cols */
 	public static function info_strip( array $cols ): string {
 		$out = '';
