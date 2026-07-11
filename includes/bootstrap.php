@@ -33,3 +33,4 @@ require_once __DIR__ . '/looks/class-court-side.php';
 // Render
 require_once __DIR__ . '/render/class-sections.php';
 require_once __DIR__ . '/render/class-page-renderer.php';
+require_once __DIR__ . '/render/class-page-map.php';

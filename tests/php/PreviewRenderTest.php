@@ -23,11 +23,11 @@ final class PreviewRenderTest extends TestCase {
 		$b   = new Blueworx_Clubhouse_Branding( new Blueworx_Clubhouse_Fake_Storage() );
 		$vis = new Blueworx_Clubhouse_Visibility( new Blueworx_Clubhouse_Fake_Storage() );
 
-		$home = blueworx_clubhouse_preview_body( 'home', $b, $vis );
+		$home = Blueworx_Clubhouse_Page_Map::render( '', $b, $vis );
 		$this->assertStringContainsString( 'class="ch-hero"', $home );
 
 		// Unknown page falls back to Home rather than erroring.
-		$other = blueworx_clubhouse_preview_body( 'about', $b, $vis );
+		$other = Blueworx_Clubhouse_Page_Map::render( 'about', $b, $vis );
 		$this->assertStringContainsString( 'class="ch-nav"', $other );
 	}
 
@@ -36,9 +36,9 @@ final class PreviewRenderTest extends TestCase {
 		$b   = new Blueworx_Clubhouse_Branding( new Blueworx_Clubhouse_Fake_Storage() );
 		$vis = new Blueworx_Clubhouse_Visibility( new Blueworx_Clubhouse_Fake_Storage() );
 
-		$this->assertStringContainsString( 'ch-scards', blueworx_clubhouse_preview_body( 'sports', $b, $vis ) );
-		$this->assertStringContainsString( 'ch-scards', blueworx_clubhouse_preview_body( 'teams', $b, $vis ) );
-		$this->assertStringContainsString( 'ch-events', blueworx_clubhouse_preview_body( 'events', $b, $vis ) );
-		$this->assertStringContainsString( 'ch-cal__month', blueworx_clubhouse_preview_body( 'calendar', $b, $vis ) );
+		$this->assertStringContainsString( 'ch-scards', Blueworx_Clubhouse_Page_Map::render( 'sports', $b, $vis ) );
+		$this->assertStringContainsString( 'ch-scards', Blueworx_Clubhouse_Page_Map::render( 'teams', $b, $vis ) );
+		$this->assertStringContainsString( 'ch-events', Blueworx_Clubhouse_Page_Map::render( 'events', $b, $vis ) );
+		$this->assertStringContainsString( 'ch-cal__month', Blueworx_Clubhouse_Page_Map::render( 'calendar', $b, $vis ) );
 	}
 }
