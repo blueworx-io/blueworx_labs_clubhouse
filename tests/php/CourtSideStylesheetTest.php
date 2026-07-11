@@ -24,4 +24,11 @@ final class CourtSideStylesheetTest extends TestCase {
 		// The accent must not be baked in as a hex — that would break re-theming.
 		$this->assertStringNotContainsString( '#c6f24e', $css );
 	}
+
+	public function test_styles_the_new_collection_sections(): void {
+		$css = $this->css();
+		foreach ( array( '.ch-hero-f', '.ch-filter', '.ch-scard', '.ch-events', '.ch-event', '.ch-archive', '.ch-cal__month' ) as $sel ) {
+			$this->assertStringContainsString( $sel, $css );
+		}
+	}
 }
