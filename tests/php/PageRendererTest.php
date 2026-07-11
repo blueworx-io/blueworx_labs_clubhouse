@@ -84,4 +84,33 @@ final class PageRendererTest extends TestCase {
 		$this->assertStringContainsString( 'class="ch-footer"', $body );
 		$this->assertStringNotContainsString( 'ch-band--ink', $body ); // no CTA band on Contact
 	}
+
+	public function test_sports_composes_filter_hero_and_stat_cards(): void {
+		$vis  = new Blueworx_Clubhouse_Visibility( new Blueworx_Clubhouse_Fake_Storage() );
+		$body = Blueworx_Clubhouse_Page_Renderer::sports( $this->branding(), $vis );
+		$this->assertStringContainsString( 'class="ch-nav"', $body );
+		$this->assertStringContainsString( 'class="ch-hero-f"', $body );
+		$this->assertStringContainsString( 'class="ch-scards"', $body );
+		$this->assertStringContainsString( 'class="ch-footer"', $body );
+		$this->assertStringContainsString( 'ch-band--ink', $body ); // shared CTA band
+		// Sports nav item is the active one.
+		$this->assertStringContainsString( 'ch-nav__link--active" href="?page=sports"', $body );
+	}
+
+	public function test_teams_composes_filter_hero_and_stat_cards(): void {
+		$vis  = new Blueworx_Clubhouse_Visibility( new Blueworx_Clubhouse_Fake_Storage() );
+		$body = Blueworx_Clubhouse_Page_Renderer::teams( $this->branding(), $vis );
+		$this->assertStringContainsString( 'class="ch-hero-f"', $body );
+		$this->assertStringContainsString( 'class="ch-scards"', $body );
+		$this->assertStringContainsString( 'ch-nav__link--active" href="?page=teams"', $body );
+	}
+
+	public function test_sports_respects_visibility(): void {
+		$storage = new Blueworx_Clubhouse_Fake_Storage();
+		$vis     = new Blueworx_Clubhouse_Visibility( $storage );
+		$vis->set_section_visible( 'sports', 'directory', false );
+		$body = Blueworx_Clubhouse_Page_Renderer::sports( $this->branding(), $vis );
+		$this->assertStringNotContainsString( 'class="ch-scards"', $body );
+		$this->assertStringContainsString( 'class="ch-hero-f"', $body ); // hero still present
+	}
 }

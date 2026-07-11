@@ -543,4 +543,130 @@ final class Blueworx_Clubhouse_Page_Renderer {
 		$out .= '</main>' . self::shell_footer( $club );
 		return $out;
 	}
+
+	public static function sports(
+		Blueworx_Clubhouse_Branding $branding,
+		Blueworx_Clubhouse_Visibility $visibility
+	): string {
+		$club = $branding->get_club_name();
+		$out  = self::shell_header( $club, '?page=sports' ) . '<main class="ch-main" id="ch-main" tabindex="-1">';
+
+		if ( $visibility->is_section_visible( 'sports', 'hero' ) ) {
+			$out .= Blueworx_Clubhouse_Sections::hero_filter( array(
+				'eyebrow'         => 'Our sports',
+				'title_lead'      => 'Nine sports, ',
+				'title_highlight' => 'one club.',
+				'lede'            => 'From first session to first team — find your section and get playing.',
+				'filter_label'    => 'Filter by sport',
+				'filters'         => array(
+					array( 'label' => 'All', 'href' => '?page=sports', 'active' => true ),
+					array( 'label' => 'Rugby', 'href' => '?page=sports', 'active' => false ),
+					array( 'label' => 'Cricket', 'href' => '?page=sports', 'active' => false ),
+					array( 'label' => 'Tennis', 'href' => '?page=sports', 'active' => false ),
+					array( 'label' => 'Football', 'href' => '?page=sports', 'active' => false ),
+					array( 'label' => 'Hockey', 'href' => '?page=sports', 'active' => false ),
+					array( 'label' => 'Netball', 'href' => '?page=sports', 'active' => false ),
+				),
+			) );
+		}
+		if ( $visibility->is_section_visible( 'sports', 'directory' ) ) {
+			$out .= Blueworx_Clubhouse_Sections::stat_card_grid( array(
+				'eyebrow'    => 'All sections',
+				'heading'    => 'Pick your sport.',
+				'link_label' => 'Join the club →',
+				'link_href'  => '?page=membership',
+				'cards'      => array(
+					array( 'image' => '', 'image_alt' => 'Rugby', 'chip' => 'Sat', 'title' => 'Rugby',
+						'description' => 'Senior, colts and touch rugby, from minis upward.',
+						'stats' => array( array( 'value' => '4', 'label' => 'Teams' ), array( 'value' => '120', 'label' => 'Players' ) ) ),
+					array( 'image' => '', 'image_alt' => 'Cricket', 'chip' => 'Summer', 'title' => 'Cricket',
+						'description' => 'Youth to senior league cricket on the square.',
+						'stats' => array( array( 'value' => '3', 'label' => 'Teams' ), array( 'value' => '80', 'label' => 'Players' ) ) ),
+					array( 'image' => '', 'image_alt' => 'Tennis', 'chip' => 'Daily', 'title' => 'Tennis',
+						'description' => 'Four courts with coaching for every age.',
+						'stats' => array( array( 'value' => '4', 'label' => 'Courts' ), array( 'value' => '90', 'label' => 'Members' ) ) ),
+					array( 'image' => '', 'image_alt' => 'Football', 'chip' => 'Sun', 'title' => 'Football',
+						'description' => 'Junior football for ages 5 to 16.',
+						'stats' => array( array( 'value' => '6', 'label' => 'Teams' ), array( 'value' => '140', 'label' => 'Players' ) ) ),
+					array( 'image' => '', 'image_alt' => 'Hockey', 'chip' => 'Sat', 'title' => 'Hockey',
+						'description' => 'Ladies and mixed hockey, league affiliated.',
+						'stats' => array( array( 'value' => '3', 'label' => 'Teams' ), array( 'value' => '60', 'label' => 'Players' ) ) ),
+					array( 'image' => '', 'image_alt' => 'Netball', 'chip' => 'Wed', 'title' => 'Netball',
+						'description' => 'Back-to-netball through to divisional squads.',
+						'stats' => array( array( 'value' => '2', 'label' => 'Teams' ), array( 'value' => '40', 'label' => 'Players' ) ) ),
+				),
+			) );
+		}
+		if ( $visibility->is_section_visible( 'sports', 'cta' ) ) {
+			$out .= Blueworx_Clubhouse_Sections::band( array(
+				'variant'   => 'ink',
+				'eyebrow'   => 'New to the club?',
+				'heading'   => 'Try any sport with a free session',
+				'lede'      => 'Not sure which section fits? Come down and try before you join.',
+				'cta_label' => 'Register interest →',
+				'cta_href'  => '?page=contact',
+			) );
+		}
+		$out .= '</main>' . self::shell_footer( $club );
+		return $out;
+	}
+
+	public static function teams(
+		Blueworx_Clubhouse_Branding $branding,
+		Blueworx_Clubhouse_Visibility $visibility
+	): string {
+		$club = $branding->get_club_name();
+		$out  = self::shell_header( $club, '?page=teams' ) . '<main class="ch-main" id="ch-main" tabindex="-1">';
+
+		if ( $visibility->is_section_visible( 'teams', 'hero' ) ) {
+			$out .= Blueworx_Clubhouse_Sections::hero_filter( array(
+				'eyebrow'         => 'Our teams',
+				'title_lead'      => 'Twenty-four teams, ',
+				'title_highlight' => 'every level.',
+				'lede'            => 'League sides, development squads and junior pathways across all nine sports.',
+				'filter_label'    => 'Filter teams by sport',
+				'filters'         => array(
+					array( 'label' => 'All', 'href' => '?page=teams', 'active' => true ),
+					array( 'label' => 'Rugby', 'href' => '?page=teams', 'active' => false ),
+					array( 'label' => 'Cricket', 'href' => '?page=teams', 'active' => false ),
+					array( 'label' => 'Hockey', 'href' => '?page=teams', 'active' => false ),
+					array( 'label' => 'Netball', 'href' => '?page=teams', 'active' => false ),
+				),
+			) );
+		}
+		if ( $visibility->is_section_visible( 'teams', 'directory' ) ) {
+			$out .= Blueworx_Clubhouse_Sections::stat_card_grid( array(
+				'eyebrow'    => 'Squads',
+				'heading'    => 'Find your team.',
+				'link_label' => '',
+				'link_href'  => '',
+				'cards'      => array(
+					array( 'image' => '', 'image_alt' => 'Rugby 1st XV', 'chip' => 'Rugby', 'title' => '1st XV',
+						'description' => 'Saturday league rugby, Division 3 South.',
+						'stats' => array( array( 'value' => 'Sat', 'label' => 'Match day' ), array( 'value' => 'Div 3', 'label' => 'League' ) ) ),
+					array( 'image' => '', 'image_alt' => 'Cricket 1st XI', 'chip' => 'Cricket', 'title' => '1st XI',
+						'description' => 'Premier division Saturday cricket.',
+						'stats' => array( array( 'value' => 'Sat', 'label' => 'Match day' ), array( 'value' => 'Prem', 'label' => 'League' ) ) ),
+					array( 'image' => '', 'image_alt' => 'Ladies hockey 1s', 'chip' => 'Hockey', 'title' => 'Ladies 1s',
+						'description' => 'County league hockey with a strong colts feed.',
+						'stats' => array( array( 'value' => 'Sat', 'label' => 'Match day' ), array( 'value' => 'County', 'label' => 'League' ) ) ),
+					array( 'image' => '', 'image_alt' => 'Netball Div 2', 'chip' => 'Netball', 'title' => 'Netball 2s',
+						'description' => 'Wednesday-night divisional netball.',
+						'stats' => array( array( 'value' => 'Wed', 'label' => 'Match day' ), array( 'value' => 'Div 2', 'label' => 'League' ) ) ),
+				),
+			) );
+		}
+		if ( $visibility->is_section_visible( 'teams', 'cta' ) ) {
+			$out .= Blueworx_Clubhouse_Sections::band( array(
+				'variant'   => 'ink',
+				'eyebrow'   => 'Want to play?',
+				'heading'   => 'Trials run all season',
+				'lede'      => 'Every squad welcomes new players — get in touch and we will match you to a session.',
+				'cta_label' => 'Get in touch →',
+				'cta_href'  => '?page=contact',
+			) );
+		}
+		$out .= '</main>' . self::shell_footer( $club );
+		return $out;
+	}
 }
