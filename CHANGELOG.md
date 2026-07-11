@@ -5,6 +5,17 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.1] - 2026-07-11
+
+### CI preview wiring
+
+Un-gates the merge train by running Playwright against the plugin's DB-free PHP preview instead of a not-yet-existent staging site.
+
+#### Changed
+
+- **Playwright now boots the preview itself.** `playwright.config.js` gains a `webServer` that starts `php -S` (docroot = plugin root) and points `baseURL` at `preview/`, so CI needs no deployed staging URL. The foundation `preview_url` input in `.github/workflows/ci.yml` is set to the same localhost preview URL.
+- **Real smoke test.** The skipped placeholder (`tests/example.spec.js`) is replaced by `tests/smoke.spec.js`, which loads each built page (home, about, membership, contact, login) and asserts it renders (title + `<main>` landmark) and that `?page=` routing resolves to the right page rather than the Home fallback.
+
 ## [0.8.0] - 2026-07-10
 
 ### Login page, hover motion, and design polish
