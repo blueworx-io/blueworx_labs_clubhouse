@@ -105,6 +105,25 @@ final class Blueworx_Clubhouse_Sections {
 			. '</div></section>';
 	}
 
+	/**
+	 * @param array{eyebrow:string,title_lead:string,title_highlight:string,lede:string,
+	 *   filter_label:string,filters:array<int,array{label:string,href:string,active:bool}>} $data
+	 */
+	public static function hero_filter( array $data ): string {
+		$pills = '';
+		foreach ( $data['filters'] as $f ) {
+			$on     = ! empty( $f['active'] ) ? ' ch-filter--on' : '';
+			$pills .= '<a class="ch-filter' . $on . '" href="' . self::e( $f['href'] ) . '">' . self::e( $f['label'] ) . '</a>';
+		}
+		return '<section class="ch-hero-f"><div class="ch-wrap">'
+			. '<span class="ch-eyebrow">' . self::e( $data['eyebrow'] ) . '</span>'
+			. '<h1 class="ch-hero-f__title">' . self::e( $data['title_lead'] )
+			. '<span class="ch-hero-f__hl">' . self::e( $data['title_highlight'] ) . '</span></h1>'
+			. '<p class="ch-hero-f__lede">' . self::e( $data['lede'] ) . '</p>'
+			. '<nav class="ch-filters" aria-label="' . self::e( $data['filter_label'] ) . '">' . $pills . '</nav>'
+			. '</div></section>';
+	}
+
 	/** @param array<int,array{value:string,label:string,featured?:bool}> $stats */
 	public static function stat_strip( array $stats ): string {
 		$items = '';

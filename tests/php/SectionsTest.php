@@ -497,4 +497,30 @@ final class SectionsTest extends TestCase {
 		$this->assertNoHexColour( $html );
 		$this->assertStringNotContainsString( 'style=', $html );
 	}
+
+	public function test_hero_filter_renders_title_lede_and_filter_pills(): void {
+		$html = Blueworx_Clubhouse_Sections::hero_filter( array(
+			'eyebrow'         => 'Our sports',
+			'title_lead'      => 'Nine sports, ',
+			'title_highlight' => 'one club.',
+			'lede'            => 'Find your section and get playing.',
+			'filter_label'    => 'Filter by sport',
+			'filters'         => array(
+				array( 'label' => 'All', 'href' => '?page=sports', 'active' => true ),
+				array( 'label' => 'Rugby', 'href' => '?page=sports', 'active' => false ),
+				array( 'label' => 'Tennis', 'href' => '?page=sports', 'active' => false ),
+			),
+		) );
+		$this->assertStringContainsString( 'class="ch-hero-f"', $html );
+		$this->assertStringContainsString( 'class="ch-hero-f__hl"', $html );
+		$this->assertStringContainsString( 'Find your section', $html );
+		// Filter bar is a nav landmark (not a list), label-driven, active pill flagged.
+		$this->assertStringContainsString( '<nav class="ch-filters" aria-label="Filter by sport">', $html );
+		// 4 = the nav's own class="ch-filters" (a substring match on "ch-filter") + the 3 pills.
+		$this->assertSame( 4, substr_count( $html, 'class="ch-filter' ) );
+		$this->assertSame( 1, substr_count( $html, 'ch-filter--on' ) );
+		$this->assertStringContainsString( 'Rugby', $html );
+		$this->assertNoHexColour( $html );
+		$this->assertStringNotContainsString( 'style=', $html );
+	}
 }
