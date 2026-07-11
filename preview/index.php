@@ -114,11 +114,25 @@ function blueworx_clubhouse_preview_document(): string {
 	$look_toggle = '<a class="ch-look-toggle" href="?look=' . rawurlencode( $other ) . '&page=' . rawurlencode( (string) $page ) . '">Look: ' . htmlspecialchars( $other_name, ENT_QUOTES, 'UTF-8' ) . ' &rarr;</a>';
 	$style      .= '<style>.ch-look-toggle{position:fixed;left:16px;bottom:16px;z-index:90;background:#201c15;color:#fff;font:600 13px/1 system-ui,sans-serif;padding:12px 16px;border-radius:8px;text-decoration:none}</style>';
 
+	// Preview-only: on a non-default look, carry the active look through the on-page
+	// ?page= links (nav, footer, CTAs) so clicking around stays in the selected look.
+	// This lives entirely in the preview harness — the sections stay skin-agnostic and
+	// emit bare ?page= hrefs; the real WordPress site has no ?look= param (the look is a
+	// persisted setting), so no link rewriting is needed there. Court Side is the default,
+	// so its links are left bare.
+	$look_persist = '';
+	if ( 'court-side' !== $look_slug ) {
+		$look_persist = '<script>(function(){var look=' . json_encode( (string) $look_slug )
+			. ';document.querySelectorAll(\'a[href^="?page="]\').forEach(function(a){'
+			. 'a.setAttribute("href",a.getAttribute("href")+"&look="+encodeURIComponent(look));});'
+			. '})();</script>';
+	}
+
 	// Served with docroot = plugin root, so the look stylesheet resolves from '/'.
 	return Blueworx_Clubhouse_Page_Renderer::document(
 		$registry->active(),
 		$branding,
-		$body . $switcher . $look_toggle . $style,
+		$body . $switcher . $look_toggle . $look_persist . $style,
 		'/'
 	);
 }
