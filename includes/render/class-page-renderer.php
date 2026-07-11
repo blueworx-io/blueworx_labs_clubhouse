@@ -669,4 +669,118 @@ final class Blueworx_Clubhouse_Page_Renderer {
 		$out .= '</main>' . self::shell_footer( $club );
 		return $out;
 	}
+
+	public static function events(
+		Blueworx_Clubhouse_Branding $branding,
+		Blueworx_Clubhouse_Visibility $visibility
+	): string {
+		$club = $branding->get_club_name();
+		$out  = self::shell_header( $club, '?page=events' ) . '<main class="ch-main" id="ch-main" tabindex="-1">';
+
+		if ( $visibility->is_section_visible( 'events', 'hero' ) ) {
+			$out .= Blueworx_Clubhouse_Sections::hero_filter( array(
+				'eyebrow'         => "What's on",
+				'title_lead'      => 'Socials, camps and ',
+				'title_highlight' => 'open days.',
+				'lede'            => "There's always something happening at the club — on the pitch and off it.",
+				'filter_label'    => 'Filter events by type',
+				'filters'         => array(
+					array( 'label' => 'All', 'href' => '?page=events', 'active' => true ),
+					array( 'label' => 'Social', 'href' => '?page=events', 'active' => false ),
+					array( 'label' => 'Junior', 'href' => '?page=events', 'active' => false ),
+					array( 'label' => 'Tournament', 'href' => '?page=events', 'active' => false ),
+				),
+			) );
+		}
+		if ( $visibility->is_section_visible( 'events', 'upcoming' ) ) {
+			$out .= Blueworx_Clubhouse_Sections::event_grid( array(
+				'eyebrow' => 'Coming up',
+				'heading' => 'Upcoming events',
+				'cards'   => array(
+					array( 'tag' => 'Open day', 'date' => 'Sat 26 Jul', 'title' => 'Club Open Day',
+						'detail' => '10:00–14:00 · Clubhouse & grounds — all welcome.', 'cta_label' => 'Register interest', 'cta_href' => '?page=contact' ),
+					array( 'tag' => 'Junior football', 'date' => '4–8 Aug', 'title' => 'Summer Football Camp',
+						'detail' => 'Ages 5–12 · a week of coaching and games.', 'cta_label' => 'Book a place', 'cta_href' => '?page=contact' ),
+					array( 'tag' => 'Social', 'date' => 'Fri 12 Sep', 'title' => 'Annual Awards Night',
+						'detail' => '19:00 · Clubhouse function room.', 'cta_label' => '', 'cta_href' => '' ),
+				),
+			) );
+		}
+		if ( $visibility->is_section_visible( 'events', 'past' ) ) {
+			$out .= Blueworx_Clubhouse_Sections::event_archive( array(
+				'heading' => 'Recently at the club',
+				'rows'    => array(
+					array( 'date' => 'Jun 2026', 'tag' => 'Social', 'title' => 'Summer BBQ & Family Day' ),
+					array( 'date' => 'May 2026', 'tag' => 'Tournament', 'title' => 'Spring Sevens Rugby Festival' ),
+					array( 'date' => 'Apr 2026', 'tag' => 'Club', 'title' => 'Annual General Meeting' ),
+					array( 'date' => 'Mar 2026', 'tag' => 'Junior', 'title' => 'Easter Multi-Sport Camp' ),
+				),
+			) );
+		}
+		if ( $visibility->is_section_visible( 'events', 'cta' ) ) {
+			$out .= Blueworx_Clubhouse_Sections::band( array(
+				'variant'   => 'ink',
+				'eyebrow'   => 'Hosting something?',
+				'heading'   => 'Hire the clubhouse',
+				'lede'      => 'Function room and bar available for members and the community.',
+				'cta_label' => 'Enquire about hire →',
+				'cta_href'  => '?page=contact',
+			) );
+		}
+		$out .= '</main>' . self::shell_footer( $club );
+		return $out;
+	}
+
+	public static function calendar(
+		Blueworx_Clubhouse_Branding $branding,
+		Blueworx_Clubhouse_Visibility $visibility
+	): string {
+		$club = $branding->get_club_name();
+		$out  = self::shell_header( $club, '?page=calendar' ) . '<main class="ch-main" id="ch-main" tabindex="-1">';
+
+		if ( $visibility->is_section_visible( 'calendar', 'hero' ) ) {
+			$out .= Blueworx_Clubhouse_Sections::hero_filter( array(
+				'eyebrow'         => 'Fixtures & results',
+				'title_lead'      => 'Every game, ',
+				'title_highlight' => 'all season.',
+				'lede'            => 'Match days across all nine sports, with results as they come in.',
+				'filter_label'    => 'Filter fixtures by sport',
+				'filters'         => array(
+					array( 'label' => 'All', 'href' => '?page=calendar', 'active' => true ),
+					array( 'label' => 'Rugby', 'href' => '?page=calendar', 'active' => false ),
+					array( 'label' => 'Cricket', 'href' => '?page=calendar', 'active' => false ),
+					array( 'label' => 'Hockey', 'href' => '?page=calendar', 'active' => false ),
+				),
+			) );
+		}
+		if ( $visibility->is_section_visible( 'calendar', 'schedule' ) ) {
+			$out .= Blueworx_Clubhouse_Sections::calendar_months( array(
+				'eyebrow' => 'The schedule',
+				'heading' => 'Fixtures & results',
+				'months'  => array(
+					array( 'label' => 'July', 'rows' => array(
+						array( 'date' => 'Sat 12', 'competition' => 'Rugby · 1st XV', 'matchup' => 'ClubHouse vs Riverside RFC', 'detail' => 'Home · 14:00', 'outcome' => '' ),
+						array( 'date' => 'Sun 13', 'competition' => 'Netball · Div 2', 'matchup' => 'ClubHouse vs Castlebridge', 'detail' => 'Away · 11:00', 'outcome' => '' ),
+						array( 'date' => 'Sat 5', 'competition' => 'Cricket · 1st XI', 'matchup' => 'ClubHouse vs Hartfield CC', 'detail' => 'Won by 34 runs', 'outcome' => 'W' ),
+					) ),
+					array( 'label' => 'June', 'rows' => array(
+						array( 'date' => 'Sat 28', 'competition' => 'Rugby · 2nd XV', 'matchup' => 'ClubHouse vs Dunmore', 'detail' => 'Lost 18–24', 'outcome' => 'L' ),
+						array( 'date' => 'Sat 21', 'competition' => 'Hockey · Ladies 1s', 'matchup' => 'ClubHouse vs Elmwood', 'detail' => 'Drew 2–2', 'outcome' => 'D' ),
+					) ),
+				),
+			) );
+		}
+		if ( $visibility->is_section_visible( 'calendar', 'cta' ) ) {
+			$out .= Blueworx_Clubhouse_Sections::band( array(
+				'variant'   => 'ink',
+				'eyebrow'   => 'Follow the club',
+				'heading'   => 'Never miss a result',
+				'lede'      => 'Fixtures, results and club news — one email a month.',
+				'cta_label' => 'Join the mailing list →',
+				'cta_href'  => '?page=contact',
+			) );
+		}
+		$out .= '</main>' . self::shell_footer( $club );
+		return $out;
+	}
 }

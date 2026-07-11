@@ -113,4 +113,32 @@ final class PageRendererTest extends TestCase {
 		$this->assertStringNotContainsString( 'class="ch-scards"', $body );
 		$this->assertStringContainsString( 'class="ch-hero-f"', $body ); // hero still present
 	}
+
+	public function test_events_composes_upcoming_and_archive(): void {
+		$vis  = new Blueworx_Clubhouse_Visibility( new Blueworx_Clubhouse_Fake_Storage() );
+		$body = Blueworx_Clubhouse_Page_Renderer::events( $this->branding(), $vis );
+		$this->assertStringContainsString( 'class="ch-hero-f"', $body );
+		$this->assertStringContainsString( 'class="ch-events"', $body );
+		$this->assertStringContainsString( 'class="ch-archive"', $body );
+		$this->assertStringContainsString( 'ch-nav__link--active" href="?page=events"', $body );
+		$this->assertStringContainsString( 'ch-band--ink', $body );
+	}
+
+	public function test_calendar_composes_month_schedule(): void {
+		$vis  = new Blueworx_Clubhouse_Visibility( new Blueworx_Clubhouse_Fake_Storage() );
+		$body = Blueworx_Clubhouse_Page_Renderer::calendar( $this->branding(), $vis );
+		$this->assertStringContainsString( 'class="ch-hero-f"', $body );
+		$this->assertStringContainsString( 'class="ch-cal"', $body );
+		$this->assertStringContainsString( 'ch-cal__month', $body );
+		$this->assertStringContainsString( 'ch-nav__link--active" href="?page=calendar"', $body );
+	}
+
+	public function test_calendar_respects_visibility(): void {
+		$storage = new Blueworx_Clubhouse_Fake_Storage();
+		$vis     = new Blueworx_Clubhouse_Visibility( $storage );
+		$vis->set_section_visible( 'calendar', 'schedule', false );
+		$body = Blueworx_Clubhouse_Page_Renderer::calendar( $this->branding(), $vis );
+		$this->assertStringNotContainsString( 'ch-cal__month', $body );
+		$this->assertStringContainsString( 'class="ch-hero-f"', $body );
+	}
 }
