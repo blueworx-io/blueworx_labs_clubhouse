@@ -459,6 +459,10 @@ a{color:inherit;text-decoration:none}
 .ch-cal__detail{font-size:14px;color:var(--color-ink-soft)}
 .ch-cal__soon{padding:4px 10px;border-radius:999px;border:1px solid var(--color-line);color:var(--color-ink-soft);font-size:12px;font-weight:600}
 
+/* Result badges sit on the light calendar background here (not the dark fixtures panel), so re-tone L/D to ink. */
+.ch-cal__row .ch-badge--l{background:color-mix(in oklab,var(--color-ink) 12%,transparent);color:var(--color-ink)}
+.ch-cal__row .ch-badge--d{border-color:color-mix(in oklab,var(--color-ink) 35%,transparent);color:var(--color-ink)}
+
 @media(max-width:640px){
 	.ch-archive__row{grid-template-columns:1fr auto}
 	.ch-archive__title{grid-column:1/-1}

@@ -31,4 +31,11 @@ final class CourtSideStylesheetTest extends TestCase {
 			$this->assertStringContainsString( $sel, $css );
 		}
 	}
+
+	public function test_calendar_retones_result_badges_for_light_background(): void {
+		$css = $this->css();
+		// L/D badges are dark-context by default; the calendar sits on the light shell, so it must re-tone them.
+		$this->assertStringContainsString( '.ch-cal__row .ch-badge--l', $css );
+		$this->assertStringContainsString( '.ch-cal__row .ch-badge--d', $css );
+	}
 }
