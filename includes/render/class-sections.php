@@ -187,6 +187,42 @@ final class Blueworx_Clubhouse_Sections {
 	}
 
 	/**
+	 * @param array{eyebrow:string,heading:string,link_label:string,link_href:string,
+	 *   cards:array<int,array{image:string,image_alt:string,chip:string,title:string,description:string,
+	 *   stats:array<int,array{value:string,label:string}>}>} $data
+	 */
+	public static function stat_card_grid( array $data ): string {
+		$cards = '';
+		foreach ( $data['cards'] as $c ) {
+			$stats = '';
+			foreach ( $c['stats'] as $s ) {
+				$stats .= '<div class="ch-scard__stat"><b class="ch-scard__stat-v">' . self::e( $s['value'] )
+					. '</b><span class="ch-scard__stat-l">' . self::e( $s['label'] ) . '</span></div>';
+			}
+			$cards .= '<article class="ch-scard" role="listitem">'
+				. self::media( $c['image'], $c['image_alt'], 'ch-scard__media' )
+				. '<span class="ch-scard__chip">' . self::e( $c['chip'] ) . '</span>'
+				. '<div class="ch-scard__body">'
+				. '<h3 class="ch-scard__title">' . self::e( $c['title'] ) . '</h3>'
+				. '<p class="ch-scard__desc">' . self::e( $c['description'] ) . '</p>'
+				. '<div class="ch-scard__stats">' . $stats . '</div></div></article>';
+		}
+		$head = '';
+		if ( '' !== $data['link_label'] ) {
+			$head = '<div class="ch-sec__head"><div>'
+				. '<span class="ch-eyebrow">' . self::e( $data['eyebrow'] ) . '</span>'
+				. '<h2 class="ch-sec__title">' . self::e( $data['heading'] ) . '</h2></div>'
+				. '<a class="ch-btn ch-btn--ghost" href="' . self::e( $data['link_href'] ) . '">' . self::e( $data['link_label'] ) . '</a></div>';
+		} else {
+			$head = '<span class="ch-eyebrow">' . self::e( $data['eyebrow'] ) . '</span>'
+				. '<h2 class="ch-sec__title">' . self::e( $data['heading'] ) . '</h2>';
+		}
+		return '<section class="ch-sec"><div class="ch-wrap">'
+			. $head
+			. '<div class="ch-scards" role="list">' . $cards . '</div></div></section>';
+	}
+
+	/**
 	 * @param array{eyebrow:string,heading:string,image:string,image_alt:string,
 	 *   cta_label:string,cta_href:string} $data
 	 */

@@ -194,6 +194,42 @@ final class SectionsTest extends TestCase {
 		$this->assertStringNotContainsString( 'style=', $html );
 	}
 
+	public function test_stat_card_grid_renders_cards_with_chip_and_stats(): void {
+		$html = Blueworx_Clubhouse_Sections::stat_card_grid( array(
+			'eyebrow'    => 'All sections',
+			'heading'    => 'Pick your sport.',
+			'link_label' => 'Join the club →',
+			'link_href'  => '?page=membership',
+			'cards'      => array(
+				array( 'image' => '', 'image_alt' => 'Rugby', 'chip' => 'Sat', 'title' => 'Rugby',
+					'description' => 'Senior, colts and touch rugby.',
+					'stats' => array( array( 'value' => '4', 'label' => 'Teams' ), array( 'value' => '120', 'label' => 'Players' ) ) ),
+				array( 'image' => '', 'image_alt' => 'Tennis', 'chip' => 'Daily', 'title' => 'Tennis',
+					'description' => 'Four courts, coaching for all ages.',
+					'stats' => array( array( 'value' => '4', 'label' => 'Courts' ) ) ),
+			),
+		) );
+		$this->assertStringContainsString( 'class="ch-scards"', $html );
+		$this->assertSame( 2, substr_count( $html, 'ch-scard"' ) );
+		$this->assertStringContainsString( 'ch-scard__chip', $html );
+		$this->assertStringContainsString( 'Senior, colts and touch rugby.', $html );
+		// 3 stat pairs total across the two cards.
+		$this->assertSame( 3, substr_count( $html, 'ch-scard__stat"' ) );
+		// The card grid is the only list; stat rows are inline metrics, not list items.
+		$this->assertListSemantics( $html, 1, 2 );
+		$this->assertStringContainsString( 'Join the club', $html );
+		$this->assertNoHexColour( $html );
+		$this->assertStringNotContainsString( 'style=', $html );
+	}
+
+	public function test_stat_card_grid_omits_head_link_when_label_empty(): void {
+		$html = Blueworx_Clubhouse_Sections::stat_card_grid( array(
+			'eyebrow' => 'x', 'heading' => 'y', 'link_label' => '', 'link_href' => '',
+			'cards'   => array( array( 'image' => '', 'image_alt' => '', 'chip' => 'c', 'title' => 't', 'description' => 'd', 'stats' => array() ) ),
+		) );
+		$this->assertStringNotContainsString( 'ch-sec__head', $html );
+	}
+
 	public function test_image_band_renders_overlay_heading_and_cta(): void {
 		$html = Blueworx_Clubhouse_Sections::image_band( array(
 			'eyebrow'   => 'The clubhouse',
