@@ -5,6 +5,24 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.12.0] - 2026-07-11
+
+### WordPress integration
+
+The plugin now serves its eight-page Court Side site inside WordPress — the first WordPress-runnable release.
+
+#### New
+
+- **Rewrite-rule routing.** The plugin owns the frontend: Home renders at the site root and each other page at `/{slug}` via rewrite rules, with the active theme left neutral. Flushed on activation/deactivation.
+- **Canvas template + proper enqueue.** A `template_include` canvas template fires `wp_head()`/`wp_footer()`; the look stylesheet and fonts are enqueued and the derived `:root` design tokens are injected inline via `wp_add_inline_style`.
+- **Cached `:root` tokens.** The composed token string is cached in an autoloaded option keyed by look + accent, so the colour math runs only when they change (`invalidate()` is exposed for the admin flow).
+- **`Page_Map`** — a single slug→renderer dispatch used by both WordPress and the DB-free preview, so they render identical bodies. The scroll-reveal script is extracted to `assets/js/reveal.js` (enqueued in WP, inlined in the preview).
+
+#### Notes
+
+- Renderers still use hardcoded demo data; the Collections/CPT plan swaps the data source behind them.
+- This branch also carries the CI-preview wiring (from PR #6) so its guardrails check passes ahead of that PR propagating through the stack.
+
 ## [0.11.0] - 2026-07-11
 
 ### Sports, Teams, Events & Calendar pages
