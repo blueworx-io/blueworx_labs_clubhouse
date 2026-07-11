@@ -27,6 +27,7 @@ define( 'BLUEWORX_LABS_CLUBHOUSE_DIR', plugin_dir_path( __FILE__ ) );
 define( 'BLUEWORX_LABS_CLUBHOUSE_URL', plugin_dir_url( __FILE__ ) );
 
 require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/bootstrap.php';
+require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/frontend/class-frontend.php';
 
 /**
  * Boot the plugin.
@@ -34,6 +35,16 @@ require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/bootstrap.php';
  * @return void
  */
 function blueworx_labs_clubhouse_init() {
-	// Plugin bootstrap goes here.
+	Blueworx_Clubhouse_Frontend::register();
 }
 add_action( 'plugins_loaded', 'blueworx_labs_clubhouse_init' );
+
+register_activation_hook(
+	__FILE__,
+	static function () {
+		Blueworx_Clubhouse_Frontend::register_rewrites();
+		flush_rewrite_rules();
+	}
+);
+
+register_deactivation_hook( __FILE__, 'flush_rewrite_rules' );

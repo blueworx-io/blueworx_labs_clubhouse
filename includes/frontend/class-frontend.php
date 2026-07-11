@@ -43,4 +43,83 @@ final class Blueworx_Clubhouse_Frontend {
 			'reveal_url'     => $plugin_url . 'assets/js/reveal.js',
 		);
 	}
+
+	public static function register(): void {
+		add_action( 'init', array( self::class, 'register_rewrites' ) );
+		add_action( 'wp_enqueue_scripts', array( self::class, 'enqueue_assets' ) );
+		add_filter( 'template_include', array( self::class, 'filter_template' ) );
+	}
+
+	public static function register_rewrites(): void {
+		add_rewrite_tag( '%' . self::QUERY_VAR . '%', '([^&]+)' );
+		foreach ( Blueworx_Clubhouse_Page_Map::pages() as $page ) {
+			if ( '' === $page['slug'] ) {
+				continue;
+			}
+			add_rewrite_rule(
+				'^' . $page['slug'] . '/?$',
+				'index.php?' . self::QUERY_VAR . '=' . $page['slug'],
+				'top'
+			);
+		}
+	}
+
+	private static function current_slug(): ?string {
+		$is_front = function_exists( 'is_front_page' ) ? is_front_page() : false;
+		$qv       = function_exists( 'get_query_var' ) ? get_query_var( self::QUERY_VAR ) : '';
+		return self::resolve_slug( (bool) $is_front, $qv );
+	}
+
+	public static function filter_template( string $template ): string {
+		$slug = self::current_slug();
+		if ( null === $slug ) {
+			return $template;
+		}
+		return dirname( __DIR__, 2 ) . '/templates/clubhouse.php';
+	}
+
+	private static function context(): array {
+		$storage    = new Blueworx_Clubhouse_Options_Storage();
+		$registry   = new Blueworx_Clubhouse_Base_Look_Registry( $storage );
+		$registry->register( new Blueworx_Clubhouse_Court_Side() );
+		$look       = $registry->active();
+		$branding   = new Blueworx_Clubhouse_Branding( $storage );
+		$visibility = new Blueworx_Clubhouse_Visibility( $storage );
+		$cache      = new Blueworx_Clubhouse_Theme_Cache( $storage );
+		return array( $look, $branding, $visibility, $cache );
+	}
+
+	public static function enqueue_assets(): void {
+		if ( null === self::current_slug() ) {
+			return;
+		}
+		list( $look, $branding, , $cache ) = self::context();
+		if ( null === $look ) {
+			return;
+		}
+		$specs = self::enqueue_specs(
+			$look,
+			$cache->root_css( $look, $branding ),
+			BLUEWORX_LABS_CLUBHOUSE_URL
+		);
+		wp_enqueue_style( 'clubhouse-fonts', $specs['fonts_url'], array(), null );
+		wp_enqueue_style( 'clubhouse-look', $specs['stylesheet_url'], array(), BLUEWORX_LABS_CLUBHOUSE_VERSION );
+		wp_add_inline_style( 'clubhouse-look', $specs['inline_css'] );
+		wp_enqueue_script( 'clubhouse-reveal', $specs['reveal_url'], array(), BLUEWORX_LABS_CLUBHOUSE_VERSION, true );
+	}
+
+	/** Render the current page body (used by the canvas template). */
+	public static function render_body(): string {
+		$slug = self::current_slug();
+		if ( null === $slug ) {
+			return '';
+		}
+		list( , $branding, $visibility, ) = self::context();
+		return Blueworx_Clubhouse_Page_Map::render( $slug, $branding, $visibility );
+	}
+
+	public static function club_name(): string {
+		list( , $branding, , ) = self::context();
+		return $branding->get_club_name();
+	}
 }

@@ -5,6 +5,31 @@ use PHPUnit\Framework\TestCase;
 
 final class FrontendTest extends TestCase {
 
+	protected function setUp(): void {
+		wp_stub_reset();
+	}
+
+	public function test_register_registers_expected_hooks(): void {
+		Blueworx_Clubhouse_Frontend::register();
+
+		$actions = array_map( static fn( $c ) => $c['args'][0], wp_stub_calls( 'add_action' ) );
+		$filters = array_map( static fn( $c ) => $c['args'][0], wp_stub_calls( 'add_filter' ) );
+
+		$this->assertContains( 'init', $actions );
+		$this->assertContains( 'wp_enqueue_scripts', $actions );
+		$this->assertContains( 'template_include', $filters );
+	}
+
+	public function test_register_rewrites_adds_one_rule_per_non_home_page(): void {
+		Blueworx_Clubhouse_Frontend::register_rewrites();
+
+		$rules      = wp_stub_calls( 'add_rewrite_rule' );
+		$non_home   = array_filter( Blueworx_Clubhouse_Page_Map::pages(), static fn( $p ) => '' !== $p['slug'] );
+		$this->assertCount( count( $non_home ), $rules );
+		// Each rule maps its slug to the clubhouse_page query var.
+		$this->assertStringContainsString( 'clubhouse_page=about', $rules[0]['args'][1] . $rules[1]['args'][1] . $rules[2]['args'][1] );
+	}
+
 	public function test_resolve_slug_front_page_is_home(): void {
 		$this->assertSame( '', Blueworx_Clubhouse_Frontend::resolve_slug( true, null ) );
 	}
