@@ -2,11 +2,11 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Add Floodlight — the third Base Look — as a bold, dark, night-match re-skin (Bricolage Grotesque + Inter, warm-ink canvas, crisp mid radii, accent spent as *glow*) that reuses the existing engine and skin-agnostic sections unchanged.
+**Goal:** Add Floodlight — the third Base Look — as a bold, dark, night-match re-skin (Bricolage Grotesque + Hanken Grotesk, warm-ink canvas, bold-modern mid radii, accent spent as *glow*) that reuses the existing engine and skin-agnostic sections unchanged.
 
 **Architecture:** A Base Look pack is a PHP class implementing `Blueworx_Clubhouse_Base_Look` (supplies shell tokens, fonts, and a stylesheet path — never content, never accent tokens) plus a stylesheet that consumes the engine's CSS custom properties. Floodlight adds `class-floodlight.php` + `assets/looks/floodlight.css`, both parallel to the Court Side pair. The preview registers Court Side + Floodlight and switches the active one by `?look=`. No section renderer, page renderer, or engine code changes — that is the whole point of the re-skin. On the dark shell all accent-coloured **text/marks/borders route through `--color-accent-deep`** (engine-guaranteed AA against `--color-bg`); raw `--color-accent` is used only for glows, washes, and large fills. The engine's `accent-ink` limitation on dark shells is *sidestepped*, never triggered.
 
-**Tech Stack:** PHP 8.2 (strict types), PHPUnit 11, plain CSS with custom properties, Google-CDN fonts (Bricolage Grotesque + Inter).
+**Tech Stack:** PHP 8.2 (strict types), PHPUnit 11, plain CSS with custom properties, Google-CDN fonts (Bricolage Grotesque + Hanken Grotesk).
 
 ## Global Constraints
 
@@ -14,7 +14,7 @@
 - **Skin-agnostic rule:** never modify section renderers (`includes/render/*`) or the engine (`includes/theme/*`) or page composition. All appearance comes from the look's tokens + stylesheet. If a section seems to need a change, that is a section bug, not this plan's work — stop and flag it.
 - **Accent contract:** the stylesheet references the accent *only* through `var(--color-accent)`, `var(--color-accent-ink)`, `var(--color-accent-deep)`, `var(--color-accent-wash)`. No club-colour hex literal appears in the stylesheet.
 - **Dark-shell accent rule:** any accent that must *read* (text, marks, borders, dots, numerals) uses `var(--color-accent-deep)`; raw `var(--color-accent)` is used only for glows (`box-shadow`), washes, and large decorative fills. Never use raw `var(--color-accent)` as text. Never rely on `var(--color-accent-ink)` for legibility (the look's glow idiom avoids solid accent fills with text).
-- **Font-name trap:** fonts come only from `var(--font-display)` / `var(--font-body)`. The stylesheet must NOT contain the substrings **`Bricolage`** or **`Inter`** anywhere — *including comments*. Use "display token" / "body token" phrasing. (The class file names the families; the CSS never does.)
+- **Font-name trap:** fonts come only from `var(--font-display)` / `var(--font-body)`. The stylesheet must NOT contain the substrings **`Bricolage`** or **`Hanken`** anywhere — *including comments*. Use "display token" / "body token" phrasing. (The class file names the families; the CSS never does.)
 - `tokens()` must NOT contain any `--color-accent*` key (accent is engine-derived per club).
 - Tests run with `composer test` (PHPUnit, no WordPress runtime); all existing tests must stay green.
 - Version bump is to **`0.10.0`** (Members' House holds `0.9.0` on its sibling branch; Floodlight takes the next minor so the two don't collide when both merge). Keep `blueworx-labs-clubhouse.php` (Version header + `BLUEWORX_LABS_CLUBHOUSE_VERSION`) and `package.json` in sync, with a matching `CHANGELOG.md` entry.
@@ -31,7 +31,7 @@
 
 **Interfaces:**
 - Consumes: `Blueworx_Clubhouse_Base_Look` (interface), `Blueworx_Clubhouse_Base_Look_Registry`, `Blueworx_Clubhouse_Branding`, `Blueworx_Clubhouse_Theme_Css`, `Blueworx_Clubhouse_Fake_Storage`.
-- Produces: `final class Blueworx_Clubhouse_Floodlight implements Blueworx_Clubhouse_Base_Look` with `slug()='floodlight'`, `name()='Floodlight'`, `description()`, `tokens()` (the fixed warm-ink dark shell), `fonts()` (Bricolage Grotesque + Inter), `stylesheet()='assets/looks/floodlight.css'`.
+- Produces: `final class Blueworx_Clubhouse_Floodlight implements Blueworx_Clubhouse_Base_Look` with `slug()='floodlight'`, `name()='Floodlight'`, `description()`, `tokens()` (the fixed warm-ink dark shell), `fonts()` (Bricolage Grotesque + Hanken Grotesk), `stylesheet()='assets/looks/floodlight.css'`.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -55,24 +55,24 @@ final class FloodlightTest extends TestCase {
 
 	public function test_tokens_carry_the_fixed_dark_shell(): void {
 		$t = ( new Blueworx_Clubhouse_Floodlight() )->tokens();
-		$this->assertSame( '#16120c', $t['--color-bg'] );
-		$this->assertSame( '#f4ede0', $t['--color-ink'] );
-		$this->assertSame( '#211a12', $t['--color-paper'] );
+		$this->assertSame( '#14110b', $t['--color-bg'] );
+		$this->assertSame( '#f3ede0', $t['--color-ink'] );
+		$this->assertSame( '#1e1913', $t['--color-paper'] );
 		$this->assertSame( '#a99f8c', $t['--color-ink-soft'] );
-		$this->assertSame( '#3a3020', $t['--color-line'] );
+		$this->assertSame( '#302a20', $t['--color-line'] );
 		$this->assertStringContainsString( 'Bricolage Grotesque', $t['--font-display'] );
-		$this->assertStringContainsString( 'Inter', $t['--font-body'] );
-		// Crisp athletic mid radii.
+		$this->assertStringContainsString( 'Hanken Grotesk', $t['--font-body'] );
+		// Bold-modern radii — enough body to carry a glow halo.
 		$this->assertSame( '16px', $t['--radius-xl'] );
-		$this->assertSame( '12px', $t['--radius-lg'] );
-		$this->assertSame( '8px', $t['--radius-md'] );
+		$this->assertSame( '11px', $t['--radius-lg'] );
+		$this->assertSame( '7px', $t['--radius-md'] );
 		// Accent is engine-derived, never baked into the look.
 		$this->assertArrayNotHasKey( '--color-accent', $t );
 	}
 
-	public function test_fonts_are_bricolage_grotesque_and_body(): void {
+	public function test_fonts_are_bricolage_grotesque_and_hanken_grotesk(): void {
 		$families = array_column( ( new Blueworx_Clubhouse_Floodlight() )->fonts(), 'family' );
-		$this->assertSame( array( 'Bricolage Grotesque', 'Inter' ), $families );
+		$this->assertSame( array( 'Bricolage Grotesque', 'Hanken Grotesk' ), $families );
 		foreach ( ( new Blueworx_Clubhouse_Floodlight() )->fonts() as $font ) {
 			$this->assertArrayHasKey( 'weights', $font );
 			$this->assertArrayHasKey( 'display', $font );
@@ -85,13 +85,20 @@ final class FloodlightTest extends TestCase {
 		$registry = new Blueworx_Clubhouse_Base_Look_Registry( $storage );
 		$registry->register( new Blueworx_Clubhouse_Floodlight() );
 		$branding = new Blueworx_Clubhouse_Branding( $storage );
-		$branding->set_accent( '#8bf34d' );
+		$branding->set_accent( '#f7a70a' );
 
 		$vars = Blueworx_Clubhouse_Theme_Css::compose( $registry->active(), $branding );
-		$this->assertSame( '#16120c', $vars['--color-bg'] );
-		$this->assertSame( '#8bf34d', $vars['--color-accent'] );
+		$this->assertSame( '#14110b', $vars['--color-bg'] );
+		$this->assertSame( '#f7a70a', $vars['--color-accent'] );
 		$this->assertArrayHasKey( '--color-accent-ink', $vars );
 		$this->assertArrayHasKey( '--color-accent-deep', $vars );
+
+		// The load-bearing dark-shell guarantee: accent-as-text (accent-deep) clears
+		// WCAG AA against the dark canvas, so every accent mark/label/numeral is legible.
+		$this->assertGreaterThanOrEqual(
+			4.5,
+			Blueworx_Clubhouse_Color_Engine::contrast_ratio( $vars['--color-accent-deep'], $vars['--color-bg'] )
+		);
 	}
 }
 ```
@@ -139,16 +146,16 @@ final class Blueworx_Clubhouse_Floodlight implements Blueworx_Clubhouse_Base_Loo
 	/** @return array<string,string> */
 	public function tokens(): array {
 		return array(
-			'--color-bg'       => '#16120c',
-			'--color-paper'    => '#211a12',
-			'--color-ink'      => '#f4ede0',
+			'--color-bg'       => '#14110b',
+			'--color-paper'    => '#1e1913',
+			'--color-ink'      => '#f3ede0',
 			'--color-ink-soft' => '#a99f8c',
-			'--color-line'     => '#3a3020',
+			'--color-line'     => '#302a20',
 			'--radius-xl'      => '16px',
-			'--radius-lg'      => '12px',
-			'--radius-md'      => '8px',
+			'--radius-lg'      => '11px',
+			'--radius-md'      => '7px',
 			'--font-display'   => "'Bricolage Grotesque', ui-sans-serif, system-ui, sans-serif",
-			'--font-body'      => "'Inter', ui-sans-serif, system-ui, sans-serif",
+			'--font-body'      => "'Hanken Grotesk', ui-sans-serif, system-ui, sans-serif",
 		);
 	}
 
@@ -156,7 +163,7 @@ final class Blueworx_Clubhouse_Floodlight implements Blueworx_Clubhouse_Base_Loo
 	public function fonts(): array {
 		return array(
 			array( 'family' => 'Bricolage Grotesque', 'weights' => array( 500, 600, 700, 800 ), 'display' => 'swap' ),
-			array( 'family' => 'Inter', 'weights' => array( 400, 500, 600, 700 ), 'display' => 'swap' ),
+			array( 'family' => 'Hanken Grotesk', 'weights' => array( 400, 500, 600, 700 ), 'display' => 'swap' ),
 		);
 	}
 
@@ -234,7 +241,7 @@ final class FloodlightStylesheetTest extends TestCase {
 		$css = $this->css();
 		$this->assertStringContainsString( 'var(--color-accent-deep)', $css );
 		// The demo accent must never be baked in — that would break re-theming.
-		$this->assertStringNotContainsString( '#8bf34d', $css );
+		$this->assertStringNotContainsString( '#f7a70a', $css );
 		// Nor the other looks' demo accents.
 		$this->assertStringNotContainsString( '#c6f24e', $css );
 		$this->assertStringNotContainsString( '#7a2f3a', $css );
@@ -245,7 +252,7 @@ final class FloodlightStylesheetTest extends TestCase {
 		// name a family (that lives in the look class, not the CSS) — including in comments.
 		$css = $this->css();
 		$this->assertStringNotContainsString( 'Bricolage', $css );
-		$this->assertStringNotContainsString( 'Inter', $css );
+		$this->assertStringNotContainsString( 'Hanken', $css );
 		$this->assertStringContainsString( 'var(--font-display)', $css );
 		$this->assertStringContainsString( 'var(--font-body)', $css );
 	}
@@ -685,9 +692,9 @@ Append these two methods inside the `PreviewRenderTest` class in `tests/php/Prev
 
 		$this->assertStringContainsString( 'floodlight.css', $html );
 		$this->assertStringContainsString( 'family=Bricolage%20Grotesque', $html );
-		$this->assertStringContainsString( 'family=Inter', $html );
+		$this->assertStringContainsString( 'family=Hanken%20Grotesk', $html );
 		// Dark shell token made it into the emitted :root.
-		$this->assertStringContainsString( '#16120c', $html );
+		$this->assertStringContainsString( '#14110b', $html );
 	}
 
 	public function test_default_look_is_still_court_side(): void {
@@ -784,7 +791,7 @@ Replace it with (add a look toggle that cycles to the next registered look, keep
 	$look_toggle = '<a class="ch-look-toggle" href="?look=' . rawurlencode( $next )
 		. '&page=' . rawurlencode( (string) $page ) . '">Look: '
 		. htmlspecialchars( $next_name, ENT_QUOTES, 'UTF-8' ) . ' &rarr;</a>';
-	$style      .= '<style>.ch-look-toggle{position:fixed;left:16px;bottom:16px;z-index:90;background:#211a12;color:#f4ede0;font:600 13px/1 system-ui,sans-serif;padding:12px 16px;border-radius:8px;text-decoration:none;border:1px solid #3a3020}</style>';
+	$style      .= '<style>.ch-look-toggle{position:fixed;left:16px;bottom:16px;z-index:90;background:#1e1913;color:#f3ede0;font:600 13px/1 system-ui,sans-serif;padding:12px 16px;border-radius:8px;text-decoration:none;border:1px solid #302a20}</style>';
 
 	// Served with docroot = plugin root, so the look stylesheet resolves from '/'.
 	return Blueworx_Clubhouse_Page_Renderer::document(
@@ -876,7 +883,7 @@ In `CHANGELOG.md`, add a new entry directly beneath the top heading (above the e
 
 ### Added
 - **Floodlight — third Base Look.** A bold, dark, night-match re-skin (Bricolage Grotesque
-  display, warm-ink canvas, crisp 16/12/8 radii, accent spent as glow) covering every
+  + Hanken Grotesk, warm-ink canvas, bold-modern 16/11/7 radii, accent spent as glow) covering every
   `ch-*` hook. Adds `includes/looks/class-floodlight.php` and `assets/looks/floodlight.css`,
   registers the look in the DB-free preview, and cycles looks via `?look=`. Pure re-skin:
   no changes to section renderers or the theme engine. On the dark shell all accent
@@ -907,7 +914,7 @@ git commit -m "chore: bump version to 0.10.0 and update changelog for Floodlight
 - [ ] `composer test` — all tests green (existing + new).
 - [ ] `composer lint` — run once as a final check; present any findings to the user (do not auto-fix in a loop).
 - [ ] Start the preview: `php -S localhost:8124` from the plugin root; open `http://localhost:8124/preview/?look=floodlight`.
-- [ ] Across `?page=home|about|membership|contact|login`: dark warm-ink shell, grotesque headings / clean body, crisp mid radii, accent glows, the bone punch button reads, no horizontal overflow from 320px to desktop.
+- [ ] Across `?page=home|about|membership|contact|login`: dark warm-ink shell, grotesque headings / clean body, bold-modern mid radii, accent glows, the bone punch button reads, no horizontal overflow from 320px to desktop.
 - [ ] Click each accent swatch: the whole page re-themes; `accent-deep` text/marks stay legible on the dark shell across every preset hue; glows re-tint.
 - [ ] Click the look toggle: cycles Court Side → Floodlight → Court Side; Court Side is visually unchanged (no regressions).
 - [ ] Confirm no `.ch-*` hook is unstyled (visually scan each page section).

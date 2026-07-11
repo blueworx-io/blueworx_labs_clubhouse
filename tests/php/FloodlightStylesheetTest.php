@@ -22,7 +22,7 @@ final class FloodlightStylesheetTest extends TestCase {
 		$css = $this->css();
 		$this->assertStringContainsString( 'var(--color-accent-deep)', $css );
 		// The demo accent must never be baked in — that would break re-theming.
-		$this->assertStringNotContainsString( '#8bf34d', $css );
+		$this->assertStringNotContainsString( '#f7a70a', $css );
 		// Nor the other looks' demo accents.
 		$this->assertStringNotContainsString( '#c6f24e', $css );
 		$this->assertStringNotContainsString( '#7a2f3a', $css );
@@ -33,7 +33,7 @@ final class FloodlightStylesheetTest extends TestCase {
 		// name a family (that lives in the look class, not the CSS) — including in comments.
 		$css = $this->css();
 		$this->assertStringNotContainsString( 'Bricolage', $css );
-		$this->assertStringNotContainsString( 'Inter', $css );
+		$this->assertStringNotContainsString( 'Hanken', $css );
 		$this->assertStringContainsString( 'var(--font-display)', $css );
 		$this->assertStringContainsString( 'var(--font-body)', $css );
 	}

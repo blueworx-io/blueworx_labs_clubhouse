@@ -39,9 +39,9 @@ final class PreviewRenderTest extends TestCase {
 
 		$this->assertStringContainsString( 'floodlight.css', $html );
 		$this->assertStringContainsString( 'family=Bricolage%20Grotesque', $html );
-		$this->assertStringContainsString( 'family=Inter', $html );
+		$this->assertStringContainsString( 'family=Hanken%20Grotesk', $html );
 		// Dark shell token made it into the emitted :root.
-		$this->assertStringContainsString( '#16120c', $html );
+		$this->assertStringContainsString( '#14110b', $html );
 	}
 
 	public function test_default_look_is_still_court_side(): void {

@@ -117,7 +117,7 @@ function blueworx_clubhouse_preview_document(): string {
 	$look_toggle = '<a class="ch-look-toggle" href="?look=' . rawurlencode( $next )
 		. '&page=' . rawurlencode( (string) $page ) . '">Look: '
 		. htmlspecialchars( $next_name, ENT_QUOTES, 'UTF-8' ) . ' &rarr;</a>';
-	$style      .= '<style>.ch-look-toggle{position:fixed;left:16px;bottom:16px;z-index:90;background:#211a12;color:#f4ede0;font:600 13px/1 system-ui,sans-serif;padding:12px 16px;border-radius:8px;text-decoration:none;border:1px solid #3a3020}</style>';
+	$style      .= '<style>.ch-look-toggle{position:fixed;left:16px;bottom:16px;z-index:90;background:#1e1913;color:#f3ede0;font:600 13px/1 system-ui,sans-serif;padding:12px 16px;border-radius:8px;text-decoration:none;border:1px solid #302a20}</style>';
 
 	// Served with docroot = plugin root, so the look stylesheet resolves from '/'.
 	return Blueworx_Clubhouse_Page_Renderer::document(
