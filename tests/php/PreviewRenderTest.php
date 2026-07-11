@@ -26,7 +26,7 @@ final class PreviewRenderTest extends TestCase {
 		$home = Blueworx_Clubhouse_Page_Map::render( '', $b, $vis );
 		$this->assertStringContainsString( 'class="ch-hero"', $home );
 
-		// Unknown page falls back to Home rather than erroring.
+		// A known page (about) renders its own markup rather than Home's.
 		$other = Blueworx_Clubhouse_Page_Map::render( 'about', $b, $vis );
 		$this->assertStringContainsString( 'class="ch-nav"', $other );
 	}

@@ -58,7 +58,6 @@ function blueworx_clubhouse_preview_palettes(): array {
 	return $out;
 }
 
-
 function blueworx_clubhouse_preview_document(): string {
 	$storage  = new Blueworx_Clubhouse_Preview_Storage();
 	$registry = new Blueworx_Clubhouse_Base_Look_Registry( $storage );

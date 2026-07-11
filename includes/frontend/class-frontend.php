@@ -19,13 +19,10 @@ final class Blueworx_Clubhouse_Frontend {
 	public const QUERY_VAR = 'clubhouse_page';
 
 	public static function resolve_slug( bool $is_front_page, mixed $query_var ): ?string {
-		if ( $is_front_page ) {
-			return '';
-		}
 		if ( is_string( $query_var ) && '' !== $query_var && Blueworx_Clubhouse_Page_Map::has( $query_var ) ) {
 			return $query_var;
 		}
-		return null;
+		return $is_front_page ? '' : null;
 	}
 
 	/**
@@ -48,6 +45,19 @@ final class Blueworx_Clubhouse_Frontend {
 		add_action( 'init', array( self::class, 'register_rewrites' ) );
 		add_action( 'wp_enqueue_scripts', array( self::class, 'enqueue_assets' ) );
 		add_filter( 'template_include', array( self::class, 'filter_template' ) );
+		add_filter( 'wp_resource_hints', array( self::class, 'resource_hints' ), 10, 2 );
+	}
+
+	/**
+	 * @param array<int,mixed> $urls
+	 * @return array<int,mixed>
+	 */
+	public static function resource_hints( array $urls, string $relation_type ): array {
+		if ( 'preconnect' === $relation_type && null !== self::current_slug() ) {
+			$urls[] = 'https://fonts.googleapis.com';
+			$urls[] = array( 'href' => 'https://fonts.gstatic.com', 'crossorigin' );
+		}
+		return $urls;
 	}
 
 	public static function register_rewrites(): void {

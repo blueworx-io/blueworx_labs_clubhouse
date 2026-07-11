@@ -18,6 +18,7 @@ final class FrontendTest extends TestCase {
 		$this->assertContains( 'init', $actions );
 		$this->assertContains( 'wp_enqueue_scripts', $actions );
 		$this->assertContains( 'template_include', $filters );
+		$this->assertContains( 'wp_resource_hints', $filters );
 	}
 
 	public function test_register_rewrites_adds_one_rule_per_non_home_page(): void {
@@ -31,6 +32,17 @@ final class FrontendTest extends TestCase {
 	}
 
 	public function test_resolve_slug_front_page_is_home(): void {
+		$this->assertSame( '', Blueworx_Clubhouse_Frontend::resolve_slug( true, null ) );
+	}
+
+	public function test_resolve_slug_query_var_wins_over_front_page(): void {
+		// Posts-on-front installs report is_front_page() true even for /about/;
+		// a present, known query var must win so sub-pages don't render Home.
+		$this->assertSame( 'about', Blueworx_Clubhouse_Frontend::resolve_slug( true, 'about' ) );
+	}
+
+	public function test_resolve_slug_front_page_without_query_var_is_home(): void {
+		$this->assertSame( '', Blueworx_Clubhouse_Frontend::resolve_slug( true, '' ) );
 		$this->assertSame( '', Blueworx_Clubhouse_Frontend::resolve_slug( true, null ) );
 	}
 
