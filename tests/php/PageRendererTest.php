@@ -141,4 +141,12 @@ final class PageRendererTest extends TestCase {
 		$this->assertStringNotContainsString( 'ch-cal__month', $body );
 		$this->assertStringContainsString( 'class="ch-hero-f"', $body );
 	}
+
+	public function test_document_inlines_reveal_script_from_file(): void {
+		$look     = new Blueworx_Clubhouse_Court_Side();
+		$branding = new Blueworx_Clubhouse_Branding( new Blueworx_Clubhouse_Fake_Storage() );
+		$html     = Blueworx_Clubhouse_Page_Renderer::document( $look, $branding, '<main></main>', '/' );
+		$this->assertStringContainsString( 'IntersectionObserver', $html );
+		$this->assertStringContainsString( "querySelectorAll('.ch-main > *:not(.ch-hero)')", $html );
+	}
 }

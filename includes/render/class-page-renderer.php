@@ -55,16 +55,8 @@ final class Blueworx_Clubhouse_Page_Renderer {
 	 * JS by design — no dependency; GSAP stays reserved for genuinely complex animation.
 	 */
 	private static function reveal_script(): string {
-		return '<script>(function(){'
-			. 'if(!("IntersectionObserver" in window)||matchMedia("(prefers-reduced-motion:reduce)").matches)return;'
-			. 'var els=document.querySelectorAll(".ch-main > *:not(.ch-hero)");'
-			. 'if(!els.length)return;'
-			. 'els.forEach(function(el){el.classList.add("ch-reveal")});'
-			. 'var io=new IntersectionObserver(function(es){es.forEach(function(e){'
-			. 'if(e.isIntersecting){e.target.classList.add("is-in");io.unobserve(e.target)}})},'
-			. '{rootMargin:"0px 0px -10% 0px",threshold:.08});'
-			. 'els.forEach(function(el){io.observe(el)});'
-			. '})();</script>';
+		$js = (string) file_get_contents( dirname( __DIR__, 2 ) . '/assets/js/reveal.js' );
+		return '<script>' . $js . '</script>';
 	}
 
 	private static function shell_header( string $club, string $active ): string {
