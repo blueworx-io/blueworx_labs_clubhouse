@@ -5,6 +5,23 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.13.0] - 2026-07-12
+
+### Collections / custom post types
+
+Real data behind the unchanged renderers.
+
+#### New
+
+- **Six custom post types** — Sports, Teams, Fixtures, Events, Sponsors, People — registered with their meta fields. Fixtures is a single type carrying an outcome (empty = upcoming, `W`/`L`/`D` = result), feeding both the Home activity tabs and the Calendar.
+- **`Collections` repository** — a pure `Demo_Collections` (preview + tests) and a thin `WP_Collections` (reads the CPT posts) behind one interface; `Page_Renderer` projects the canonical data to each renderer's exact shape, so no renderer changed.
+- **Demo content is seeded** on activation from a single `Demo_Content` source, so a fresh install still shows a fully populated site. Per-field editing UI arrives with the admin flow.
+
+#### Notes
+
+- Home and Calendar fixtures are now derived from one consistent set (the previously-hardcoded demo diverged between the two views).
+- The `sponsors` renderer takes only names, so a sponsor's URL is stored but unused for now; committee entries render without email (matching the demo), the directory shows emails.
+
 ## [0.12.0] - 2026-07-11
 
 ### WordPress integration
