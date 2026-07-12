@@ -41,6 +41,51 @@ The four remaining collection pages, completing the eight-page ClubHouse site un
 - Filter pills are presentational (unfiltered demo data), consistent with the progressive-enhancement / presentational-forms decisions.
 - Members' House and Floodlight will need the same new `ch-*` hooks styled when they rebase onto this branch (re-skin contract).
 
+## [0.10.0] - 2026-07-11
+
+### Floodlight Base Look
+
+A bold, dark, night-match re-skin covering every `ch-*` hook.
+
+#### New
+
+- **Floodlight — third Base Look.** A bold, dark, night-match re-skin (Bricolage Grotesque + Hanken Grotesk, warm-ink canvas, bold-modern 16/11/7 radii, accent spent as glow) covering every `ch-*` hook. Adds `includes/looks/class-floodlight.php` and `assets/looks/floodlight.css`, registers the look in the DB-free preview, and cycles looks via `?look=`. Pure re-skin: no changes to section renderers or the theme engine. On the dark shell all accent text/marks route through the engine's AA-guaranteed `--color-accent-deep`; the engine's `accent-ink`-on-dark limitation is sidestepped by the glow idiom, not triggered.
+
+> Note: `0.9.0` is the Members' House Base Look, delivered on its own sibling branch/PR; Floodlight takes `0.10.0` so the two do not collide when both merge into `base-look-theming-design`.
+
+## [0.9.0] - 2026-07-10
+
+### Members' House — second Base Look
+
+The first re-skin. A refined, editorial Base Look that reuses the engine and every
+skin-agnostic section unchanged — swapping the active look changes only the tokens,
+fonts, and stylesheet.
+
+- **New Base Look `members-house`** (`Blueworx_Clubhouse_Members_House`): warm parchment
+  shell, warm near-black ink, small crisp radii (10/7/4px), Fraunces (display) + Mulish
+  (body). Accent stays engine-derived — the look defines no accent tokens.
+- **Refined-editorial stylesheet** (`assets/looks/members-house.css`): every `ch-*` hook
+  restyled in a restrained idiom — hairline rules, rectangular buttons, an accent
+  underline on the hero highlight (no rotated block), quiet accent-wash bands, and fine
+  accent marks. Accent is referenced only via `var(--color-accent*)`, so a club still
+  re-themes by swapping one colour. All accessibility and motion behaviour (skip link,
+  focus indicator, no-JS nav drawer, ticker pause, scroll-reveal, reduced-motion) is
+  preserved through the shared section markup.
+- **Preview look switch**: `preview/index.php` registers both looks and takes `?look=`
+  (default Court Side), with a toggle to flip between them; the accent swatches derive
+  from the active look's shell so they stay AA-correct per look.
+
+## [0.8.1] - 2026-07-11
+
+### CI preview wiring
+
+Un-gates the merge train by running Playwright against the plugin's DB-free PHP preview instead of a not-yet-existent staging site.
+
+#### Changed
+
+- **Playwright now boots the preview itself.** `playwright.config.js` gains a `webServer` that starts `php -S` (docroot = plugin root) and points `baseURL` at `preview/`, so CI needs no deployed staging URL. The foundation `preview_url` input in `.github/workflows/ci.yml` is set to the same localhost preview URL.
+- **Real smoke test.** The skipped placeholder (`tests/example.spec.js`) is replaced by `tests/smoke.spec.js`, which loads each built page (home, about, membership, contact, login) and asserts it renders (title + `<main>` landmark) and that `?page=` routing resolves to the right page rather than the Home fallback.
+
 ## [0.8.0] - 2026-07-10
 
 ### Login page, hover motion, and design polish
