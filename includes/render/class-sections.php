@@ -105,6 +105,25 @@ final class Blueworx_Clubhouse_Sections {
 			. '</div></section>';
 	}
 
+	/**
+	 * @param array{eyebrow:string,title_lead:string,title_highlight:string,lede:string,
+	 *   filter_label:string,filters:array<int,array{label:string,href:string,active:bool}>} $data
+	 */
+	public static function hero_filter( array $data ): string {
+		$pills = '';
+		foreach ( $data['filters'] as $f ) {
+			$on     = ! empty( $f['active'] ) ? ' ch-filter--on' : '';
+			$pills .= '<a class="ch-filter' . $on . '" href="' . self::e( $f['href'] ) . '">' . self::e( $f['label'] ) . '</a>';
+		}
+		return '<section class="ch-hero-f"><div class="ch-wrap">'
+			. '<span class="ch-eyebrow">' . self::e( $data['eyebrow'] ) . '</span>'
+			. '<h1 class="ch-hero-f__title">' . self::e( $data['title_lead'] )
+			. '<span class="ch-hero-f__hl">' . self::e( $data['title_highlight'] ) . '</span></h1>'
+			. '<p class="ch-hero-f__lede">' . self::e( $data['lede'] ) . '</p>'
+			. '<nav class="ch-filters" aria-label="' . self::e( $data['filter_label'] ) . '">' . $pills . '</nav>'
+			. '</div></section>';
+	}
+
 	/** @param array<int,array{value:string,label:string,featured?:bool}> $stats */
 	public static function stat_strip( array $stats ): string {
 		$items = '';
@@ -165,6 +184,42 @@ final class Blueworx_Clubhouse_Sections {
 			. '<h2 class="ch-sec__title">' . self::e( $data['heading'] ) . '</h2></div>'
 			. '<a class="ch-btn ch-btn--ghost" href="' . self::e( $data['link_href'] ) . '">' . self::e( $data['link_label'] ) . '</a></div>'
 			. '<div class="ch-cards" role="list">' . $cards . '</div></div></section>';
+	}
+
+	/**
+	 * @param array{eyebrow:string,heading:string,link_label:string,link_href:string,
+	 *   cards:array<int,array{image:string,image_alt:string,chip:string,title:string,description:string,
+	 *   stats:array<int,array{value:string,label:string}>}>} $data
+	 */
+	public static function stat_card_grid( array $data ): string {
+		$cards = '';
+		foreach ( $data['cards'] as $c ) {
+			$stats = '';
+			foreach ( $c['stats'] as $s ) {
+				$stats .= '<div class="ch-scard__stat"><b class="ch-scard__stat-v">' . self::e( $s['value'] )
+					. '</b><span class="ch-scard__stat-l">' . self::e( $s['label'] ) . '</span></div>';
+			}
+			$cards .= '<article class="ch-scard" role="listitem">'
+				. self::media( $c['image'], $c['image_alt'], 'ch-scard__media' )
+				. '<span class="ch-scard__chip">' . self::e( $c['chip'] ) . '</span>'
+				. '<div class="ch-scard__body">'
+				. '<h3 class="ch-scard__title">' . self::e( $c['title'] ) . '</h3>'
+				. '<p class="ch-scard__desc">' . self::e( $c['description'] ) . '</p>'
+				. '<div class="ch-scard__stats">' . $stats . '</div></div></article>';
+		}
+		$head = '';
+		if ( '' !== $data['link_label'] ) {
+			$head = '<div class="ch-sec__head"><div>'
+				. '<span class="ch-eyebrow">' . self::e( $data['eyebrow'] ) . '</span>'
+				. '<h2 class="ch-sec__title">' . self::e( $data['heading'] ) . '</h2></div>'
+				. '<a class="ch-btn ch-btn--ghost" href="' . self::e( $data['link_href'] ) . '">' . self::e( $data['link_label'] ) . '</a></div>';
+		} else {
+			$head = '<span class="ch-eyebrow">' . self::e( $data['eyebrow'] ) . '</span>'
+				. '<h2 class="ch-sec__title">' . self::e( $data['heading'] ) . '</h2>';
+		}
+		return '<section class="ch-sec"><div class="ch-wrap">'
+			. $head
+			. '<div class="ch-scards" role="list">' . $cards . '</div></div></section>';
 	}
 
 	/**
@@ -293,6 +348,45 @@ final class Blueworx_Clubhouse_Sections {
 			. '<span class="ch-eyebrow">' . self::e( $data['eyebrow'] ) . '</span>'
 			. '<h2 class="ch-sec__title">' . self::e( $data['heading'] ) . '</h2>'
 			. '<div class="ch-news" role="list">' . $cards . '</div></div></section>';
+	}
+
+	/**
+	 * @param array{eyebrow:string,heading:string,
+	 *   cards:array<int,array{tag:string,date:string,title:string,detail:string,cta_label:string,cta_href:string}>} $data
+	 */
+	public static function event_grid( array $data ): string {
+		$cards = '';
+		foreach ( $data['cards'] as $c ) {
+			$cta = '' !== $c['cta_label']
+				? '<a class="ch-btn ch-btn--ghost ch-event__cta" href="' . self::e( $c['cta_href'] ) . '">' . self::e( $c['cta_label'] ) . '</a>'
+				: '';
+			$cards .= '<article class="ch-event" role="listitem">'
+				. '<div class="ch-event__meta"><span class="ch-event__tag">' . self::e( $c['tag'] ) . '</span>'
+				. '<span class="ch-event__date">' . self::e( $c['date'] ) . '</span></div>'
+				. '<h3 class="ch-event__title">' . self::e( $c['title'] ) . '</h3>'
+				. '<p class="ch-event__detail">' . self::e( $c['detail'] ) . '</p>'
+				. $cta . '</article>';
+		}
+		return '<section class="ch-sec"><div class="ch-wrap">'
+			. '<span class="ch-eyebrow">' . self::e( $data['eyebrow'] ) . '</span>'
+			. '<h2 class="ch-sec__title">' . self::e( $data['heading'] ) . '</h2>'
+			. '<div class="ch-events" role="list">' . $cards . '</div></div></section>';
+	}
+
+	/**
+	 * @param array{heading:string,rows:array<int,array{date:string,tag:string,title:string}>} $data
+	 */
+	public static function event_archive( array $data ): string {
+		$rows = '';
+		foreach ( $data['rows'] as $r ) {
+			$rows .= '<div class="ch-archive__row" role="listitem">'
+				. '<span class="ch-archive__date">' . self::e( $r['date'] ) . '</span>'
+				. '<span class="ch-archive__tag">' . self::e( $r['tag'] ) . '</span>'
+				. '<span class="ch-archive__title">' . self::e( $r['title'] ) . '</span></div>';
+		}
+		return '<section class="ch-sec ch-sec--alt"><div class="ch-wrap">'
+			. '<h2 class="ch-sec__title ch-sec__title--sm">' . self::e( $data['heading'] ) . '</h2>'
+			. '<div class="ch-archive" role="list">' . $rows . '</div></div></section>';
 	}
 
 	/** @param array<int,array{label:string,lines:array<int,string>,link_label:string,link_href:string}> $cols */
@@ -538,5 +632,38 @@ final class Blueworx_Clubhouse_Sections {
 			. '<p class="ch-auth__alt">' . self::e( $data['join_prompt'] ) . ' '
 			. '<a class="ch-auth__alt-link" href="' . self::e( $data['join_href'] ) . '">' . self::e( $data['join_label'] ) . '</a></p>'
 			. '</div></div></section>';
+	}
+
+	/**
+	 * @param array{eyebrow:string,heading:string,
+	 *   months:array<int,array{label:string,rows:array<int,array{date:string,competition:string,
+	 *   matchup:string,detail:string,outcome:string}>}>} $data
+	 */
+	public static function calendar_months( array $data ): string {
+		$months = '';
+		foreach ( $data['months'] as $m ) {
+			$rows = '';
+			foreach ( $m['rows'] as $r ) {
+				if ( '' === $r['outcome'] ) {
+					$status = '<span class="ch-cal__soon">Upcoming</span>';
+				} else {
+					$o      = strtolower( $r['outcome'] );
+					$mod    = in_array( $o, array( 'w', 'l', 'd' ), true ) ? $o : 'd';
+					$status = '<span class="ch-badge ch-badge--' . $mod . '">' . self::e( $r['outcome'] ) . '</span>';
+				}
+				$rows .= '<div class="ch-cal__row" role="listitem">'
+					. '<span class="ch-cal__date">' . self::e( $r['date'] ) . '</span>'
+					. '<div class="ch-cal__body"><span class="ch-cal__comp">' . self::e( $r['competition'] ) . '</span>'
+					. '<span class="ch-cal__match">' . self::e( $r['matchup'] ) . '</span></div>'
+					. '<span class="ch-cal__detail">' . self::e( $r['detail'] ) . '</span>'
+					. $status . '</div>';
+			}
+			$months .= '<div class="ch-cal__month"><h3 class="ch-cal__mlabel">' . self::e( $m['label'] ) . '</h3>'
+				. '<div class="ch-cal__rows" role="list">' . $rows . '</div></div>';
+		}
+		return '<section class="ch-sec"><div class="ch-wrap">'
+			. '<span class="ch-eyebrow">' . self::e( $data['eyebrow'] ) . '</span>'
+			. '<h2 class="ch-sec__title">' . self::e( $data['heading'] ) . '</h2>'
+			. '<div class="ch-cal">' . $months . '</div></div></section>';
 	}
 }

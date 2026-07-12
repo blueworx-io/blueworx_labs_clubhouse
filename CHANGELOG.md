@@ -5,6 +5,24 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.11.0] - 2026-07-11
+
+### Sports, Teams, Events & Calendar pages
+
+The four remaining collection pages, completing the eight-page ClubHouse site under the Court Side look.
+
+#### New
+
+- **Four new pages** — Sports, Teams, Events and Calendar — composed under per-section `Visibility` with hardcoded ClubHouse demo data, routed in the preview via `?page=`.
+- **Five new skin-agnostic section renderers** on `Blueworx_Clubhouse_Sections`: `hero_filter` (filter-pill hero), `stat_card_grid` (chip + stats cards for Sports/Teams), `event_grid` + `event_archive` (upcoming cards + past list), and `calendar_months` (month-grouped fixtures/results with W/D/L status badges). All emit only `ch-*` classes, escape interpolated text, and carry list semantics.
+- **Court Side styling** for every new hook, consuming engine custom properties only.
+
+#### Notes
+
+- Demo data is hardcoded this round; the later Collections/CPT plan swaps the data source behind the unchanged renderers.
+- Filter pills are presentational (unfiltered demo data), consistent with the progressive-enhancement / presentational-forms decisions.
+- Members' House and Floodlight will need the same new `ch-*` hooks styled when they rebase onto this branch (re-skin contract).
+
 ## [0.10.0] - 2026-07-11
 
 ### Floodlight Base Look

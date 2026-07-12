@@ -72,6 +72,14 @@ function blueworx_clubhouse_preview_body(
 			return Blueworx_Clubhouse_Page_Renderer::contact( $branding, $visibility );
 		case 'login':
 			return Blueworx_Clubhouse_Page_Renderer::login( $branding, $visibility );
+		case 'sports':
+			return Blueworx_Clubhouse_Page_Renderer::sports( $branding, $visibility );
+		case 'teams':
+			return Blueworx_Clubhouse_Page_Renderer::teams( $branding, $visibility );
+		case 'events':
+			return Blueworx_Clubhouse_Page_Renderer::events( $branding, $visibility );
+		case 'calendar':
+			return Blueworx_Clubhouse_Page_Renderer::calendar( $branding, $visibility );
 		case 'home':
 		default:
 			return Blueworx_Clubhouse_Page_Renderer::home( $branding, $visibility );

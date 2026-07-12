@@ -194,6 +194,42 @@ final class SectionsTest extends TestCase {
 		$this->assertStringNotContainsString( 'style=', $html );
 	}
 
+	public function test_stat_card_grid_renders_cards_with_chip_and_stats(): void {
+		$html = Blueworx_Clubhouse_Sections::stat_card_grid( array(
+			'eyebrow'    => 'All sections',
+			'heading'    => 'Pick your sport.',
+			'link_label' => 'Join the club →',
+			'link_href'  => '?page=membership',
+			'cards'      => array(
+				array( 'image' => '', 'image_alt' => 'Rugby', 'chip' => 'Sat', 'title' => 'Rugby',
+					'description' => 'Senior, colts and touch rugby.',
+					'stats' => array( array( 'value' => '4', 'label' => 'Teams' ), array( 'value' => '120', 'label' => 'Players' ) ) ),
+				array( 'image' => '', 'image_alt' => 'Tennis', 'chip' => 'Daily', 'title' => 'Tennis',
+					'description' => 'Four courts, coaching for all ages.',
+					'stats' => array( array( 'value' => '4', 'label' => 'Courts' ) ) ),
+			),
+		) );
+		$this->assertStringContainsString( 'class="ch-scards"', $html );
+		$this->assertSame( 2, substr_count( $html, 'ch-scard"' ) );
+		$this->assertStringContainsString( 'ch-scard__chip', $html );
+		$this->assertStringContainsString( 'Senior, colts and touch rugby.', $html );
+		// 3 stat pairs total across the two cards.
+		$this->assertSame( 3, substr_count( $html, 'ch-scard__stat"' ) );
+		// The card grid is the only list; stat rows are inline metrics, not list items.
+		$this->assertListSemantics( $html, 1, 2 );
+		$this->assertStringContainsString( 'Join the club', $html );
+		$this->assertNoHexColour( $html );
+		$this->assertStringNotContainsString( 'style=', $html );
+	}
+
+	public function test_stat_card_grid_omits_head_link_when_label_empty(): void {
+		$html = Blueworx_Clubhouse_Sections::stat_card_grid( array(
+			'eyebrow' => 'x', 'heading' => 'y', 'link_label' => '', 'link_href' => '',
+			'cards'   => array( array( 'image' => '', 'image_alt' => '', 'chip' => 'c', 'title' => 't', 'description' => 'd', 'stats' => array() ) ),
+		) );
+		$this->assertStringNotContainsString( 'ch-sec__head', $html );
+	}
+
 	public function test_image_band_renders_overlay_heading_and_cta(): void {
 		$html = Blueworx_Clubhouse_Sections::image_band( array(
 			'eyebrow'   => 'The clubhouse',
@@ -496,5 +532,105 @@ final class SectionsTest extends TestCase {
 		$this->assertStringContainsString( 'href="?page=membership"', $html );
 		$this->assertNoHexColour( $html );
 		$this->assertStringNotContainsString( 'style=', $html );
+	}
+
+	public function test_hero_filter_renders_title_lede_and_filter_pills(): void {
+		$html = Blueworx_Clubhouse_Sections::hero_filter( array(
+			'eyebrow'         => 'Our sports',
+			'title_lead'      => 'Nine sports, ',
+			'title_highlight' => 'one club.',
+			'lede'            => 'Find your section and get playing.',
+			'filter_label'    => 'Filter by sport',
+			'filters'         => array(
+				array( 'label' => 'All', 'href' => '?page=sports', 'active' => true ),
+				array( 'label' => 'Rugby', 'href' => '?page=sports', 'active' => false ),
+				array( 'label' => 'Tennis', 'href' => '?page=sports', 'active' => false ),
+			),
+		) );
+		$this->assertStringContainsString( 'class="ch-hero-f"', $html );
+		$this->assertStringContainsString( 'class="ch-hero-f__hl"', $html );
+		$this->assertStringContainsString( 'Find your section', $html );
+		// Filter bar is a nav landmark (not a list), label-driven, active pill flagged.
+		$this->assertStringContainsString( '<nav class="ch-filters" aria-label="Filter by sport">', $html );
+		// 4 = the nav's own class="ch-filters" (a substring match on "ch-filter") + the 3 pills.
+		$this->assertSame( 4, substr_count( $html, 'class="ch-filter' ) );
+		$this->assertSame( 1, substr_count( $html, 'ch-filter--on' ) );
+		$this->assertStringContainsString( 'Rugby', $html );
+		$this->assertNoHexColour( $html );
+		$this->assertStringNotContainsString( 'style=', $html );
+	}
+
+	public function test_event_grid_renders_upcoming_cards_with_optional_cta(): void {
+		$html = Blueworx_Clubhouse_Sections::event_grid( array(
+			'eyebrow' => 'Upcoming', 'heading' => 'What is on',
+			'cards'   => array(
+				array( 'tag' => 'Open day', 'date' => 'Sat 26 Jul', 'title' => 'Club Open Day',
+					'detail' => '10:00–14:00 · Clubhouse & grounds', 'cta_label' => 'Book a place', 'cta_href' => '#' ),
+				array( 'tag' => 'Social', 'date' => 'Fri 12 Sep', 'title' => 'Annual Awards Night',
+					'detail' => '19:00 · Function room', 'cta_label' => '', 'cta_href' => '' ),
+			),
+		) );
+		$this->assertStringContainsString( 'class="ch-events"', $html );
+		$this->assertSame( 2, substr_count( $html, 'ch-event"' ) );
+		$this->assertListSemantics( $html, 1, 2 );
+		$this->assertStringContainsString( 'Club Open Day', $html );
+		// Only the first card has a CTA.
+		$this->assertSame( 1, substr_count( $html, 'ch-event__cta' ) );
+		$this->assertNoHexColour( $html );
+		$this->assertStringNotContainsString( 'style=', $html );
+	}
+
+	public function test_event_archive_renders_past_rows(): void {
+		$html = Blueworx_Clubhouse_Sections::event_archive( array(
+			'heading' => 'Past events',
+			'rows'    => array(
+				array( 'date' => 'Jun 2026', 'tag' => 'Social', 'title' => 'Summer BBQ' ),
+				array( 'date' => 'May 2026', 'tag' => 'Tournament', 'title' => 'Spring Sevens' ),
+				array( 'date' => 'Apr 2026', 'tag' => 'Club', 'title' => 'AGM' ),
+			),
+		) );
+		$this->assertStringContainsString( 'class="ch-archive"', $html );
+		$this->assertSame( 3, substr_count( $html, 'ch-archive__row' ) );
+		$this->assertListSemantics( $html, 1, 3 );
+		$this->assertStringContainsString( 'Spring Sevens', $html );
+		$this->assertNoHexColour( $html );
+		$this->assertStringNotContainsString( 'style=', $html );
+	}
+
+	public function test_calendar_months_groups_rows_and_badges_outcomes(): void {
+		$html = Blueworx_Clubhouse_Sections::calendar_months( array(
+			'eyebrow' => 'Season', 'heading' => 'Fixtures & results',
+			'months'  => array(
+				array( 'label' => 'July', 'rows' => array(
+					array( 'date' => 'Sat 12', 'competition' => 'Rugby · 1st XV', 'matchup' => 'ClubHouse vs Riverside', 'detail' => 'Home · 14:00', 'outcome' => '' ),
+					array( 'date' => 'Sat 5', 'competition' => 'Cricket · 1st XI', 'matchup' => 'ClubHouse vs Hartfield', 'detail' => 'Won by 34', 'outcome' => 'W' ),
+				) ),
+				array( 'label' => 'June', 'rows' => array(
+					array( 'date' => 'Sat 28', 'competition' => 'Rugby · 2nd XV', 'matchup' => 'ClubHouse vs Dunmore', 'detail' => 'Lost 18–24', 'outcome' => 'L' ),
+				) ),
+			),
+		) );
+		$this->assertStringContainsString( 'class="ch-cal"', $html );
+		$this->assertSame( 2, substr_count( $html, 'ch-cal__month' ) );
+		$this->assertStringContainsString( '>July<', $html );
+		$this->assertStringContainsString( '>June<', $html );
+		// Upcoming row → soon tag; result rows → W/L badges.
+		$this->assertSame( 1, substr_count( $html, 'ch-cal__soon' ) );
+		$this->assertStringContainsString( 'ch-badge--w', $html );
+		$this->assertStringContainsString( 'ch-badge--l', $html );
+		// One list per month; 3 rows total (2 + 1).
+		$this->assertListSemantics( $html, 2, 3 );
+		$this->assertNoHexColour( $html );
+		$this->assertStringNotContainsString( 'style=', $html );
+	}
+
+	public function test_calendar_unknown_outcome_falls_back_to_draw_badge(): void {
+		$html = Blueworx_Clubhouse_Sections::calendar_months( array(
+			'eyebrow' => 'x', 'heading' => 'y',
+			'months'  => array( array( 'label' => 'Aug', 'rows' => array(
+				array( 'date' => 'Sat 1', 'competition' => 'c', 'matchup' => 'm', 'detail' => 'd', 'outcome' => 'X' ),
+			) ) ),
+		) );
+		$this->assertStringContainsString( 'ch-badge--d', $html );
 	}
 }

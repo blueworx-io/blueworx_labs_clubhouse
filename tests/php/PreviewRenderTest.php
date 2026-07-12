@@ -31,6 +31,17 @@ final class PreviewRenderTest extends TestCase {
 		$this->assertStringContainsString( 'class="ch-nav"', $other );
 	}
 
+	public function test_preview_routes_the_four_collection_pages(): void {
+		require_once dirname( __DIR__, 2 ) . '/preview/index.php';
+		$b   = new Blueworx_Clubhouse_Branding( new Blueworx_Clubhouse_Fake_Storage() );
+		$vis = new Blueworx_Clubhouse_Visibility( new Blueworx_Clubhouse_Fake_Storage() );
+
+		$this->assertStringContainsString( 'ch-scards', blueworx_clubhouse_preview_body( 'sports', $b, $vis ) );
+		$this->assertStringContainsString( 'ch-scards', blueworx_clubhouse_preview_body( 'teams', $b, $vis ) );
+		$this->assertStringContainsString( 'ch-events', blueworx_clubhouse_preview_body( 'events', $b, $vis ) );
+		$this->assertStringContainsString( 'ch-cal__month', blueworx_clubhouse_preview_body( 'calendar', $b, $vis ) );
+	}
+
 	public function test_look_param_switches_to_floodlight(): void {
 		require_once dirname( __DIR__, 2 ) . '/preview/index.php';
 		$_GET['look'] = 'floodlight';
