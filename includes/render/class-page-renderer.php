@@ -118,7 +118,8 @@ final class Blueworx_Clubhouse_Page_Renderer {
 
 	public static function home(
 		Blueworx_Clubhouse_Branding $branding,
-		Blueworx_Clubhouse_Visibility $visibility
+		Blueworx_Clubhouse_Visibility $visibility,
+		Blueworx_Clubhouse_Collections $collections
 	): string {
 		$club = $branding->get_club_name();
 		$out  = '';
@@ -168,16 +169,23 @@ final class Blueworx_Clubhouse_Page_Renderer {
 			) );
 		}
 		if ( $visibility->is_section_visible( 'home', 'sports' ) ) {
+			$sports = array_slice( $collections->sports(), 0, 4 );
 			$out .= Blueworx_Clubhouse_Sections::card_grid( array(
 				'eyebrow'    => 'Our sports',
 				'heading'    => 'Pick your game.',
 				'link_label' => 'All sections →',
 				'link_href'  => '?page=sports',
-				'cards'      => array(
-					array( 'image' => '', 'image_alt' => 'Rugby', 'tag' => 'Sat', 'title' => 'Rugby', 'subtitle' => 'Senior · colts · touch' ),
-					array( 'image' => '', 'image_alt' => 'Tennis', 'tag' => 'Daily', 'title' => 'Tennis', 'subtitle' => 'Four courts · coaching' ),
-					array( 'image' => '', 'image_alt' => 'Cricket', 'tag' => 'Summer', 'title' => 'Cricket', 'subtitle' => 'Youth → senior league' ),
-					array( 'image' => '', 'image_alt' => 'Football', 'tag' => 'Sun', 'title' => 'Football', 'subtitle' => 'Juniors · ages 5–16' ),
+				'cards'      => array_map(
+					static function ( array $s ): array {
+						return array(
+							'image'     => $s['image'],
+							'image_alt' => $s['title'],
+							'tag'       => $s['label'],
+							'title'     => $s['title'],
+							'subtitle'  => $s['subtitle'],
+						);
+					},
+					$sports
 				),
 			) );
 		}
@@ -265,7 +273,8 @@ final class Blueworx_Clubhouse_Page_Renderer {
 
 	public static function about(
 		Blueworx_Clubhouse_Branding $branding,
-		Blueworx_Clubhouse_Visibility $visibility
+		Blueworx_Clubhouse_Visibility $visibility,
+		Blueworx_Clubhouse_Collections $collections
 	): string {
 		$club = $branding->get_club_name();
 		$out  = self::shell_header( $club, '?page=about' ) . '<main class="ch-main" id="ch-main" tabindex="-1">';
@@ -349,7 +358,8 @@ final class Blueworx_Clubhouse_Page_Renderer {
 
 	public static function membership(
 		Blueworx_Clubhouse_Branding $branding,
-		Blueworx_Clubhouse_Visibility $visibility
+		Blueworx_Clubhouse_Visibility $visibility,
+		Blueworx_Clubhouse_Collections $collections
 	): string {
 		$club = $branding->get_club_name();
 		$out  = self::shell_header( $club, '?page=membership' ) . '<main class="ch-main" id="ch-main" tabindex="-1">';
@@ -454,7 +464,8 @@ final class Blueworx_Clubhouse_Page_Renderer {
 
 	public static function contact(
 		Blueworx_Clubhouse_Branding $branding,
-		Blueworx_Clubhouse_Visibility $visibility
+		Blueworx_Clubhouse_Visibility $visibility,
+		Blueworx_Clubhouse_Collections $collections
 	): string {
 		$club = $branding->get_club_name();
 		$out  = self::shell_header( $club, '?page=contact' ) . '<main class="ch-main" id="ch-main" tabindex="-1">';
@@ -511,7 +522,8 @@ final class Blueworx_Clubhouse_Page_Renderer {
 
 	public static function login(
 		Blueworx_Clubhouse_Branding $branding,
-		Blueworx_Clubhouse_Visibility $visibility
+		Blueworx_Clubhouse_Visibility $visibility,
+		Blueworx_Clubhouse_Collections $collections
 	): string {
 		$club = $branding->get_club_name();
 		$out  = self::shell_header( $club, '?page=login' ) . '<main class="ch-main" id="ch-main" tabindex="-1">';
@@ -538,7 +550,8 @@ final class Blueworx_Clubhouse_Page_Renderer {
 
 	public static function sports(
 		Blueworx_Clubhouse_Branding $branding,
-		Blueworx_Clubhouse_Visibility $visibility
+		Blueworx_Clubhouse_Visibility $visibility,
+		Blueworx_Clubhouse_Collections $collections
 	): string {
 		$club = $branding->get_club_name();
 		$out  = self::shell_header( $club, '?page=sports' ) . '<main class="ch-main" id="ch-main" tabindex="-1">';
@@ -567,25 +580,21 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'heading'    => 'Pick your sport.',
 				'link_label' => 'Join the club →',
 				'link_href'  => '?page=membership',
-				'cards'      => array(
-					array( 'image' => '', 'image_alt' => 'Rugby', 'chip' => 'Sat', 'title' => 'Rugby',
-						'description' => 'Senior, colts and touch rugby, from minis upward.',
-						'stats' => array( array( 'value' => '4', 'label' => 'Teams' ), array( 'value' => '120', 'label' => 'Players' ) ) ),
-					array( 'image' => '', 'image_alt' => 'Cricket', 'chip' => 'Summer', 'title' => 'Cricket',
-						'description' => 'Youth to senior league cricket on the square.',
-						'stats' => array( array( 'value' => '3', 'label' => 'Teams' ), array( 'value' => '80', 'label' => 'Players' ) ) ),
-					array( 'image' => '', 'image_alt' => 'Tennis', 'chip' => 'Daily', 'title' => 'Tennis',
-						'description' => 'Four courts with coaching for every age.',
-						'stats' => array( array( 'value' => '4', 'label' => 'Courts' ), array( 'value' => '90', 'label' => 'Members' ) ) ),
-					array( 'image' => '', 'image_alt' => 'Football', 'chip' => 'Sun', 'title' => 'Football',
-						'description' => 'Junior football for ages 5 to 16.',
-						'stats' => array( array( 'value' => '6', 'label' => 'Teams' ), array( 'value' => '140', 'label' => 'Players' ) ) ),
-					array( 'image' => '', 'image_alt' => 'Hockey', 'chip' => 'Sat', 'title' => 'Hockey',
-						'description' => 'Ladies and mixed hockey, league affiliated.',
-						'stats' => array( array( 'value' => '3', 'label' => 'Teams' ), array( 'value' => '60', 'label' => 'Players' ) ) ),
-					array( 'image' => '', 'image_alt' => 'Netball', 'chip' => 'Wed', 'title' => 'Netball',
-						'description' => 'Back-to-netball through to divisional squads.',
-						'stats' => array( array( 'value' => '2', 'label' => 'Teams' ), array( 'value' => '40', 'label' => 'Players' ) ) ),
+				'cards'      => array_map(
+					static function ( array $s ): array {
+						return array(
+							'image'       => $s['image'],
+							'image_alt'   => $s['title'],
+							'chip'        => $s['label'],
+							'title'       => $s['title'],
+							'description' => $s['description'],
+							'stats'       => array(
+								array( 'value' => $s['stat1_value'], 'label' => $s['stat1_label'] ),
+								array( 'value' => $s['stat2_value'], 'label' => $s['stat2_label'] ),
+							),
+						);
+					},
+					$collections->sports()
 				),
 			) );
 		}
@@ -605,7 +614,8 @@ final class Blueworx_Clubhouse_Page_Renderer {
 
 	public static function teams(
 		Blueworx_Clubhouse_Branding $branding,
-		Blueworx_Clubhouse_Visibility $visibility
+		Blueworx_Clubhouse_Visibility $visibility,
+		Blueworx_Clubhouse_Collections $collections
 	): string {
 		$club = $branding->get_club_name();
 		$out  = self::shell_header( $club, '?page=teams' ) . '<main class="ch-main" id="ch-main" tabindex="-1">';
@@ -664,7 +674,8 @@ final class Blueworx_Clubhouse_Page_Renderer {
 
 	public static function events(
 		Blueworx_Clubhouse_Branding $branding,
-		Blueworx_Clubhouse_Visibility $visibility
+		Blueworx_Clubhouse_Visibility $visibility,
+		Blueworx_Clubhouse_Collections $collections
 	): string {
 		$club = $branding->get_club_name();
 		$out  = self::shell_header( $club, '?page=events' ) . '<main class="ch-main" id="ch-main" tabindex="-1">';
@@ -725,7 +736,8 @@ final class Blueworx_Clubhouse_Page_Renderer {
 
 	public static function calendar(
 		Blueworx_Clubhouse_Branding $branding,
-		Blueworx_Clubhouse_Visibility $visibility
+		Blueworx_Clubhouse_Visibility $visibility,
+		Blueworx_Clubhouse_Collections $collections
 	): string {
 		$club = $branding->get_club_name();
 		$out  = self::shell_header( $club, '?page=calendar' ) . '<main class="ch-main" id="ch-main" tabindex="-1">';

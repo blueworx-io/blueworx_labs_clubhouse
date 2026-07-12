@@ -70,7 +70,7 @@ function blueworx_clubhouse_preview_document(): string {
 	if ( ! Blueworx_Clubhouse_Page_Map::has( $slug ) ) {
 		$slug = '';
 	}
-	$body = Blueworx_Clubhouse_Page_Map::render( $slug, $branding, $visibility );
+	$body = Blueworx_Clubhouse_Page_Map::render( $slug, $branding, $visibility, new Blueworx_Clubhouse_Demo_Collections() );
 	$palettes  = blueworx_clubhouse_preview_palettes();
 	$switcher   = '<div class="ch-switcher" data-ch-palettes=\''
 		. htmlspecialchars( json_encode( $palettes ), ENT_QUOTES, 'UTF-8' ) . '\'></div>'

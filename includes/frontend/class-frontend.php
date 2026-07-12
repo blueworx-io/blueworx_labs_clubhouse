@@ -96,7 +96,9 @@ final class Blueworx_Clubhouse_Frontend {
 		$branding   = new Blueworx_Clubhouse_Branding( $storage );
 		$visibility = new Blueworx_Clubhouse_Visibility( $storage );
 		$cache      = new Blueworx_Clubhouse_Theme_Cache( $storage );
-		return array( $look, $branding, $visibility, $cache );
+		// Task 6 swaps this for WP_Collections, reading seeded CPT posts.
+		$collections = new Blueworx_Clubhouse_Demo_Collections();
+		return array( $look, $branding, $visibility, $cache, $collections );
 	}
 
 	public static function enqueue_assets(): void {
@@ -124,8 +126,8 @@ final class Blueworx_Clubhouse_Frontend {
 		if ( null === $slug ) {
 			return '';
 		}
-		list( , $branding, $visibility, ) = self::context();
-		return Blueworx_Clubhouse_Page_Map::render( $slug, $branding, $visibility );
+		list( , $branding, $visibility, , $collections ) = self::context();
+		return Blueworx_Clubhouse_Page_Map::render( $slug, $branding, $visibility, $collections );
 	}
 
 	public static function club_name(): string {

@@ -11,6 +11,9 @@ final class PageMapTest extends TestCase {
 	private function visibility(): Blueworx_Clubhouse_Visibility {
 		return new Blueworx_Clubhouse_Visibility( new Blueworx_Clubhouse_Fake_Storage() );
 	}
+	private function collections(): Blueworx_Clubhouse_Demo_Collections {
+		return new Blueworx_Clubhouse_Demo_Collections();
+	}
 
 	public function test_home_slug_is_empty_string_and_first(): void {
 		$pages = Blueworx_Clubhouse_Page_Map::pages();
@@ -33,16 +36,16 @@ final class PageMapTest extends TestCase {
 
 	public function test_render_dispatches_to_the_right_page(): void {
 		// Calendar body carries the calendar-only hook; About carries benefits, not calendar.
-		$cal = Blueworx_Clubhouse_Page_Map::render( 'calendar', $this->branding(), $this->visibility() );
+		$cal = Blueworx_Clubhouse_Page_Map::render( 'calendar', $this->branding(), $this->visibility(), $this->collections() );
 		$this->assertStringContainsString( 'ch-cal', $cal );
 
-		$about = Blueworx_Clubhouse_Page_Map::render( 'about', $this->branding(), $this->visibility() );
+		$about = Blueworx_Clubhouse_Page_Map::render( 'about', $this->branding(), $this->visibility(), $this->collections() );
 		$this->assertStringContainsString( 'ch-benefits', $about );
 		$this->assertStringNotContainsString( 'ch-cal"', $about );
 	}
 
 	public function test_render_home_for_empty_slug(): void {
-		$home = Blueworx_Clubhouse_Page_Map::render( '', $this->branding(), $this->visibility() );
+		$home = Blueworx_Clubhouse_Page_Map::render( '', $this->branding(), $this->visibility(), $this->collections() );
 		$this->assertStringContainsString( 'ch-cards', $home );
 	}
 }
