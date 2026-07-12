@@ -38,4 +38,11 @@ final class CourtSideStylesheetTest extends TestCase {
 		$this->assertStringContainsString( '.ch-cal__row .ch-badge--l', $css );
 		$this->assertStringContainsString( '.ch-cal__row .ch-badge--d', $css );
 	}
+
+	public function test_styles_the_social_block(): void {
+		$css = $this->css();
+		foreach ( array( '.ch-social', '.ch-social__link' ) as $sel ) {
+			$this->assertStringContainsString( $sel, $css );
+		}
+	}
 }
