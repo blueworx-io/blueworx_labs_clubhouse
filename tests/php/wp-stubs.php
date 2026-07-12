@@ -6,12 +6,16 @@
 // shadowed. Reset with wp_stub_reset() in setUp().
 declare(strict_types=1);
 
-$GLOBALS['wp_stub_calls']   = array();
-$GLOBALS['wp_stub_options'] = array();
+$GLOBALS['wp_stub_calls']    = array();
+$GLOBALS['wp_stub_options']  = array();
+$GLOBALS['wp_stub_posts']    = array();
+$GLOBALS['wp_stub_postmeta'] = array();
 
 function wp_stub_reset(): void {
-	$GLOBALS['wp_stub_calls']   = array();
-	$GLOBALS['wp_stub_options'] = array();
+	$GLOBALS['wp_stub_calls']    = array();
+	$GLOBALS['wp_stub_options']  = array();
+	$GLOBALS['wp_stub_posts']    = array();
+	$GLOBALS['wp_stub_postmeta'] = array();
 }
 function wp_stub_calls( string $fn ): array {
 	return array_values( array_filter(
@@ -59,5 +63,20 @@ if ( ! function_exists( 'delete_option' ) ) {
 	function delete_option( string $key ): bool {
 		unset( $GLOBALS['wp_stub_options'][ $key ] );
 		return true;
+	}
+}
+if ( ! function_exists( 'get_posts' ) ) {
+	function get_posts( array $args = array() ) {
+		$type = $args['post_type'] ?? '';
+		return $GLOBALS['wp_stub_posts'][ $type ] ?? array();
+	}
+}
+if ( ! function_exists( 'get_post_meta' ) ) {
+	function get_post_meta( int $id, string $key = '', bool $single = false ) {
+		$meta = $GLOBALS['wp_stub_postmeta'][ $id ] ?? array();
+		if ( '' === $key ) {
+			return $meta;
+		}
+		return $single ? ( $meta[ $key ] ?? '' ) : array( $meta[ $key ] ?? '' );
 	}
 }
