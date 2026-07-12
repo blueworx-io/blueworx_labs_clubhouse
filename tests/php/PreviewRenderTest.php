@@ -20,26 +20,28 @@ final class PreviewRenderTest extends TestCase {
 
 	public function test_preview_defaults_to_home_and_routes_by_page_param(): void {
 		require_once dirname( __DIR__, 2 ) . '/preview/index.php';
-		$b   = new Blueworx_Clubhouse_Branding( new Blueworx_Clubhouse_Fake_Storage() );
-		$vis = new Blueworx_Clubhouse_Visibility( new Blueworx_Clubhouse_Fake_Storage() );
+		$b    = new Blueworx_Clubhouse_Branding( new Blueworx_Clubhouse_Fake_Storage() );
+		$vis  = new Blueworx_Clubhouse_Visibility( new Blueworx_Clubhouse_Fake_Storage() );
+		$coll = new Blueworx_Clubhouse_Demo_Collections();
 
-		$home = blueworx_clubhouse_preview_body( 'home', $b, $vis );
+		$home = Blueworx_Clubhouse_Page_Map::render( '', $b, $vis, $coll );
 		$this->assertStringContainsString( 'class="ch-hero"', $home );
 
-		// Unknown page falls back to Home rather than erroring.
-		$other = blueworx_clubhouse_preview_body( 'about', $b, $vis );
+		// A known page (about) renders its own markup rather than Home's.
+		$other = Blueworx_Clubhouse_Page_Map::render( 'about', $b, $vis, $coll );
 		$this->assertStringContainsString( 'class="ch-nav"', $other );
 	}
 
 	public function test_preview_routes_the_four_collection_pages(): void {
 		require_once dirname( __DIR__, 2 ) . '/preview/index.php';
-		$b   = new Blueworx_Clubhouse_Branding( new Blueworx_Clubhouse_Fake_Storage() );
-		$vis = new Blueworx_Clubhouse_Visibility( new Blueworx_Clubhouse_Fake_Storage() );
+		$b    = new Blueworx_Clubhouse_Branding( new Blueworx_Clubhouse_Fake_Storage() );
+		$vis  = new Blueworx_Clubhouse_Visibility( new Blueworx_Clubhouse_Fake_Storage() );
+		$coll = new Blueworx_Clubhouse_Demo_Collections();
 
-		$this->assertStringContainsString( 'ch-scards', blueworx_clubhouse_preview_body( 'sports', $b, $vis ) );
-		$this->assertStringContainsString( 'ch-scards', blueworx_clubhouse_preview_body( 'teams', $b, $vis ) );
-		$this->assertStringContainsString( 'ch-events', blueworx_clubhouse_preview_body( 'events', $b, $vis ) );
-		$this->assertStringContainsString( 'ch-cal__month', blueworx_clubhouse_preview_body( 'calendar', $b, $vis ) );
+		$this->assertStringContainsString( 'ch-scards', Blueworx_Clubhouse_Page_Map::render( 'sports', $b, $vis, $coll ) );
+		$this->assertStringContainsString( 'ch-scards', Blueworx_Clubhouse_Page_Map::render( 'teams', $b, $vis, $coll ) );
+		$this->assertStringContainsString( 'ch-events', Blueworx_Clubhouse_Page_Map::render( 'events', $b, $vis, $coll ) );
+		$this->assertStringContainsString( 'ch-cal__month', Blueworx_Clubhouse_Page_Map::render( 'calendar', $b, $vis, $coll ) );
 	}
 
 	public function test_look_param_switches_to_floodlight(): void {

@@ -23,3 +23,15 @@ for (const { slug, marker } of PAGES) {
     await expect(page.locator(marker).first()).toBeVisible();
   });
 }
+
+test('sports page lists collection sports', async ({ page }) => {
+  await page.goto('?page=sports');
+  await expect(page.getByText('Rugby').first()).toBeVisible();
+  await expect(page.getByText('Netball').first()).toBeVisible();
+});
+
+test('calendar shows month-grouped fixtures from the collection', async ({ page }) => {
+  await page.goto('?page=calendar');
+  await expect(page.getByText('July').first()).toBeVisible();
+  await expect(page.getByText('Won by 34 runs').first()).toBeVisible();
+});

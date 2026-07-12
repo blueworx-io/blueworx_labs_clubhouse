@@ -55,16 +55,8 @@ final class Blueworx_Clubhouse_Page_Renderer {
 	 * JS by design — no dependency; GSAP stays reserved for genuinely complex animation.
 	 */
 	private static function reveal_script(): string {
-		return '<script>(function(){'
-			. 'if(!("IntersectionObserver" in window)||matchMedia("(prefers-reduced-motion:reduce)").matches)return;'
-			. 'var els=document.querySelectorAll(".ch-main > *:not(.ch-hero)");'
-			. 'if(!els.length)return;'
-			. 'els.forEach(function(el){el.classList.add("ch-reveal")});'
-			. 'var io=new IntersectionObserver(function(es){es.forEach(function(e){'
-			. 'if(e.isIntersecting){e.target.classList.add("is-in");io.unobserve(e.target)}})},'
-			. '{rootMargin:"0px 0px -10% 0px",threshold:.08});'
-			. 'els.forEach(function(el){io.observe(el)});'
-			. '})();</script>';
+		$js = (string) file_get_contents( dirname( __DIR__, 2 ) . '/assets/js/reveal.js' );
+		return '<script>' . $js . '</script>';
 	}
 
 	private static function shell_header( string $club, string $active ): string {
@@ -126,7 +118,8 @@ final class Blueworx_Clubhouse_Page_Renderer {
 
 	public static function home(
 		Blueworx_Clubhouse_Branding $branding,
-		Blueworx_Clubhouse_Visibility $visibility
+		Blueworx_Clubhouse_Visibility $visibility,
+		Blueworx_Clubhouse_Collections $collections
 	): string {
 		$club = $branding->get_club_name();
 		$out  = '';
@@ -176,16 +169,23 @@ final class Blueworx_Clubhouse_Page_Renderer {
 			) );
 		}
 		if ( $visibility->is_section_visible( 'home', 'sports' ) ) {
+			$sports = array_slice( $collections->sports(), 0, 4 );
 			$out .= Blueworx_Clubhouse_Sections::card_grid( array(
 				'eyebrow'    => 'Our sports',
 				'heading'    => 'Pick your game.',
 				'link_label' => 'All sections →',
 				'link_href'  => '?page=sports',
-				'cards'      => array(
-					array( 'image' => '', 'image_alt' => 'Rugby', 'tag' => 'Sat', 'title' => 'Rugby', 'subtitle' => 'Senior · colts · touch' ),
-					array( 'image' => '', 'image_alt' => 'Tennis', 'tag' => 'Daily', 'title' => 'Tennis', 'subtitle' => 'Four courts · coaching' ),
-					array( 'image' => '', 'image_alt' => 'Cricket', 'tag' => 'Summer', 'title' => 'Cricket', 'subtitle' => 'Youth → senior league' ),
-					array( 'image' => '', 'image_alt' => 'Football', 'tag' => 'Sun', 'title' => 'Football', 'subtitle' => 'Juniors · ages 5–16' ),
+				'cards'      => array_map(
+					static function ( array $s ): array {
+						return array(
+							'image'     => $s['image'],
+							'image_alt' => $s['title'],
+							'tag'       => $s['label'],
+							'title'     => $s['title'],
+							'subtitle'  => $s['subtitle'],
+						);
+					},
+					$sports
 				),
 			) );
 		}
@@ -222,20 +222,13 @@ final class Blueworx_Clubhouse_Page_Renderer {
 			$out .= Blueworx_Clubhouse_Sections::activity_tabs( array(
 				'eyebrow'  => 'Club activity',
 				'heading'  => "What\u{2019}s happening",
-				'fixtures' => array(
-					array( 'month' => 'JUL', 'day' => '12', 'competition' => 'Rugby · 1st XV', 'time' => '14:00', 'matchup' => 'ClubHouse vs Riverside RFC' ),
-					array( 'month' => 'JUL', 'day' => '13', 'competition' => 'Netball · Div 2', 'time' => '11:00', 'matchup' => 'ClubHouse vs Castlebridge' ),
-					array( 'month' => 'JUL', 'day' => '19', 'competition' => 'Hockey · Ladies 1s', 'time' => '15:30', 'matchup' => 'ClubHouse vs Elmwood' ),
-				),
-				'results'  => array(
-					array( 'date' => 'JUL 5', 'home' => 'ClubHouse 1st XI', 'away' => 'Hartfield CC', 'score' => '+34', 'outcome' => 'W' ),
-					array( 'date' => 'JUN 28', 'home' => 'ClubHouse 2nd XV', 'away' => 'Dunmore', 'score' => '18–24', 'outcome' => 'L' ),
-					array( 'date' => 'JUL 2', 'home' => 'J. Patel', 'away' => 'R. Osei', 'score' => '2–0', 'outcome' => 'W' ),
-				),
-				'events'   => array(
-					array( 'tag' => 'Open day', 'date' => 'Sat 26 Jul', 'title' => 'Club Open Day', 'detail' => '10:00–14:00 · Clubhouse & grounds' ),
-					array( 'tag' => 'Junior football', 'date' => '4–8 Aug', 'title' => 'Summer Football Camp', 'detail' => 'Ages 5–12 · book via Events' ),
-					array( 'tag' => 'Social', 'date' => 'Fri 12 Sep', 'title' => 'Annual Awards Night', 'detail' => '19:00 · Clubhouse function room' ),
+				'fixtures' => Blueworx_Clubhouse_Fixture_Projection::home_fixtures( $collections->fixtures() ),
+				'results'  => Blueworx_Clubhouse_Fixture_Projection::home_results( $collections->fixtures() ),
+				'events'   => array_map(
+					static function ( array $e ): array {
+						return array( 'tag' => $e['tag'], 'date' => $e['date'], 'title' => $e['title'], 'detail' => $e['detail'] );
+					},
+					array_slice( array_values( array_filter( $collections->events(), static fn( $e ) => 'upcoming' === $e['status'] ) ), 0, 3 )
 				),
 			) );
 		}
@@ -261,7 +254,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 		if ( $visibility->is_section_visible( 'home', 'sponsors' ) ) {
 			$out .= Blueworx_Clubhouse_Sections::sponsors( array(
 				'heading' => 'Our sponsors & partners', 'link_label' => 'Become a sponsor', 'link_href' => '#',
-				'names'   => array( 'Sponsor 01', 'Sponsor 02', 'Sponsor 03', 'Sponsor 04', 'Sponsor 05', 'Sponsor 06' ),
+				'names'   => array_map( static fn( array $s ): string => $s['name'], $collections->sponsors() ),
 			) );
 		}
 		$out .= '</main>';
@@ -273,7 +266,8 @@ final class Blueworx_Clubhouse_Page_Renderer {
 
 	public static function about(
 		Blueworx_Clubhouse_Branding $branding,
-		Blueworx_Clubhouse_Visibility $visibility
+		Blueworx_Clubhouse_Visibility $visibility,
+		Blueworx_Clubhouse_Collections $collections
 	): string {
 		$club = $branding->get_club_name();
 		$out  = self::shell_header( $club, '?page=about' ) . '<main class="ch-main" id="ch-main" tabindex="-1">';
@@ -323,13 +317,11 @@ final class Blueworx_Clubhouse_Page_Renderer {
 			$out .= Blueworx_Clubhouse_Sections::people_grid( array(
 				'eyebrow' => 'Who runs the club',
 				'heading' => 'The committee',
-				'people'  => array(
-					array( 'name' => 'Priya Nair', 'role' => 'Chair', 'email' => '' ),
-					array( 'name' => 'Tom Ellison', 'role' => 'Treasurer', 'email' => '' ),
-					array( 'name' => 'Grace Okafor', 'role' => 'Secretary', 'email' => '' ),
-					array( 'name' => 'Daniel Reed', 'role' => 'Membership', 'email' => '' ),
-					array( 'name' => 'Aisha Khan', 'role' => 'Safeguarding', 'email' => '' ),
-					array( 'name' => 'Mark Bailey', 'role' => 'Grounds', 'email' => '' ),
+				'people'  => array_map(
+					static function ( array $p ): array {
+						return array( 'name' => $p['name'], 'role' => $p['committee_role'], 'email' => '' );
+					},
+					array_values( array_filter( $collections->people(), static fn( $p ) => '' !== $p['committee_role'] ) )
 				),
 			) );
 		}
@@ -357,7 +349,8 @@ final class Blueworx_Clubhouse_Page_Renderer {
 
 	public static function membership(
 		Blueworx_Clubhouse_Branding $branding,
-		Blueworx_Clubhouse_Visibility $visibility
+		Blueworx_Clubhouse_Visibility $visibility,
+		Blueworx_Clubhouse_Collections $collections
 	): string {
 		$club = $branding->get_club_name();
 		$out  = self::shell_header( $club, '?page=membership' ) . '<main class="ch-main" id="ch-main" tabindex="-1">';
@@ -462,7 +455,8 @@ final class Blueworx_Clubhouse_Page_Renderer {
 
 	public static function contact(
 		Blueworx_Clubhouse_Branding $branding,
-		Blueworx_Clubhouse_Visibility $visibility
+		Blueworx_Clubhouse_Visibility $visibility,
+		Blueworx_Clubhouse_Collections $collections
 	): string {
 		$club = $branding->get_club_name();
 		$out  = self::shell_header( $club, '?page=contact' ) . '<main class="ch-main" id="ch-main" tabindex="-1">';
@@ -503,13 +497,11 @@ final class Blueworx_Clubhouse_Page_Renderer {
 			$out .= Blueworx_Clubhouse_Sections::people_grid( array(
 				'eyebrow' => 'Who to contact',
 				'heading' => 'The directory',
-				'people'  => array(
-					array( 'name' => 'Daniel Reed', 'role' => 'Membership', 'email' => 'membership@clubhouse.example' ),
-					array( 'name' => 'Aisha Khan', 'role' => 'Juniors & safeguarding', 'email' => 'safeguarding@clubhouse.example' ),
-					array( 'name' => 'Grace Okafor', 'role' => 'Venue hire', 'email' => 'hire@clubhouse.example' ),
-					array( 'name' => 'Tom Ellison', 'role' => 'Sponsorship', 'email' => 'sponsors@clubhouse.example' ),
-					array( 'name' => 'Priya Nair', 'role' => 'Press', 'email' => 'press@clubhouse.example' ),
-					array( 'name' => 'The club office', 'role' => 'General', 'email' => 'hello@clubhouse.example' ),
+				'people'  => array_map(
+					static function ( array $p ): array {
+						return array( 'name' => $p['name'], 'role' => $p['directory_role'], 'email' => $p['email'] );
+					},
+					array_values( array_filter( $collections->people(), static fn( $p ) => '' !== $p['directory_role'] ) )
 				),
 			) );
 		}
@@ -519,7 +511,8 @@ final class Blueworx_Clubhouse_Page_Renderer {
 
 	public static function login(
 		Blueworx_Clubhouse_Branding $branding,
-		Blueworx_Clubhouse_Visibility $visibility
+		Blueworx_Clubhouse_Visibility $visibility,
+		Blueworx_Clubhouse_Collections $collections
 	): string {
 		$club = $branding->get_club_name();
 		$out  = self::shell_header( $club, '?page=login' ) . '<main class="ch-main" id="ch-main" tabindex="-1">';
@@ -546,7 +539,8 @@ final class Blueworx_Clubhouse_Page_Renderer {
 
 	public static function sports(
 		Blueworx_Clubhouse_Branding $branding,
-		Blueworx_Clubhouse_Visibility $visibility
+		Blueworx_Clubhouse_Visibility $visibility,
+		Blueworx_Clubhouse_Collections $collections
 	): string {
 		$club = $branding->get_club_name();
 		$out  = self::shell_header( $club, '?page=sports' ) . '<main class="ch-main" id="ch-main" tabindex="-1">';
@@ -575,25 +569,21 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'heading'    => 'Pick your sport.',
 				'link_label' => 'Join the club →',
 				'link_href'  => '?page=membership',
-				'cards'      => array(
-					array( 'image' => '', 'image_alt' => 'Rugby', 'chip' => 'Sat', 'title' => 'Rugby',
-						'description' => 'Senior, colts and touch rugby, from minis upward.',
-						'stats' => array( array( 'value' => '4', 'label' => 'Teams' ), array( 'value' => '120', 'label' => 'Players' ) ) ),
-					array( 'image' => '', 'image_alt' => 'Cricket', 'chip' => 'Summer', 'title' => 'Cricket',
-						'description' => 'Youth to senior league cricket on the square.',
-						'stats' => array( array( 'value' => '3', 'label' => 'Teams' ), array( 'value' => '80', 'label' => 'Players' ) ) ),
-					array( 'image' => '', 'image_alt' => 'Tennis', 'chip' => 'Daily', 'title' => 'Tennis',
-						'description' => 'Four courts with coaching for every age.',
-						'stats' => array( array( 'value' => '4', 'label' => 'Courts' ), array( 'value' => '90', 'label' => 'Members' ) ) ),
-					array( 'image' => '', 'image_alt' => 'Football', 'chip' => 'Sun', 'title' => 'Football',
-						'description' => 'Junior football for ages 5 to 16.',
-						'stats' => array( array( 'value' => '6', 'label' => 'Teams' ), array( 'value' => '140', 'label' => 'Players' ) ) ),
-					array( 'image' => '', 'image_alt' => 'Hockey', 'chip' => 'Sat', 'title' => 'Hockey',
-						'description' => 'Ladies and mixed hockey, league affiliated.',
-						'stats' => array( array( 'value' => '3', 'label' => 'Teams' ), array( 'value' => '60', 'label' => 'Players' ) ) ),
-					array( 'image' => '', 'image_alt' => 'Netball', 'chip' => 'Wed', 'title' => 'Netball',
-						'description' => 'Back-to-netball through to divisional squads.',
-						'stats' => array( array( 'value' => '2', 'label' => 'Teams' ), array( 'value' => '40', 'label' => 'Players' ) ) ),
+				'cards'      => array_map(
+					static function ( array $s ): array {
+						return array(
+							'image'       => $s['image'],
+							'image_alt'   => $s['title'],
+							'chip'        => $s['label'],
+							'title'       => $s['title'],
+							'description' => $s['description'],
+							'stats'       => array(
+								array( 'value' => $s['stat1_value'], 'label' => $s['stat1_label'] ),
+								array( 'value' => $s['stat2_value'], 'label' => $s['stat2_label'] ),
+							),
+						);
+					},
+					$collections->sports()
 				),
 			) );
 		}
@@ -613,7 +603,8 @@ final class Blueworx_Clubhouse_Page_Renderer {
 
 	public static function teams(
 		Blueworx_Clubhouse_Branding $branding,
-		Blueworx_Clubhouse_Visibility $visibility
+		Blueworx_Clubhouse_Visibility $visibility,
+		Blueworx_Clubhouse_Collections $collections
 	): string {
 		$club = $branding->get_club_name();
 		$out  = self::shell_header( $club, '?page=teams' ) . '<main class="ch-main" id="ch-main" tabindex="-1">';
@@ -640,19 +631,21 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'heading'    => 'Find your team.',
 				'link_label' => '',
 				'link_href'  => '',
-				'cards'      => array(
-					array( 'image' => '', 'image_alt' => 'Rugby 1st XV', 'chip' => 'Rugby', 'title' => '1st XV',
-						'description' => 'Saturday league rugby, Division 3 South.',
-						'stats' => array( array( 'value' => 'Sat', 'label' => 'Match day' ), array( 'value' => 'Div 3', 'label' => 'League' ) ) ),
-					array( 'image' => '', 'image_alt' => 'Cricket 1st XI', 'chip' => 'Cricket', 'title' => '1st XI',
-						'description' => 'Premier division Saturday cricket.',
-						'stats' => array( array( 'value' => 'Sat', 'label' => 'Match day' ), array( 'value' => 'Prem', 'label' => 'League' ) ) ),
-					array( 'image' => '', 'image_alt' => 'Ladies hockey 1s', 'chip' => 'Hockey', 'title' => 'Ladies 1s',
-						'description' => 'County league hockey with a strong colts feed.',
-						'stats' => array( array( 'value' => 'Sat', 'label' => 'Match day' ), array( 'value' => 'County', 'label' => 'League' ) ) ),
-					array( 'image' => '', 'image_alt' => 'Netball Div 2', 'chip' => 'Netball', 'title' => 'Netball 2s',
-						'description' => 'Wednesday-night divisional netball.',
-						'stats' => array( array( 'value' => 'Wed', 'label' => 'Match day' ), array( 'value' => 'Div 2', 'label' => 'League' ) ) ),
+				'cards'      => array_map(
+					static function ( array $t ): array {
+						return array(
+							'image'       => $t['image'],
+							'image_alt'   => $t['sport'] . ' ' . $t['title'],
+							'chip'        => $t['sport'],
+							'title'       => $t['title'],
+							'description' => $t['description'],
+							'stats'       => array(
+								array( 'value' => $t['match_day'], 'label' => 'Match day' ),
+								array( 'value' => $t['league'], 'label' => 'League' ),
+							),
+						);
+					},
+					$collections->teams()
 				),
 			) );
 		}
@@ -672,7 +665,8 @@ final class Blueworx_Clubhouse_Page_Renderer {
 
 	public static function events(
 		Blueworx_Clubhouse_Branding $branding,
-		Blueworx_Clubhouse_Visibility $visibility
+		Blueworx_Clubhouse_Visibility $visibility,
+		Blueworx_Clubhouse_Collections $collections
 	): string {
 		$club = $branding->get_club_name();
 		$out  = self::shell_header( $club, '?page=events' ) . '<main class="ch-main" id="ch-main" tabindex="-1">';
@@ -693,27 +687,34 @@ final class Blueworx_Clubhouse_Page_Renderer {
 			) );
 		}
 		if ( $visibility->is_section_visible( 'events', 'upcoming' ) ) {
+			$upcoming = array_values( array_filter( $collections->events(), static fn( $e ) => 'upcoming' === $e['status'] ) );
 			$out .= Blueworx_Clubhouse_Sections::event_grid( array(
 				'eyebrow' => 'Coming up',
 				'heading' => 'Upcoming events',
-				'cards'   => array(
-					array( 'tag' => 'Open day', 'date' => 'Sat 26 Jul', 'title' => 'Club Open Day',
-						'detail' => '10:00–14:00 · Clubhouse & grounds — all welcome.', 'cta_label' => 'Register interest', 'cta_href' => '?page=contact' ),
-					array( 'tag' => 'Junior football', 'date' => '4–8 Aug', 'title' => 'Summer Football Camp',
-						'detail' => 'Ages 5–12 · a week of coaching and games.', 'cta_label' => 'Book a place', 'cta_href' => '?page=contact' ),
-					array( 'tag' => 'Social', 'date' => 'Fri 12 Sep', 'title' => 'Annual Awards Night',
-						'detail' => '19:00 · Clubhouse function room.', 'cta_label' => '', 'cta_href' => '' ),
+				'cards'   => array_map(
+					static function ( array $e ): array {
+						return array(
+							'tag'       => $e['tag'],
+							'date'      => $e['date'],
+							'title'     => $e['title'],
+							'detail'    => $e['detail'],
+							'cta_label' => $e['cta_label'],
+							'cta_href'  => $e['cta_href'],
+						);
+					},
+					$upcoming
 				),
 			) );
 		}
 		if ( $visibility->is_section_visible( 'events', 'past' ) ) {
+			$past = array_values( array_filter( $collections->events(), static fn( $e ) => 'past' === $e['status'] ) );
 			$out .= Blueworx_Clubhouse_Sections::event_archive( array(
 				'heading' => 'Recently at the club',
-				'rows'    => array(
-					array( 'date' => 'Jun 2026', 'tag' => 'Social', 'title' => 'Summer BBQ & Family Day' ),
-					array( 'date' => 'May 2026', 'tag' => 'Tournament', 'title' => 'Spring Sevens Rugby Festival' ),
-					array( 'date' => 'Apr 2026', 'tag' => 'Club', 'title' => 'Annual General Meeting' ),
-					array( 'date' => 'Mar 2026', 'tag' => 'Junior', 'title' => 'Easter Multi-Sport Camp' ),
+				'rows'    => array_map(
+					static function ( array $e ): array {
+						return array( 'date' => $e['date'], 'tag' => $e['tag'], 'title' => $e['title'] );
+					},
+					$past
 				),
 			) );
 		}
@@ -733,7 +734,8 @@ final class Blueworx_Clubhouse_Page_Renderer {
 
 	public static function calendar(
 		Blueworx_Clubhouse_Branding $branding,
-		Blueworx_Clubhouse_Visibility $visibility
+		Blueworx_Clubhouse_Visibility $visibility,
+		Blueworx_Clubhouse_Collections $collections
 	): string {
 		$club = $branding->get_club_name();
 		$out  = self::shell_header( $club, '?page=calendar' ) . '<main class="ch-main" id="ch-main" tabindex="-1">';
@@ -757,17 +759,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 			$out .= Blueworx_Clubhouse_Sections::calendar_months( array(
 				'eyebrow' => 'The schedule',
 				'heading' => 'Fixtures & results',
-				'months'  => array(
-					array( 'label' => 'July', 'rows' => array(
-						array( 'date' => 'Sat 12', 'competition' => 'Rugby · 1st XV', 'matchup' => 'ClubHouse vs Riverside RFC', 'detail' => 'Home · 14:00', 'outcome' => '' ),
-						array( 'date' => 'Sun 13', 'competition' => 'Netball · Div 2', 'matchup' => 'ClubHouse vs Castlebridge', 'detail' => 'Away · 11:00', 'outcome' => '' ),
-						array( 'date' => 'Sat 5', 'competition' => 'Cricket · 1st XI', 'matchup' => 'ClubHouse vs Hartfield CC', 'detail' => 'Won by 34 runs', 'outcome' => 'W' ),
-					) ),
-					array( 'label' => 'June', 'rows' => array(
-						array( 'date' => 'Sat 28', 'competition' => 'Rugby · 2nd XV', 'matchup' => 'ClubHouse vs Dunmore', 'detail' => 'Lost 18–24', 'outcome' => 'L' ),
-						array( 'date' => 'Sat 21', 'competition' => 'Hockey · Ladies 1s', 'matchup' => 'ClubHouse vs Elmwood', 'detail' => 'Drew 2–2', 'outcome' => 'D' ),
-					) ),
-				),
+				'months'  => Blueworx_Clubhouse_Fixture_Projection::calendar_months( $collections->fixtures() ),
 			) );
 		}
 		if ( $visibility->is_section_visible( 'calendar', 'cta' ) ) {
