@@ -1,16 +1,19 @@
 // @ts-check
 const { defineConfig, devices } = require('@playwright/test');
 
-// Playwright runs against a deployed staging/preview URL rather than spinning up
-// WordPress in CI. The CI workflow sets PLAYWRIGHT_BASE_URL (and BASE_URL) from
-// the caller workflow's `preview_url` input.
+// Playwright runs against the plugin's DB-free PHP preview (preview/index.php) —
+// the same Page_Renderer output WordPress `template_include` will later echo. The
+// webServer below boots `php -S` (docroot = plugin root) so no deployed staging
+// site is needed; in CI it always starts fresh, locally it reuses a running one.
 //
-// TODO: replace the placeholder below (and `preview_url` in .github/workflows/ci.yml)
-// once a real staging/preview URL exists.
+// The foundation CI passes PLAYWRIGHT_BASE_URL from its `preview_url` input, which
+// is set to the preview URL below so the two agree.
+const PORT = 8124;
+const previewURL = `http://127.0.0.1:${PORT}/preview/`;
 const baseURL =
   process.env.PLAYWRIGHT_BASE_URL ||
   process.env.BASE_URL ||
-  'https://staging.example.com';
+  previewURL;
 
 module.exports = defineConfig({
   testDir: './tests',
@@ -21,6 +24,12 @@ module.exports = defineConfig({
   use: {
     baseURL,
     trace: 'on-first-retry',
+  },
+  webServer: {
+    command: `php -S 127.0.0.1:${PORT}`,
+    url: previewURL,
+    reuseExistingServer: !process.env.CI,
+    timeout: 30_000,
   },
   projects: [
     {

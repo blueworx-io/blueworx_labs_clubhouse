@@ -82,8 +82,9 @@ function blueworx_clubhouse_preview_document(): string {
 	$storage  = new Blueworx_Clubhouse_Preview_Storage();
 	$registry = new Blueworx_Clubhouse_Base_Look_Registry( $storage );
 	$registry->register( new Blueworx_Clubhouse_Court_Side() );
+	$registry->register( new Blueworx_Clubhouse_Members_House() );
 	$registry->register( new Blueworx_Clubhouse_Floodlight() );
-	$look_order = array( 'court-side', 'floodlight' );
+	$look_order = array( 'court-side', 'members-house', 'floodlight' );
 	$look_slug  = isset( $_GET['look'] ) && is_string( $_GET['look'] ) ? preg_replace( '/[^a-z-]/', '', $_GET['look'] ) : 'court-side';
 	if ( ! $registry->has( (string) $look_slug ) ) {
 		$look_slug = 'court-side';
@@ -119,11 +120,25 @@ function blueworx_clubhouse_preview_document(): string {
 		. htmlspecialchars( $next_name, ENT_QUOTES, 'UTF-8' ) . ' &rarr;</a>';
 	$style      .= '<style>.ch-look-toggle{position:fixed;left:16px;bottom:16px;z-index:90;background:#1e1913;color:#f3ede0;font:600 13px/1 system-ui,sans-serif;padding:12px 16px;border-radius:8px;text-decoration:none;border:1px solid #302a20}</style>';
 
+	// Preview-only: on a non-default look, carry the active look through the on-page
+	// ?page= links (nav, footer, CTAs) so clicking around stays in the selected look.
+	// This lives entirely in the preview harness — the sections stay skin-agnostic and
+	// emit bare ?page= hrefs; the real WordPress site has no ?look= param (the look is a
+	// persisted setting), so no link rewriting is needed there. Court Side is the default,
+	// so its links are left bare.
+	$look_persist = '';
+	if ( 'court-side' !== $look_slug ) {
+		$look_persist = '<script>(function(){var look=' . json_encode( (string) $look_slug )
+			. ';document.querySelectorAll(\'a[href^="?page="]\').forEach(function(a){'
+			. 'a.setAttribute("href",a.getAttribute("href")+"&look="+encodeURIComponent(look));});'
+			. '})();</script>';
+	}
+
 	// Served with docroot = plugin root, so the look stylesheet resolves from '/'.
 	return Blueworx_Clubhouse_Page_Renderer::document(
 		$registry->active(),
 		$branding,
-		$body . $switcher . $look_toggle . $style,
+		$body . $switcher . $look_toggle . $look_persist . $style,
 		'/'
 	);
 }
