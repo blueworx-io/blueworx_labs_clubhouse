@@ -666,4 +666,31 @@ final class Blueworx_Clubhouse_Sections {
 			. '<h2 class="ch-sec__title">' . self::e( $data['heading'] ) . '</h2>'
 			. '<div class="ch-cal">' . $months . '</div></div></section>';
 	}
+
+	/** Self-hosted brand mark, inherits colour via currentColor — no hex, no icon font. */
+	private const FACEBOOK_ICON = '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true">'
+		. '<path d="M22 12.06C22 6.51 17.52 2 12 2S2 6.51 2 12.06c0 5 3.66 9.15 8.44 9.94v-7.03H7.9v-2.91h2.54V9.85c0-2.5 1.49-3.89 3.77-3.89 1.09 0 2.24.2 2.24.2v2.47h-1.26c-1.24 0-1.63.77-1.63 1.56v1.87h2.78l-.45 2.91h-2.33V22c4.78-.79 8.44-4.94 8.44-9.94Z"/></svg>';
+
+	/** Self-hosted brand mark, inherits colour via currentColor — no hex, no icon font. */
+	private const INSTAGRAM_ICON = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+		. '<rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4.2"/><circle cx="17.2" cy="6.8" r="1.1" fill="currentColor" stroke="none"/></svg>';
+
+	/** Global "follow us" links — not a live/embedded feed. @param array{heading:string,lede:string,facebook_url:string,instagram_url:string} $data */
+	public static function social( array $data ): string {
+		$links = array(
+			array( 'label' => 'Facebook', 'url' => $data['facebook_url'], 'icon' => self::FACEBOOK_ICON ),
+			array( 'label' => 'Instagram', 'url' => $data['instagram_url'], 'icon' => self::INSTAGRAM_ICON ),
+		);
+		$out = '';
+		foreach ( $links as $l ) {
+			$out .= '<a class="ch-social__link" role="listitem" href="' . self::e( $l['url'] ) . '" aria-label="Follow us on ' . self::e( $l['label'] ) . '">'
+				. '<span class="ch-social__icon" aria-hidden="true">' . $l['icon'] . '</span>'
+				. '<span class="ch-social__label">' . self::e( $l['label'] ) . '</span></a>';
+		}
+		return '<section class="ch-social"><div class="ch-wrap ch-social__in">'
+			. '<div class="ch-social__text"><h2 class="ch-social__title">' . self::e( $data['heading'] ) . '</h2>'
+			. '<p class="ch-social__lede">' . self::e( $data['lede'] ) . '</p></div>'
+			. '<div class="ch-social__links" role="list">' . $out . '</div>'
+			. '</div></section>';
+	}
 }

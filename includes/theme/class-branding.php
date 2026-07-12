@@ -20,6 +20,8 @@ final class Blueworx_Clubhouse_Branding {
 		'accent'    => '#c6f24e',
 		'club_name' => 'ClubHouse',
 		'logo'      => '',
+		'facebook'  => 'https://facebook.com/clubhouse',
+		'instagram' => 'https://instagram.com/clubhouse',
 	);
 
 	private Blueworx_Clubhouse_Storage $storage;
@@ -67,5 +69,21 @@ final class Blueworx_Clubhouse_Branding {
 
 	public function set_logo( string $url_or_id ): void {
 		$this->put( 'logo', $url_or_id );
+	}
+
+	public function get_facebook_url(): string {
+		return (string) $this->value( 'facebook' );
+	}
+
+	public function set_facebook_url( string $url ): void {
+		$this->put( 'facebook', $url );
+	}
+
+	public function get_instagram_url(): string {
+		return (string) $this->value( 'instagram' );
+	}
+
+	public function set_instagram_url( string $url ): void {
+		$this->put( 'instagram', $url );
 	}
 }
