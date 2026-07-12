@@ -83,7 +83,9 @@ function blueworx_clubhouse_preview_document(): string {
 	$registry = new Blueworx_Clubhouse_Base_Look_Registry( $storage );
 	$registry->register( new Blueworx_Clubhouse_Court_Side() );
 	$registry->register( new Blueworx_Clubhouse_Members_House() );
-	$look_slug = isset( $_GET['look'] ) && is_string( $_GET['look'] ) ? preg_replace( '/[^a-z-]/', '', $_GET['look'] ) : 'court-side';
+	$registry->register( new Blueworx_Clubhouse_Floodlight() );
+	$look_order = array( 'court-side', 'members-house', 'floodlight' );
+	$look_slug  = isset( $_GET['look'] ) && is_string( $_GET['look'] ) ? preg_replace( '/[^a-z-]/', '', $_GET['look'] ) : 'court-side';
 	if ( ! $registry->has( (string) $look_slug ) ) {
 		$look_slug = 'court-side';
 	}
@@ -109,10 +111,14 @@ function blueworx_clubhouse_preview_document(): string {
 		. '})();</script>';
 	$style     = '<style>.ch-switcher{position:fixed;right:16px;bottom:16px;z-index:90;background:#fff;border:1px solid #e9e4d8;border-radius:16px;padding:8px;display:flex;flex-wrap:wrap;max-width:150px}</style>';
 
-	$other      = 'court-side' === $look_slug ? 'members-house' : 'court-side';
-	$other_name = 'court-side' === $look_slug ? "Members' House" : 'Court Side';
-	$look_toggle = '<a class="ch-look-toggle" href="?look=' . rawurlencode( $other ) . '&page=' . rawurlencode( (string) $page ) . '">Look: ' . htmlspecialchars( $other_name, ENT_QUOTES, 'UTF-8' ) . ' &rarr;</a>';
-	$style      .= '<style>.ch-look-toggle{position:fixed;left:16px;bottom:16px;z-index:90;background:#201c15;color:#fff;font:600 13px/1 system-ui,sans-serif;padding:12px 16px;border-radius:8px;text-decoration:none}</style>';
+	$idx        = array_search( (string) $look_slug, $look_order, true );
+	$next       = $look_order[ ( (int) $idx + 1 ) % count( $look_order ) ];
+	$next_look  = $registry->get( $next );
+	$next_name  = $next_look instanceof Blueworx_Clubhouse_Base_Look ? $next_look->name() : ucwords( str_replace( '-', ' ', $next ) );
+	$look_toggle = '<a class="ch-look-toggle" href="?look=' . rawurlencode( $next )
+		. '&page=' . rawurlencode( (string) $page ) . '">Look: '
+		. htmlspecialchars( $next_name, ENT_QUOTES, 'UTF-8' ) . ' &rarr;</a>';
+	$style      .= '<style>.ch-look-toggle{position:fixed;left:16px;bottom:16px;z-index:90;background:#1e1913;color:#f3ede0;font:600 13px/1 system-ui,sans-serif;padding:12px 16px;border-radius:8px;text-decoration:none;border:1px solid #302a20}</style>';
 
 	// Preview-only: on a non-default look, carry the active look through the on-page
 	// ?page= links (nav, footer, CTAs) so clicking around stays in the selected look.
