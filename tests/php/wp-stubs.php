@@ -80,3 +80,21 @@ if ( ! function_exists( 'get_post_meta' ) ) {
 		return $single ? ( $meta[ $key ] ?? '' ) : array( $meta[ $key ] ?? '' );
 	}
 }
+if ( ! function_exists( 'register_post_type' ) ) {
+	function register_post_type( ...$a ) { wp_stub_record( 'register_post_type', $a ); return (object) array( 'name' => $a[0] ?? '' ); }
+}
+if ( ! function_exists( 'register_post_meta' ) ) {
+	function register_post_meta( ...$a ) { wp_stub_record( 'register_post_meta', $a ); return true; }
+}
+if ( ! function_exists( 'wp_insert_post' ) ) {
+	function wp_insert_post( ...$a ) { wp_stub_record( 'wp_insert_post', $a ); return count( $GLOBALS['wp_stub_calls'] ); }
+}
+if ( ! function_exists( 'add_post_meta' ) ) {
+	function add_post_meta( ...$a ) { wp_stub_record( 'add_post_meta', $a ); return true; }
+}
+if ( ! function_exists( '__' ) ) {
+	function __( $text, $domain = 'default' ) { return $text; }
+}
+if ( ! function_exists( 'get_the_title' ) ) {
+	function get_the_title( $post = 0 ) { return is_object( $post ) ? ( $post->post_title ?? '' ) : ''; }
+}

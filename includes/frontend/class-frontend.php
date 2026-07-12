@@ -43,6 +43,7 @@ final class Blueworx_Clubhouse_Frontend {
 
 	public static function register(): void {
 		add_action( 'init', array( self::class, 'register_rewrites' ) );
+		add_action( 'init', array( Blueworx_Clubhouse_Collection_Types::class, 'register' ) );
 		add_action( 'wp_enqueue_scripts', array( self::class, 'enqueue_assets' ) );
 		add_filter( 'template_include', array( self::class, 'filter_template' ) );
 		add_filter( 'wp_resource_hints', array( self::class, 'resource_hints' ), 10, 2 );
@@ -96,8 +97,7 @@ final class Blueworx_Clubhouse_Frontend {
 		$branding   = new Blueworx_Clubhouse_Branding( $storage );
 		$visibility = new Blueworx_Clubhouse_Visibility( $storage );
 		$cache      = new Blueworx_Clubhouse_Theme_Cache( $storage );
-		// Task 6 swaps this for WP_Collections, reading seeded CPT posts.
-		$collections = new Blueworx_Clubhouse_Demo_Collections();
+		$collections = new Blueworx_Clubhouse_WP_Collections();
 		return array( $look, $branding, $visibility, $cache, $collections );
 	}
 

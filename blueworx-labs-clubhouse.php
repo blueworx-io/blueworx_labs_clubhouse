@@ -29,6 +29,11 @@ define( 'BLUEWORX_LABS_CLUBHOUSE_URL', plugin_dir_url( __FILE__ ) );
 require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/bootstrap.php';
 require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/frontend/class-frontend.php';
 
+require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/collections/class-collection-mappers.php';
+require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/collections/class-wp-collections.php';
+require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/collections/class-collection-types.php';
+require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/collections/class-collection-seeder.php';
+
 /**
  * Boot the plugin.
  *
@@ -43,6 +48,8 @@ register_activation_hook(
 	__FILE__,
 	static function () {
 		Blueworx_Clubhouse_Frontend::register_rewrites();
+		Blueworx_Clubhouse_Collection_Types::register();
+		Blueworx_Clubhouse_Collection_Seeder::seed();
 		flush_rewrite_rules();
 	}
 );
