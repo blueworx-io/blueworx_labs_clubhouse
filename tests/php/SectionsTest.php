@@ -633,4 +633,39 @@ final class SectionsTest extends TestCase {
 		) );
 		$this->assertStringContainsString( 'ch-badge--d', $html );
 	}
+
+	public function test_social_renders_links_with_labels_and_list_semantics(): void {
+		$html = Blueworx_Clubhouse_Sections::social( array(
+			'heading'        => 'Follow the club',
+			'lede'           => 'Match-day photos, results and behind-the-scenes.',
+			'facebook_url'   => 'https://facebook.com/clubhouse',
+			'instagram_url'  => 'https://instagram.com/clubhouse',
+		) );
+		$this->assertStringContainsString( 'class="ch-social"', $html );
+		$this->assertStringContainsString( 'href="https://facebook.com/clubhouse"', $html );
+		$this->assertStringContainsString( 'href="https://instagram.com/clubhouse"', $html );
+		$this->assertStringContainsString( 'aria-label="Follow us on Facebook"', $html );
+		$this->assertStringContainsString( 'aria-label="Follow us on Instagram"', $html );
+		$this->assertStringContainsString( '>Facebook<', $html );
+		$this->assertStringContainsString( '>Instagram<', $html );
+		$this->assertListSemantics( $html, 1, 2 );
+		$this->assertStringContainsString( 'Follow the club', $html );
+		$this->assertStringContainsString( 'Match-day photos, results and behind-the-scenes.', $html );
+		$this->assertNoHexColour( $html );
+		$this->assertStringNotContainsString( 'style=', $html );
+	}
+
+	public function test_social_escapes_heading_lede_and_urls(): void {
+		$html = Blueworx_Clubhouse_Sections::social( array(
+			'heading'        => 'Follow "us" & friends',
+			'lede'           => 'Join us <here> & now',
+			'facebook_url'   => 'https://facebook.com/club?ref=a&b="x"',
+			'instagram_url'  => 'https://instagram.com/club?ref=a&b="x"',
+		) );
+		$this->assertStringNotContainsString( '<here>', $html );
+		$this->assertStringContainsString( '&lt;here&gt;', $html );
+		$this->assertStringContainsString( 'Follow &quot;us&quot; &amp; friends', $html );
+		$this->assertStringContainsString( 'href="https://facebook.com/club?ref=a&amp;b=&quot;x&quot;"', $html );
+		$this->assertStringContainsString( 'href="https://instagram.com/club?ref=a&amp;b=&quot;x&quot;"', $html );
+	}
 }

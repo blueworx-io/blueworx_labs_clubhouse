@@ -257,6 +257,14 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'names'   => array_map( static fn( array $s ): string => $s['name'], $collections->sponsors() ),
 			) );
 		}
+		if ( $visibility->is_section_visible( 'home', 'social' ) ) {
+			$out .= Blueworx_Clubhouse_Sections::social( array(
+				'heading'       => 'Follow the club',
+				'lede'          => 'Match-day photos, results and behind-the-scenes — join us on socials.',
+				'facebook_url'  => $branding->get_facebook_url(),
+				'instagram_url' => $branding->get_instagram_url(),
+			) );
+		}
 		$out .= '</main>';
 		if ( $visibility->is_section_visible( 'home', 'footer' ) ) {
 			$out .= self::shell_footer( $club );
@@ -503,6 +511,14 @@ final class Blueworx_Clubhouse_Page_Renderer {
 					},
 					array_values( array_filter( $collections->people(), static fn( $p ) => '' !== $p['directory_role'] ) )
 				),
+			) );
+		}
+		if ( $visibility->is_section_visible( 'contact', 'social' ) ) {
+			$out .= Blueworx_Clubhouse_Sections::social( array(
+				'heading'       => 'Stay connected',
+				'lede'          => 'Follow the club for match-day updates, results and event announcements.',
+				'facebook_url'  => $branding->get_facebook_url(),
+				'instagram_url' => $branding->get_instagram_url(),
 			) );
 		}
 		$out .= '</main>' . self::shell_footer( $club );
