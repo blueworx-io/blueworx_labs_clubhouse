@@ -222,16 +222,8 @@ final class Blueworx_Clubhouse_Page_Renderer {
 			$out .= Blueworx_Clubhouse_Sections::activity_tabs( array(
 				'eyebrow'  => 'Club activity',
 				'heading'  => "What\u{2019}s happening",
-				'fixtures' => array(
-					array( 'month' => 'JUL', 'day' => '12', 'competition' => 'Rugby · 1st XV', 'time' => '14:00', 'matchup' => 'ClubHouse vs Riverside RFC' ),
-					array( 'month' => 'JUL', 'day' => '13', 'competition' => 'Netball · Div 2', 'time' => '11:00', 'matchup' => 'ClubHouse vs Castlebridge' ),
-					array( 'month' => 'JUL', 'day' => '19', 'competition' => 'Hockey · Ladies 1s', 'time' => '15:30', 'matchup' => 'ClubHouse vs Elmwood' ),
-				),
-				'results'  => array(
-					array( 'date' => 'JUL 5', 'home' => 'ClubHouse 1st XI', 'away' => 'Hartfield CC', 'score' => '+34', 'outcome' => 'W' ),
-					array( 'date' => 'JUN 28', 'home' => 'ClubHouse 2nd XV', 'away' => 'Dunmore', 'score' => '18–24', 'outcome' => 'L' ),
-					array( 'date' => 'JUL 2', 'home' => 'J. Patel', 'away' => 'R. Osei', 'score' => '2–0', 'outcome' => 'W' ),
-				),
+				'fixtures' => Blueworx_Clubhouse_Fixture_Projection::home_fixtures( $collections->fixtures() ),
+				'results'  => Blueworx_Clubhouse_Fixture_Projection::home_results( $collections->fixtures() ),
 				'events'   => array_map(
 					static function ( array $e ): array {
 						return array( 'tag' => $e['tag'], 'date' => $e['date'], 'title' => $e['title'], 'detail' => $e['detail'] );
@@ -767,17 +759,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 			$out .= Blueworx_Clubhouse_Sections::calendar_months( array(
 				'eyebrow' => 'The schedule',
 				'heading' => 'Fixtures & results',
-				'months'  => array(
-					array( 'label' => 'July', 'rows' => array(
-						array( 'date' => 'Sat 12', 'competition' => 'Rugby · 1st XV', 'matchup' => 'ClubHouse vs Riverside RFC', 'detail' => 'Home · 14:00', 'outcome' => '' ),
-						array( 'date' => 'Sun 13', 'competition' => 'Netball · Div 2', 'matchup' => 'ClubHouse vs Castlebridge', 'detail' => 'Away · 11:00', 'outcome' => '' ),
-						array( 'date' => 'Sat 5', 'competition' => 'Cricket · 1st XI', 'matchup' => 'ClubHouse vs Hartfield CC', 'detail' => 'Won by 34 runs', 'outcome' => 'W' ),
-					) ),
-					array( 'label' => 'June', 'rows' => array(
-						array( 'date' => 'Sat 28', 'competition' => 'Rugby · 2nd XV', 'matchup' => 'ClubHouse vs Dunmore', 'detail' => 'Lost 18–24', 'outcome' => 'L' ),
-						array( 'date' => 'Sat 21', 'competition' => 'Hockey · Ladies 1s', 'matchup' => 'ClubHouse vs Elmwood', 'detail' => 'Drew 2–2', 'outcome' => 'D' ),
-					) ),
-				),
+				'months'  => Blueworx_Clubhouse_Fixture_Projection::calendar_months( $collections->fixtures() ),
 			) );
 		}
 		if ( $visibility->is_section_visible( 'calendar', 'cta' ) ) {

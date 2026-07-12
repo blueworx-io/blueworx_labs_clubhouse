@@ -35,6 +35,7 @@ require_once __DIR__ . '/looks/class-court-side.php';
 require_once __DIR__ . '/render/class-sections.php';
 require_once __DIR__ . '/render/class-page-renderer.php';
 require_once __DIR__ . '/render/class-page-map.php';
+require_once __DIR__ . '/render/class-fixture-projection.php';
 
 // Collections (pure)
 require_once __DIR__ . '/collections/interface-collections.php';
