@@ -4,6 +4,8 @@ jobs:
   guardrails:
     uses: blueworx-io/bluegroup_core_foundation/.github/workflows/ci-wordpress.yml@main
     with:
-      # TODO: replace with the real staging/preview URL once one exists.
-      preview_url: https://staging.example.com
+      # Playwright boots the plugin's DB-free PHP preview via its webServer config
+      # (see playwright.config.js) and runs against it — no deployed staging site.
+      # This URL must match the webServer URL in playwright.config.js.
+      preview_url: http://127.0.0.1:8124/preview/
       plugin_slug: blueworx-labs-clubhouse
