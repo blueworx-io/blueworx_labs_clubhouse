@@ -29,6 +29,8 @@ require_once __DIR__ . '/theme/class-theme-css.php';
 
 // Looks
 require_once __DIR__ . '/looks/class-court-side.php';
+require_once __DIR__ . '/looks/class-members-house.php';
+require_once __DIR__ . '/looks/class-floodlight.php';
 
 // Render
 require_once __DIR__ . '/render/class-sections.php';
