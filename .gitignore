@@ -1,5 +1,13 @@
 node_modules/
+package-lock.json
 /test-results/
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+/vendor/
+composer.lock
+.phpunit.result.cache
+
+# Local verification artifacts (Playwright MCP snapshots + preview screenshots)
+.playwright-mcp/
+/*.png

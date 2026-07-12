@@ -1,10 +1,10 @@
 {
   "name": "blueworx-labs-clubhouse",
-  "version": "0.1.0",
+  "version": "0.14.0",
   "private": true,
   "description": "Blueworx Labs Clubhouse WordPress plugin.",
   "scripts": {
-    "lint": "echo \"No lint configured yet\" && exit 0",
+    "lint": "echo \"PHP is linted by PHPCS — run 'composer lint' (config: phpcs.xml.dist). Enforced by the PHPCS CI step. No JS lint configured.\"",
     "build": "echo \"No build configured yet\" && exit 0",
     "test": "playwright test"
   },

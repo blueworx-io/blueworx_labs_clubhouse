@@ -1,0 +1,58 @@
+<?php
+declare(strict_types=1);
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
+/**
+ * Caches the composed :root token string in storage (an autoloaded option in
+ * production) so the colour math runs only when the look or accent changes.
+ * The admin flow calls invalidate() on save.
+ *
+ * @package BlueworxLabsClubhouse
+ */
+final class Blueworx_Clubhouse_Theme_Cache {
+
+	private const CSS_KEY = 'root_css';
+	private const SIG_KEY = 'root_css_sig';
+
+	private Blueworx_Clubhouse_Storage $storage;
+
+	public function __construct( Blueworx_Clubhouse_Storage $storage ) {
+		$this->storage = $storage;
+	}
+
+	public function root_css(
+		Blueworx_Clubhouse_Base_Look $look,
+		Blueworx_Clubhouse_Branding $branding
+	): string {
+		$signature  = self::signature( $look, $branding );
+		$cached_css = $this->storage->get( self::CSS_KEY, '' );
+		$cached_sig = $this->storage->get( self::SIG_KEY, '' );
+
+		if ( is_string( $cached_css ) && '' !== $cached_css && $cached_sig === $signature ) {
+			return $cached_css;
+		}
+
+		$css = Blueworx_Clubhouse_Theme_Css::to_css(
+			Blueworx_Clubhouse_Theme_Css::compose( $look, $branding )
+		);
+		$this->storage->set( self::CSS_KEY, $css );
+		$this->storage->set( self::SIG_KEY, $signature );
+		return $css;
+	}
+
+	public function invalidate(): void {
+		$this->storage->delete( self::CSS_KEY );
+		$this->storage->delete( self::SIG_KEY );
+	}
+
+	private static function signature(
+		Blueworx_Clubhouse_Base_Look $look,
+		Blueworx_Clubhouse_Branding $branding
+	): string {
+		// Tokens depend only on the look's shell tokens and the derived accent.
+		return md5( $look->slug() . '|' . $branding->get_accent() );
+	}
+}
