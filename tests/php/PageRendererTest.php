@@ -175,4 +175,39 @@ final class PageRendererTest extends TestCase {
 		$this->assertStringContainsString( 'Senior · colts · touch', $html );  // Home uses the short subtitle
 		$this->assertStringNotContainsString( 'Netball', substr( $html, strpos( $html, 'Our sports' ), 600 ) );  // only first 4
 	}
+
+	private function render( string $page ): string {
+		return Blueworx_Clubhouse_Page_Map::render(
+			$page,
+			new Blueworx_Clubhouse_Branding( new Blueworx_Clubhouse_Fake_Storage() ),
+			new Blueworx_Clubhouse_Visibility( new Blueworx_Clubhouse_Fake_Storage() ),
+			new Blueworx_Clubhouse_Demo_Collections()
+		);
+	}
+
+	public function test_teams_projected(): void {
+		$html = $this->render( 'teams' );
+		$this->assertStringContainsString( '1st XV', $html );
+		$this->assertStringContainsString( 'Saturday league rugby, Division 3 South.', $html );
+		$this->assertStringContainsString( 'Match day', $html );
+	}
+
+	public function test_events_upcoming_and_archive_projected(): void {
+		$html = $this->render( 'events' );
+		$this->assertStringContainsString( 'Club Open Day', $html );          // upcoming
+		$this->assertStringContainsString( 'Register interest', $html );      // upcoming CTA
+		$this->assertStringContainsString( 'Summer BBQ &amp; Family Day', $html ); // past (escaped &)
+	}
+
+	public function test_sponsors_projected(): void {
+		$this->assertStringContainsString( 'Sponsor 01', $this->render( 'home' ) );
+	}
+
+	public function test_committee_blanks_email_directory_shows_it(): void {
+		$about = $this->render( 'about' );
+		$this->assertStringContainsString( 'Priya Nair', $about );
+		$this->assertStringNotContainsString( 'press@clubhouse.example', $about ); // committee blanks email
+		$contact = $this->render( 'contact' );
+		$this->assertStringContainsString( 'membership@clubhouse.example', $contact ); // directory shows email
+	}
 }
