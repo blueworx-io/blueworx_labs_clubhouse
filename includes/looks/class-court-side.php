@@ -53,4 +53,8 @@ final class Blueworx_Clubhouse_Court_Side implements Blueworx_Clubhouse_Base_Loo
 	public function stylesheet(): string {
 		return 'assets/looks/court-side.css';
 	}
+
+	public function accent_bears_text(): bool {
+		return true;
+	}
 }

@@ -87,4 +87,5 @@ final class Clubhouse_Test_Look implements Blueworx_Clubhouse_Base_Look {
 	public function tokens(): array { return $this->tokens; }
 	public function fonts(): array { return array(); }
 	public function stylesheet(): string { return 'assets/looks/test-look.css'; }
+	public function accent_bears_text(): bool { return true; }
 }

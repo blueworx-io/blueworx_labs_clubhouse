@@ -45,4 +45,8 @@ final class Blueworx_Clubhouse_Fake_Look implements Blueworx_Clubhouse_Base_Look
 	public function stylesheet(): string {
 		return 'assets/looks/' . $this->slug . '.css';
 	}
+
+	public function accent_bears_text(): bool {
+		return true;
+	}
 }
