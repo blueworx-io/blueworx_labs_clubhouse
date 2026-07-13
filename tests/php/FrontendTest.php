@@ -92,4 +92,13 @@ final class FrontendTest extends TestCase {
 		$this->assertSame( 'about', Blueworx_Clubhouse_Frontend::resolve_slug( false, 'about' ) );
 		$this->assertSame( '', Blueworx_Clubhouse_Frontend::resolve_slug( true, null ) );
 	}
+
+	public function test_resolve_logo_turns_an_attachment_id_into_a_url(): void {
+		$this->assertSame( 'https://club.test/wp-content/uploads/att-9.png', Blueworx_Clubhouse_Frontend::resolve_logo( '9' ) );
+	}
+
+	public function test_resolve_logo_passes_through_a_stored_url_and_empty(): void {
+		$this->assertSame( 'https://cdn.example/logo.svg', Blueworx_Clubhouse_Frontend::resolve_logo( 'https://cdn.example/logo.svg' ) );
+		$this->assertSame( '', Blueworx_Clubhouse_Frontend::resolve_logo( '' ) );
+	}
 }

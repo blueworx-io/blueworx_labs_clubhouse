@@ -140,14 +140,23 @@ final class Blueworx_Clubhouse_Frontend {
 		wp_enqueue_script( 'clubhouse-reveal', $specs['reveal_url'], array(), BLUEWORX_LABS_CLUBHOUSE_VERSION, true );
 	}
 
+	/** Turn a stored logo (attachment ID or legacy URL) into a URL string for the header. */
+	public static function resolve_logo( string $stored ): string {
+		if ( '' === $stored ) {
+			return '';
+		}
+		return ctype_digit( $stored ) ? Blueworx_Clubhouse_Media::url( (int) $stored ) : $stored;
+	}
+
 	/** Render the current page body (used by the canvas template). */
 	public static function render_body(): string {
 		$slug = self::current_slug();
 		if ( null === $slug ) {
 			return '';
 		}
-		$ctx = self::context();
-		return Blueworx_Clubhouse_Page_Map::render( $slug, $ctx->branding, $ctx->visibility, $ctx->collections );
+		$ctx      = self::context();
+		$logo_url = self::resolve_logo( $ctx->branding->get_logo() );
+		return Blueworx_Clubhouse_Page_Map::render( $slug, $ctx->branding, $ctx->visibility, $ctx->collections, $logo_url );
 	}
 
 	public static function club_name(): string {

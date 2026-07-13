@@ -45,4 +45,9 @@ final class CourtSideStylesheetTest extends TestCase {
 			$this->assertStringContainsString( $sel, $css );
 		}
 	}
+
+	public function test_stylesheet_styles_the_brand_logo(): void {
+		$css = (string) file_get_contents( dirname( __DIR__, 2 ) . '/assets/looks/court-side.css' );
+		$this->assertStringContainsString( '.ch-brand__logo', $css );
+	}
 }
