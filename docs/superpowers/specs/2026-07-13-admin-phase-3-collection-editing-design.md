@@ -187,7 +187,7 @@ gating.
 
 ## Versioning & deployment
 
-Minor bump **0.16.1 → 0.17.0** with the changelog updated alongside, as the final task. Branch
+Minor bump **0.16.1 → 0.18.0** with the changelog updated alongside, as the final task. Branch
 `admin-phase-3-cpt-editing` off `main`; PR to `main`; wait for the `guardrails / guardrails` check
 to go GREEN before merging (auto-merge disabled). After merge, refresh the deployment zip at
 `..\blueworx-labs-clubhouse.zip` per the house rule (runtime files only; forward-slash entries via
