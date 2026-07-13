@@ -147,15 +147,16 @@ git commit -m "feat: add filename stem to Base Look fonts() metadata"
 
 ---
 
-### Task 2: `Page_Renderer::font_face_css()` + migrate `document()`, remove `google_fonts_url()`
+### Task 2: `Page_Renderer::font_face_css()` + migrate `document()`
 
-Add the pure `@font-face` generator, switch `document()` to it, and delete the Google URL builder and the CDN `<link>`/`preconnect` tags. The DB-free preview already calls `document(... , '/')`, so it inherits the change automatically.
+Add the pure `@font-face` generator, switch `document()` to it, and drop the Google `<link>`/`preconnect` tags from the document head. **Leave `google_fonts_url()` defined for now** — `Frontend::enqueue_specs()` still calls it until Task 3, so removing it here would red the suite. Task 3 deletes it. The DB-free preview already calls `document(... , '/')`, so it inherits the head change automatically — its font assertions are updated in this task.
 
 **Files:**
-- Modify: `includes/render/class-page-renderer.php:19-26` (remove `google_fonts_url`, add `font_face_css`)
+- Modify: `includes/render/class-page-renderer.php:19-26` (add `font_face_css` — keep `google_fonts_url`)
 - Modify: `includes/render/class-page-renderer.php:28-48` (`document()` head)
 - Test: `tests/php/PageRendererTest.php:15-21` (replace the URL test)
 - Test: `tests/php/PageRendererTest.php:23-36` (update the document-head test)
+- Test: `tests/php/PreviewRenderTest.php:53-55,66-68` (swap the `family=` assertions for self-hosted paths)
 
 **Interfaces:**
 - Consumes: `fonts()` entries with `stem` + `weights` (Task 1).
@@ -193,9 +194,9 @@ In `tests/php/PageRendererTest.php`, replace `test_google_fonts_url_lists_both_f
 Run: `composer test -- --filter test_font_face_css_emits_a_rule_per_weight`
 Expected: FAIL — `Call to undefined method …::font_face_css()`.
 
-- [ ] **Step 3: Implement `font_face_css()` and remove `google_fonts_url()`**
+- [ ] **Step 3: Implement `font_face_css()` (keep `google_fonts_url()`)**
 
-In `includes/render/class-page-renderer.php`, replace `google_fonts_url()` (lines 19-26) with:
+In `includes/render/class-page-renderer.php`, add this method immediately **after** the existing `google_fonts_url()` method (do NOT delete `google_fonts_url()` — Task 3 removes it once `Frontend` no longer calls it):
 
 ```php
 	public static function font_face_css( Blueworx_Clubhouse_Base_Look $look, string $base_url ): string {
@@ -255,15 +256,33 @@ with:
 		$this->assertStringNotContainsString( 'googleapis', $doc );
 ```
 
-- [ ] **Step 6: Run the PHP suite**
+- [ ] **Step 6: Update the preview render test**
+
+`tests/php/PreviewRenderTest.php` asserts each look's Google `family=` query string appears in the preview document — proving the correct look's fonts are emitted. Now that the preview emits self-hosted `@font-face` `src` URLs (base `/`), update those assertions.
+
+Replace lines 54-55 (in `test_look_param_switches_to_floodlight`):
+
+```php
+		$this->assertStringContainsString( '/assets/fonts/bricolage-grotesque-', $html );
+		$this->assertStringContainsString( '/assets/fonts/hanken-grotesk-', $html );
+```
+
+Replace lines 67-68 (in `test_look_param_switches_to_members_house`):
+
+```php
+		$this->assertStringContainsString( '/assets/fonts/fraunces-', $html );
+		$this->assertStringContainsString( '/assets/fonts/mulish-', $html );
+```
+
+- [ ] **Step 7: Run the PHP suite**
 
 Run: `composer test`
-Expected: PASS. If any other test references `google_fonts_url`, grep and update it — none should remain outside `FrontendTest` (handled in Task 3).
+Expected: PASS (the full suite). `google_fonts_url()` is still defined and still called by `Frontend`, so `FrontendTest` stays green; Task 3 removes it.
 
-- [ ] **Step 7: Commit**
+- [ ] **Step 8: Commit**
 
 ```bash
-git add includes/render/class-page-renderer.php tests/php/PageRendererTest.php
+git add includes/render/class-page-renderer.php tests/php/PageRendererTest.php tests/php/PreviewRenderTest.php
 git commit -m "feat: generate self-hosted @font-face CSS; drop Google Fonts link from document()"
 ```
 
@@ -277,6 +296,7 @@ Switch the WordPress enqueue path to inline the generated `@font-face` CSS and s
 - Modify: `includes/frontend/class-frontend.php:38-52` (`enqueue_specs` + its docblock)
 - Modify: `includes/frontend/class-frontend.php:62-72` (`resource_hints`)
 - Modify: `includes/frontend/class-frontend.php:132-149` (`enqueue_assets`)
+- Modify: `includes/render/class-page-renderer.php` (delete the now-unused `google_fonts_url()`)
 - Test: `tests/php/FrontendTest.php:30-40` (`test_register_registers_expected_hooks` — drop the `wp_resource_hints` assertion)
 - Test: `tests/php/FrontendTest.php:76-84` (`test_enqueue_specs_shape`)
 
@@ -372,16 +392,20 @@ In `tests/php/FrontendTest.php`, add:
 	}
 ```
 
-- [ ] **Step 7: Run the PHP suite**
+- [ ] **Step 7: Delete the now-unused `google_fonts_url()`**
+
+`Frontend` no longer calls it and `document()` was migrated in Task 2, so `google_fonts_url()` is now dead code. In `includes/render/class-page-renderer.php`, delete the entire `google_fonts_url()` method (the `public static function google_fonts_url( … ) { … }` block). This also clears the last `googleapis` reference from `includes/`.
+
+- [ ] **Step 8: Run the PHP suite**
 
 Run: `composer test`
-Expected: PASS.
+Expected: PASS. (No test should reference `google_fonts_url` any longer — Task 2 replaced the only direct test, and this task drops the `fonts.googleapis.com` assertion in `test_enqueue_specs_shape`.)
 
-- [ ] **Step 8: Commit**
+- [ ] **Step 9: Commit**
 
 ```bash
-git add includes/frontend/class-frontend.php tests/php/FrontendTest.php
-git commit -m "feat: inline self-hosted @font-face in enqueue; drop Google preconnect hints"
+git add includes/frontend/class-frontend.php includes/render/class-page-renderer.php tests/php/FrontendTest.php
+git commit -m "feat: inline self-hosted @font-face in enqueue; drop Google preconnect hints and google_fonts_url"
 ```
 
 ---
