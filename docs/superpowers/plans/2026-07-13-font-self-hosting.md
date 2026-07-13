@@ -277,6 +277,7 @@ Switch the WordPress enqueue path to inline the generated `@font-face` CSS and s
 - Modify: `includes/frontend/class-frontend.php:38-52` (`enqueue_specs` + its docblock)
 - Modify: `includes/frontend/class-frontend.php:62-72` (`resource_hints`)
 - Modify: `includes/frontend/class-frontend.php:132-149` (`enqueue_assets`)
+- Test: `tests/php/FrontendTest.php:30-40` (`test_register_registers_expected_hooks` — drop the `wp_resource_hints` assertion)
 - Test: `tests/php/FrontendTest.php:76-84` (`test_enqueue_specs_shape`)
 
 **Interfaces:**
@@ -336,6 +337,14 @@ In `includes/frontend/class-frontend.php`, update the docblock (line 39) and ret
 In `includes/frontend/class-frontend.php`, replace `resource_hints` (lines 66-72) — remove the whole `googleapis`/`gstatic` branch. Also remove its registration on line 59.
 
 Delete line 59 (`add_filter( 'wp_resource_hints', … )`) from `register()`, and delete the `resource_hints` method entirely (lines 62-72). Self-hosted fonts share the site origin, so no cross-origin preconnect is warranted.
+
+Because the `wp_resource_hints` filter is no longer registered, update `test_register_registers_expected_hooks` in `tests/php/FrontendTest.php` (line 39) by **removing** this now-false assertion:
+
+```php
+		$this->assertContains( 'wp_resource_hints', $filters );
+```
+
+The remaining assertions in that test (`init`, `wp_enqueue_scripts`, `template_include`) stay.
 
 - [ ] **Step 5: Update `enqueue_assets`**
 
