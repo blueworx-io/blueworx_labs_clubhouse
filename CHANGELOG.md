@@ -5,6 +5,22 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.15.0] - 2026-07-13
+
+### Admin foundation & engine hardening
+
+Groundwork for the admin experience — no user-facing UI yet.
+
+#### Changed
+
+- **All three Base Looks are now registered at runtime.** `Frontend` previously registered only Court Side, so the stored active look could never resolve to Members' House or Floodlight on a live site. A shared `Frontend::registry()` now registers all three (Court Side first as the fallback).
+- **Theme-cache signature includes look tokens + plugin version.** The composed `:root` cache was keyed only on look slug + accent, so an upgrade that changed a look's shell tokens served stale CSS. The signature now also hashes the look's token contents and the plugin version.
+- **`Frontend::context()` returns a named `Clubhouse_Context` DTO** instead of a positional array, and now carries the Base Look registry for the upcoming setup screen.
+
+#### Added
+
+- **`Color_Engine::accent_is_legible()`** — validates that a club accent clears WCAG AA both as ink on the accent fill and as accent-text on the shell. The admin setup screen will use it to reject low-contrast accents.
+
 ## [0.14.0] - 2026-07-12
 
 ### Social block
