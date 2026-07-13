@@ -27,6 +27,7 @@ require_once __DIR__ . '/theme/class-color-engine.php';
 require_once __DIR__ . '/theme/class-branding.php';
 require_once __DIR__ . '/theme/class-theme-css.php';
 require_once __DIR__ . '/theme/class-theme-cache.php';
+require_once __DIR__ . '/theme/class-demo-state.php';
 
 // Looks
 require_once __DIR__ . '/looks/class-court-side.php';
