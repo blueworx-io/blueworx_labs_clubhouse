@@ -89,4 +89,27 @@ final class SetupControllerTest extends TestCase {
 		Blueworx_Clubhouse_Setup_Controller::handle_save( array( 'clubhouse_club_name' => 'X' ), $storage );
 		$this->assertSame( '', $storage->get( 'root_css', '' ) );
 	}
+
+	public function test_register_adds_admin_menu_and_enqueue_hooks(): void {
+		wp_stub_reset();
+		Blueworx_Clubhouse_Setup_Controller::register();
+		$actions = array_map( static fn( $c ) => $c['args'][0], wp_stub_calls( 'add_action' ) );
+		$this->assertContains( 'admin_menu', $actions );
+		$this->assertContains( 'admin_enqueue_scripts', $actions );
+	}
+
+	public function test_build_model_reflects_live_state(): void {
+		$storage  = new Blueworx_Clubhouse_Fake_Storage();
+		Blueworx_Clubhouse_Frontend::registry( $storage )->set_active( 'floodlight' );
+		( new Blueworx_Clubhouse_Branding( $storage ) )->set_club_name( 'Riverside RFC' );
+
+		$model = Blueworx_Clubhouse_Setup_Controller::build_model( $storage, array(), '<nonce>', 'https://club.test/x' );
+
+		$this->assertSame( '<nonce>', $model['nonce_field'] );
+		$this->assertSame( 'Riverside RFC', $model['branding']['club_name'] );
+		$active = array_values( array_filter( $model['looks'], static fn( $l ) => $l['active'] ) );
+		$this->assertSame( 'floodlight', $active[0]['slug'] );
+		$this->assertCount( 3, $model['looks'] );
+		$this->assertSame( 6, $model['progress']['total'] );
+	}
 }

@@ -107,3 +107,27 @@ if ( ! function_exists( 'esc_url_raw' ) ) {
 if ( ! function_exists( 'sanitize_hex_color' ) ) {
 	function sanitize_hex_color( $color ) { $c = trim( (string) $color ); return preg_match( '/^#[0-9a-fA-F]{6}$/', $c ) ? strtolower( $c ) : ''; }
 }
+if ( ! function_exists( 'add_menu_page' ) ) {
+	function add_menu_page( ...$a ) { wp_stub_record( 'add_menu_page', $a ); return 'toplevel_page_' . ( $a[3] ?? '' ); }
+}
+if ( ! function_exists( 'current_user_can' ) ) {
+	function current_user_can( ...$a ) { wp_stub_record( 'current_user_can', $a ); return true; }
+}
+if ( ! function_exists( 'wp_enqueue_media' ) ) {
+	function wp_enqueue_media( ...$a ) { wp_stub_record( 'wp_enqueue_media', $a ); }
+}
+if ( ! function_exists( 'admin_url' ) ) {
+	function admin_url( $path = '' ) { return 'https://club.test/wp-admin/' . ltrim( (string) $path, '/' ); }
+}
+if ( ! function_exists( 'wp_get_attachment_image_url' ) ) {
+	function wp_get_attachment_image_url( $id, $size = 'thumbnail' ) { return $id ? 'https://club.test/wp-content/uploads/att-' . (int) $id . '.png' : false; }
+}
+if ( ! function_exists( 'wp_nonce_field' ) ) {
+	function wp_nonce_field( ...$a ) { wp_stub_record( 'wp_nonce_field', $a ); return '<input type="hidden" name="_wpnonce" value="stub-nonce">'; }
+}
+if ( ! function_exists( 'check_admin_referer' ) ) {
+	function check_admin_referer( ...$a ) { wp_stub_record( 'check_admin_referer', $a ); return true; }
+}
+if ( ! function_exists( 'wp_unslash' ) ) {
+	function wp_unslash( $v ) { return $v; }
+}

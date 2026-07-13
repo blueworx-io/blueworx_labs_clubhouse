@@ -88,4 +88,101 @@ final class Blueworx_Clubhouse_Setup_Controller {
 
 		return $notices;
 	}
+
+	public static function register(): void {
+		add_action( 'admin_menu', array( self::class, 'add_menu' ) );
+		add_action( 'admin_enqueue_scripts', array( self::class, 'enqueue' ) );
+	}
+
+	public static function add_menu(): void {
+		add_menu_page(
+			'Clubhouse Setup',
+			'Clubhouse',
+			self::CAPABILITY,
+			self::PAGE_SLUG,
+			array( self::class, 'render_page' ),
+			'dashicons-megaphone',
+			3
+		);
+	}
+
+	public static function enqueue( string $hook ): void {
+		if ( 'toplevel_page_' . self::PAGE_SLUG !== $hook ) {
+			return;
+		}
+		wp_enqueue_media();
+		wp_enqueue_style( 'clubhouse-admin-setup', BLUEWORX_LABS_CLUBHOUSE_URL . 'assets/css/admin-setup.css', array(), BLUEWORX_LABS_CLUBHOUSE_VERSION );
+		wp_enqueue_script( 'clubhouse-admin-setup', BLUEWORX_LABS_CLUBHOUSE_URL . 'assets/js/admin-setup.js', array(), BLUEWORX_LABS_CLUBHOUSE_VERSION, true );
+	}
+
+	public static function render_page(): void {
+		if ( ! current_user_can( self::CAPABILITY ) ) {
+			return;
+		}
+		$storage = new Blueworx_Clubhouse_Options_Storage();
+		$notices = array();
+		if ( isset( $_POST['clubhouse_setup_submit'] ) ) {
+			check_admin_referer( self::NONCE );
+			$notices = self::handle_save( wp_unslash( $_POST ), $storage );
+		}
+		$nonce_field = wp_nonce_field( self::NONCE, '_wpnonce', true, false )
+			. '<input type="hidden" name="clubhouse_setup_submit" value="1">';
+		$action_url  = admin_url( 'admin.php?page=' . self::PAGE_SLUG );
+		echo Blueworx_Clubhouse_Setup_Screen::render( self::build_model( $storage, $notices, $nonce_field, $action_url ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+	}
+
+	/**
+	 * @param array<int,array{type:string,text:string}> $notices
+	 * @return array<string,mixed>
+	 */
+	public static function build_model( Blueworx_Clubhouse_Storage $storage, array $notices, string $nonce_field, string $action_url ): array {
+		$registry    = Blueworx_Clubhouse_Frontend::registry( $storage );
+		$branding    = new Blueworx_Clubhouse_Branding( $storage );
+		$vis         = new Blueworx_Clubhouse_Visibility( $storage );
+		$active_slug = (string) $storage->get( 'active_base_look', '' );
+		$active_look = $registry->active();
+
+		$looks = array();
+		foreach ( $registry->all() as $look ) {
+			$looks[] = array(
+				'slug'        => $look->slug(),
+				'name'        => $look->name(),
+				'description' => $look->description(),
+				'active'      => null !== $active_look && $look->slug() === $active_look->slug(),
+			);
+		}
+
+		$logo         = $branding->get_logo();
+		$logo_preview = '';
+		if ( '' !== $logo ) {
+			$logo_preview = ctype_digit( $logo ) ? (string) wp_get_attachment_image_url( (int) $logo, 'medium' ) : $logo;
+		}
+
+		$pages_state    = array();
+		$sections_state = array();
+		foreach ( Blueworx_Clubhouse_Setup_Sections::inventory() as $page ) {
+			$pages_state[ $page['page'] ] = $vis->is_page_visible( $page['page'] );
+			foreach ( $page['sections'] as $section ) {
+				$sections_state[ $page['page'] . '.' . $section['key'] ] = $vis->is_section_visible( $page['page'], $section['key'] );
+			}
+		}
+
+		return array(
+			'nonce_field' => $nonce_field,
+			'action_url'  => $action_url,
+			'notices'     => $notices,
+			'progress'    => Blueworx_Clubhouse_Setup_Progress::compute( $branding, $active_look ?? new Blueworx_Clubhouse_Court_Side(), '' !== $active_slug ),
+			'looks'       => $looks,
+			'branding'    => array(
+				'accent'       => $branding->get_accent(),
+				'club_name'    => $branding->get_club_name(),
+				'logo'         => $logo,
+				'logo_preview' => $logo_preview,
+				'facebook'     => $branding->get_facebook_url(),
+				'instagram'    => $branding->get_instagram_url(),
+			),
+			'inventory'   => Blueworx_Clubhouse_Setup_Sections::inventory(),
+			'visibility'  => array( 'pages' => $pages_state, 'sections' => $sections_state ),
+		);
+	}
 }
