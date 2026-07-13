@@ -114,4 +114,21 @@ class Blueworx_Clubhouse_Color_Engine {
 			'--color-accent-wash' => self::mix( $accent, self::normalize_hex( $shell_bg ), 0.12 ),
 		);
 	}
+
+	/**
+	 * Is this accent legible against the given shell? True iff BOTH derived
+	 * tokens clear WCAG AA (>= 4.5): the ink on the accent fill (accent-ink vs
+	 * accent) and the accent-as-text on the shell (accent-deep vs shell bg).
+	 *
+	 * accent-deep is AA-guaranteed by derive() on any shell, so in practice the
+	 * binding constraint is accent-ink — a light accent on a light-ink (dark)
+	 * shell has no legible text colour and is rejected. Used by the admin setup
+	 * screen to refuse low-contrast accents at selection time.
+	 */
+	public static function accent_is_legible( string $accent, string $shell_bg, string $shell_ink ): bool {
+		$d       = self::derive( $accent, $shell_bg, $shell_ink );
+		$ink_ok  = self::contrast_ratio( $d['--color-accent-ink'], $d['--color-accent'] ) >= 4.5;
+		$deep_ok = self::contrast_ratio( $d['--color-accent-deep'], self::normalize_hex( $shell_bg ) ) >= 4.5;
+		return $ink_ok && $deep_ok;
+	}
 }
