@@ -25,23 +25,37 @@ final class Blueworx_Clubhouse_Page_Renderer {
 		return 'https://fonts.googleapis.com/css2?' . implode( '&', $families ) . '&display=swap';
 	}
 
+	public static function font_face_css( Blueworx_Clubhouse_Base_Look $look, string $base_url ): string {
+		$css = '';
+		foreach ( $look->fonts() as $font ) {
+			$stem    = $font['stem'];
+			$display = $font['display'];
+			foreach ( $font['weights'] as $weight ) {
+				$css .= "@font-face{font-family:'" . $font['family'] . "';"
+					. 'font-style:normal;'
+					. 'font-weight:' . (int) $weight . ';'
+					. 'font-display:' . $display . ';'
+					. 'src:url(' . $base_url . 'assets/fonts/' . $stem . '-' . $weight . '.woff2) format(\'woff2\')}';
+			}
+		}
+		return $css;
+	}
+
 	public static function document(
 		Blueworx_Clubhouse_Base_Look $look,
 		Blueworx_Clubhouse_Branding $branding,
 		string $body,
 		string $plugin_url = ''
 	): string {
-		$vars = Blueworx_Clubhouse_Theme_Css::compose( $look, $branding );
-		$css  = Blueworx_Clubhouse_Theme_Css::to_css( $vars );
-		$font = htmlspecialchars( self::google_fonts_url( $look ), ENT_QUOTES, 'UTF-8' );
-		$sheet = htmlspecialchars( $plugin_url . $look->stylesheet(), ENT_QUOTES, 'UTF-8' );
+		$vars     = Blueworx_Clubhouse_Theme_Css::compose( $look, $branding );
+		$css      = Blueworx_Clubhouse_Theme_Css::to_css( $vars );
+		$faces    = self::font_face_css( $look, $plugin_url );
+		$sheet    = htmlspecialchars( $plugin_url . $look->stylesheet(), ENT_QUOTES, 'UTF-8' );
 
 		return '<!doctype html><html lang="en"><head>'
 			. '<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">'
 			. '<title>' . htmlspecialchars( $branding->get_club_name(), ENT_QUOTES, 'UTF-8' ) . '</title>'
-			. '<link rel="preconnect" href="https://fonts.googleapis.com">'
-			. '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'
-			. '<link rel="stylesheet" href="' . $font . '">'
+			. '<style>' . $faces . '</style>'
 			. '<link rel="stylesheet" href="' . $sheet . '">'
 			. '<style>' . $css . '</style>'
 			. '</head><body>' . $body . self::reveal_script() . '</body></html>';

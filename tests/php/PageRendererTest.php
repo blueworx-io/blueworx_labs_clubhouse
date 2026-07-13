@@ -12,12 +12,25 @@ final class PageRendererTest extends TestCase {
 		return new Blueworx_Clubhouse_Demo_Collections();
 	}
 
-	public function test_google_fonts_url_lists_both_families(): void {
-		$url = Blueworx_Clubhouse_Page_Renderer::google_fonts_url( new Blueworx_Clubhouse_Court_Side() );
-		$this->assertStringStartsWith( 'https://fonts.googleapis.com/css2?', $url );
-		$this->assertStringContainsString( 'family=Syne:wght@600;700;800', $url );
-		$this->assertStringContainsString( 'family=Inter:wght@400;500;600', $url );
-		$this->assertStringContainsString( 'display=swap', $url );
+	public function test_font_face_css_emits_a_rule_per_weight(): void {
+		$css = Blueworx_Clubhouse_Page_Renderer::font_face_css(
+			new Blueworx_Clubhouse_Court_Side(),
+			'/wp-content/plugins/clubhouse/'
+		);
+		// One @font-face per declared weight: Syne 600/700/800 + Inter 400/500/600 = 6.
+		$this->assertSame( 6, substr_count( $css, '@font-face' ) );
+		$this->assertStringContainsString( "font-family:'Syne'", $css );
+		$this->assertStringContainsString( 'font-weight:700', $css );
+		$this->assertStringContainsString( 'font-display:swap', $css );
+		$this->assertStringContainsString(
+			"src:url(/wp-content/plugins/clubhouse/assets/fonts/syne-700.woff2) format('woff2')",
+			$css
+		);
+		$this->assertStringContainsString(
+			"src:url(/wp-content/plugins/clubhouse/assets/fonts/inter-400.woff2) format('woff2')",
+			$css
+		);
+		$this->assertStringNotContainsString( 'googleapis', $css );
 	}
 
 	public function test_document_head_carries_tokens_fonts_and_stylesheet(): void {
@@ -30,7 +43,12 @@ final class PageRendererTest extends TestCase {
 		$this->assertStringContainsString( ':root{', $doc );
 		$this->assertStringContainsString( '--color-bg:#faf8f3;', $doc );
 		$this->assertStringContainsString( '--color-accent:#3b5bdb;', $doc );
-		$this->assertStringContainsString( 'fonts.googleapis.com', $doc );
+		$this->assertStringContainsString( '@font-face', $doc );
+		$this->assertStringContainsString(
+			"src:url(/wp-content/plugins/clubhouse/assets/fonts/syne-700.woff2) format('woff2')",
+			$doc
+		);
+		$this->assertStringNotContainsString( 'googleapis', $doc );
 		$this->assertStringContainsString( '/wp-content/plugins/clubhouse/assets/looks/court-side.css', $doc );
 		$this->assertStringContainsString( '<main>hi</main>', $doc );
 	}
