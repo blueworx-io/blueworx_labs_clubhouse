@@ -34,11 +34,11 @@ final class Blueworx_Clubhouse_Fake_Look implements Blueworx_Clubhouse_Base_Look
 	/** @return array<string,string> */
 	public function tokens(): array { return $this->tokens; }
 
-	/** @return array<int,array{family:string,weights:array<int,int>,display:string}> */
+	/** @return array<int,array{family:string,stem:string,weights:array<int,int>,display:string}> */
 	public function fonts(): array {
 		return array(
-			array( 'family' => 'Syne', 'weights' => array( 600, 700, 800 ), 'display' => 'swap' ),
-			array( 'family' => 'Inter', 'weights' => array( 400, 500, 600 ), 'display' => 'swap' ),
+			array( 'family' => 'Syne', 'stem' => 'syne', 'weights' => array( 600, 700, 800 ), 'display' => 'swap' ),
+			array( 'family' => 'Inter', 'stem' => 'inter', 'weights' => array( 400, 500, 600 ), 'display' => 'swap' ),
 		);
 	}
 

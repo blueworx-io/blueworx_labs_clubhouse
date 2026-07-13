@@ -25,6 +25,7 @@ final class BaseLookContractTest extends TestCase {
 		$look = new Blueworx_Clubhouse_Fake_Look();
 		$this->assertNotEmpty( $look->fonts() );
 		$this->assertArrayHasKey( 'family', $look->fonts()[0] );
+		$this->assertArrayHasKey( 'stem', $look->fonts()[0] );
 		$this->assertStringEndsWith( '.css', $look->stylesheet() );
 	}
 }

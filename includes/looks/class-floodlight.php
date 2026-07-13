@@ -44,11 +44,11 @@ final class Blueworx_Clubhouse_Floodlight implements Blueworx_Clubhouse_Base_Loo
 		);
 	}
 
-	/** @return array<int,array{family:string,weights:array<int,int>,display:string}> */
+	/** @return array<int,array{family:string,stem:string,weights:array<int,int>,display:string}> */
 	public function fonts(): array {
 		return array(
-			array( 'family' => 'Bricolage Grotesque', 'weights' => array( 500, 600, 700, 800 ), 'display' => 'swap' ),
-			array( 'family' => 'Hanken Grotesk', 'weights' => array( 400, 500, 600, 700 ), 'display' => 'swap' ),
+			array( 'family' => 'Bricolage Grotesque', 'stem' => 'bricolage-grotesque', 'weights' => array( 500, 600, 700, 800 ), 'display' => 'swap' ),
+			array( 'family' => 'Hanken Grotesk', 'stem' => 'hanken-grotesk', 'weights' => array( 400, 500, 600, 700 ), 'display' => 'swap' ),
 		);
 	}
 
