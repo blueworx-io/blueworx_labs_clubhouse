@@ -36,4 +36,36 @@ final class OwnerRoleTest extends TestCase {
 		$this->assertFalse( Blueworx_Clubhouse_Owner_Role::is_owner( $admin ) );
 		$this->assertFalse( Blueworx_Clubhouse_Owner_Role::is_owner( null ) );
 	}
+
+	public function test_removable_menu_slugs_is_current_minus_allowlist(): void {
+		$this->assertSame(
+			array( 'themes.php', 'plugins.php', 'tools.php' ),
+			Blueworx_Clubhouse_Owner_Role::removable_menu_slugs(
+				array( 'index.php', 'themes.php', 'plugins.php', 'tools.php', 'upload.php' ),
+				Blueworx_Clubhouse_Owner_Capabilities::menu_allowlist()
+			)
+		);
+	}
+
+	public function test_lock_menu_removes_disallowed_only_for_owners(): void {
+		$GLOBALS['menu'] = array(
+			array( '', 'read', 'index.php' ),
+			array( '', 'edit_theme_options', 'themes.php' ),
+			array( '', 'activate_plugins', 'plugins.php' ),
+			array( '', 'upload_files', 'upload.php' ),
+		);
+		// Not an owner → no removals.
+		$GLOBALS['wp_stub_current_user'] = (object) array( 'roles' => array( 'administrator' ) );
+		Blueworx_Clubhouse_Owner_Role::lock_menu();
+		$this->assertSame( array(), wp_stub_calls( 'remove_menu_page' ) );
+
+		// Owner → themes.php + plugins.php removed, index.php + upload.php kept.
+		$GLOBALS['wp_stub_current_user'] = (object) array( 'roles' => array( 'clubhouse_owner' ) );
+		Blueworx_Clubhouse_Owner_Role::lock_menu();
+		$removed = array_map( static fn( $c ) => $c['args'][0], wp_stub_calls( 'remove_menu_page' ) );
+		$this->assertContains( 'themes.php', $removed );
+		$this->assertContains( 'plugins.php', $removed );
+		$this->assertNotContains( 'index.php', $removed );
+		$this->assertNotContains( 'upload.php', $removed );
+	}
 }

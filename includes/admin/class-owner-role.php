@@ -46,4 +46,34 @@ final class Blueworx_Clubhouse_Owner_Role {
 		return is_object( $user ) && isset( $user->roles ) && is_array( $user->roles )
 			&& in_array( Blueworx_Clubhouse_Owner_Capabilities::ROLE, $user->roles, true );
 	}
+
+	public static function register(): void {
+		add_action( 'admin_menu', array( self::class, 'lock_menu' ), 999 );
+	}
+
+	/** Remove every top-level menu the owner is not allowed. Gated on the owner role. */
+	public static function lock_menu(): void {
+		if ( ! self::is_owner( wp_get_current_user() ) ) {
+			return;
+		}
+		$menu    = isset( $GLOBALS['menu'] ) && is_array( $GLOBALS['menu'] ) ? $GLOBALS['menu'] : array();
+		$current = array();
+		foreach ( $menu as $item ) {
+			if ( isset( $item[2] ) ) {
+				$current[] = (string) $item[2];
+			}
+		}
+		foreach ( self::removable_menu_slugs( $current, Blueworx_Clubhouse_Owner_Capabilities::menu_allowlist() ) as $slug ) {
+			remove_menu_page( $slug );
+		}
+	}
+
+	/**
+	 * @param array<int,string> $current
+	 * @param array<int,string> $allowlist
+	 * @return array<int,string>
+	 */
+	public static function removable_menu_slugs( array $current, array $allowlist ): array {
+		return array_values( array_diff( $current, $allowlist ) );
+	}
 }

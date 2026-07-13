@@ -6,18 +6,20 @@
 // shadowed. Reset with wp_stub_reset() in setUp().
 declare(strict_types=1);
 
-$GLOBALS['wp_stub_calls']    = array();
-$GLOBALS['wp_stub_options']  = array();
-$GLOBALS['wp_stub_posts']    = array();
-$GLOBALS['wp_stub_postmeta'] = array();
-$GLOBALS['wp_stub_roles']    = array( 'administrator' => array( 'display' => 'Administrator', 'caps' => array() ) );
+$GLOBALS['wp_stub_calls']       = array();
+$GLOBALS['wp_stub_options']     = array();
+$GLOBALS['wp_stub_posts']       = array();
+$GLOBALS['wp_stub_postmeta']    = array();
+$GLOBALS['wp_stub_roles']       = array( 'administrator' => array( 'display' => 'Administrator', 'caps' => array() ) );
+$GLOBALS['wp_stub_current_user'] = (object) array( 'roles' => array() );
 
 function wp_stub_reset(): void {
-	$GLOBALS['wp_stub_calls']    = array();
-	$GLOBALS['wp_stub_options']  = array();
-	$GLOBALS['wp_stub_posts']    = array();
-	$GLOBALS['wp_stub_postmeta'] = array();
-	$GLOBALS['wp_stub_roles']    = array( 'administrator' => array( 'display' => 'Administrator', 'caps' => array() ) );
+	$GLOBALS['wp_stub_calls']       = array();
+	$GLOBALS['wp_stub_options']     = array();
+	$GLOBALS['wp_stub_posts']       = array();
+	$GLOBALS['wp_stub_postmeta']    = array();
+	$GLOBALS['wp_stub_roles']       = array( 'administrator' => array( 'display' => 'Administrator', 'caps' => array() ) );
+	$GLOBALS['wp_stub_current_user'] = (object) array( 'roles' => array() );
 }
 function wp_stub_calls( string $fn ): array {
 	return array_values( array_filter(
@@ -117,6 +119,12 @@ if ( ! function_exists( 'add_menu_page' ) ) {
 }
 if ( ! function_exists( 'remove_submenu_page' ) ) {
 	function remove_submenu_page( ...$a ) { wp_stub_record( 'remove_submenu_page', $a ); return false; }
+}
+if ( ! function_exists( 'wp_get_current_user' ) ) {
+	function wp_get_current_user() { return $GLOBALS['wp_stub_current_user']; }
+}
+if ( ! function_exists( 'remove_menu_page' ) ) {
+	function remove_menu_page( $slug ) { wp_stub_record( 'remove_menu_page', array( $slug ) ); return false; }
 }
 if ( ! function_exists( 'current_user_can' ) ) {
 	function current_user_can( ...$a ) { wp_stub_record( 'current_user_can', $a ); return true; }
