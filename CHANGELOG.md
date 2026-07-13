@@ -5,6 +5,21 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.17.0] - 2026-07-13
+
+### Demo mode
+
+An admin-only way to demo the Base Looks live on the real site, so a prospective club owner can pick one.
+
+#### Added
+
+- **Demo mode toggle.** A **⚡ Demo mode** button in the front-end WordPress admin bar (for users who can manage the site). Turning it on reveals a floating switcher listing every installed Base Look; click a look and the whole live site re-skins to it on the spot.
+- **Ephemeral and private.** Switching looks in Demo mode is per-admin and temporary (held in a browser cookie) — it never changes the club's saved look, accent, or content, and public visitors always see the saved look. "Exit demo" (or toggling it off) returns to the saved look.
+
+#### Fixed
+
+- **Clubhouse → Setup menu now mounts.** `Setup_Controller::register()` was defined but never called at runtime, so the Setup admin page never appeared; it is now wired up alongside Demo mode.
+
 ## [0.16.1] - 2026-07-13
 
 ### Changed
