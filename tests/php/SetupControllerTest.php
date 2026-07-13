@@ -112,4 +112,14 @@ final class SetupControllerTest extends TestCase {
 		$this->assertCount( 3, $model['looks'] );
 		$this->assertSame( 6, $model['progress']['total'] );
 	}
+
+	public function test_capability_is_the_custom_clubhouse_cap(): void {
+		$this->assertSame( 'manage_clubhouse', Blueworx_Clubhouse_Setup_Controller::CAPABILITY );
+	}
+
+	public function test_screen_html_renders_the_setup_form(): void {
+		$html = Blueworx_Clubhouse_Setup_Controller::screen_html( new Blueworx_Clubhouse_Fake_Storage(), array() );
+		$this->assertStringContainsString( 'clubhouse-setup', $html );
+		$this->assertStringContainsString( '<form', $html );
+	}
 }

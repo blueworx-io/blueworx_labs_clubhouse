@@ -16,7 +16,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 final class Blueworx_Clubhouse_Setup_Controller {
 
-	public const CAPABILITY = 'manage_options'; // Phase 4 swaps this for the owner cap.
+	public const CAPABILITY = Blueworx_Clubhouse_Owner_Capabilities::SETUP_CAP; // manage_clubhouse — owner + admin.
 	public const PAGE_SLUG  = 'clubhouse-setup';
 	public const NONCE      = 'clubhouse_setup_save';
 
@@ -125,10 +125,15 @@ final class Blueworx_Clubhouse_Setup_Controller {
 			check_admin_referer( self::NONCE );
 			$notices = self::handle_save( wp_unslash( $_POST ), $storage );
 		}
+		echo self::screen_html( $storage, $notices ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped within Setup_Screen.
+	}
+
+	/** Render the Setup screen HTML for a storage + notices — shared by the page and the owner dashboard. */
+	public static function screen_html( Blueworx_Clubhouse_Storage $storage, array $notices ): string {
 		$nonce_field = wp_nonce_field( self::NONCE, '_wpnonce', true, false )
 			. '<input type="hidden" name="clubhouse_setup_submit" value="1">';
 		$action_url  = admin_url( 'admin.php?page=' . self::PAGE_SLUG );
-		echo Blueworx_Clubhouse_Setup_Screen::render( self::build_model( $storage, $notices, $nonce_field, $action_url ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+		return Blueworx_Clubhouse_Setup_Screen::render( self::build_model( $storage, $notices, $nonce_field, $action_url ) );
 	}
 
 	/**
