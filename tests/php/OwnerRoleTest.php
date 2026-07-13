@@ -68,4 +68,21 @@ final class OwnerRoleTest extends TestCase {
 		$this->assertNotContains( 'index.php', $removed );
 		$this->assertNotContains( 'upload.php', $removed );
 	}
+
+	public function test_takeover_dashboard_replaces_widgets_only_for_owners(): void {
+		$GLOBALS['wp_meta_boxes'] = array( 'dashboard' => array( 'normal' => array( 'core' => array( 'dashboard_activity' => array() ) ) ) );
+
+		// Admin → untouched.
+		$GLOBALS['wp_stub_current_user'] = (object) array( 'roles' => array( 'administrator' ) );
+		Blueworx_Clubhouse_Owner_Role::takeover_dashboard();
+		$this->assertSame( array(), wp_stub_calls( 'wp_add_dashboard_widget' ) );
+		$this->assertNotSame( array(), $GLOBALS['wp_meta_boxes']['dashboard'] );
+
+		// Owner → default widgets cleared + our Setup widget added.
+		$GLOBALS['wp_stub_current_user'] = (object) array( 'roles' => array( 'clubhouse_owner' ) );
+		Blueworx_Clubhouse_Owner_Role::takeover_dashboard();
+		$this->assertSame( array(), $GLOBALS['wp_meta_boxes']['dashboard'] );
+		$added = wp_stub_calls( 'wp_add_dashboard_widget' );
+		$this->assertSame( 'clubhouse_setup_dashboard', $added[0]['args'][0] );
+	}
 }

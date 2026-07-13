@@ -204,3 +204,6 @@ if ( ! function_exists( 'remove_role' ) ) {
 if ( ! function_exists( 'get_role' ) ) {
 	function get_role( $role ) { return isset( $GLOBALS['wp_stub_roles'][ $role ] ) ? new Blueworx_Stub_Role( $role ) : null; }
 }
+if ( ! function_exists( 'wp_add_dashboard_widget' ) ) {
+	function wp_add_dashboard_widget( ...$a ) { wp_stub_record( 'wp_add_dashboard_widget', $a ); }
+}

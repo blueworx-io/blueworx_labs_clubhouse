@@ -49,6 +49,7 @@ final class Blueworx_Clubhouse_Owner_Role {
 
 	public static function register(): void {
 		add_action( 'admin_menu', array( self::class, 'lock_menu' ), 999 );
+		add_action( 'wp_dashboard_setup', array( self::class, 'takeover_dashboard' ), 999 );
 	}
 
 	/** Remove every top-level menu the owner is not allowed. Gated on the owner role. */
@@ -75,5 +76,19 @@ final class Blueworx_Clubhouse_Owner_Role {
 	 */
 	public static function removable_menu_slugs( array $current, array $allowlist ): array {
 		return array_values( array_diff( $current, $allowlist ) );
+	}
+
+	/** For owners only: clear the default dashboard widgets and mount the Setup screen. */
+	public static function takeover_dashboard(): void {
+		if ( ! self::is_owner( wp_get_current_user() ) ) {
+			return;
+		}
+		$GLOBALS['wp_meta_boxes']['dashboard'] = array();
+		wp_add_dashboard_widget( 'clubhouse_setup_dashboard', 'Clubhouse Setup', array( self::class, 'render_dashboard' ) );
+	}
+
+	/** Dashboard widget body: the reused Setup screen (its form posts to the Setup page). */
+	public static function render_dashboard(): void {
+		echo Blueworx_Clubhouse_Setup_Controller::screen_html( new Blueworx_Clubhouse_Options_Storage(), array() ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped within Setup_Screen.
 	}
 }
