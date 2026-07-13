@@ -27,6 +27,7 @@ require_once __DIR__ . '/theme/class-color-engine.php';
 require_once __DIR__ . '/theme/class-branding.php';
 require_once __DIR__ . '/theme/class-theme-css.php';
 require_once __DIR__ . '/theme/class-theme-cache.php';
+require_once __DIR__ . '/theme/class-demo-state.php';
 
 // Looks
 require_once __DIR__ . '/looks/class-court-side.php';
@@ -50,3 +51,7 @@ require_once __DIR__ . '/collections/interface-collections.php';
 require_once __DIR__ . '/collections/class-demo-content.php';
 require_once __DIR__ . '/collections/class-demo-collections.php';
 require_once __DIR__ . '/collections/class-collection-meta.php';
+
+// Frontend (pure)
+require_once __DIR__ . '/frontend/class-links.php';
+require_once __DIR__ . '/frontend/class-demo-mode.php';

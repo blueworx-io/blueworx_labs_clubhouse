@@ -136,8 +136,14 @@ if ( ! function_exists( 'wp_enqueue_media' ) ) {
 if ( ! function_exists( 'admin_url' ) ) {
 	function admin_url( $path = '' ) { return 'https://club.test/wp-admin/' . ltrim( (string) $path, '/' ); }
 }
+if ( ! function_exists( 'home_url' ) ) {
+	function home_url( $path = '' ) { return 'https://club.test' . ( '' === (string) $path ? '/' : (string) $path ); }
+}
 if ( ! function_exists( 'wp_get_attachment_image_url' ) ) {
 	function wp_get_attachment_image_url( $id, $size = 'thumbnail' ) { return $id ? 'https://club.test/wp-content/uploads/att-' . (int) $id . '.png' : false; }
+}
+if ( ! function_exists( 'wp_nonce_url' ) ) {
+	function wp_nonce_url( $url, $action = -1, $name = '_wpnonce' ) { return (string) $url . ( str_contains( (string) $url, '?' ) ? '&' : '?' ) . $name . '=stubnonce'; }
 }
 if ( ! function_exists( 'wp_nonce_field' ) ) {
 	function wp_nonce_field( ...$a ) { wp_stub_record( 'wp_nonce_field', $a ); $name = $a[1] ?? '_wpnonce'; return '<input type="hidden" name="' . $name . '" value="stub-nonce">'; }

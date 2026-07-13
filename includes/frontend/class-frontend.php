@@ -109,16 +109,24 @@ final class Blueworx_Clubhouse_Frontend {
 	}
 
 	private static function context(): Blueworx_Clubhouse_Clubhouse_Context {
-		$storage  = new Blueworx_Clubhouse_Options_Storage();
-		$registry = self::registry( $storage );
+		$storage    = new Blueworx_Clubhouse_Options_Storage();
+		$registry   = self::registry( $storage );
+		$demo_slug  = Blueworx_Clubhouse_Demo_Controller::look_slug( $registry );
+		$look       = null !== $demo_slug ? $registry->get( $demo_slug ) : $registry->active();
 		return new Blueworx_Clubhouse_Clubhouse_Context(
-			$registry->active(),
+			$look,
 			new Blueworx_Clubhouse_Branding( $storage ),
 			new Blueworx_Clubhouse_Visibility( $storage ),
 			new Blueworx_Clubhouse_Theme_Cache( $storage ),
 			new Blueworx_Clubhouse_WP_Collections(),
 			$registry
 		);
+	}
+
+	/** The Base Look slug this request will render (demo override or saved active). */
+	public static function active_look_slug(): ?string {
+		$look = self::context()->look;
+		return null === $look ? null : $look->slug();
 	}
 
 	public static function enqueue_assets(): void {
@@ -154,9 +162,27 @@ final class Blueworx_Clubhouse_Frontend {
 		if ( null === $slug ) {
 			return '';
 		}
+		Blueworx_Clubhouse_Links::set_resolver( array( self::class, 'link_url' ) );
 		$ctx      = self::context();
 		$logo_url = self::resolve_logo( $ctx->branding->get_logo() );
 		return Blueworx_Clubhouse_Page_Map::render( $slug, $ctx->branding, $ctx->visibility, $ctx->collections, $logo_url );
+	}
+
+	/**
+	 * Resolve an internal page key ('home', 'about', …) to a real WordPress URL.
+	 * Installed as the Links resolver during front-end rendering so the shared
+	 * renderer emits permalinks (/about/) instead of the preview's ?page= form.
+	 * Falls back to the clubhouse_page query var when permalinks are plain.
+	 */
+	public static function link_url( string $key ): string {
+		$slug = 'home' === $key ? '' : $key;
+		if ( '' === $slug ) {
+			return home_url( '/' );
+		}
+		if ( '' !== (string) get_option( 'permalink_structure', '' ) ) {
+			return home_url( '/' . $slug . '/' );
+		}
+		return home_url( '/?' . self::QUERY_VAR . '=' . $slug );
 	}
 
 	public static function club_name(): string {

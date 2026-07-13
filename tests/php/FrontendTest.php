@@ -9,6 +9,24 @@ final class FrontendTest extends TestCase {
 		wp_stub_reset();
 	}
 
+	protected function tearDown(): void {
+		unset( $_COOKIE[ Blueworx_Clubhouse_Demo_Mode::COOKIE_LOOK ] );
+	}
+
+	public function test_link_url_home_is_site_root(): void {
+		$this->assertSame( 'https://club.test/', Blueworx_Clubhouse_Frontend::link_url( 'home' ) );
+	}
+
+	public function test_link_url_pretty_permalinks_use_slug_path(): void {
+		update_option( 'permalink_structure', '/%postname%/' );
+		$this->assertSame( 'https://club.test/about/', Blueworx_Clubhouse_Frontend::link_url( 'about' ) );
+	}
+
+	public function test_link_url_plain_permalinks_fall_back_to_query_var(): void {
+		update_option( 'permalink_structure', '' );
+		$this->assertSame( 'https://club.test/?clubhouse_page=about', Blueworx_Clubhouse_Frontend::link_url( 'about' ) );
+	}
+
 	public function test_register_registers_expected_hooks(): void {
 		Blueworx_Clubhouse_Frontend::register();
 
@@ -91,6 +109,20 @@ final class FrontendTest extends TestCase {
 	public function test_resolve_slug_without_visibility_unchanged(): void {
 		$this->assertSame( 'about', Blueworx_Clubhouse_Frontend::resolve_slug( false, 'about' ) );
 		$this->assertSame( '', Blueworx_Clubhouse_Frontend::resolve_slug( true, null ) );
+	}
+
+	public function test_active_look_slug_reflects_demo_override_when_on(): void {
+		wp_stub_reset();
+		( new Blueworx_Clubhouse_Demo_State( new Blueworx_Clubhouse_Options_Storage() ) )->set( true );
+		$_COOKIE[ Blueworx_Clubhouse_Demo_Mode::COOKIE_LOOK ] = 'floodlight';
+		$this->assertSame( 'floodlight', Blueworx_Clubhouse_Frontend::active_look_slug() );
+	}
+
+	public function test_active_look_slug_is_saved_look_without_demo(): void {
+		wp_stub_reset();
+		unset( $_COOKIE[ Blueworx_Clubhouse_Demo_Mode::COOKIE_LOOK ] );
+		// No saved look → registry falls back to first registered (Court Side).
+		$this->assertSame( 'court-side', Blueworx_Clubhouse_Frontend::active_look_slug() );
 	}
 
 	public function test_resolve_logo_turns_an_attachment_id_into_a_url(): void {

@@ -10,6 +10,12 @@ require dirname( __DIR__, 2 ) . '/vendor/autoload.php';
 if ( ! defined( 'ABSPATH' ) ) {
 	define( 'ABSPATH', dirname( __DIR__, 2 ) . '/' );
 }
+if ( ! defined( 'BLUEWORX_LABS_CLUBHOUSE_URL' ) ) {
+	define( 'BLUEWORX_LABS_CLUBHOUSE_URL', 'https://club.test/wp-content/plugins/blueworx-labs-clubhouse/' );
+}
+if ( ! defined( 'BLUEWORX_LABS_CLUBHOUSE_VERSION' ) ) {
+	define( 'BLUEWORX_LABS_CLUBHOUSE_VERSION', 'test' );
+}
 
 // Plugin runtime constants: normally defined by the main plugin file, which the
 // test bootstrap intentionally never loads (see require list below). A handful
@@ -28,7 +34,9 @@ require dirname( __DIR__, 2 ) . '/includes/bootstrap.php';
 
 require_once dirname( __DIR__, 2 ) . '/includes/frontend/class-clubhouse-context.php';
 require_once dirname( __DIR__, 2 ) . '/includes/frontend/class-frontend.php';
+require_once dirname( __DIR__, 2 ) . '/includes/frontend/class-demo-mode.php';
 require_once dirname( __DIR__, 2 ) . '/includes/admin/class-setup-controller.php';
+require_once dirname( __DIR__, 2 ) . '/includes/admin/class-demo-controller.php';
 require_once dirname( __DIR__, 2 ) . '/includes/admin/class-owner-role.php';
 
 require_once dirname( __DIR__, 2 ) . '/includes/collections/class-collection-mappers.php';

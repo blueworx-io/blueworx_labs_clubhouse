@@ -68,4 +68,19 @@ final class SetupScreenTest extends TestCase {
 		$this->assertStringContainsString( 'notice notice-error', $html );
 		$this->assertStringContainsString( 'That accent is too low-contrast.', $html );
 	}
+
+	public function test_render_includes_demo_mode_toggle(): void {
+		$model = $this->model();
+		$model['demo_active'] = false;
+		$html = Blueworx_Clubhouse_Setup_Screen::render( $model );
+		$this->assertStringContainsString( 'name="clubhouse_demo_active"', $html );
+		$this->assertStringContainsString( 'Demo mode', $html );
+	}
+
+	public function test_render_checks_demo_toggle_when_active(): void {
+		$model = $this->model();
+		$model['demo_active'] = true;
+		$html = Blueworx_Clubhouse_Setup_Screen::render( $model );
+		$this->assertMatchesRegularExpression( '/name="clubhouse_demo_active"[^>]*checked/', $html );
+	}
 }

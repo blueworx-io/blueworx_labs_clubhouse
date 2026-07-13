@@ -83,6 +83,9 @@ final class Blueworx_Clubhouse_Setup_Controller {
 			$notices[] = array( 'type' => 'warning', 'text' => 'Your saved accent colour is low-contrast on the selected look. Choose a new accent for best legibility.' );
 		}
 
+		// Demo mode (site-wide) — checkbox present = on.
+		( new Blueworx_Clubhouse_Demo_State( $storage ) )->set( isset( $post['clubhouse_demo_active'] ) );
+
 		// 6. Bust the composed :root cache so the new look/accent take effect.
 		( new Blueworx_Clubhouse_Theme_Cache( $storage ) )->invalidate();
 
@@ -190,6 +193,7 @@ final class Blueworx_Clubhouse_Setup_Controller {
 			),
 			'inventory'   => Blueworx_Clubhouse_Setup_Sections::inventory(),
 			'visibility'  => array( 'pages' => $pages_state, 'sections' => $sections_state ),
+			'demo_active' => ( new Blueworx_Clubhouse_Demo_State( $storage ) )->is_on(),
 		);
 	}
 }

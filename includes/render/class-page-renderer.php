@@ -60,26 +60,25 @@ final class Blueworx_Clubhouse_Page_Renderer {
 	}
 
 	private static function shell_header( string $club, string $active, Blueworx_Clubhouse_Visibility $visibility, string $logo_url = '' ): string {
-		$nav = array(
-			array( 'label' => 'Home', 'href' => '?page=home' ),
-			array( 'label' => 'About', 'href' => '?page=about' ),
-			array( 'label' => 'Sports', 'href' => '?page=sports' ),
-			array( 'label' => 'Teams', 'href' => '?page=teams' ),
-			array( 'label' => 'Membership', 'href' => '?page=membership' ),
-			array( 'label' => 'Events', 'href' => '?page=events' ),
-			array( 'label' => 'Calendar', 'href' => '?page=calendar' ),
-			array( 'label' => 'Contact', 'href' => '?page=contact' ),
-		);
 		return Blueworx_Clubhouse_Sections::header( array(
 			'club_name'   => $club,
 			'banner'      => 'Summer sign-ups are open — register your interest for 2026/27 →',
-			'banner_href' => '?page=membership',
-			'nav'         => self::visible_nav( $nav, $visibility ),
+			'banner_href' => Blueworx_Clubhouse_Links::url( 'membership' ),
+			'nav'         => self::nav_links( array(
+				array( 'label' => 'Home', 'key' => 'home' ),
+				array( 'label' => 'About', 'key' => 'about' ),
+				array( 'label' => 'Sports', 'key' => 'sports' ),
+				array( 'label' => 'Teams', 'key' => 'teams' ),
+				array( 'label' => 'Membership', 'key' => 'membership' ),
+				array( 'label' => 'Events', 'key' => 'events' ),
+				array( 'label' => 'Calendar', 'key' => 'calendar' ),
+				array( 'label' => 'Contact', 'key' => 'contact' ),
+			), $visibility ),
 			'active'      => $active,
 			'login'       => 'Log in',
-			'login_href'  => '?page=login',
+			'login_href'  => Blueworx_Clubhouse_Links::url( 'login' ),
 			'join'        => 'Join the Club',
-			'join_href'   => '?page=membership',
+			'join_href'   => Blueworx_Clubhouse_Links::url( 'membership' ),
 			'logo'        => $logo_url,
 		) );
 	}
@@ -90,17 +89,17 @@ final class Blueworx_Clubhouse_Page_Renderer {
 			'tagline'    => 'Nine sports, one club. A home ground for every team, and everyone who follows them.',
 			'socials'    => array( 'Facebook', 'Instagram', 'Community', 'Share' ),
 			'columns'    => array(
-				array( 'title' => 'Club', 'links' => self::visible_nav( array(
-					array( 'label' => 'About', 'href' => '?page=about' ),
-					array( 'label' => 'Sports', 'href' => '?page=sports' ),
-					array( 'label' => 'Teams', 'href' => '?page=teams' ),
-					array( 'label' => 'Events', 'href' => '?page=events' ),
+				array( 'title' => 'Club', 'links' => self::nav_links( array(
+					array( 'label' => 'About', 'key' => 'about' ),
+					array( 'label' => 'Sports', 'key' => 'sports' ),
+					array( 'label' => 'Teams', 'key' => 'teams' ),
+					array( 'label' => 'Events', 'key' => 'events' ),
 				), $visibility ) ),
-				array( 'title' => 'Get involved', 'links' => self::visible_nav( array(
-					array( 'label' => 'Membership', 'href' => '?page=membership' ),
-					array( 'label' => 'Calendar', 'href' => '?page=calendar' ),
-					array( 'label' => 'Volunteer', 'href' => '?page=contact' ),
-					array( 'label' => 'Contact', 'href' => '?page=contact' ),
+				array( 'title' => 'Get involved', 'links' => self::nav_links( array(
+					array( 'label' => 'Membership', 'key' => 'membership' ),
+					array( 'label' => 'Calendar', 'key' => 'calendar' ),
+					array( 'label' => 'Volunteer', 'key' => 'contact' ),
+					array( 'label' => 'Contact', 'key' => 'contact' ),
 				), $visibility ) ),
 			),
 			'newsletter' => array(
@@ -119,25 +118,23 @@ final class Blueworx_Clubhouse_Page_Renderer {
 	}
 
 	/**
-	 * Drop nav/footer links whose target page is hidden. Non-page hrefs
-	 * (e.g. '#', 'mailto:') are never filtered.
+	 * Drop links whose target page is hidden, then resolve each surviving page
+	 * key to its real URL via the Links seam. Filtering by key (not by parsing a
+	 * resolved href) keeps hidden-page omission working whether links render as
+	 * the preview '?page=' form or real WordPress permalinks.
 	 *
-	 * @param array<int,array{label:string,href:string}> $items
+	 * @param array<int,array{label:string,key:string}> $items
 	 * @return array<int,array{label:string,href:string}>
 	 */
-	private static function visible_nav( array $items, Blueworx_Clubhouse_Visibility $visibility ): array {
-		return array_values( array_filter(
-			$items,
-			static function ( array $item ) use ( $visibility ): bool {
-				$slug = self::href_page( $item['href'] );
-				return null === $slug || $visibility->is_page_visible( $slug );
+	private static function nav_links( array $items, Blueworx_Clubhouse_Visibility $visibility ): array {
+		$out = array();
+		foreach ( $items as $item ) {
+			if ( ! $visibility->is_page_visible( $item['key'] ) ) {
+				continue;
 			}
-		) );
-	}
-
-	/** Map a '?page=x' href to its page key; null for any other href. */
-	private static function href_page( string $href ): ?string {
-		return 0 === strpos( $href, '?page=' ) ? substr( $href, strlen( '?page=' ) ) : null;
+			$out[] = array( 'label' => $item['label'], 'href' => Blueworx_Clubhouse_Links::url( $item['key'] ) );
+		}
+		return $out;
 	}
 
 	public static function home(
@@ -150,7 +147,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 		$out  = '';
 
 		if ( $visibility->is_section_visible( 'home', 'header' ) ) {
-			$out .= self::shell_header( $club, '?page=home', $visibility, $logo_url );
+			$out .= self::shell_header( $club, Blueworx_Clubhouse_Links::url( 'home' ), $visibility, $logo_url );
 		}
 		$out .= '<main class="ch-main" id="ch-main" tabindex="-1">';
 		if ( $visibility->is_section_visible( 'home', 'hero' ) ) {
@@ -160,9 +157,9 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'title_highlight'    => 'One community.',
 				'lede'               => "Nine sports, twenty-four teams, and a clubhouse that's always open. Come for the game — stay for the people.",
 				'cta_primary'        => 'Explore membership',
-				'cta_primary_href'   => '?page=membership',
+				'cta_primary_href'   => Blueworx_Clubhouse_Links::url( 'membership' ),
 				'cta_secondary'      => 'Take a tour →',
-				'cta_secondary_href' => '?page=about',
+				'cta_secondary_href' => Blueworx_Clubhouse_Links::url( 'about' ),
 				'image'              => '',
 				'image_alt'          => 'ClubHouse floodlit pitch on a Saturday',
 				'image_caption'      => 'Saturday, floodlights on',
@@ -171,10 +168,10 @@ final class Blueworx_Clubhouse_Page_Renderer {
 		if ( $visibility->is_section_visible( 'home', 'quick_tiles' ) ) {
 			// Task-oriented shortcuts (verb-first), deliberately not a mirror of the nav.
 			$out .= Blueworx_Clubhouse_Sections::quick_tiles( array(
-				array( 'label' => 'Join the club', 'href' => '?page=membership' ),
-				array( 'label' => 'Take a tour', 'href' => '?page=about' ),
-				array( 'label' => 'See fixtures', 'href' => '?page=calendar' ),
-				array( 'label' => 'Get in touch', 'href' => '?page=contact' ),
+				array( 'label' => 'Join the club', 'href' => Blueworx_Clubhouse_Links::url( 'membership' ) ),
+				array( 'label' => 'Take a tour', 'href' => Blueworx_Clubhouse_Links::url( 'about' ) ),
+				array( 'label' => 'See fixtures', 'href' => Blueworx_Clubhouse_Links::url( 'calendar' ) ),
+				array( 'label' => 'Get in touch', 'href' => Blueworx_Clubhouse_Links::url( 'contact' ) ),
 			) );
 		}
 		if ( $visibility->is_section_visible( 'home', 'ticker' ) ) {
@@ -199,7 +196,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'eyebrow'    => 'Our sports',
 				'heading'    => 'Pick your game.',
 				'link_label' => 'All sections →',
-				'link_href'  => '?page=sports',
+				'link_href'  => Blueworx_Clubhouse_Links::url( 'sports' ),
 				'cards'      => array_map(
 					static function ( array $s ): array {
 						return array(
@@ -219,7 +216,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'eyebrow'   => 'The clubhouse',
 				'heading'   => 'A home ground for every team, and everyone who follows them',
 				'image'     => '', 'image_alt' => 'ClubHouse pavilion at dusk',
-				'cta_label' => 'Visit us', 'cta_href' => '?page=contact',
+				'cta_label' => 'Visit us', 'cta_href' => Blueworx_Clubhouse_Links::url( 'contact' ),
 			) );
 		}
 		if ( $visibility->is_section_visible( 'home', 'membership' ) ) {
@@ -229,18 +226,18 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'heading'   => 'Open to everyone, from £28/month.',
 				'lede'      => 'From first-timers to county players — every tier includes clubhouse access, discounted events and a free trial session.',
 				'cta_label' => 'Choose your tier →',
-				'cta_href'  => '?page=membership',
+				'cta_href'  => Blueworx_Clubhouse_Links::url( 'membership' ),
 			) );
 			$out .= Blueworx_Clubhouse_Sections::tier_grid( array(
 				array( 'eyebrow' => 'Full playing', 'name' => 'Adult', 'price' => '£28', 'period' => '/mo',
 					'features' => array( 'Any section, any level', 'League affiliation', 'Clubhouse & socials' ),
-					'recommended' => false, 'cta_label' => 'Join', 'cta_href' => '?page=membership' ),
+					'recommended' => false, 'cta_label' => 'Join', 'cta_href' => Blueworx_Clubhouse_Links::url( 'membership' ) ),
 				array( 'eyebrow' => 'Best value', 'name' => 'Family', 'price' => '£45', 'period' => '/mo',
 					'features' => array( 'Up to 5 members', 'Any sections', 'Priority event booking' ),
-					'recommended' => true, 'cta_label' => 'Join', 'cta_href' => '?page=membership' ),
+					'recommended' => true, 'cta_label' => 'Join', 'cta_href' => Blueworx_Clubhouse_Links::url( 'membership' ) ),
 				array( 'eyebrow' => 'Off the pitch', 'name' => 'Social', 'price' => '£12', 'period' => '/mo',
 					'features' => array( 'Full clubhouse access', 'Member events', 'Support your club' ),
-					'recommended' => false, 'cta_label' => 'Join', 'cta_href' => '?page=membership' ),
+					'recommended' => false, 'cta_label' => 'Join', 'cta_href' => Blueworx_Clubhouse_Links::url( 'membership' ) ),
 			) );
 		}
 		if ( $visibility->is_section_visible( 'home', 'activity' ) ) {
@@ -304,7 +301,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 		string $logo_url = ''
 	): string {
 		$club = $branding->get_club_name();
-		$out  = self::shell_header( $club, '?page=about', $visibility, $logo_url ) . '<main class="ch-main" id="ch-main" tabindex="-1">';
+		$out  = self::shell_header( $club, Blueworx_Clubhouse_Links::url( 'about' ), $visibility, $logo_url ) . '<main class="ch-main" id="ch-main" tabindex="-1">';
 
 		if ( $visibility->is_section_visible( 'about', 'hero' ) ) {
 			$out .= Blueworx_Clubhouse_Sections::hero( array(
@@ -313,9 +310,9 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'title_highlight'    => 'community sport.',
 				'lede'               => 'From one rugby pitch in 1974 to nine sports and twenty-four teams — ClubHouse has always been about more than the game.',
 				'cta_primary'        => 'Join the club',
-				'cta_primary_href'   => '?page=membership',
+				'cta_primary_href'   => Blueworx_Clubhouse_Links::url( 'membership' ),
 				'cta_secondary'      => 'Meet the committee',
-				'cta_secondary_href' => '?page=contact',
+				'cta_secondary_href' => Blueworx_Clubhouse_Links::url( 'contact' ),
 				'image'              => '',
 				'image_alt'          => 'ClubHouse members on the terrace',
 				'image_caption'      => '',
@@ -364,7 +361,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'eyebrow'   => 'The facilities',
 				'heading'   => 'Five pitches, four courts, one clubhouse',
 				'image'     => '', 'image_alt' => 'ClubHouse grounds from the air',
-				'cta_label' => 'Book a visit', 'cta_href' => '?page=contact',
+				'cta_label' => 'Book a visit', 'cta_href' => Blueworx_Clubhouse_Links::url( 'contact' ),
 			) );
 		}
 		if ( $visibility->is_section_visible( 'about', 'cta' ) ) {
@@ -374,7 +371,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'heading'   => 'Want to be part of it?',
 				'lede'      => 'Play, volunteer, or just come for the atmosphere.',
 				'cta_label' => 'Join the club →',
-				'cta_href'  => '?page=membership',
+				'cta_href'  => Blueworx_Clubhouse_Links::url( 'membership' ),
 			) );
 		}
 		$out .= '</main>' . self::shell_footer( $club, $visibility );
@@ -388,7 +385,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 		string $logo_url = ''
 	): string {
 		$club = $branding->get_club_name();
-		$out  = self::shell_header( $club, '?page=membership', $visibility, $logo_url ) . '<main class="ch-main" id="ch-main" tabindex="-1">';
+		$out  = self::shell_header( $club, Blueworx_Clubhouse_Links::url( 'membership' ), $visibility, $logo_url ) . '<main class="ch-main" id="ch-main" tabindex="-1">';
 
 		if ( $visibility->is_section_visible( 'membership', 'hero' ) ) {
 			$out .= Blueworx_Clubhouse_Sections::hero( array(
@@ -397,9 +394,9 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'title_highlight'    => 'Play for years.',
 				'lede'               => 'From first-timers to county players, there is a category for you — every membership includes clubhouse access, discounted events and a free trial.',
 				'cta_primary'        => 'Register interest',
-				'cta_primary_href'   => '?page=contact',
+				'cta_primary_href'   => Blueworx_Clubhouse_Links::url( 'contact' ),
 				'cta_secondary'      => 'Ask a question',
-				'cta_secondary_href' => '?page=contact',
+				'cta_secondary_href' => Blueworx_Clubhouse_Links::url( 'contact' ),
 				'image'              => '',
 				'image_alt'          => 'ClubHouse members warming up',
 				'image_caption'      => '',
@@ -421,16 +418,16 @@ final class Blueworx_Clubhouse_Page_Renderer {
 			$out .= Blueworx_Clubhouse_Sections::tier_grid( array(
 				array( 'eyebrow' => 'Under 18', 'name' => 'Junior', 'price' => '£12', 'period' => '/mo',
 					'features' => array( 'Any junior section', 'Coaching included', 'Holiday camp discounts' ),
-					'recommended' => false, 'cta_label' => 'Join', 'cta_href' => '?page=contact' ),
+					'recommended' => false, 'cta_label' => 'Join', 'cta_href' => Blueworx_Clubhouse_Links::url( 'contact' ) ),
 				array( 'eyebrow' => 'Full playing', 'name' => 'Adult', 'price' => '£28', 'period' => '/mo',
 					'features' => array( 'Any section, any level', 'League affiliation', 'Clubhouse & socials' ),
-					'recommended' => false, 'cta_label' => 'Join', 'cta_href' => '?page=contact' ),
+					'recommended' => false, 'cta_label' => 'Join', 'cta_href' => Blueworx_Clubhouse_Links::url( 'contact' ) ),
 				array( 'eyebrow' => 'Best value', 'name' => 'Family', 'price' => '£45', 'period' => '/mo',
 					'features' => array( 'Up to 5 members', 'Any sections', 'Priority event booking' ),
-					'recommended' => true, 'cta_label' => 'Join', 'cta_href' => '?page=contact' ),
+					'recommended' => true, 'cta_label' => 'Join', 'cta_href' => Blueworx_Clubhouse_Links::url( 'contact' ) ),
 				array( 'eyebrow' => 'Off the pitch', 'name' => 'Social', 'price' => '£12', 'period' => '/mo',
 					'features' => array( 'Full clubhouse access', 'Member events', 'Support your club' ),
-					'recommended' => false, 'cta_label' => 'Join', 'cta_href' => '?page=contact' ),
+					'recommended' => false, 'cta_label' => 'Join', 'cta_href' => Blueworx_Clubhouse_Links::url( 'contact' ) ),
 			) );
 		}
 		if ( $visibility->is_section_visible( 'membership', 'detail' ) ) {
@@ -481,7 +478,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'heading'   => 'Register your interest',
 				'lede'      => 'Tell us a little about you and we will be in touch within a few days.',
 				'cta_label' => 'Register interest →',
-				'cta_href'  => '?page=contact',
+				'cta_href'  => Blueworx_Clubhouse_Links::url( 'contact' ),
 			) );
 		}
 		$out .= '</main>' . self::shell_footer( $club, $visibility );
@@ -495,7 +492,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 		string $logo_url = ''
 	): string {
 		$club = $branding->get_club_name();
-		$out  = self::shell_header( $club, '?page=contact', $visibility, $logo_url ) . '<main class="ch-main" id="ch-main" tabindex="-1">';
+		$out  = self::shell_header( $club, Blueworx_Clubhouse_Links::url( 'contact' ), $visibility, $logo_url ) . '<main class="ch-main" id="ch-main" tabindex="-1">';
 
 		if ( $visibility->is_section_visible( 'contact', 'hero' ) ) {
 			$out .= Blueworx_Clubhouse_Sections::hero( array(
@@ -560,7 +557,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 		string $logo_url = ''
 	): string {
 		$club = $branding->get_club_name();
-		$out  = self::shell_header( $club, '?page=login', $visibility, $logo_url ) . '<main class="ch-main" id="ch-main" tabindex="-1">';
+		$out  = self::shell_header( $club, Blueworx_Clubhouse_Links::url( 'login' ), $visibility, $logo_url ) . '<main class="ch-main" id="ch-main" tabindex="-1">';
 
 		if ( $visibility->is_section_visible( 'login', 'form' ) ) {
 			$out .= Blueworx_Clubhouse_Sections::auth( array(
@@ -575,7 +572,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'submit_label'   => 'Log in',
 				'join_prompt'    => 'Not a member yet?',
 				'join_label'     => 'Join the club',
-				'join_href'      => '?page=membership',
+				'join_href'      => Blueworx_Clubhouse_Links::url( 'membership' ),
 			) );
 		}
 		$out .= '</main>' . self::shell_footer( $club, $visibility );
@@ -589,7 +586,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 		string $logo_url = ''
 	): string {
 		$club = $branding->get_club_name();
-		$out  = self::shell_header( $club, '?page=sports', $visibility, $logo_url ) . '<main class="ch-main" id="ch-main" tabindex="-1">';
+		$out  = self::shell_header( $club, Blueworx_Clubhouse_Links::url( 'sports' ), $visibility, $logo_url ) . '<main class="ch-main" id="ch-main" tabindex="-1">';
 
 		if ( $visibility->is_section_visible( 'sports', 'hero' ) ) {
 			$out .= Blueworx_Clubhouse_Sections::hero_filter( array(
@@ -599,13 +596,13 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'lede'            => 'From first session to first team — find your section and get playing.',
 				'filter_label'    => 'Filter by sport',
 				'filters'         => array(
-					array( 'label' => 'All', 'href' => '?page=sports', 'active' => true ),
-					array( 'label' => 'Rugby', 'href' => '?page=sports', 'active' => false ),
-					array( 'label' => 'Cricket', 'href' => '?page=sports', 'active' => false ),
-					array( 'label' => 'Tennis', 'href' => '?page=sports', 'active' => false ),
-					array( 'label' => 'Football', 'href' => '?page=sports', 'active' => false ),
-					array( 'label' => 'Hockey', 'href' => '?page=sports', 'active' => false ),
-					array( 'label' => 'Netball', 'href' => '?page=sports', 'active' => false ),
+					array( 'label' => 'All', 'href' => Blueworx_Clubhouse_Links::url( 'sports' ), 'active' => true ),
+					array( 'label' => 'Rugby', 'href' => Blueworx_Clubhouse_Links::url( 'sports' ), 'active' => false ),
+					array( 'label' => 'Cricket', 'href' => Blueworx_Clubhouse_Links::url( 'sports' ), 'active' => false ),
+					array( 'label' => 'Tennis', 'href' => Blueworx_Clubhouse_Links::url( 'sports' ), 'active' => false ),
+					array( 'label' => 'Football', 'href' => Blueworx_Clubhouse_Links::url( 'sports' ), 'active' => false ),
+					array( 'label' => 'Hockey', 'href' => Blueworx_Clubhouse_Links::url( 'sports' ), 'active' => false ),
+					array( 'label' => 'Netball', 'href' => Blueworx_Clubhouse_Links::url( 'sports' ), 'active' => false ),
 				),
 			) );
 		}
@@ -614,7 +611,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'eyebrow'    => 'All sections',
 				'heading'    => 'Pick your sport.',
 				'link_label' => 'Join the club →',
-				'link_href'  => '?page=membership',
+				'link_href'  => Blueworx_Clubhouse_Links::url( 'membership' ),
 				'cards'      => array_map(
 					static function ( array $s ): array {
 						return array(
@@ -640,7 +637,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'heading'   => 'Try any sport with a free session',
 				'lede'      => 'Not sure which section fits? Come down and try before you join.',
 				'cta_label' => 'Register interest →',
-				'cta_href'  => '?page=contact',
+				'cta_href'  => Blueworx_Clubhouse_Links::url( 'contact' ),
 			) );
 		}
 		$out .= '</main>' . self::shell_footer( $club, $visibility );
@@ -654,7 +651,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 		string $logo_url = ''
 	): string {
 		$club = $branding->get_club_name();
-		$out  = self::shell_header( $club, '?page=teams', $visibility, $logo_url ) . '<main class="ch-main" id="ch-main" tabindex="-1">';
+		$out  = self::shell_header( $club, Blueworx_Clubhouse_Links::url( 'teams' ), $visibility, $logo_url ) . '<main class="ch-main" id="ch-main" tabindex="-1">';
 
 		if ( $visibility->is_section_visible( 'teams', 'hero' ) ) {
 			$out .= Blueworx_Clubhouse_Sections::hero_filter( array(
@@ -664,11 +661,11 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'lede'            => 'League sides, development squads and junior pathways across all nine sports.',
 				'filter_label'    => 'Filter teams by sport',
 				'filters'         => array(
-					array( 'label' => 'All', 'href' => '?page=teams', 'active' => true ),
-					array( 'label' => 'Rugby', 'href' => '?page=teams', 'active' => false ),
-					array( 'label' => 'Cricket', 'href' => '?page=teams', 'active' => false ),
-					array( 'label' => 'Hockey', 'href' => '?page=teams', 'active' => false ),
-					array( 'label' => 'Netball', 'href' => '?page=teams', 'active' => false ),
+					array( 'label' => 'All', 'href' => Blueworx_Clubhouse_Links::url( 'teams' ), 'active' => true ),
+					array( 'label' => 'Rugby', 'href' => Blueworx_Clubhouse_Links::url( 'teams' ), 'active' => false ),
+					array( 'label' => 'Cricket', 'href' => Blueworx_Clubhouse_Links::url( 'teams' ), 'active' => false ),
+					array( 'label' => 'Hockey', 'href' => Blueworx_Clubhouse_Links::url( 'teams' ), 'active' => false ),
+					array( 'label' => 'Netball', 'href' => Blueworx_Clubhouse_Links::url( 'teams' ), 'active' => false ),
 				),
 			) );
 		}
@@ -703,7 +700,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'heading'   => 'Trials run all season',
 				'lede'      => 'Every squad welcomes new players — get in touch and we will match you to a session.',
 				'cta_label' => 'Get in touch →',
-				'cta_href'  => '?page=contact',
+				'cta_href'  => Blueworx_Clubhouse_Links::url( 'contact' ),
 			) );
 		}
 		$out .= '</main>' . self::shell_footer( $club, $visibility );
@@ -717,7 +714,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 		string $logo_url = ''
 	): string {
 		$club = $branding->get_club_name();
-		$out  = self::shell_header( $club, '?page=events', $visibility, $logo_url ) . '<main class="ch-main" id="ch-main" tabindex="-1">';
+		$out  = self::shell_header( $club, Blueworx_Clubhouse_Links::url( 'events' ), $visibility, $logo_url ) . '<main class="ch-main" id="ch-main" tabindex="-1">';
 
 		if ( $visibility->is_section_visible( 'events', 'hero' ) ) {
 			$out .= Blueworx_Clubhouse_Sections::hero_filter( array(
@@ -727,10 +724,10 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'lede'            => "There's always something happening at the club — on the pitch and off it.",
 				'filter_label'    => 'Filter events by type',
 				'filters'         => array(
-					array( 'label' => 'All', 'href' => '?page=events', 'active' => true ),
-					array( 'label' => 'Social', 'href' => '?page=events', 'active' => false ),
-					array( 'label' => 'Junior', 'href' => '?page=events', 'active' => false ),
-					array( 'label' => 'Tournament', 'href' => '?page=events', 'active' => false ),
+					array( 'label' => 'All', 'href' => Blueworx_Clubhouse_Links::url( 'events' ), 'active' => true ),
+					array( 'label' => 'Social', 'href' => Blueworx_Clubhouse_Links::url( 'events' ), 'active' => false ),
+					array( 'label' => 'Junior', 'href' => Blueworx_Clubhouse_Links::url( 'events' ), 'active' => false ),
+					array( 'label' => 'Tournament', 'href' => Blueworx_Clubhouse_Links::url( 'events' ), 'active' => false ),
 				),
 			) );
 		}
@@ -773,7 +770,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'heading'   => 'Hire the clubhouse',
 				'lede'      => 'Function room and bar available for members and the community.',
 				'cta_label' => 'Enquire about hire →',
-				'cta_href'  => '?page=contact',
+				'cta_href'  => Blueworx_Clubhouse_Links::url( 'contact' ),
 			) );
 		}
 		$out .= '</main>' . self::shell_footer( $club, $visibility );
@@ -787,7 +784,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 		string $logo_url = ''
 	): string {
 		$club = $branding->get_club_name();
-		$out  = self::shell_header( $club, '?page=calendar', $visibility, $logo_url ) . '<main class="ch-main" id="ch-main" tabindex="-1">';
+		$out  = self::shell_header( $club, Blueworx_Clubhouse_Links::url( 'calendar' ), $visibility, $logo_url ) . '<main class="ch-main" id="ch-main" tabindex="-1">';
 
 		if ( $visibility->is_section_visible( 'calendar', 'hero' ) ) {
 			$out .= Blueworx_Clubhouse_Sections::hero_filter( array(
@@ -797,10 +794,10 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'lede'            => 'Match days across all nine sports, with results as they come in.',
 				'filter_label'    => 'Filter fixtures by sport',
 				'filters'         => array(
-					array( 'label' => 'All', 'href' => '?page=calendar', 'active' => true ),
-					array( 'label' => 'Rugby', 'href' => '?page=calendar', 'active' => false ),
-					array( 'label' => 'Cricket', 'href' => '?page=calendar', 'active' => false ),
-					array( 'label' => 'Hockey', 'href' => '?page=calendar', 'active' => false ),
+					array( 'label' => 'All', 'href' => Blueworx_Clubhouse_Links::url( 'calendar' ), 'active' => true ),
+					array( 'label' => 'Rugby', 'href' => Blueworx_Clubhouse_Links::url( 'calendar' ), 'active' => false ),
+					array( 'label' => 'Cricket', 'href' => Blueworx_Clubhouse_Links::url( 'calendar' ), 'active' => false ),
+					array( 'label' => 'Hockey', 'href' => Blueworx_Clubhouse_Links::url( 'calendar' ), 'active' => false ),
 				),
 			) );
 		}
@@ -818,7 +815,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'heading'   => 'Never miss a result',
 				'lede'      => 'Fixtures, results and club news — one email a month.',
 				'cta_label' => 'Join the mailing list →',
-				'cta_href'  => '?page=contact',
+				'cta_href'  => Blueworx_Clubhouse_Links::url( 'contact' ),
 			) );
 		}
 		$out .= '</main>' . self::shell_footer( $club, $visibility );
