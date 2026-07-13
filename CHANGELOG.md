@@ -5,6 +5,12 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.20.1] - 2026-07-13
+
+### Docs
+
+- Added a **manual WP smoke-test checklist** (`docs/manual-smoke-test.md`) covering the live-install-only behaviours across Admin Phases 1–4 and the site-wide Demo mode runtime — the surface that cannot be reached by unit tests (real WordPress, multiple browsers, capability/nonce probing).
+
 ## [0.20.0] - 2026-07-13
 
 ### Changed
