@@ -36,6 +36,7 @@ require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/collections/class-media.php
 require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/collections/class-wp-collections.php';
 require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/collections/class-collection-types.php';
 require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/collections/class-collection-seeder.php';
+require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/collections/class-collection-meta-boxes.php';
 
 /**
  * Boot the plugin.

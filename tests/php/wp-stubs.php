@@ -123,11 +123,40 @@ if ( ! function_exists( 'wp_get_attachment_image_url' ) ) {
 	function wp_get_attachment_image_url( $id, $size = 'thumbnail' ) { return $id ? 'https://club.test/wp-content/uploads/att-' . (int) $id . '.png' : false; }
 }
 if ( ! function_exists( 'wp_nonce_field' ) ) {
-	function wp_nonce_field( ...$a ) { wp_stub_record( 'wp_nonce_field', $a ); return '<input type="hidden" name="_wpnonce" value="stub-nonce">'; }
+	function wp_nonce_field( ...$a ) { wp_stub_record( 'wp_nonce_field', $a ); $name = $a[1] ?? '_wpnonce'; return '<input type="hidden" name="' . $name . '" value="stub-nonce">'; }
 }
 if ( ! function_exists( 'check_admin_referer' ) ) {
 	function check_admin_referer( ...$a ) { wp_stub_record( 'check_admin_referer', $a ); return true; }
 }
 if ( ! function_exists( 'wp_unslash' ) ) {
 	function wp_unslash( $v ) { return $v; }
+}
+if ( ! function_exists( 'update_post_meta' ) ) {
+	function update_post_meta( int $id, string $key, $value ) {
+		$GLOBALS['wp_stub_postmeta'][ $id ][ $key ] = $value;
+		wp_stub_record( 'update_post_meta', array( $id, $key, $value ) );
+		return true;
+	}
+}
+if ( ! function_exists( 'add_meta_box' ) ) {
+	function add_meta_box( ...$a ) { wp_stub_record( 'add_meta_box', $a ); }
+}
+if ( ! function_exists( 'wp_verify_nonce' ) ) {
+	function wp_verify_nonce( $nonce, $action = -1 ) { wp_stub_record( 'wp_verify_nonce', array( $nonce, $action ) ); return 1; }
+}
+if ( ! function_exists( 'esc_attr' ) ) {
+	function esc_attr( $s ) { return htmlspecialchars( (string) $s, ENT_QUOTES, 'UTF-8' ); }
+}
+if ( ! function_exists( 'esc_html' ) ) {
+	function esc_html( $s ) { return htmlspecialchars( (string) $s, ENT_QUOTES, 'UTF-8' ); }
+}
+if ( ! function_exists( 'esc_textarea' ) ) {
+	function esc_textarea( $s ) { return htmlspecialchars( (string) $s, ENT_QUOTES, 'UTF-8' ); }
+}
+if ( ! function_exists( 'selected' ) ) {
+	function selected( $a, $b = true, $echo = true ) {
+		$r = ( (string) $a === (string) $b ) ? ' selected="selected"' : '';
+		if ( $echo ) { echo $r; }
+		return $r;
+	}
 }
