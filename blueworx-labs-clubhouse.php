@@ -48,6 +48,7 @@ function blueworx_labs_clubhouse_init() {
 	Blueworx_Clubhouse_Frontend::register();
 	Blueworx_Clubhouse_Setup_Controller::register();
 	Blueworx_Clubhouse_Collection_Meta_Boxes::register();
+	add_action( 'admin_menu', array( Blueworx_Clubhouse_Collection_Types::class, 'register_content_menu' ) );
 }
 add_action( 'plugins_loaded', 'blueworx_labs_clubhouse_init' );
 

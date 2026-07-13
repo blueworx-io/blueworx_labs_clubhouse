@@ -115,6 +115,9 @@ if ( ! function_exists( 'sanitize_hex_color' ) ) {
 if ( ! function_exists( 'add_menu_page' ) ) {
 	function add_menu_page( ...$a ) { wp_stub_record( 'add_menu_page', $a ); return 'toplevel_page_' . ( $a[3] ?? '' ); }
 }
+if ( ! function_exists( 'remove_submenu_page' ) ) {
+	function remove_submenu_page( ...$a ) { wp_stub_record( 'remove_submenu_page', $a ); return false; }
+}
 if ( ! function_exists( 'current_user_can' ) ) {
 	function current_user_can( ...$a ) { wp_stub_record( 'current_user_can', $a ); return true; }
 }
