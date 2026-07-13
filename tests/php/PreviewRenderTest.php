@@ -51,8 +51,8 @@ final class PreviewRenderTest extends TestCase {
 		unset( $_GET['look'] );
 
 		$this->assertStringContainsString( 'floodlight.css', $html );
-		$this->assertStringContainsString( 'family=Bricolage%20Grotesque', $html );
-		$this->assertStringContainsString( 'family=Hanken%20Grotesk', $html );
+		$this->assertStringContainsString( '/assets/fonts/bricolage-grotesque-', $html );
+		$this->assertStringContainsString( '/assets/fonts/hanken-grotesk-', $html );
 		// Dark shell token made it into the emitted :root.
 		$this->assertStringContainsString( '#14110b', $html );
 	}
@@ -64,8 +64,8 @@ final class PreviewRenderTest extends TestCase {
 		unset( $_GET['look'] );
 
 		$this->assertStringContainsString( 'members-house.css', $html );
-		$this->assertStringContainsString( 'family=Fraunces', $html );
-		$this->assertStringContainsString( 'family=Mulish', $html );
+		$this->assertStringContainsString( '/assets/fonts/fraunces-', $html );
+		$this->assertStringContainsString( '/assets/fonts/mulish-', $html );
 		// Parchment shell token made it into the emitted :root.
 		$this->assertStringContainsString( '#f2ece0', $html );
 	}

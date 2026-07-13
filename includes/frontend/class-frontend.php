@@ -36,7 +36,7 @@ final class Blueworx_Clubhouse_Frontend {
 	}
 
 	/**
-	 * @return array{fonts_url:string,stylesheet_url:string,inline_css:string,reveal_url:string}
+	 * @return array{font_face_css:string,stylesheet_url:string,inline_css:string,reveal_url:string}
 	 */
 	public static function enqueue_specs(
 		Blueworx_Clubhouse_Base_Look $look,
@@ -44,7 +44,7 @@ final class Blueworx_Clubhouse_Frontend {
 		string $plugin_url
 	): array {
 		return array(
-			'fonts_url'      => Blueworx_Clubhouse_Page_Renderer::google_fonts_url( $look ),
+			'font_face_css'  => Blueworx_Clubhouse_Page_Renderer::font_face_css( $look, $plugin_url ),
 			'stylesheet_url' => $plugin_url . $look->stylesheet(),
 			'inline_css'     => $root_css,
 			'reveal_url'     => $plugin_url . 'assets/js/reveal.js',
@@ -56,19 +56,6 @@ final class Blueworx_Clubhouse_Frontend {
 		add_action( 'init', array( Blueworx_Clubhouse_Collection_Types::class, 'register' ) );
 		add_action( 'wp_enqueue_scripts', array( self::class, 'enqueue_assets' ) );
 		add_filter( 'template_include', array( self::class, 'filter_template' ) );
-		add_filter( 'wp_resource_hints', array( self::class, 'resource_hints' ), 10, 2 );
-	}
-
-	/**
-	 * @param array<int,mixed> $urls
-	 * @return array<int,mixed>
-	 */
-	public static function resource_hints( array $urls, string $relation_type ): array {
-		if ( 'preconnect' === $relation_type && null !== self::current_slug() ) {
-			$urls[] = 'https://fonts.googleapis.com';
-			$urls[] = array( 'href' => 'https://fonts.gstatic.com', 'crossorigin' );
-		}
-		return $urls;
 	}
 
 	public static function register_rewrites(): void {
@@ -142,8 +129,8 @@ final class Blueworx_Clubhouse_Frontend {
 			$ctx->cache->root_css( $ctx->look, $ctx->branding ),
 			BLUEWORX_LABS_CLUBHOUSE_URL
 		);
-		wp_enqueue_style( 'clubhouse-fonts', $specs['fonts_url'], array(), null );
 		wp_enqueue_style( 'clubhouse-look', $specs['stylesheet_url'], array(), BLUEWORX_LABS_CLUBHOUSE_VERSION );
+		wp_add_inline_style( 'clubhouse-look', $specs['font_face_css'], 'before' );
 		wp_add_inline_style( 'clubhouse-look', $specs['inline_css'] );
 		wp_enqueue_script( 'clubhouse-reveal', $specs['reveal_url'], array(), BLUEWORX_LABS_CLUBHOUSE_VERSION, true );
 	}

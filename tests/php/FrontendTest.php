@@ -36,7 +36,6 @@ final class FrontendTest extends TestCase {
 		$this->assertContains( 'init', $actions );
 		$this->assertContains( 'wp_enqueue_scripts', $actions );
 		$this->assertContains( 'template_include', $filters );
-		$this->assertContains( 'wp_resource_hints', $filters );
 	}
 
 	public function test_register_rewrites_adds_one_rule_per_non_home_page(): void {
@@ -77,10 +76,22 @@ final class FrontendTest extends TestCase {
 		$look  = new Blueworx_Clubhouse_Court_Side();
 		$specs = Blueworx_Clubhouse_Frontend::enqueue_specs( $look, ':root{--x:1}', 'https://club.test/wp-content/plugins/clubhouse/' );
 
-		$this->assertStringContainsString( 'fonts.googleapis.com', $specs['fonts_url'] );
+		$this->assertStringContainsString( '@font-face', $specs['font_face_css'] );
+		$this->assertStringContainsString(
+			"src:url(https://club.test/wp-content/plugins/clubhouse/assets/fonts/syne-700.woff2) format('woff2')",
+			$specs['font_face_css']
+		);
+		$this->assertStringNotContainsString( 'googleapis', $specs['font_face_css'] );
 		$this->assertSame( 'https://club.test/wp-content/plugins/clubhouse/assets/looks/court-side.css', $specs['stylesheet_url'] );
 		$this->assertSame( ':root{--x:1}', $specs['inline_css'] );
 		$this->assertSame( 'https://club.test/wp-content/plugins/clubhouse/assets/js/reveal.js', $specs['reveal_url'] );
+	}
+
+	public function test_no_google_font_origins_are_referenced(): void {
+		$look  = new Blueworx_Clubhouse_Court_Side();
+		$specs = Blueworx_Clubhouse_Frontend::enqueue_specs( $look, ':root{}', 'https://club.test/wp/' );
+		$this->assertStringNotContainsString( 'gstatic', $specs['font_face_css'] );
+		$this->assertFalse( method_exists( Blueworx_Clubhouse_Frontend::class, 'resource_hints' ) );
 	}
 
 	public function test_club_name_reads_branding_through_context(): void {

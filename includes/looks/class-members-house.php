@@ -43,11 +43,11 @@ final class Blueworx_Clubhouse_Members_House implements Blueworx_Clubhouse_Base_
 		);
 	}
 
-	/** @return array<int,array{family:string,weights:array<int,int>,display:string}> */
+	/** @return array<int,array{family:string,stem:string,weights:array<int,int>,display:string}> */
 	public function fonts(): array {
 		return array(
-			array( 'family' => 'Fraunces', 'weights' => array( 400, 500, 600, 700 ), 'display' => 'swap' ),
-			array( 'family' => 'Mulish', 'weights' => array( 400, 500, 600, 700 ), 'display' => 'swap' ),
+			array( 'family' => 'Fraunces', 'stem' => 'fraunces', 'weights' => array( 400, 500, 600, 700 ), 'display' => 'swap' ),
+			array( 'family' => 'Mulish', 'stem' => 'mulish', 'weights' => array( 400, 500, 600, 700 ), 'display' => 'swap' ),
 		);
 	}
 

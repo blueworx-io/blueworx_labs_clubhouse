@@ -7,22 +7,34 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 /**
  * Assembles a full HTML document for a Base Look + branding: <head> carries the
- * Google-fonts link, the look stylesheet, and the derived :root variables; <body>
- * is a string of rendered sections. home() composes the demo Home shell, honouring
- * per-section visibility. The same output is what WordPress template_include will
- * later echo — the preview is just an earlier caller.
+ * self-hosted @font-face rules (injected inline), the look stylesheet, and the
+ * derived :root variables; <body> is a string of rendered sections. home()
+ * composes the demo Home shell, honouring per-section visibility. The same
+ * output is what WordPress template_include will later echo — the preview is
+ * just an earlier caller.
  *
  * @package BlueworxLabsClubhouse
  */
 final class Blueworx_Clubhouse_Page_Renderer {
 
-	public static function google_fonts_url( Blueworx_Clubhouse_Base_Look $look ): string {
-		$families = array();
+	public static function font_face_css( Blueworx_Clubhouse_Base_Look $look, string $base_url ): string {
+		// Normalise to exactly one trailing slash so callers may pass the base with or
+		// without it; an empty base stays empty (relative paths). Guards a future caller
+		// against the '…pluginassets/fonts/…' footgun.
+		$base = '' === $base_url ? '' : rtrim( $base_url, '/' ) . '/';
+		$css  = '';
 		foreach ( $look->fonts() as $font ) {
-			$families[] = 'family=' . rawurlencode( $font['family'] )
-				. ':wght@' . implode( ';', $font['weights'] );
+			$stem    = $font['stem'];
+			$display = $font['display'];
+			foreach ( $font['weights'] as $weight ) {
+				$css .= "@font-face{font-family:'" . $font['family'] . "';"
+					. 'font-style:normal;'
+					. 'font-weight:' . (int) $weight . ';'
+					. 'font-display:' . $display . ';'
+					. 'src:url(' . $base . 'assets/fonts/' . $stem . '-' . $weight . '.woff2) format(\'woff2\')}';
+			}
 		}
-		return 'https://fonts.googleapis.com/css2?' . implode( '&', $families ) . '&display=swap';
+		return $css;
 	}
 
 	public static function document(
@@ -31,17 +43,15 @@ final class Blueworx_Clubhouse_Page_Renderer {
 		string $body,
 		string $plugin_url = ''
 	): string {
-		$vars = Blueworx_Clubhouse_Theme_Css::compose( $look, $branding );
-		$css  = Blueworx_Clubhouse_Theme_Css::to_css( $vars );
-		$font = htmlspecialchars( self::google_fonts_url( $look ), ENT_QUOTES, 'UTF-8' );
-		$sheet = htmlspecialchars( $plugin_url . $look->stylesheet(), ENT_QUOTES, 'UTF-8' );
+		$vars     = Blueworx_Clubhouse_Theme_Css::compose( $look, $branding );
+		$css      = Blueworx_Clubhouse_Theme_Css::to_css( $vars );
+		$faces    = self::font_face_css( $look, $plugin_url );
+		$sheet    = htmlspecialchars( $plugin_url . $look->stylesheet(), ENT_QUOTES, 'UTF-8' );
 
 		return '<!doctype html><html lang="en"><head>'
 			. '<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">'
 			. '<title>' . htmlspecialchars( $branding->get_club_name(), ENT_QUOTES, 'UTF-8' ) . '</title>'
-			. '<link rel="preconnect" href="https://fonts.googleapis.com">'
-			. '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'
-			. '<link rel="stylesheet" href="' . $font . '">'
+			. '<style>' . $faces . '</style>'
 			. '<link rel="stylesheet" href="' . $sheet . '">'
 			. '<style>' . $css . '</style>'
 			. '</head><body>' . $body . self::reveal_script() . '</body></html>';

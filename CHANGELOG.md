@@ -5,6 +5,14 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.21.0] - 2026-07-13
+
+### Phase 5 — Font self-hosting
+
+#### Changed
+
+- **Fonts are now self-hosted.** Every Base Look's typefaces (Syne, Inter, Fraunces, Mulish, Bricolage Grotesque, Hanken Grotesk) are served from woff2 files bundled in the plugin instead of the Google Fonts CDN. No visible change — same families, weights, and `font-display: swap` — but the front end now makes **zero third-party font requests** (no `fonts.googleapis.com`/`fonts.gstatic.com`), which is faster and more private. Each family's SIL OFL 1.1 licence is bundled under `assets/fonts/licenses/`.
+
 ## [0.20.1] - 2026-07-13
 
 ### Docs

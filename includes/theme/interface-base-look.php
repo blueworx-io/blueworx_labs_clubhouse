@@ -32,7 +32,7 @@ interface Blueworx_Clubhouse_Base_Look {
 	/**
 	 * Loadable font assets for this look.
 	 *
-	 * @return array<int, array{family:string, weights:array<int,int>, display:string}>
+	 * @return array<int, array{family:string, stem:string, weights:array<int,int>, display:string}>
 	 */
 	public function fonts(): array;
 
