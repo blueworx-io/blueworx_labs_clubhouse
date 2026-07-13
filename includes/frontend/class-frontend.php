@@ -89,6 +89,15 @@ final class Blueworx_Clubhouse_Frontend {
 		return dirname( __DIR__, 2 ) . '/templates/clubhouse.php';
 	}
 
+	/** Build a Base Look registry with all packs registered (Court Side first = fallback). */
+	public static function registry( Blueworx_Clubhouse_Storage $storage ): Blueworx_Clubhouse_Base_Look_Registry {
+		$registry = new Blueworx_Clubhouse_Base_Look_Registry( $storage );
+		$registry->register( new Blueworx_Clubhouse_Court_Side() );
+		$registry->register( new Blueworx_Clubhouse_Members_House() );
+		$registry->register( new Blueworx_Clubhouse_Floodlight() );
+		return $registry;
+	}
+
 	private static function context(): array {
 		$storage    = new Blueworx_Clubhouse_Options_Storage();
 		$registry   = new Blueworx_Clubhouse_Base_Look_Registry( $storage );
