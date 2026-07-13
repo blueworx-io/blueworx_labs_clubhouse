@@ -29,6 +29,7 @@ final class Blueworx_Clubhouse_Setup_Screen {
 		$out .= self::look_area( $model['looks'] );
 		$out .= self::branding_area( $model['branding'] );
 		$out .= self::visibility_area( $model['inventory'], $model['visibility'] );
+		$out .= self::demo_area( (bool) ( $model['demo_active'] ?? false ) );
 		$out .= '<p class="submit"><button type="submit" class="button button-primary">Save changes</button></p>';
 		$out .= '</form></div>';
 		return $out;
@@ -117,6 +118,14 @@ final class Blueworx_Clubhouse_Setup_Screen {
 			}
 			$out .= '</div></fieldset>';
 		}
+		return $out;
+	}
+
+	private static function demo_area( bool $active ): string {
+		$checked = $active ? ' checked' : '';
+		$out  = '<h2>Demo mode</h2>';
+		$out .= '<p class="description">When on, every visitor sees a floating switcher to preview the Base Looks, and the site renders in a demo look. Your saved look is not changed. Only administrators can turn this on or off.</p>';
+		$out .= '<label><input type="checkbox" name="clubhouse_demo_active" value="1"' . $checked . '> Enable demo mode for all visitors</label>';
 		return $out;
 	}
 }

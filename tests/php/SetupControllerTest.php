@@ -98,6 +98,19 @@ final class SetupControllerTest extends TestCase {
 		$this->assertContains( 'admin_enqueue_scripts', $actions );
 	}
 
+	public function test_handle_save_enables_demo_mode_when_checked(): void {
+		$storage = new Blueworx_Clubhouse_Fake_Storage();
+		Blueworx_Clubhouse_Setup_Controller::handle_save( array( 'clubhouse_demo_active' => '1' ), $storage );
+		$this->assertTrue( ( new Blueworx_Clubhouse_Demo_State( $storage ) )->is_on() );
+	}
+
+	public function test_handle_save_disables_demo_mode_when_absent(): void {
+		$storage = new Blueworx_Clubhouse_Fake_Storage();
+		( new Blueworx_Clubhouse_Demo_State( $storage ) )->set( true );
+		Blueworx_Clubhouse_Setup_Controller::handle_save( array(), $storage );
+		$this->assertFalse( ( new Blueworx_Clubhouse_Demo_State( $storage ) )->is_on() );
+	}
+
 	public function test_build_model_reflects_live_state(): void {
 		$storage  = new Blueworx_Clubhouse_Fake_Storage();
 		Blueworx_Clubhouse_Frontend::registry( $storage )->set_active( 'floodlight' );
