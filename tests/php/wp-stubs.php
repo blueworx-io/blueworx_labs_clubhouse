@@ -10,12 +10,14 @@ $GLOBALS['wp_stub_calls']    = array();
 $GLOBALS['wp_stub_options']  = array();
 $GLOBALS['wp_stub_posts']    = array();
 $GLOBALS['wp_stub_postmeta'] = array();
+$GLOBALS['wp_stub_roles']    = array( 'administrator' => array( 'display' => 'Administrator', 'caps' => array() ) );
 
 function wp_stub_reset(): void {
 	$GLOBALS['wp_stub_calls']    = array();
 	$GLOBALS['wp_stub_options']  = array();
 	$GLOBALS['wp_stub_posts']    = array();
 	$GLOBALS['wp_stub_postmeta'] = array();
+	$GLOBALS['wp_stub_roles']    = array( 'administrator' => array( 'display' => 'Administrator', 'caps' => array() ) );
 }
 function wp_stub_calls( string $fn ): array {
 	return array_values( array_filter(
@@ -162,4 +164,32 @@ if ( ! function_exists( 'selected' ) ) {
 		if ( $echo ) { echo $r; }
 		return $r;
 	}
+}
+
+if ( ! class_exists( 'Blueworx_Stub_Role' ) ) {
+	final class Blueworx_Stub_Role {
+		public string $name;
+		public function __construct( string $name ) { $this->name = $name; }
+		public function add_cap( string $cap, bool $grant = true ): void {
+			$GLOBALS['wp_stub_roles'][ $this->name ]['caps'][ $cap ] = $grant;
+			wp_stub_record( 'role_add_cap', array( $this->name, $cap ) );
+		}
+		public function remove_cap( string $cap ): void {
+			unset( $GLOBALS['wp_stub_roles'][ $this->name ]['caps'][ $cap ] );
+			wp_stub_record( 'role_remove_cap', array( $this->name, $cap ) );
+		}
+	}
+}
+if ( ! function_exists( 'add_role' ) ) {
+	function add_role( $role, $display, $caps = array() ) {
+		$GLOBALS['wp_stub_roles'][ $role ] = array( 'display' => $display, 'caps' => $caps );
+		wp_stub_record( 'add_role', array( $role, $display, $caps ) );
+		return new Blueworx_Stub_Role( $role );
+	}
+}
+if ( ! function_exists( 'remove_role' ) ) {
+	function remove_role( $role ) { unset( $GLOBALS['wp_stub_roles'][ $role ] ); wp_stub_record( 'remove_role', array( $role ) ); }
+}
+if ( ! function_exists( 'get_role' ) ) {
+	function get_role( $role ) { return isset( $GLOBALS['wp_stub_roles'][ $role ] ) ? new Blueworx_Stub_Role( $role ) : null; }
 }
