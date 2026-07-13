@@ -10,7 +10,7 @@ final class FrontendTest extends TestCase {
 	}
 
 	protected function tearDown(): void {
-		unset( $_COOKIE[ Blueworx_Clubhouse_Demo_Mode::COOKIE_FLAG ], $_COOKIE[ Blueworx_Clubhouse_Demo_Mode::COOKIE_LOOK ] );
+		unset( $_COOKIE[ Blueworx_Clubhouse_Demo_Mode::COOKIE_LOOK ] );
 	}
 
 	public function test_link_url_home_is_site_root(): void {
@@ -120,16 +120,16 @@ final class FrontendTest extends TestCase {
 		$this->assertContains( 'wp_footer', $actions, 'Demo switcher must be wired' );
 	}
 
-	public function test_active_look_slug_reflects_demo_override_for_admin(): void {
+	public function test_active_look_slug_reflects_demo_override_when_on(): void {
 		wp_stub_reset();
-		$_COOKIE[ Blueworx_Clubhouse_Demo_Mode::COOKIE_FLAG ] = '1';
+		( new Blueworx_Clubhouse_Demo_State( new Blueworx_Clubhouse_Options_Storage() ) )->set( true );
 		$_COOKIE[ Blueworx_Clubhouse_Demo_Mode::COOKIE_LOOK ] = 'floodlight';
 		$this->assertSame( 'floodlight', Blueworx_Clubhouse_Frontend::active_look_slug() );
 	}
 
 	public function test_active_look_slug_is_saved_look_without_demo(): void {
 		wp_stub_reset();
-		unset( $_COOKIE[ Blueworx_Clubhouse_Demo_Mode::COOKIE_FLAG ], $_COOKIE[ Blueworx_Clubhouse_Demo_Mode::COOKIE_LOOK ] );
+		unset( $_COOKIE[ Blueworx_Clubhouse_Demo_Mode::COOKIE_LOOK ] );
 		// No saved look → registry falls back to first registered (Court Side).
 		$this->assertSame( 'court-side', Blueworx_Clubhouse_Frontend::active_look_slug() );
 	}

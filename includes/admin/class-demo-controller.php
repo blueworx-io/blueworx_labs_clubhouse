@@ -7,22 +7,26 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * WordPress-coupled glue for admin Demo mode. Reads the per-admin cookie +
- * capability, exposes the effective demo look slug to Frontend::context(), and
- * renders the admin-bar toggle + floating switcher on the front end. All
- * decisions and markup live in the pure Blueworx_Clubhouse_Demo_Mode; this class
- * only touches WordPress. Never persists — the club's saved look is untouched.
+ * WordPress-coupled glue for site-wide Demo mode. Reads the stored on/off flag
+ * (Demo_State) for every visitor and exposes the per-viewer demo look to
+ * Frontend::context(); renders the admin-bar toggle (a nonce'd link, works
+ * front-end and in wp-admin) and the floating switcher. Only capability-gated
+ * admins may flip the flag; the switcher and demo assets are shown to all
+ * viewers while on. Never writes the club's saved look.
  *
  * @package BlueworxLabsClubhouse
  */
 final class Blueworx_Clubhouse_Demo_Controller {
 
-	public const CAPABILITY = 'manage_options';
+	public const CAPABILITY     = 'manage_options';
+	public const TOGGLE_ACTION  = 'clubhouse_demo_toggle';
+	public const NONCE          = 'clubhouse_demo_toggle';
 
 	public static function register(): void {
 		add_action( 'admin_bar_menu', array( self::class, 'admin_bar_node' ), 100 );
 		add_action( 'wp_enqueue_scripts', array( self::class, 'enqueue' ) );
 		add_action( 'wp_footer', array( self::class, 'render_switcher' ) );
+		add_action( 'admin_post_' . self::TOGGLE_ACTION, array( self::class, 'handle_toggle' ) );
 	}
 
 	private static function can_manage(): bool {
@@ -33,23 +37,46 @@ final class Blueworx_Clubhouse_Demo_Controller {
 		if ( ! isset( $_COOKIE[ $name ] ) ) {
 			return null;
 		}
-		return sanitize_text_field( wp_unslash( $_COOKIE[ $name ] ) ); // phpcs:ignore WordPress.Security.NonceVerification.NoNonce -- read-only per-admin UI preference, cap-gated below.
+		return sanitize_text_field( wp_unslash( $_COOKIE[ $name ] ) ); // phpcs:ignore WordPress.Security.NonceVerification.NoNonce -- read-only per-viewer preview preference; changes nothing server-side.
 	}
 
-	public static function is_active(): bool {
-		return Blueworx_Clubhouse_Demo_Mode::is_active( self::can_manage(), self::cookie( Blueworx_Clubhouse_Demo_Mode::COOKIE_FLAG ) );
+	public static function is_on(): bool {
+		return ( new Blueworx_Clubhouse_Demo_State( new Blueworx_Clubhouse_Options_Storage() ) )->is_on();
 	}
 
 	public static function look_slug( Blueworx_Clubhouse_Base_Look_Registry $registry ): ?string {
 		return Blueworx_Clubhouse_Demo_Mode::resolve_look_slug(
-			self::is_active(),
+			self::is_on(),
 			self::cookie( Blueworx_Clubhouse_Demo_Mode::COOKIE_LOOK ),
 			array_keys( $registry->all() )
 		);
 	}
 
-	public static function enqueue(): void {
+	/** Flip the stored flag; returns the new state. Pure glue — unit-testable with any Storage. */
+	public static function apply_toggle( Blueworx_Clubhouse_Storage $storage ): bool {
+		$state = new Blueworx_Clubhouse_Demo_State( $storage );
+		$next  = ! $state->is_on();
+		$state->set( $next );
+		return $next;
+	}
+
+	public static function handle_toggle(): void {
 		if ( ! self::can_manage() ) {
+			return;
+		}
+		check_admin_referer( self::NONCE );
+		self::apply_toggle( new Blueworx_Clubhouse_Options_Storage() );
+		$back = wp_get_referer();
+		wp_safe_redirect( false !== $back ? $back : home_url( '/' ) );
+		exit;
+	}
+
+	private static function toggle_url(): string {
+		return wp_nonce_url( admin_url( 'admin-post.php?action=' . self::TOGGLE_ACTION ), self::NONCE );
+	}
+
+	public static function enqueue(): void {
+		if ( ! self::is_on() ) {
 			return;
 		}
 		wp_enqueue_style( 'clubhouse-demo', BLUEWORX_LABS_CLUBHOUSE_URL . 'assets/css/demo.css', array(), BLUEWORX_LABS_CLUBHOUSE_VERSION );
@@ -61,18 +88,17 @@ final class Blueworx_Clubhouse_Demo_Controller {
 		if ( ! self::can_manage() || ! is_object( $wp_admin_bar ) || ! method_exists( $wp_admin_bar, 'add_node' ) ) {
 			return;
 		}
-		$on    = self::is_active();
-		$label = $on ? 'Demo mode: On' : 'Demo mode: Off';
+		$on = self::is_on();
 		$wp_admin_bar->add_node( array(
 			'id'    => 'clubhouse-demo-toggle',
-			'title' => '⚡ ' . $label,
-			'href'  => '#',
+			'title' => '⚡ ' . ( $on ? 'Demo mode: On' : 'Demo mode: Off' ),
+			'href'  => self::toggle_url(),
 			'meta'  => array( 'class' => $on ? 'clubhouse-demo-on' : 'clubhouse-demo-off' ),
 		) );
 	}
 
 	public static function render_switcher(): void {
-		if ( ! self::is_active() ) {
+		if ( ! self::is_on() ) {
 			return;
 		}
 		$registry = Blueworx_Clubhouse_Frontend::registry( new Blueworx_Clubhouse_Options_Storage() );
@@ -81,6 +107,7 @@ final class Blueworx_Clubhouse_Demo_Controller {
 		foreach ( $registry->all() as $look ) {
 			$looks[] = array( 'slug' => $look->slug(), 'name' => $look->name() );
 		}
-		echo Blueworx_Clubhouse_Demo_Mode::switcher_html( $looks, $current ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Demo_Mode escapes all dynamic text.
+		$deactivate = self::can_manage() ? self::toggle_url() : null;
+		echo Blueworx_Clubhouse_Demo_Mode::switcher_html( $looks, $current, $deactivate ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Demo_Mode escapes all dynamic text.
 	}
 }
