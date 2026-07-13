@@ -89,29 +89,39 @@ final class Blueworx_Clubhouse_Frontend {
 		return dirname( __DIR__, 2 ) . '/templates/clubhouse.php';
 	}
 
-	private static function context(): array {
-		$storage    = new Blueworx_Clubhouse_Options_Storage();
-		$registry   = new Blueworx_Clubhouse_Base_Look_Registry( $storage );
+	/** Build a Base Look registry with all packs registered (Court Side first = fallback). */
+	public static function registry( Blueworx_Clubhouse_Storage $storage ): Blueworx_Clubhouse_Base_Look_Registry {
+		$registry = new Blueworx_Clubhouse_Base_Look_Registry( $storage );
 		$registry->register( new Blueworx_Clubhouse_Court_Side() );
-		$look       = $registry->active();
-		$branding   = new Blueworx_Clubhouse_Branding( $storage );
-		$visibility = new Blueworx_Clubhouse_Visibility( $storage );
-		$cache      = new Blueworx_Clubhouse_Theme_Cache( $storage );
-		$collections = new Blueworx_Clubhouse_WP_Collections();
-		return array( $look, $branding, $visibility, $cache, $collections );
+		$registry->register( new Blueworx_Clubhouse_Members_House() );
+		$registry->register( new Blueworx_Clubhouse_Floodlight() );
+		return $registry;
+	}
+
+	private static function context(): Blueworx_Clubhouse_Clubhouse_Context {
+		$storage  = new Blueworx_Clubhouse_Options_Storage();
+		$registry = self::registry( $storage );
+		return new Blueworx_Clubhouse_Clubhouse_Context(
+			$registry->active(),
+			new Blueworx_Clubhouse_Branding( $storage ),
+			new Blueworx_Clubhouse_Visibility( $storage ),
+			new Blueworx_Clubhouse_Theme_Cache( $storage ),
+			new Blueworx_Clubhouse_WP_Collections(),
+			$registry
+		);
 	}
 
 	public static function enqueue_assets(): void {
 		if ( null === self::current_slug() ) {
 			return;
 		}
-		list( $look, $branding, , $cache ) = self::context();
-		if ( null === $look ) {
+		$ctx = self::context();
+		if ( null === $ctx->look ) {
 			return;
 		}
 		$specs = self::enqueue_specs(
-			$look,
-			$cache->root_css( $look, $branding ),
+			$ctx->look,
+			$ctx->cache->root_css( $ctx->look, $ctx->branding ),
 			BLUEWORX_LABS_CLUBHOUSE_URL
 		);
 		wp_enqueue_style( 'clubhouse-fonts', $specs['fonts_url'], array(), null );
@@ -126,12 +136,11 @@ final class Blueworx_Clubhouse_Frontend {
 		if ( null === $slug ) {
 			return '';
 		}
-		list( , $branding, $visibility, , $collections ) = self::context();
-		return Blueworx_Clubhouse_Page_Map::render( $slug, $branding, $visibility, $collections );
+		$ctx = self::context();
+		return Blueworx_Clubhouse_Page_Map::render( $slug, $ctx->branding, $ctx->visibility, $ctx->collections );
 	}
 
 	public static function club_name(): string {
-		list( , $branding, , ) = self::context();
-		return $branding->get_club_name();
+		return self::context()->branding->get_club_name();
 	}
 }

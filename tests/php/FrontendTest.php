@@ -64,4 +64,10 @@ final class FrontendTest extends TestCase {
 		$this->assertSame( ':root{--x:1}', $specs['inline_css'] );
 		$this->assertSame( 'https://club.test/wp-content/plugins/clubhouse/assets/js/reveal.js', $specs['reveal_url'] );
 	}
+
+	public function test_club_name_reads_branding_through_context(): void {
+		wp_stub_reset();
+		update_option( 'clubhouse_branding', array( 'club_name' => 'Riverside RFC' ) );
+		$this->assertSame( 'Riverside RFC', Blueworx_Clubhouse_Frontend::club_name() );
+	}
 }
