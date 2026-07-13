@@ -30,6 +30,7 @@ require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/bootstrap.php';
 require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/frontend/class-clubhouse-context.php';
 require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/frontend/class-frontend.php';
 require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/admin/class-setup-controller.php';
+require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/admin/class-demo-controller.php';
 
 require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/collections/class-collection-mappers.php';
 require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/collections/class-wp-collections.php';
