@@ -55,4 +55,8 @@ final class Blueworx_Clubhouse_Floodlight implements Blueworx_Clubhouse_Base_Loo
 	public function stylesheet(): string {
 		return 'assets/looks/floodlight.css';
 	}
+
+	public function accent_bears_text(): bool {
+		return false;
+	}
 }

@@ -54,4 +54,8 @@ final class Blueworx_Clubhouse_Members_House implements Blueworx_Clubhouse_Base_
 	public function stylesheet(): string {
 		return 'assets/looks/members-house.css';
 	}
+
+	public function accent_bears_text(): bool {
+		return true;
+	}
 }

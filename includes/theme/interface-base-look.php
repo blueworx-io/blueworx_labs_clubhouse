@@ -38,4 +38,11 @@ interface Blueworx_Clubhouse_Base_Look {
 
 	/** Plugin-root-relative path to the look's stylesheet. */
 	public function stylesheet(): string;
+
+	/**
+	 * Does this look paint text ON the accent fill (buttons, hero highlight,
+	 * ticker label)? If true, an accent must clear AA as ink-on-fill to be
+	 * acceptable; glow-only looks (accent spent as ambient light) return false.
+	 */
+	public function accent_bears_text(): bool;
 }

@@ -5,6 +5,25 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.16.0] - 2026-07-13
+
+### Clubhouse Setup screen
+
+The first owner-facing admin surface — a standard WordPress admin page under a new **Clubhouse** menu.
+
+#### Added
+
+- **Base Look picker.** Choose Court Side, Members' House, or Floodlight; the choice becomes the active look.
+- **Branding controls.** Accent colour (rejected on save if it is too low-contrast for the chosen look — the check is look-aware: text-bearing looks need higher contrast than the glow-only dark look), club name, logo (via the media library), and Facebook / Instagram URLs.
+- **Visibility controls.** Show or hide any page and any of its sections. A hidden sub-page now returns a 404 on the front end (a hidden home page falls back to WordPress's front-page setting).
+- **Setup progress bar.** Tracks the six branding/look configuration items (page content is not counted).
+- **Look-aware accent legibility.** Base Looks now declare whether they paint text on the accent fill, so accent acceptance matches how each look actually uses the colour.
+
+#### Notes
+
+- The screen is a standard admin page for now (capability `manage_options`); the locked-down Clubhouse Owner role and Dashboard takeover arrive in a later phase.
+- The logo is stored here; rendering it in the site header (and omitting hidden pages from the nav) lands in the next phase.
+
 ## [0.15.0] - 2026-07-13
 
 ### Admin foundation & engine hardening

@@ -39,6 +39,11 @@ require_once __DIR__ . '/render/class-page-renderer.php';
 require_once __DIR__ . '/render/class-page-map.php';
 require_once __DIR__ . '/render/class-fixture-projection.php';
 
+// Admin (pure)
+require_once __DIR__ . '/admin/class-setup-progress.php';
+require_once __DIR__ . '/admin/class-setup-sections.php';
+require_once __DIR__ . '/admin/class-setup-screen.php';
+
 // Collections (pure)
 require_once __DIR__ . '/collections/interface-collections.php';
 require_once __DIR__ . '/collections/class-demo-content.php';

@@ -1,0 +1,11 @@
+.clubhouse-setup .clubhouse-progress { max-width: 640px; margin: 16px 0 24px; }
+.clubhouse-progress__track { background: #e2e4e7; border-radius: 999px; height: 10px; overflow: hidden; }
+.clubhouse-progress__bar { background: #2271b1; height: 100%; transition: width .3s ease; }
+.clubhouse-looks { display: flex; flex-wrap: wrap; gap: 12px; margin: 12px 0 24px; }
+.clubhouse-look-card { display: block; border: 2px solid #dcdcde; border-radius: 10px; padding: 14px 16px; cursor: pointer; max-width: 220px; }
+.clubhouse-look-card:has( input:checked ) { border-color: #2271b1; background: #f0f6fc; }
+.clubhouse-look-card__name { display: block; font-weight: 600; margin: 6px 0 4px; }
+.clubhouse-look-card__desc { display: block; color: #50575e; font-size: 13px; }
+.clubhouse-vis-page { border: 1px solid #dcdcde; border-radius: 8px; padding: 10px 14px; margin: 0 0 12px; }
+.clubhouse-vis-sections { display: flex; flex-wrap: wrap; gap: 6px 20px; margin-top: 8px; }
+.clubhouse-vis-section { display: block; min-width: 160px; }

@@ -70,4 +70,26 @@ final class FrontendTest extends TestCase {
 		update_option( 'clubhouse_branding', array( 'club_name' => 'Riverside RFC' ) );
 		$this->assertSame( 'Riverside RFC', Blueworx_Clubhouse_Frontend::club_name() );
 	}
+
+	public function test_resolve_slug_hidden_page_is_null(): void {
+		$vis = new Blueworx_Clubhouse_Visibility( new Blueworx_Clubhouse_Fake_Storage() );
+		$vis->set_page_visible( 'about', false );
+		$this->assertNull( Blueworx_Clubhouse_Frontend::resolve_slug( false, 'about', $vis ) );
+	}
+
+	public function test_resolve_slug_visible_page_still_resolves(): void {
+		$vis = new Blueworx_Clubhouse_Visibility( new Blueworx_Clubhouse_Fake_Storage() );
+		$this->assertSame( 'about', Blueworx_Clubhouse_Frontend::resolve_slug( false, 'about', $vis ) );
+	}
+
+	public function test_resolve_slug_hidden_home_is_null(): void {
+		$vis = new Blueworx_Clubhouse_Visibility( new Blueworx_Clubhouse_Fake_Storage() );
+		$vis->set_page_visible( 'home', false );
+		$this->assertNull( Blueworx_Clubhouse_Frontend::resolve_slug( true, null, $vis ) );
+	}
+
+	public function test_resolve_slug_without_visibility_unchanged(): void {
+		$this->assertSame( 'about', Blueworx_Clubhouse_Frontend::resolve_slug( false, 'about' ) );
+		$this->assertSame( '', Blueworx_Clubhouse_Frontend::resolve_slug( true, null ) );
+	}
 }

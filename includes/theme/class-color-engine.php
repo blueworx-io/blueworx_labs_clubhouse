@@ -131,4 +131,24 @@ class Blueworx_Clubhouse_Color_Engine {
 		$deep_ok = self::contrast_ratio( $d['--color-accent-deep'], self::normalize_hex( $shell_bg ) ) >= 4.5;
 		return $ink_ok && $deep_ok;
 	}
+
+	/** Is the accent legible as text/marks ON the shell (accent-deep vs bg)? */
+	public static function accent_deep_is_legible( string $accent, string $shell_bg ): bool {
+		// shell_ink is irrelevant to accent-deep; pass the bg (unused for deep).
+		$d = self::derive( $accent, $shell_bg, $shell_bg );
+		return self::contrast_ratio( $d['--color-accent-deep'], self::normalize_hex( $shell_bg ) ) >= 4.5;
+	}
+
+	/**
+	 * Look-aware acceptance: for a look that paints text on the accent fill,
+	 * require full legibility (ink + deep); for a glow-only look, require only
+	 * accent-deep (the accent never carries text there).
+	 */
+	public static function accent_is_legible_for( Blueworx_Clubhouse_Base_Look $look, string $accent ): bool {
+		$t = $look->tokens();
+		if ( $look->accent_bears_text() ) {
+			return self::accent_is_legible( $accent, $t['--color-bg'], $t['--color-ink'] );
+		}
+		return self::accent_deep_is_legible( $accent, $t['--color-bg'] );
+	}
 }
