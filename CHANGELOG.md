@@ -13,6 +13,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Fonts are now self-hosted.** Every Base Look's typefaces (Syne, Inter, Fraunces, Mulish, Bricolage Grotesque, Hanken Grotesk) are served from woff2 files bundled in the plugin instead of the Google Fonts CDN. No visible change — same families, weights, and `font-display: swap` — but the front end now makes **zero third-party font requests** (no `fonts.googleapis.com`/`fonts.gstatic.com`), which is faster and more private. Each family's SIL OFL 1.1 licence is bundled under `assets/fonts/licenses/`.
 
+## [0.20.1] - 2026-07-13
+
+### Docs
+
+- Added a **manual WP smoke-test checklist** (`docs/manual-smoke-test.md`) covering the live-install-only behaviours across Admin Phases 1–4 and the site-wide Demo mode runtime — the surface that cannot be reached by unit tests (real WordPress, multiple browsers, capability/nonce probing).
+
 ## [0.20.0] - 2026-07-13
 
 ### Changed
