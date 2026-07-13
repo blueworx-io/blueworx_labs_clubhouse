@@ -156,8 +156,26 @@ final class Blueworx_Clubhouse_Frontend {
 		if ( null === $slug ) {
 			return '';
 		}
+		Blueworx_Clubhouse_Links::set_resolver( array( self::class, 'link_url' ) );
 		$ctx = self::context();
 		return Blueworx_Clubhouse_Page_Map::render( $slug, $ctx->branding, $ctx->visibility, $ctx->collections );
+	}
+
+	/**
+	 * Resolve an internal page key ('home', 'about', …) to a real WordPress URL.
+	 * Installed as the Links resolver during front-end rendering so the shared
+	 * renderer emits permalinks (/about/) instead of the preview's ?page= form.
+	 * Falls back to the clubhouse_page query var when permalinks are plain.
+	 */
+	public static function link_url( string $key ): string {
+		$slug = 'home' === $key ? '' : $key;
+		if ( '' === $slug ) {
+			return home_url( '/' );
+		}
+		if ( '' !== (string) get_option( 'permalink_structure', '' ) ) {
+			return home_url( '/' . $slug . '/' );
+		}
+		return home_url( '/?' . self::QUERY_VAR . '=' . $slug );
 	}
 
 	public static function club_name(): string {

@@ -50,4 +50,5 @@ require_once __DIR__ . '/collections/class-demo-content.php';
 require_once __DIR__ . '/collections/class-demo-collections.php';
 
 // Frontend (pure)
+require_once __DIR__ . '/frontend/class-links.php';
 require_once __DIR__ . '/frontend/class-demo-mode.php';

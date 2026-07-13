@@ -62,7 +62,7 @@ final class Blueworx_Clubhouse_Sections {
 		return '<a class="ch-skip" href="#ch-main">Skip to content</a>'
 			. $banner
 			. '<header class="ch-nav"><div class="ch-wrap ch-nav__in">'
-			. '<a class="ch-brand" href="?page=home"><span class="ch-brand__mark">C</span>' . self::e( $data['club_name'] ) . '</a>'
+			. '<a class="ch-brand" href="' . self::e( Blueworx_Clubhouse_Links::url( 'home' ) ) . '"><span class="ch-brand__mark">C</span>' . self::e( $data['club_name'] ) . '</a>'
 			. '<nav class="ch-nav__links" aria-label="Primary">' . $links . '</nav>'
 			. '<div class="ch-nav__cta">'
 			. '<a class="ch-btn ch-btn--ghost" href="' . self::e( $login_href ) . '">' . self::e( $data['login'] ) . '</a>'
@@ -449,7 +449,7 @@ final class Blueworx_Clubhouse_Sections {
 		return '<footer class="ch-footer"><div class="ch-wrap">'
 			. '<div class="ch-footer__grid">'
 			. '<div class="ch-footer__brand-col">'
-			. '<a class="ch-brand" href="?page=home"><span class="ch-brand__mark">C</span>' . self::e( $data['club_name'] ) . '</a>'
+			. '<a class="ch-brand" href="' . self::e( Blueworx_Clubhouse_Links::url( 'home' ) ) . '"><span class="ch-brand__mark">C</span>' . self::e( $data['club_name'] ) . '</a>'
 			. '<p class="ch-footer__tagline">' . self::e( $data['tagline'] ) . '</p>'
 			. '<div class="ch-footer__socials">' . $socials . '</div></div>'
 			. $cols . $nl . '</div>'

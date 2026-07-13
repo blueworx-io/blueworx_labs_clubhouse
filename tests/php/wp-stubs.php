@@ -119,6 +119,9 @@ if ( ! function_exists( 'wp_enqueue_media' ) ) {
 if ( ! function_exists( 'admin_url' ) ) {
 	function admin_url( $path = '' ) { return 'https://club.test/wp-admin/' . ltrim( (string) $path, '/' ); }
 }
+if ( ! function_exists( 'home_url' ) ) {
+	function home_url( $path = '' ) { return 'https://club.test' . ( '' === (string) $path ? '/' : (string) $path ); }
+}
 if ( ! function_exists( 'wp_get_attachment_image_url' ) ) {
 	function wp_get_attachment_image_url( $id, $size = 'thumbnail' ) { return $id ? 'https://club.test/wp-content/uploads/att-' . (int) $id . '.png' : false; }
 }

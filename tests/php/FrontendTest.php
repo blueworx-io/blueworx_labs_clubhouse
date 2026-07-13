@@ -13,6 +13,20 @@ final class FrontendTest extends TestCase {
 		unset( $_COOKIE[ Blueworx_Clubhouse_Demo_Mode::COOKIE_FLAG ], $_COOKIE[ Blueworx_Clubhouse_Demo_Mode::COOKIE_LOOK ] );
 	}
 
+	public function test_link_url_home_is_site_root(): void {
+		$this->assertSame( 'https://club.test/', Blueworx_Clubhouse_Frontend::link_url( 'home' ) );
+	}
+
+	public function test_link_url_pretty_permalinks_use_slug_path(): void {
+		update_option( 'permalink_structure', '/%postname%/' );
+		$this->assertSame( 'https://club.test/about/', Blueworx_Clubhouse_Frontend::link_url( 'about' ) );
+	}
+
+	public function test_link_url_plain_permalinks_fall_back_to_query_var(): void {
+		update_option( 'permalink_structure', '' );
+		$this->assertSame( 'https://club.test/?clubhouse_page=about', Blueworx_Clubhouse_Frontend::link_url( 'about' ) );
+	}
+
 	public function test_register_registers_expected_hooks(): void {
 		Blueworx_Clubhouse_Frontend::register();
 
