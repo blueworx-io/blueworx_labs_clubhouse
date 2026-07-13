@@ -18,11 +18,21 @@ final class Blueworx_Clubhouse_Frontend {
 
 	public const QUERY_VAR = 'clubhouse_page';
 
-	public static function resolve_slug( bool $is_front_page, mixed $query_var ): ?string {
+	public static function resolve_slug( bool $is_front_page, mixed $query_var, ?Blueworx_Clubhouse_Visibility $visibility = null ): ?string {
+		$slug = null;
 		if ( is_string( $query_var ) && '' !== $query_var && Blueworx_Clubhouse_Page_Map::has( $query_var ) ) {
-			return $query_var;
+			$slug = $query_var;
+		} elseif ( $is_front_page ) {
+			$slug = '';
 		}
-		return $is_front_page ? '' : null;
+		if ( null === $slug ) {
+			return null;
+		}
+		$page = '' === $slug ? 'home' : $slug;
+		if ( null !== $visibility && ! $visibility->is_page_visible( $page ) ) {
+			return null;
+		}
+		return $slug;
 	}
 
 	/**
@@ -78,7 +88,7 @@ final class Blueworx_Clubhouse_Frontend {
 	private static function current_slug(): ?string {
 		$is_front = function_exists( 'is_front_page' ) ? is_front_page() : false;
 		$qv       = function_exists( 'get_query_var' ) ? get_query_var( self::QUERY_VAR ) : '';
-		return self::resolve_slug( (bool) $is_front, $qv );
+		return self::resolve_slug( (bool) $is_front, $qv, self::context()->visibility );
 	}
 
 	public static function filter_template( string $template ): string {
