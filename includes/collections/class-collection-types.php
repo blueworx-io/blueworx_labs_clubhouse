@@ -15,6 +15,8 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 final class Blueworx_Clubhouse_Collection_Types {
 
+	public const CONTENT_SLUG = 'clubhouse-content';
+
 	public const POST_TYPES = array(
 		'clubhouse_sport',
 		'clubhouse_team',
@@ -50,7 +52,7 @@ final class Blueworx_Clubhouse_Collection_Types {
 				'labels'       => array( 'name' => $plural, 'singular_name' => $singular ),
 				'public'       => false,
 				'show_ui'      => true,
-				'show_in_menu' => true,
+				'show_in_menu' => self::CONTENT_SLUG,
 				'menu_icon'    => 'dashicons-groups',
 				'supports'     => array( 'title', 'page-attributes' ),
 				'has_archive'  => false,
@@ -65,5 +67,15 @@ final class Blueworx_Clubhouse_Collection_Types {
 				) );
 			}
 		}
+	}
+
+	/**
+	 * Registers the top-level "Content" menu the six CPTs nest under, and removes
+	 * the auto-created duplicate submenu so the parent link opens the first CPT.
+	 * Hooked on admin_menu.
+	 */
+	public static function register_content_menu(): void {
+		add_menu_page( 'Content', 'Content', 'edit_posts', self::CONTENT_SLUG, '', 'dashicons-clipboard', 4 );
+		remove_submenu_page( self::CONTENT_SLUG, self::CONTENT_SLUG );
 	}
 }

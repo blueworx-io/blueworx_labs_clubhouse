@@ -13,4 +13,24 @@ final class CollectionTypesTest extends TestCase {
 		}
 		$this->assertCount( 6, wp_stub_calls( 'register_post_type' ) );
 	}
+
+	public function test_cpts_mount_under_the_content_parent(): void {
+		wp_stub_reset();
+		Blueworx_Clubhouse_Collection_Types::register();
+		$calls = wp_stub_calls( 'register_post_type' );
+		$this->assertNotEmpty( $calls );
+		foreach ( $calls as $call ) {
+			$this->assertSame( 'clubhouse-content', $call['args'][1]['show_in_menu'] );
+		}
+	}
+
+	public function test_register_content_menu_adds_parent_and_drops_duplicate(): void {
+		wp_stub_reset();
+		Blueworx_Clubhouse_Collection_Types::register_content_menu();
+		$menu = wp_stub_calls( 'add_menu_page' );
+		$this->assertNotEmpty( $menu );
+		$this->assertSame( 'clubhouse-content', $menu[0]['args'][3] );
+		$dropped = wp_stub_calls( 'remove_submenu_page' );
+		$this->assertSame( array( 'clubhouse-content', 'clubhouse-content' ), $dropped[0]['args'] );
+	}
 }

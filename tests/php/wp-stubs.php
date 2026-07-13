@@ -6,16 +6,21 @@
 // shadowed. Reset with wp_stub_reset() in setUp().
 declare(strict_types=1);
 
-$GLOBALS['wp_stub_calls']    = array();
-$GLOBALS['wp_stub_options']  = array();
-$GLOBALS['wp_stub_posts']    = array();
-$GLOBALS['wp_stub_postmeta'] = array();
+$GLOBALS['wp_stub_calls']       = array();
+$GLOBALS['wp_stub_options']     = array();
+$GLOBALS['wp_stub_posts']       = array();
+$GLOBALS['wp_stub_postmeta']    = array();
+$GLOBALS['wp_stub_roles']       = array( 'administrator' => array( 'display' => 'Administrator', 'caps' => array() ) );
+$GLOBALS['wp_stub_current_user'] = (object) array( 'roles' => array() );
 
 function wp_stub_reset(): void {
-	$GLOBALS['wp_stub_calls']    = array();
-	$GLOBALS['wp_stub_options']  = array();
-	$GLOBALS['wp_stub_posts']    = array();
-	$GLOBALS['wp_stub_postmeta'] = array();
+	$GLOBALS['wp_stub_calls']       = array();
+	$GLOBALS['wp_stub_options']     = array();
+	$GLOBALS['wp_stub_posts']       = array();
+	$GLOBALS['wp_stub_postmeta']    = array();
+	$GLOBALS['wp_stub_roles']       = array( 'administrator' => array( 'display' => 'Administrator', 'caps' => array() ) );
+	$GLOBALS['wp_stub_current_user'] = (object) array( 'roles' => array() );
+	unset( $GLOBALS['menu'], $GLOBALS['wp_meta_boxes'] );
 }
 function wp_stub_calls( string $fn ): array {
 	return array_values( array_filter(
@@ -113,6 +118,15 @@ if ( ! function_exists( 'sanitize_hex_color' ) ) {
 if ( ! function_exists( 'add_menu_page' ) ) {
 	function add_menu_page( ...$a ) { wp_stub_record( 'add_menu_page', $a ); return 'toplevel_page_' . ( $a[3] ?? '' ); }
 }
+if ( ! function_exists( 'remove_submenu_page' ) ) {
+	function remove_submenu_page( ...$a ) { wp_stub_record( 'remove_submenu_page', $a ); return false; }
+}
+if ( ! function_exists( 'wp_get_current_user' ) ) {
+	function wp_get_current_user() { return $GLOBALS['wp_stub_current_user']; }
+}
+if ( ! function_exists( 'remove_menu_page' ) ) {
+	function remove_menu_page( $slug ) { wp_stub_record( 'remove_menu_page', array( $slug ) ); return false; }
+}
 if ( ! function_exists( 'current_user_can' ) ) {
 	function current_user_can( ...$a ) { wp_stub_record( 'current_user_can', $a ); return true; }
 }
@@ -162,4 +176,35 @@ if ( ! function_exists( 'selected' ) ) {
 		if ( $echo ) { echo $r; }
 		return $r;
 	}
+}
+
+if ( ! class_exists( 'Blueworx_Stub_Role' ) ) {
+	final class Blueworx_Stub_Role {
+		public string $name;
+		public function __construct( string $name ) { $this->name = $name; }
+		public function add_cap( string $cap, bool $grant = true ): void {
+			$GLOBALS['wp_stub_roles'][ $this->name ]['caps'][ $cap ] = $grant;
+			wp_stub_record( 'role_add_cap', array( $this->name, $cap ) );
+		}
+		public function remove_cap( string $cap ): void {
+			unset( $GLOBALS['wp_stub_roles'][ $this->name ]['caps'][ $cap ] );
+			wp_stub_record( 'role_remove_cap', array( $this->name, $cap ) );
+		}
+	}
+}
+if ( ! function_exists( 'add_role' ) ) {
+	function add_role( $role, $display, $caps = array() ) {
+		$GLOBALS['wp_stub_roles'][ $role ] = array( 'display' => $display, 'caps' => $caps );
+		wp_stub_record( 'add_role', array( $role, $display, $caps ) );
+		return new Blueworx_Stub_Role( $role );
+	}
+}
+if ( ! function_exists( 'remove_role' ) ) {
+	function remove_role( $role ) { unset( $GLOBALS['wp_stub_roles'][ $role ] ); wp_stub_record( 'remove_role', array( $role ) ); }
+}
+if ( ! function_exists( 'get_role' ) ) {
+	function get_role( $role ) { return isset( $GLOBALS['wp_stub_roles'][ $role ] ) ? new Blueworx_Stub_Role( $role ) : null; }
+}
+if ( ! function_exists( 'wp_add_dashboard_widget' ) ) {
+	function wp_add_dashboard_widget( ...$a ) { wp_stub_record( 'wp_add_dashboard_widget', $a ); }
 }
