@@ -17,6 +17,7 @@ require dirname( __DIR__, 2 ) . '/includes/bootstrap.php';
 
 require_once dirname( __DIR__, 2 ) . '/includes/frontend/class-clubhouse-context.php';
 require_once dirname( __DIR__, 2 ) . '/includes/frontend/class-frontend.php';
+require_once dirname( __DIR__, 2 ) . '/includes/admin/class-setup-controller.php';
 
 require_once dirname( __DIR__, 2 ) . '/includes/collections/class-collection-mappers.php';
 require_once dirname( __DIR__, 2 ) . '/includes/collections/class-wp-collections.php';
