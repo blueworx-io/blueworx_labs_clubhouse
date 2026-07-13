@@ -45,7 +45,7 @@ final class DemoModeSwitcherTest extends TestCase {
 
 	public function test_skin_agnostic_no_colour_literals(): void {
 		$html = Blueworx_Clubhouse_Demo_Mode::switcher_html( $this->looks(), 'court-side' );
-		$this->assertDoesNotMatchRegularExpression( '/#[0-9a-fA-F]{3,6}\b/', $html, 'switcher must not hardcode colours' );
+		$this->assertDoesNotMatchRegularExpression( '/(?<!&)#[0-9a-fA-F]{3,6}\b/', $html, 'switcher must not hardcode colours' );
 		$this->assertStringNotContainsString( 'var(--color-accent', $html, 'chrome must not consume accent tokens' );
 	}
 }

@@ -39,11 +39,7 @@ final class Blueworx_Clubhouse_Demo_Mode {
 	}
 
 	private static function esc( string $v ): string {
-		// ENT_HTML5 (on top of the codebase's usual ENT_QUOTES) renders an
-		// apostrophe as the named entity &apos; instead of the numeric &#039;,
-		// so escaped names never emit a "#" + hex-digit run that could be
-		// mistaken for a hardcoded colour literal by the skin-agnostic guard.
-		return htmlspecialchars( $v, ENT_QUOTES | ENT_HTML5, 'UTF-8' );
+		return htmlspecialchars( $v, ENT_QUOTES, 'UTF-8' );
 	}
 
 	/**
