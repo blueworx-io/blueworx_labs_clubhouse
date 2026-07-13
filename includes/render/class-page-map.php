@@ -42,7 +42,8 @@ final class Blueworx_Clubhouse_Page_Map {
 		string $slug,
 		Blueworx_Clubhouse_Branding $branding,
 		Blueworx_Clubhouse_Visibility $visibility,
-		Blueworx_Clubhouse_Collections $collections
+		Blueworx_Clubhouse_Collections $collections,
+		string $logo_url = ''
 	): string {
 		$method = 'home';
 		foreach ( self::pages() as $page ) {
@@ -55,7 +56,8 @@ final class Blueworx_Clubhouse_Page_Map {
 			array( Blueworx_Clubhouse_Page_Renderer::class, $method ),
 			$branding,
 			$visibility,
-			$collections
+			$collections,
+			$logo_url
 		);
 	}
 }

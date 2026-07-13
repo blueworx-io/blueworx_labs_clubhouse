@@ -668,4 +668,28 @@ final class SectionsTest extends TestCase {
 		$this->assertStringContainsString( 'href="https://facebook.com/club?ref=a&amp;b=&quot;x&quot;"', $html );
 		$this->assertStringContainsString( 'href="https://instagram.com/club?ref=a&amp;b=&quot;x&quot;"', $html );
 	}
+
+	public function test_header_renders_logo_image_when_a_url_is_given(): void {
+		$html = Blueworx_Clubhouse_Sections::header( array(
+			'club_name' => 'ClubHouse', 'banner' => '', 'banner_href' => '',
+			'nav' => array( array( 'label' => 'Home', 'href' => '?page=home' ) ),
+			'active' => '?page=home', 'login' => 'Log in', 'login_href' => '?page=login',
+			'join' => 'Join', 'join_href' => '?page=membership',
+			'logo' => 'https://club.test/logo.png',
+		) );
+		$this->assertStringContainsString( '<img class="ch-brand__logo" src="https://club.test/logo.png" alt="ClubHouse">', $html );
+		$this->assertStringContainsString( 'ClubHouse', $html ); // name text kept beside the logo
+		$this->assertStringNotContainsString( 'ch-brand__mark', $html );
+	}
+
+	public function test_header_falls_back_to_the_mark_glyph_without_a_logo(): void {
+		$html = Blueworx_Clubhouse_Sections::header( array(
+			'club_name' => 'ClubHouse', 'banner' => '', 'banner_href' => '',
+			'nav' => array( array( 'label' => 'Home', 'href' => '?page=home' ) ),
+			'active' => '?page=home', 'login' => 'Log in', 'login_href' => '?page=login',
+			'join' => 'Join', 'join_href' => '?page=membership',
+		) );
+		$this->assertStringContainsString( 'ch-brand__mark', $html );
+		$this->assertStringNotContainsString( 'ch-brand__logo', $html );
+	}
 }
