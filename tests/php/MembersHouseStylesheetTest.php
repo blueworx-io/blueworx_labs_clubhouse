@@ -36,4 +36,9 @@ final class MembersHouseStylesheetTest extends TestCase {
 		$this->assertStringContainsString( 'var(--font-display)', $css );
 		$this->assertStringContainsString( 'var(--font-body)', $css );
 	}
+
+	public function test_stylesheet_styles_the_brand_logo(): void {
+		$css = (string) file_get_contents( dirname( __DIR__, 2 ) . '/assets/looks/members-house.css' );
+		$this->assertStringContainsString( '.ch-brand__logo', $css );
+	}
 }

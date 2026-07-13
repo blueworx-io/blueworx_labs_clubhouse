@@ -29,7 +29,7 @@ final class FixtureProjectionTest extends TestCase {
 	public function test_calendar_groups_by_month_with_detail(): void {
 		$months = Blueworx_Clubhouse_Fixture_Projection::calendar_months( $this->fx() );
 		$labels = array_column( $months, 'label' );
-		$this->assertSame( array( 'July', 'June' ), $labels );
+		$this->assertSame( array( 'July 2026', 'June 2026' ), $labels );
 		$july = $months[0]['rows'];
 		// An upcoming row uses "{venue} · {time}" detail and empty outcome.
 		$up = array_values( array_filter( $july, static fn( $r ) => '' === $r['outcome'] ) )[0];
@@ -37,5 +37,48 @@ final class FixtureProjectionTest extends TestCase {
 		// A played row uses the result_summary as detail.
 		$won = array_values( array_filter( $july, static fn( $r ) => 'W' === $r['outcome'] ) )[0];
 		$this->assertSame( 'Won by 34 runs', $won['detail'] );
+	}
+
+	public function test_calendar_groups_by_year_and_month_across_years(): void {
+		$fixtures = array(
+			$this->fixture( '2026-01-10' ),
+			$this->fixture( '2025-01-20' ),
+			$this->fixture( '2025-12-05' ),
+		);
+		$labels = array_column( Blueworx_Clubhouse_Fixture_Projection::calendar_months( $fixtures ), 'label' );
+		// Newest-first, and 2025 January stays separate from 2026 January.
+		$this->assertSame( array( 'January 2026', 'December 2025', 'January 2025' ), $labels );
+	}
+
+	public function test_malformed_dates_do_not_resolve_to_now(): void {
+		$fixtures = array( $this->fixture( '' ), $this->fixture( 'garbage' ), $this->fixture( '2026-05-01' ) );
+
+		// Undated fixtures are omitted from the date-ranked Home tabs.
+		$upcoming = Blueworx_Clubhouse_Fixture_Projection::home_fixtures( $fixtures, 10 );
+		$this->assertCount( 1, $upcoming );
+		$this->assertSame( 'MAY', $upcoming[0]['month'] );
+
+		// The calendar surfaces undated fixtures under a "Date TBC" bucket, ordered last.
+		$labels = array_column( Blueworx_Clubhouse_Fixture_Projection::calendar_months( $fixtures ), 'label' );
+		$this->assertSame( array( 'May 2026', 'Date TBC' ), $labels );
+		$tbc = Blueworx_Clubhouse_Fixture_Projection::calendar_months( $fixtures )[1]['rows'];
+		$this->assertSame( 'TBC', $tbc[0]['date'] );
+	}
+
+	public function test_home_results_omit_undated_played_fixtures(): void {
+		$dated   = array( 'sport' => 'Rugby', 'match_date' => '2026-05-01', 'kickoff_time' => '14:00', 'venue' => 'H', 'home' => 'A', 'away' => 'B', 'score' => '1-0', 'outcome' => 'W', 'result_summary' => 'Won' );
+		$undated = array( 'sport' => 'Rugby', 'match_date' => '', 'kickoff_time' => '14:00', 'venue' => 'H', 'home' => 'C', 'away' => 'D', 'score' => '2-2', 'outcome' => 'D', 'result_summary' => 'Draw' );
+		$rows = Blueworx_Clubhouse_Fixture_Projection::home_results( array( $dated, $undated ), 10 );
+		$this->assertCount( 1, $rows );
+		$this->assertSame( 'A', $rows[0]['home'] );
+	}
+
+	/** @return array<string,mixed> A minimal upcoming fixture with the given match_date. */
+	private function fixture( string $match_date ): array {
+		return array(
+			'sport' => 'Rugby', 'match_date' => $match_date, 'kickoff_time' => '14:00',
+			'venue' => 'Home', 'home' => 'ClubHouse', 'away' => 'Rivals',
+			'score' => '', 'outcome' => '', 'result_summary' => '',
+		);
 	}
 }

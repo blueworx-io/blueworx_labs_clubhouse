@@ -20,9 +20,11 @@ require_once dirname( __DIR__, 2 ) . '/includes/frontend/class-frontend.php';
 require_once dirname( __DIR__, 2 ) . '/includes/admin/class-setup-controller.php';
 
 require_once dirname( __DIR__, 2 ) . '/includes/collections/class-collection-mappers.php';
+require_once dirname( __DIR__, 2 ) . '/includes/collections/class-media.php';
 require_once dirname( __DIR__, 2 ) . '/includes/collections/class-wp-collections.php';
 require_once dirname( __DIR__, 2 ) . '/includes/collections/class-collection-types.php';
 require_once dirname( __DIR__, 2 ) . '/includes/collections/class-collection-seeder.php';
+require_once dirname( __DIR__, 2 ) . '/includes/collections/class-collection-meta-boxes.php';
 
 // Test doubles.
 foreach ( glob( __DIR__ . '/fakes/*.php' ) as $fake ) {
