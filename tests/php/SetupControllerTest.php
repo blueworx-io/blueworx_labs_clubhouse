@@ -125,4 +125,29 @@ final class SetupControllerTest extends TestCase {
 		$this->assertCount( 3, $model['looks'] );
 		$this->assertSame( 6, $model['progress']['total'] );
 	}
+
+	public function test_capability_is_the_custom_clubhouse_cap(): void {
+		$this->assertSame( 'manage_clubhouse', Blueworx_Clubhouse_Setup_Controller::CAPABILITY );
+	}
+
+	public function test_screen_html_renders_the_setup_form(): void {
+		$html = Blueworx_Clubhouse_Setup_Controller::screen_html( new Blueworx_Clubhouse_Fake_Storage(), array() );
+		$this->assertStringContainsString( 'clubhouse-setup', $html );
+		$this->assertStringContainsString( '<form', $html );
+	}
+
+	public function test_enqueue_loads_assets_on_owner_dashboard(): void {
+		wp_stub_reset();
+		$GLOBALS['wp_stub_current_user'] = (object) array( 'roles' => array( 'clubhouse_owner' ) );
+		Blueworx_Clubhouse_Setup_Controller::enqueue( 'index.php' );
+		$this->assertNotEmpty( wp_stub_calls( 'wp_enqueue_media' ) );
+		$this->assertNotEmpty( wp_stub_calls( 'wp_enqueue_style' ) );
+	}
+
+	public function test_enqueue_skips_dashboard_for_non_owner(): void {
+		wp_stub_reset();
+		$GLOBALS['wp_stub_current_user'] = (object) array( 'roles' => array( 'administrator' ) );
+		Blueworx_Clubhouse_Setup_Controller::enqueue( 'index.php' );
+		$this->assertSame( array(), wp_stub_calls( 'wp_enqueue_media' ) );
+	}
 }

@@ -5,11 +5,24 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.19.0] - 2026-07-13
+## [0.20.0] - 2026-07-13
 
 ### Changed
 
 - **Demo mode is now site-wide.** Instead of a private per-admin preview, an administrator turns Demo mode on or off for the whole site — from the ⚡ admin-bar toggle (which now works in the front end *and* in wp-admin) or from a new control on **Clubhouse → Setup**. While it is on, every visitor sees the floating look switcher and can click through the Base Looks themselves (their own choice, held in their browser); the club's saved look is never changed. Only administrators can turn it on or off.
+
+## [0.19.0] — Admin Phase 4: Clubhouse Owner role, admin lockdown & Dashboard takeover
+
+### Added
+- A new **Clubhouse Owner** role: a curated back-end for non-technical club owners. Login lands directly on the Setup screen (the dashboard is replaced with it), and the admin menu is limited to Setup, Content, Media, Posts, Comments, Users, and Profile — everything else (Appearance, Plugins, Tools, Settings, Pages) is hidden and capability-denied.
+- The six collection post types are now grouped under a single **Content** menu.
+- Owners can view the Users list but cannot create, edit, or delete users; they can edit the collections and the blog, upload media, and moderate comments.
+
+### Changed
+- The Clubhouse Setup screen is now gated by a dedicated `manage_clubhouse` capability (granted to owners and administrators) instead of `manage_options`.
+
+### Notes
+- The role is created on activation and kept on deactivate; it is removed only when the plugin is uninstalled.
 
 ## [0.18.0] — Admin Phase 3: collection editing, projection robustness, header logo/nav
 
