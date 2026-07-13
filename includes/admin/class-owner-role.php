@@ -50,6 +50,21 @@ final class Blueworx_Clubhouse_Owner_Role {
 	public static function register(): void {
 		add_action( 'admin_menu', array( self::class, 'lock_menu' ), 999 );
 		add_action( 'wp_dashboard_setup', array( self::class, 'takeover_dashboard' ), 999 );
+		add_action( 'admin_init', array( self::class, 'maybe_upgrade' ) );
+	}
+
+	/**
+	 * Re-sync the role and admin cap grant when the plugin version changes — covers
+	 * in-place updates, where the activation hook does not run. Idempotent + cheap
+	 * (one option read per admin request; a write only when the version changes).
+	 */
+	public static function maybe_upgrade(): void {
+		$installed = (string) get_option( 'clubhouse_role_version', '' );
+		$current   = defined( 'BLUEWORX_LABS_CLUBHOUSE_VERSION' ) ? BLUEWORX_LABS_CLUBHOUSE_VERSION : 'dev';
+		if ( $installed !== $current ) {
+			self::activate();
+			update_option( 'clubhouse_role_version', $current );
+		}
 	}
 
 	/** Remove every top-level menu the owner is not allowed. Gated on the owner role. */

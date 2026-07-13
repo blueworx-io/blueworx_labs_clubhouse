@@ -11,6 +11,17 @@ if ( ! defined( 'ABSPATH' ) ) {
 	define( 'ABSPATH', dirname( __DIR__, 2 ) . '/' );
 }
 
+// Plugin runtime constants: normally defined by the main plugin file, which the
+// test bootstrap intentionally never loads (see require list below). A handful
+// of classes (enqueue paths) reference them unguarded, so tests exercising those
+// code paths need stand-in values.
+if ( ! defined( 'BLUEWORX_LABS_CLUBHOUSE_URL' ) ) {
+	define( 'BLUEWORX_LABS_CLUBHOUSE_URL', 'https://club.test/wp-content/plugins/blueworx-labs-clubhouse/' );
+}
+if ( ! defined( 'BLUEWORX_LABS_CLUBHOUSE_VERSION' ) ) {
+	define( 'BLUEWORX_LABS_CLUBHOUSE_VERSION', 'test' );
+}
+
 require_once __DIR__ . '/wp-stubs.php';
 
 require dirname( __DIR__, 2 ) . '/includes/bootstrap.php';

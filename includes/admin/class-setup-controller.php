@@ -107,7 +107,9 @@ final class Blueworx_Clubhouse_Setup_Controller {
 	}
 
 	public static function enqueue( string $hook ): void {
-		if ( 'toplevel_page_' . self::PAGE_SLUG !== $hook ) {
+		$is_setup_page = ( 'toplevel_page_' . self::PAGE_SLUG === $hook );
+		$is_owner_dash = ( 'index.php' === $hook && Blueworx_Clubhouse_Owner_Role::is_owner( wp_get_current_user() ) );
+		if ( ! $is_setup_page && ! $is_owner_dash ) {
 			return;
 		}
 		wp_enqueue_media();

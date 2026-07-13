@@ -85,4 +85,20 @@ final class OwnerRoleTest extends TestCase {
 		$added = wp_stub_calls( 'wp_add_dashboard_widget' );
 		$this->assertSame( 'clubhouse_setup_dashboard', $added[0]['args'][0] );
 	}
+
+	public function test_maybe_upgrade_resyncs_when_version_differs(): void {
+		update_option( 'clubhouse_role_version', '0.0.0' );
+		Blueworx_Clubhouse_Owner_Role::maybe_upgrade();
+		$this->assertArrayHasKey( 'clubhouse_owner', $GLOBALS['wp_stub_roles'] );
+		$this->assertTrue( $GLOBALS['wp_stub_roles']['administrator']['caps']['manage_clubhouse'] );
+	}
+
+	public function test_maybe_upgrade_is_noop_when_version_matches(): void {
+		$current = defined( 'BLUEWORX_LABS_CLUBHOUSE_VERSION' ) ? BLUEWORX_LABS_CLUBHOUSE_VERSION : 'dev';
+		update_option( 'clubhouse_role_version', $current );
+		wp_stub_reset(); // clears recorded calls but keeps option? re-set below to be explicit
+		update_option( 'clubhouse_role_version', $current );
+		Blueworx_Clubhouse_Owner_Role::maybe_upgrade();
+		$this->assertSame( array(), wp_stub_calls( 'add_role' ) );
+	}
 }

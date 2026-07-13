@@ -20,6 +20,7 @@ function wp_stub_reset(): void {
 	$GLOBALS['wp_stub_postmeta']    = array();
 	$GLOBALS['wp_stub_roles']       = array( 'administrator' => array( 'display' => 'Administrator', 'caps' => array() ) );
 	$GLOBALS['wp_stub_current_user'] = (object) array( 'roles' => array() );
+	unset( $GLOBALS['menu'], $GLOBALS['wp_meta_boxes'] );
 }
 function wp_stub_calls( string $fn ): array {
 	return array_values( array_filter(
