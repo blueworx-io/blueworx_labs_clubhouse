@@ -33,6 +33,15 @@ final class PageRendererTest extends TestCase {
 		$this->assertStringNotContainsString( 'googleapis', $css );
 	}
 
+	public function test_font_face_css_normalises_a_base_without_trailing_slash(): void {
+		$look       = new Blueworx_Clubhouse_Court_Side();
+		$with_slash = Blueworx_Clubhouse_Page_Renderer::font_face_css( $look, 'https://club.test/plugin/' );
+		$no_slash   = Blueworx_Clubhouse_Page_Renderer::font_face_css( $look, 'https://club.test/plugin' );
+		$this->assertSame( $with_slash, $no_slash );
+		$this->assertStringContainsString( 'src:url(https://club.test/plugin/assets/fonts/syne-700.woff2)', $no_slash );
+		$this->assertStringNotContainsString( 'pluginassets', $no_slash );
+	}
+
 	public function test_document_head_carries_tokens_fonts_and_stylesheet(): void {
 		$b = $this->branding();
 		$b->set_accent( '#3b5bdb' );

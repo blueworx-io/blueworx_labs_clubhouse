@@ -18,7 +18,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 final class Blueworx_Clubhouse_Page_Renderer {
 
 	public static function font_face_css( Blueworx_Clubhouse_Base_Look $look, string $base_url ): string {
-		$css = '';
+		// Normalise to exactly one trailing slash so callers may pass the base with or
+		// without it; an empty base stays empty (relative paths). Guards a future caller
+		// against the '…pluginassets/fonts/…' footgun.
+		$base = '' === $base_url ? '' : rtrim( $base_url, '/' ) . '/';
+		$css  = '';
 		foreach ( $look->fonts() as $font ) {
 			$stem    = $font['stem'];
 			$display = $font['display'];
@@ -27,7 +31,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 					. 'font-style:normal;'
 					. 'font-weight:' . (int) $weight . ';'
 					. 'font-display:' . $display . ';'
-					. 'src:url(' . $base_url . 'assets/fonts/' . $stem . '-' . $weight . '.woff2) format(\'woff2\')}';
+					. 'src:url(' . $base . 'assets/fonts/' . $stem . '-' . $weight . '.woff2) format(\'woff2\')}';
 			}
 		}
 		return $css;
