@@ -41,6 +41,7 @@ require_once __DIR__ . '/render/class-fixture-projection.php';
 
 // Admin (pure)
 require_once __DIR__ . '/admin/class-setup-progress.php';
+require_once __DIR__ . '/admin/class-setup-sections.php';
 
 // Collections (pure)
 require_once __DIR__ . '/collections/interface-collections.php';
