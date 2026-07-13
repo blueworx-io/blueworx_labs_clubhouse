@@ -48,11 +48,26 @@ final class Blueworx_Clubhouse_Theme_Cache {
 		$this->storage->delete( self::SIG_KEY );
 	}
 
+	/** @param array<string,string> $tokens */
+	private static function serialize_tokens( array $tokens ): string {
+		ksort( $tokens );
+		$parts = array();
+		foreach ( $tokens as $key => $value ) {
+			$parts[] = $key . ':' . $value;
+		}
+		return implode( ';', $parts );
+	}
+
 	private static function signature(
 		Blueworx_Clubhouse_Base_Look $look,
 		Blueworx_Clubhouse_Branding $branding
 	): string {
-		// Tokens depend only on the look's shell tokens and the derived accent.
-		return md5( $look->slug() . '|' . $branding->get_accent() );
+		// Tokens depend on the look's slug, its shell token *contents*, the derived
+		// accent, and the plugin version. Hashing the token contents + version means
+		// an upgrade that changes a look's tokens (same slug/accent) still busts the
+		// cache. The version constant is absent under PHPUnit, so guard it.
+		$version = defined( 'BLUEWORX_LABS_CLUBHOUSE_VERSION' ) ? BLUEWORX_LABS_CLUBHOUSE_VERSION : 'dev';
+		$tokens  = self::serialize_tokens( $look->tokens() );
+		return md5( $look->slug() . '|' . $branding->get_accent() . '|' . $tokens . '|' . $version );
 	}
 }
