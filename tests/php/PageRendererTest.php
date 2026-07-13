@@ -210,4 +210,28 @@ final class PageRendererTest extends TestCase {
 		$contact = $this->render( 'contact' );
 		$this->assertStringContainsString( 'membership@clubhouse.example', $contact ); // directory shows email
 	}
+
+	public function test_hidden_page_is_omitted_from_nav_and_footer(): void {
+		$shown      = new Blueworx_Clubhouse_Visibility( new Blueworx_Clubhouse_Fake_Storage() );
+		$body_shown = Blueworx_Clubhouse_Page_Renderer::home( $this->branding(), $shown, $this->collections() );
+		// Control: all pages visible → About appears in both the nav and the footer link list.
+		$this->assertStringContainsString( 'class="ch-nav__link" href="?page=about"', $body_shown );
+		$this->assertStringContainsString( 'class="ch-footer__link" href="?page=about"', $body_shown );
+
+		$hidden = new Blueworx_Clubhouse_Visibility( new Blueworx_Clubhouse_Fake_Storage() );
+		$hidden->set_page_visible( 'about', false );
+		$body_hidden = Blueworx_Clubhouse_Page_Renderer::home( $this->branding(), $hidden, $this->collections() );
+		// Hiding About removes it from the primary nav and the footer link list...
+		$this->assertStringNotContainsString( 'class="ch-nav__link" href="?page=about"', $body_hidden );
+		$this->assertStringNotContainsString( 'class="ch-footer__link" href="?page=about"', $body_hidden );
+		// ...while a still-visible page keeps its nav link.
+		$this->assertStringContainsString( 'class="ch-nav__link" href="?page=sports"', $body_hidden );
+	}
+
+	public function test_home_renders_the_logo_when_threaded(): void {
+		$vis  = new Blueworx_Clubhouse_Visibility( new Blueworx_Clubhouse_Fake_Storage() );
+		$body = Blueworx_Clubhouse_Page_Renderer::home( $this->branding(), $vis, $this->collections(), 'https://club.test/logo.png' );
+		$this->assertStringContainsString( 'ch-brand__logo', $body );
+		$this->assertStringContainsString( 'src="https://club.test/logo.png"', $body );
+	}
 }

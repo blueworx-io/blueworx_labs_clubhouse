@@ -57,8 +57,6 @@ final class Blueworx_Clubhouse_Frontend {
 		add_action( 'wp_enqueue_scripts', array( self::class, 'enqueue_assets' ) );
 		add_filter( 'template_include', array( self::class, 'filter_template' ) );
 		add_filter( 'wp_resource_hints', array( self::class, 'resource_hints' ), 10, 2 );
-		Blueworx_Clubhouse_Setup_Controller::register();
-		Blueworx_Clubhouse_Demo_Controller::register();
 	}
 
 	/**
@@ -150,6 +148,14 @@ final class Blueworx_Clubhouse_Frontend {
 		wp_enqueue_script( 'clubhouse-reveal', $specs['reveal_url'], array(), BLUEWORX_LABS_CLUBHOUSE_VERSION, true );
 	}
 
+	/** Turn a stored logo (attachment ID or legacy URL) into a URL string for the header. */
+	public static function resolve_logo( string $stored ): string {
+		if ( '' === $stored ) {
+			return '';
+		}
+		return ctype_digit( $stored ) ? Blueworx_Clubhouse_Media::url( (int) $stored ) : $stored;
+	}
+
 	/** Render the current page body (used by the canvas template). */
 	public static function render_body(): string {
 		$slug = self::current_slug();
@@ -157,8 +163,9 @@ final class Blueworx_Clubhouse_Frontend {
 			return '';
 		}
 		Blueworx_Clubhouse_Links::set_resolver( array( self::class, 'link_url' ) );
-		$ctx = self::context();
-		return Blueworx_Clubhouse_Page_Map::render( $slug, $ctx->branding, $ctx->visibility, $ctx->collections );
+		$ctx      = self::context();
+		$logo_url = self::resolve_logo( $ctx->branding->get_logo() );
+		return Blueworx_Clubhouse_Page_Map::render( $slug, $ctx->branding, $ctx->visibility, $ctx->collections, $logo_url );
 	}
 
 	/**

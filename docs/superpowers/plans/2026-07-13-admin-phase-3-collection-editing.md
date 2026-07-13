@@ -15,9 +15,10 @@
 - **Meta-key contract:** the keys the meta-boxes write are exactly those the mappers read (`class-collection-mappers.php`) and the seeder seeds (`class-collection-seeder.php`) — including the fixture `home_team`/`away_team` (meta) ↔ `home`/`away` (canonical) remap, which stays untouched.
 - **Byte-identical render:** WordPress and the DB-free preview dispatch through `Page_Map::render` and must produce identical bodies for identical inputs. New render inputs (logo URL) are parameters, defaulting to `''`.
 - **Output escaping:** every interpolated value is escaped at output (`htmlspecialchars( …, ENT_QUOTES, 'UTF-8' )` in pure code; `esc_attr`/`esc_html`/`esc_textarea` in glue).
-- **Version:** bump `0.16.1 → 0.17.0` (minor) in `blueworx-labs-clubhouse.php` (header + `BLUEWORX_LABS_CLUBHOUSE_VERSION`) and `package.json`, with a matching `CHANGELOG.md` entry — as the final task.
+- **Version:** bump `0.16.1 → 0.18.0` (minor) in `blueworx-labs-clubhouse.php` (header + `BLUEWORX_LABS_CLUBHOUSE_VERSION`) and `package.json`, with a matching `CHANGELOG.md` entry — as the final task. (Phase 3 uses **0.18.0**, not 0.17.0: a parallel `admin-demo-mode` branch already claims 0.17.0, so Phase 3 cedes it. `0.18.0 > 0.16.1` keeps the CI version-bump check valid whichever branch merges first.)
 - **Run from repo root:** tests `./vendor/bin/phpunit`; a single test `./vendor/bin/phpunit --filter TestName`; lint `composer lint`.
-- **Commit** after each task's tests pass. Branch is `admin-phase-3-cpt-editing` (already created off `main`).
+- **Isolation:** this branch is executed in a dedicated git worktree at `../blueworx_labs_clubhouse-phase3` (a second session works `admin-demo-mode` in the primary working copy). Run all commands from the worktree root.
+- **Commit** after each task's tests pass. Branch is `admin-phase-3-cpt-editing` (created off `main`).
 
 ---
 
@@ -1504,7 +1505,7 @@ git commit -m "feat: resolve logo id to url in Frontend and style .ch-brand__log
 
 ---
 
-## Task 8: Version bump to 0.17.0, changelog, final verification
+## Task 8: Version bump to 0.18.0, changelog, final verification
 
 **Files:**
 - Modify: `blueworx-labs-clubhouse.php` (header `Version:` + `BLUEWORX_LABS_CLUBHOUSE_VERSION`)
@@ -1515,16 +1516,16 @@ git commit -m "feat: resolve logo id to url in Frontend and style .ch-brand__log
 
 - [ ] **Step 1: Bump the plugin version**
 
-In `blueworx-labs-clubhouse.php`, change the header line ` * Version:           0.16.1` to ` * Version:           0.17.0`, and `define( 'BLUEWORX_LABS_CLUBHOUSE_VERSION', '0.16.1' );` to `define( 'BLUEWORX_LABS_CLUBHOUSE_VERSION', '0.17.0' );`.
+In `blueworx-labs-clubhouse.php`, change the header line ` * Version:           0.16.1` to ` * Version:           0.18.0`, and `define( 'BLUEWORX_LABS_CLUBHOUSE_VERSION', '0.16.1' );` to `define( 'BLUEWORX_LABS_CLUBHOUSE_VERSION', '0.18.0' );`.
 
-In `package.json`, change `"version": "0.16.1"` to `"version": "0.17.0"`.
+In `package.json`, change `"version": "0.16.1"` to `"version": "0.18.0"`.
 
 - [ ] **Step 2: Add the changelog entry**
 
 In `CHANGELOG.md`, add a new entry immediately below the top heading, above the most recent existing entry, matching the file's existing format:
 
 ```markdown
-## [0.17.0] — Admin Phase 3: collection editing, projection robustness, header logo/nav
+## [0.18.0] — Admin Phase 3: collection editing, projection robustness, header logo/nav
 
 ### Added
 - Native custom meta-boxes for all six collection CPTs (fixtures, teams, people, sponsors, sports, events) with typed inputs (date/time/select/email/url) and a `wp.media` image picker, driven by a single pure `Collection_Meta` field definition; values sanitised server-side and escaped on output.
@@ -1548,7 +1549,7 @@ Expected: no errors. (Present any warnings to the user at session end for a deci
 
 ```bash
 git add blueworx-labs-clubhouse.php package.json CHANGELOG.md
-git commit -m "chore: bump to 0.17.0 (Admin Phase 3 — collection editing)"
+git commit -m "chore: bump to 0.18.0 (Admin Phase 3 — collection editing)"
 ```
 
 ---

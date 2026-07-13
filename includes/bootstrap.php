@@ -49,6 +49,7 @@ require_once __DIR__ . '/admin/class-setup-screen.php';
 require_once __DIR__ . '/collections/interface-collections.php';
 require_once __DIR__ . '/collections/class-demo-content.php';
 require_once __DIR__ . '/collections/class-demo-collections.php';
+require_once __DIR__ . '/collections/class-collection-meta.php';
 
 // Frontend (pure)
 require_once __DIR__ . '/frontend/class-links.php';

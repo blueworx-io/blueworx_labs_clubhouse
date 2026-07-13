@@ -29,6 +29,14 @@ final class Blueworx_Clubhouse_Sections {
 		return '<div class="' . $cls . '">' . $img . '</div>';
 	}
 
+	/** @param array{club_name:string,logo?:string} $data */
+	private static function brand_mark( array $data ): string {
+		$logo = $data['logo'] ?? '';
+		return '' !== $logo
+			? '<img class="ch-brand__logo" src="' . self::e( $logo ) . '" alt="' . self::e( $data['club_name'] ) . '">'
+			: '<span class="ch-brand__mark">C</span>';
+	}
+
 	/** Up-to-two-letter initials for a photo-less avatar (first + last word). */
 	private static function initials( string $name ): string {
 		$parts = array_values( array_filter( preg_split( '/\s+/', trim( $name ) ) ?: array() ) );
@@ -43,7 +51,7 @@ final class Blueworx_Clubhouse_Sections {
 	/**
 	 * @param array{club_name:string,banner:string,banner_href:string,
 	 *   nav:array<int,array{label:string,href:string}>,active:string,
-	 *   login:string,login_href?:string,join:string,join_href:string} $data
+	 *   login:string,login_href?:string,join:string,join_href:string,logo?:string} $data
 	 */
 	public static function header( array $data ): string {
 		$login_href = $data['login_href'] ?? '#';
@@ -62,7 +70,7 @@ final class Blueworx_Clubhouse_Sections {
 		return '<a class="ch-skip" href="#ch-main">Skip to content</a>'
 			. $banner
 			. '<header class="ch-nav"><div class="ch-wrap ch-nav__in">'
-			. '<a class="ch-brand" href="' . self::e( Blueworx_Clubhouse_Links::url( 'home' ) ) . '"><span class="ch-brand__mark">C</span>' . self::e( $data['club_name'] ) . '</a>'
+			. '<a class="ch-brand" href="' . self::e( Blueworx_Clubhouse_Links::url( 'home' ) ) . '">' . self::brand_mark( $data ) . self::e( $data['club_name'] ) . '</a>'
 			. '<nav class="ch-nav__links" aria-label="Primary">' . $links . '</nav>'
 			. '<div class="ch-nav__cta">'
 			. '<a class="ch-btn ch-btn--ghost" href="' . self::e( $login_href ) . '">' . self::e( $data['login'] ) . '</a>'

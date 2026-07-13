@@ -23,12 +23,19 @@ final class Blueworx_Clubhouse_WP_Collections implements Blueworx_Clubhouse_Coll
 			'orderby'     => 'menu_order',
 			'order'       => 'ASC',
 		) );
-		$out = array();
+		$media_keys = Blueworx_Clubhouse_Collection_Meta::media_keys( $post_type );
+		$out        = array();
 		foreach ( $posts as $post ) {
-			$id    = is_object( $post ) ? $post->ID : (int) $post;
+			$id   = is_object( $post ) ? $post->ID : (int) $post;
+			$meta = self::flatten_meta( $id );
+			foreach ( $media_keys as $key ) {
+				if ( isset( $meta[ $key ] ) && ctype_digit( $meta[ $key ] ) ) {
+					$meta[ $key ] = Blueworx_Clubhouse_Media::url( (int) $meta[ $key ] );
+				}
+			}
 			$out[] = $mapper( array(
 				'title' => get_the_title( $post ),
-				'meta'  => self::flatten_meta( $id ),
+				'meta'  => $meta,
 			) );
 		}
 		return $out;

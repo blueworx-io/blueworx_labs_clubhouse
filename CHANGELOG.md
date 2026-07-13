@@ -5,17 +5,28 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.18.0] - 2026-07-13
+## [0.19.0] - 2026-07-13
 
 ### Changed
 
 - **Demo mode is now site-wide.** Instead of a private per-admin preview, an administrator turns Demo mode on or off for the whole site — from the ⚡ admin-bar toggle (which now works in the front end *and* in wp-admin) or from a new control on **Clubhouse → Setup**. While it is on, every visitor sees the floating look switcher and can click through the Base Looks themselves (their own choice, held in their browser); the club's saved look is never changed. Only administrators can turn it on or off.
 
+## [0.18.0] — Admin Phase 3: collection editing, projection robustness, header logo/nav
+
+### Added
+- Native custom meta-boxes for all six collection CPTs (fixtures, teams, people, sponsors, sports, events) with typed inputs (date/time/select/email/url) and a `wp.media` image picker, driven by a single pure `Collection_Meta` field definition; values sanitised server-side and escaped on output.
+- Admin list columns for the high-signal fields of each collection (e.g. a fixture's date, teams, and result).
+- Front-end logo rendering in the site header (attachment resolved to a URL in the WordPress layer; club-name text kept beside it) and omission of hidden pages from the header nav and footer link lists.
+
+### Fixed
+- `Fixture_Projection` now groups the calendar by year-and-month (`January 2026`) so fixtures in different years no longer merge, and guards empty/malformed match dates (which previously resolved to "now") — undated fixtures show as "Date TBC" on the calendar.
+- The Clubhouse Setup admin menu is now registered on init (it was defined in v0.16.0 but never wired, so it never appeared on a real install).
+
 ## [0.17.0] - 2026-07-13
 
 ### Demo mode
 
-An admin-only way to demo the Base Looks live on the real site, so a prospective club owner can pick one.
+An admin-only way to demo the Base Looks live on the real site, so a prospective club owner can pick one. (Superseded by the site-wide model in 0.19.0.)
 
 #### Added
 
@@ -24,7 +35,6 @@ An admin-only way to demo the Base Looks live on the real site, so a prospective
 
 #### Fixed
 
-- **Clubhouse → Setup menu now mounts.** `Setup_Controller::register()` was defined but never called at runtime, so the Setup admin page never appeared; it is now wired up alongside Demo mode.
 - **Front-end navigation now uses real permalinks.** Internal links were emitting the preview server's `?page=<slug>` form, which WordPress does not route — so every nav click landed on Home. Links now resolve to proper permalinks (e.g. `/about/`), falling back to a query-var URL when permalinks are set to Plain.
 
 ## [0.16.1] - 2026-07-13

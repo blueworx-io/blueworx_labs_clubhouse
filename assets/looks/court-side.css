@@ -57,6 +57,7 @@ a{color:inherit;text-decoration:none}
 .ch-nav__in{display:flex;align-items:center;justify-content:space-between;height:80px;gap:24px}
 .ch-brand{font-family:var(--font-display);font-weight:800;font-size:25px;letter-spacing:-.03em;display:flex;align-items:center;gap:10px;flex:none}
 .ch-brand__mark{width:36px;height:36px;border-radius:12px;background:var(--color-accent);color:var(--color-accent-ink);display:grid;place-items:center;font-size:18px;font-weight:800}
+.ch-brand__logo{display:block;max-height:40px;width:auto}
 .ch-nav__links{display:flex;gap:28px;font-size:15px;font-weight:500;color:var(--color-ink-soft)}
 .ch-nav__link{display:inline-block;padding:8px 0}
 .ch-nav__link:hover{color:var(--color-accent-deep)}

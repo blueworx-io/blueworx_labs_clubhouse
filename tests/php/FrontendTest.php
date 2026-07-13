@@ -111,15 +111,6 @@ final class FrontendTest extends TestCase {
 		$this->assertSame( '', Blueworx_Clubhouse_Frontend::resolve_slug( true, null ) );
 	}
 
-	public function test_register_also_wires_setup_and_demo_controllers(): void {
-		wp_stub_reset();
-		Blueworx_Clubhouse_Frontend::register();
-		$actions = array_map( static fn( $c ) => $c['args'][0], wp_stub_calls( 'add_action' ) );
-		$this->assertContains( 'admin_menu', $actions, 'Setup menu must be wired' );
-		$this->assertContains( 'admin_bar_menu', $actions, 'Demo admin-bar toggle must be wired' );
-		$this->assertContains( 'wp_footer', $actions, 'Demo switcher must be wired' );
-	}
-
 	public function test_active_look_slug_reflects_demo_override_when_on(): void {
 		wp_stub_reset();
 		( new Blueworx_Clubhouse_Demo_State( new Blueworx_Clubhouse_Options_Storage() ) )->set( true );
@@ -132,5 +123,14 @@ final class FrontendTest extends TestCase {
 		unset( $_COOKIE[ Blueworx_Clubhouse_Demo_Mode::COOKIE_LOOK ] );
 		// No saved look → registry falls back to first registered (Court Side).
 		$this->assertSame( 'court-side', Blueworx_Clubhouse_Frontend::active_look_slug() );
+	}
+
+	public function test_resolve_logo_turns_an_attachment_id_into_a_url(): void {
+		$this->assertSame( 'https://club.test/wp-content/uploads/att-9.png', Blueworx_Clubhouse_Frontend::resolve_logo( '9' ) );
+	}
+
+	public function test_resolve_logo_passes_through_a_stored_url_and_empty(): void {
+		$this->assertSame( 'https://cdn.example/logo.svg', Blueworx_Clubhouse_Frontend::resolve_logo( 'https://cdn.example/logo.svg' ) );
+		$this->assertSame( '', Blueworx_Clubhouse_Frontend::resolve_logo( '' ) );
 	}
 }
