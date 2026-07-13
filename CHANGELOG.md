@@ -15,7 +15,7 @@ The first owner-facing admin surface — a standard WordPress admin page under a
 
 - **Base Look picker.** Choose Court Side, Members' House, or Floodlight; the choice becomes the active look.
 - **Branding controls.** Accent colour (rejected on save if it is too low-contrast for the chosen look — the check is look-aware: text-bearing looks need higher contrast than the glow-only dark look), club name, logo (via the media library), and Facebook / Instagram URLs.
-- **Visibility controls.** Show or hide any page and any of its sections. Hidden pages now return a 404 on the front end.
+- **Visibility controls.** Show or hide any page and any of its sections. A hidden sub-page now returns a 404 on the front end (a hidden home page falls back to WordPress's front-page setting).
 - **Setup progress bar.** Tracks the six branding/look configuration items (page content is not counted).
 - **Look-aware accent legibility.** Base Looks now declare whether they paint text on the accent fill, so accent acceptance matches how each look actually uses the colour.
 
