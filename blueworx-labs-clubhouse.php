@@ -32,6 +32,7 @@ require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/frontend/class-frontend.php
 require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/admin/class-setup-controller.php';
 
 require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/collections/class-collection-mappers.php';
+require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/collections/class-media.php';
 require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/collections/class-wp-collections.php';
 require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/collections/class-collection-types.php';
 require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/collections/class-collection-seeder.php';
