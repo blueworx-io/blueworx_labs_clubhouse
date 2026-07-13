@@ -7,23 +7,15 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 /**
  * Assembles a full HTML document for a Base Look + branding: <head> carries the
- * Google-fonts link, the look stylesheet, and the derived :root variables; <body>
- * is a string of rendered sections. home() composes the demo Home shell, honouring
- * per-section visibility. The same output is what WordPress template_include will
- * later echo — the preview is just an earlier caller.
+ * self-hosted @font-face rules (injected inline), the look stylesheet, and the
+ * derived :root variables; <body> is a string of rendered sections. home()
+ * composes the demo Home shell, honouring per-section visibility. The same
+ * output is what WordPress template_include will later echo — the preview is
+ * just an earlier caller.
  *
  * @package BlueworxLabsClubhouse
  */
 final class Blueworx_Clubhouse_Page_Renderer {
-
-	public static function google_fonts_url( Blueworx_Clubhouse_Base_Look $look ): string {
-		$families = array();
-		foreach ( $look->fonts() as $font ) {
-			$families[] = 'family=' . rawurlencode( $font['family'] )
-				. ':wght@' . implode( ';', $font['weights'] );
-		}
-		return 'https://fonts.googleapis.com/css2?' . implode( '&', $families ) . '&display=swap';
-	}
 
 	public static function font_face_css( Blueworx_Clubhouse_Base_Look $look, string $base_url ): string {
 		$css = '';
