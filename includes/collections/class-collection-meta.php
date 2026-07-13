@@ -154,10 +154,15 @@ final class Blueworx_Clubhouse_Collection_Meta {
 		return ( false !== $date && $date->format( $format ) === $raw ) ? $raw : '';
 	}
 
-	/** Permissive link: keeps site-relative (?page=…, /path, #frag) and absolute URLs; blocks script schemes. */
+	/** Permissive link: keeps site-relative (?page=…, /path, #frag) and absolute URLs; blocks script schemes even when whitespace-obfuscated. */
 	private static function href( string $raw ): string {
 		$url = trim( strip_tags( $raw ) );
-		if ( '' === $url || preg_match( '/^\s*(javascript|data|vbscript):/i', $url ) ) {
+		if ( '' === $url ) {
+			return '';
+		}
+		// Collapse whitespace/control chars so an obfuscated scheme (e.g. "java\tscript:") can't slip past the blocklist.
+		$probe = (string) preg_replace( '/[\s\x00-\x1F]+/', '', $url );
+		if ( preg_match( '/^(javascript|data|vbscript):/i', $probe ) ) {
 			return '';
 		}
 		return $url;

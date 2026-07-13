@@ -75,7 +75,7 @@ final class Blueworx_Clubhouse_Collection_Meta_Boxes {
 				$preview = ( '' !== $value && ctype_digit( $value ) ) ? (string) wp_get_attachment_image_url( (int) $value, 'thumbnail' ) : '';
 				$hidden  = '' === $preview ? ' style="display:none"' : '';
 				$control = '<input type="hidden" id="' . esc_attr( $id ) . '" name="' . esc_attr( $name ) . '" value="' . esc_attr( $value ) . '">'
-					. '<img class="clubhouse-meta__preview" src="' . esc_attr( $preview ) . '" alt=""' . $hidden . '>'
+					. '<img class="clubhouse-meta__preview" src="' . esc_url( $preview ) . '" alt=""' . $hidden . '>'
 					. '<button type="button" class="button clubhouse-meta__pick" data-target="' . esc_attr( $id ) . '">Choose image</button> '
 					. '<button type="button" class="button clubhouse-meta__clear" data-target="' . esc_attr( $id ) . '">Remove</button>';
 				break;

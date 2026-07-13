@@ -65,6 +65,14 @@ final class FixtureProjectionTest extends TestCase {
 		$this->assertSame( 'TBC', $tbc[0]['date'] );
 	}
 
+	public function test_home_results_omit_undated_played_fixtures(): void {
+		$dated   = array( 'sport' => 'Rugby', 'match_date' => '2026-05-01', 'kickoff_time' => '14:00', 'venue' => 'H', 'home' => 'A', 'away' => 'B', 'score' => '1-0', 'outcome' => 'W', 'result_summary' => 'Won' );
+		$undated = array( 'sport' => 'Rugby', 'match_date' => '', 'kickoff_time' => '14:00', 'venue' => 'H', 'home' => 'C', 'away' => 'D', 'score' => '2-2', 'outcome' => 'D', 'result_summary' => 'Draw' );
+		$rows = Blueworx_Clubhouse_Fixture_Projection::home_results( array( $dated, $undated ), 10 );
+		$this->assertCount( 1, $rows );
+		$this->assertSame( 'A', $rows[0]['home'] );
+	}
+
 	/** @return array<string,mixed> A minimal upcoming fixture with the given match_date. */
 	private function fixture( string $match_date ): array {
 		return array(

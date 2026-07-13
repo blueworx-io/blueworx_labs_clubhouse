@@ -104,6 +104,9 @@ if ( ! function_exists( 'sanitize_text_field' ) ) {
 if ( ! function_exists( 'esc_url_raw' ) ) {
 	function esc_url_raw( $url ) { $u = trim( (string) $url ); return preg_match( '#^https?://#i', $u ) ? $u : ''; }
 }
+if ( ! function_exists( 'esc_url' ) ) {
+	function esc_url( $url ) { $u = trim( (string) $url ); return preg_match( '#^https?://#i', $u ) ? htmlspecialchars( $u, ENT_QUOTES, 'UTF-8' ) : ''; }
+}
 if ( ! function_exists( 'sanitize_hex_color' ) ) {
 	function sanitize_hex_color( $color ) { $c = trim( (string) $color ); return preg_match( '/^#[0-9a-fA-F]{6}$/', $c ) ? strtolower( $c ) : ''; }
 }

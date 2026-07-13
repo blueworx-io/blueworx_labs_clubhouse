@@ -61,6 +61,15 @@ final class CollectionMetaTest extends TestCase {
 		$this->assertSame( '', Blueworx_Clubhouse_Collection_Meta::sanitise( 'clubhouse_event', 'cta_href', 'javascript:alert(1)' ) );
 	}
 
+	public function test_href_blocks_whitespace_obfuscated_scheme(): void {
+		$this->assertSame( '', Blueworx_Clubhouse_Collection_Meta::sanitise( 'clubhouse_event', 'cta_href', "java\tscript:alert(1)" ) );
+		$this->assertSame( '', Blueworx_Clubhouse_Collection_Meta::sanitise( 'clubhouse_event', 'cta_href', "java\nscript:alert(1)" ) );
+		$this->assertSame( '', Blueworx_Clubhouse_Collection_Meta::sanitise( 'clubhouse_event', 'cta_href', "vb script:x" ) );
+		// Legitimate values still pass unchanged.
+		$this->assertSame( '?page=contact', Blueworx_Clubhouse_Collection_Meta::sanitise( 'clubhouse_event', 'cta_href', '?page=contact' ) );
+		$this->assertSame( 'https://x.example', Blueworx_Clubhouse_Collection_Meta::sanitise( 'clubhouse_event', 'cta_href', 'https://x.example' ) );
+	}
+
 	public function test_media_sanitises_to_positive_id_string(): void {
 		$this->assertSame( '42', Blueworx_Clubhouse_Collection_Meta::sanitise( 'clubhouse_sport', 'image', '42' ) );
 		$this->assertSame( '', Blueworx_Clubhouse_Collection_Meta::sanitise( 'clubhouse_sport', 'image', '0' ) );
