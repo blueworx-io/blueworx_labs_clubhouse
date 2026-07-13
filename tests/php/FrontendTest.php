@@ -92,4 +92,28 @@ final class FrontendTest extends TestCase {
 		$this->assertSame( 'about', Blueworx_Clubhouse_Frontend::resolve_slug( false, 'about' ) );
 		$this->assertSame( '', Blueworx_Clubhouse_Frontend::resolve_slug( true, null ) );
 	}
+
+	public function test_register_also_wires_setup_and_demo_controllers(): void {
+		wp_stub_reset();
+		Blueworx_Clubhouse_Frontend::register();
+		$actions = array_map( static fn( $c ) => $c['args'][0], wp_stub_calls( 'add_action' ) );
+		$this->assertContains( 'admin_menu', $actions, 'Setup menu must be wired' );
+		$this->assertContains( 'admin_bar_menu', $actions, 'Demo admin-bar toggle must be wired' );
+		$this->assertContains( 'wp_footer', $actions, 'Demo switcher must be wired' );
+	}
+
+	public function test_active_look_slug_reflects_demo_override_for_admin(): void {
+		wp_stub_reset();
+		$_COOKIE[ Blueworx_Clubhouse_Demo_Mode::COOKIE_FLAG ] = '1';
+		$_COOKIE[ Blueworx_Clubhouse_Demo_Mode::COOKIE_LOOK ] = 'floodlight';
+		$this->assertSame( 'floodlight', Blueworx_Clubhouse_Frontend::active_look_slug() );
+		unset( $_COOKIE[ Blueworx_Clubhouse_Demo_Mode::COOKIE_FLAG ], $_COOKIE[ Blueworx_Clubhouse_Demo_Mode::COOKIE_LOOK ] );
+	}
+
+	public function test_active_look_slug_is_saved_look_without_demo(): void {
+		wp_stub_reset();
+		unset( $_COOKIE[ Blueworx_Clubhouse_Demo_Mode::COOKIE_FLAG ], $_COOKIE[ Blueworx_Clubhouse_Demo_Mode::COOKIE_LOOK ] );
+		// No saved look → registry falls back to first registered (Court Side).
+		$this->assertSame( 'court-side', Blueworx_Clubhouse_Frontend::active_look_slug() );
+	}
 }

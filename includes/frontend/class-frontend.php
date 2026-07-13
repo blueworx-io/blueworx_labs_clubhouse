@@ -57,6 +57,8 @@ final class Blueworx_Clubhouse_Frontend {
 		add_action( 'wp_enqueue_scripts', array( self::class, 'enqueue_assets' ) );
 		add_filter( 'template_include', array( self::class, 'filter_template' ) );
 		add_filter( 'wp_resource_hints', array( self::class, 'resource_hints' ), 10, 2 );
+		Blueworx_Clubhouse_Setup_Controller::register();
+		Blueworx_Clubhouse_Demo_Controller::register();
 	}
 
 	/**
@@ -109,16 +111,24 @@ final class Blueworx_Clubhouse_Frontend {
 	}
 
 	private static function context(): Blueworx_Clubhouse_Clubhouse_Context {
-		$storage  = new Blueworx_Clubhouse_Options_Storage();
-		$registry = self::registry( $storage );
+		$storage    = new Blueworx_Clubhouse_Options_Storage();
+		$registry   = self::registry( $storage );
+		$demo_slug  = Blueworx_Clubhouse_Demo_Controller::look_slug( $registry );
+		$look       = null !== $demo_slug ? $registry->get( $demo_slug ) : $registry->active();
 		return new Blueworx_Clubhouse_Clubhouse_Context(
-			$registry->active(),
+			$look,
 			new Blueworx_Clubhouse_Branding( $storage ),
 			new Blueworx_Clubhouse_Visibility( $storage ),
 			new Blueworx_Clubhouse_Theme_Cache( $storage ),
 			new Blueworx_Clubhouse_WP_Collections(),
 			$registry
 		);
+	}
+
+	/** The Base Look slug this request will render (demo override or saved active). */
+	public static function active_look_slug(): ?string {
+		$look = self::context()->look;
+		return null === $look ? null : $look->slug();
 	}
 
 	public static function enqueue_assets(): void {
