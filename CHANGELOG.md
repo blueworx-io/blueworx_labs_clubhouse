@@ -19,6 +19,7 @@ An admin-only way to demo the Base Looks live on the real site, so a prospective
 #### Fixed
 
 - **Clubhouse → Setup menu now mounts.** `Setup_Controller::register()` was defined but never called at runtime, so the Setup admin page never appeared; it is now wired up alongside Demo mode.
+- **Front-end navigation now uses real permalinks.** Internal links were emitting the preview server's `?page=<slug>` form, which WordPress does not route — so every nav click landed on Home. Links now resolve to proper permalinks (e.g. `/about/`), falling back to a query-var URL when permalinks are set to Plain.
 
 ## [0.16.1] - 2026-07-13
 
