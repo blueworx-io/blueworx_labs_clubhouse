@@ -37,4 +37,38 @@ final class Blueworx_Clubhouse_Demo_Mode {
 		}
 		return in_array( $look_cookie, $available_slugs, true ) ? $look_cookie : null;
 	}
+
+	private static function esc( string $v ): string {
+		// ENT_HTML5 (on top of the codebase's usual ENT_QUOTES) renders an
+		// apostrophe as the named entity &apos; instead of the numeric &#039;,
+		// so escaped names never emit a "#" + hex-digit run that could be
+		// mistaken for a hardcoded colour literal by the skin-agnostic guard.
+		return htmlspecialchars( $v, ENT_QUOTES | ENT_HTML5, 'UTF-8' );
+	}
+
+	/**
+	 * Floating admin-only switcher bar. Neutral chrome — styled by demo.css, no
+	 * colour literals, no accent tokens. Each control carries the look slug for
+	 * demo.js; the current look is flagged for both styling and a11y.
+	 *
+	 * @param array<int,array{slug:string,name:string}> $looks
+	 */
+	public static function switcher_html( array $looks, ?string $current_slug ): string {
+		$out  = '<div id="clubhouse-demo" class="clubhouse-demo" role="region" aria-label="Demo mode look switcher">';
+		$out .= '<span class="clubhouse-demo__title">Demo mode</span>';
+		$out .= '<div class="clubhouse-demo__looks" role="group" aria-label="Choose a Base Look">';
+		foreach ( $looks as $look ) {
+			$is_current = $look['slug'] === $current_slug;
+			$class      = 'clubhouse-demo__look' . ( $is_current ? ' is-current' : '' );
+			$pressed    = $is_current ? 'true' : 'false';
+			$out       .= '<button type="button" class="' . self::esc( $class ) . '"'
+				. ' data-clubhouse-look="' . self::esc( $look['slug'] ) . '"'
+				. ' aria-pressed="' . $pressed . '">'
+				. self::esc( $look['name'] ) . '</button>';
+		}
+		$out .= '</div>';
+		$out .= '<button type="button" class="clubhouse-demo__exit" data-clubhouse-demo-exit>Exit demo</button>';
+		$out .= '</div>';
+		return $out;
+	}
 }
