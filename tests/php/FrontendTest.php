@@ -9,6 +9,10 @@ final class FrontendTest extends TestCase {
 		wp_stub_reset();
 	}
 
+	protected function tearDown(): void {
+		unset( $_COOKIE[ Blueworx_Clubhouse_Demo_Mode::COOKIE_FLAG ], $_COOKIE[ Blueworx_Clubhouse_Demo_Mode::COOKIE_LOOK ] );
+	}
+
 	public function test_register_registers_expected_hooks(): void {
 		Blueworx_Clubhouse_Frontend::register();
 
@@ -107,7 +111,6 @@ final class FrontendTest extends TestCase {
 		$_COOKIE[ Blueworx_Clubhouse_Demo_Mode::COOKIE_FLAG ] = '1';
 		$_COOKIE[ Blueworx_Clubhouse_Demo_Mode::COOKIE_LOOK ] = 'floodlight';
 		$this->assertSame( 'floodlight', Blueworx_Clubhouse_Frontend::active_look_slug() );
-		unset( $_COOKIE[ Blueworx_Clubhouse_Demo_Mode::COOKIE_FLAG ], $_COOKIE[ Blueworx_Clubhouse_Demo_Mode::COOKIE_LOOK ] );
 	}
 
 	public function test_active_look_slug_is_saved_look_without_demo(): void {
