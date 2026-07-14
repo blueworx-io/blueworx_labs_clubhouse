@@ -683,11 +683,16 @@ final class Blueworx_Clubhouse_Sections {
 	private const INSTAGRAM_ICON = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
 		. '<rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4.2"/><circle cx="17.2" cy="6.8" r="1.1" fill="currentColor" stroke="none"/></svg>';
 
-	/** Global "follow us" links — not a live/embedded feed. @param array{heading:string,lede:string,facebook_url:string,instagram_url:string} $data */
+	/** Self-hosted brand mark, inherits colour via currentColor — no hex, no icon font. */
+	private const LINKEDIN_ICON = '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true">'
+		. '<path d="M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.35V9h3.42v1.56h.05c.48-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28ZM5.34 7.43a2.07 2.07 0 1 1 0-4.14 2.07 2.07 0 0 1 0 4.14ZM7.12 20.45H3.55V9h3.57v11.45ZM22.22 0H1.77C.79 0 0 .77 0 1.73v20.54C0 23.22.79 24 1.77 24h20.45c.98 0 1.78-.78 1.78-1.73V1.73C24 .77 23.2 0 22.22 0Z"/></svg>';
+
+	/** Global "follow us" links — not a live/embedded feed. @param array{heading:string,lede:string,facebook_url:string,instagram_url:string,linkedin_url:string} $data */
 	public static function social( array $data ): string {
 		$links = array(
 			array( 'label' => 'Facebook', 'url' => $data['facebook_url'], 'icon' => self::FACEBOOK_ICON ),
 			array( 'label' => 'Instagram', 'url' => $data['instagram_url'], 'icon' => self::INSTAGRAM_ICON ),
+			array( 'label' => 'LinkedIn', 'url' => $data['linkedin_url'], 'icon' => self::LINKEDIN_ICON ),
 		);
 		$out = '';
 		foreach ( $links as $l ) {

@@ -97,7 +97,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 		return Blueworx_Clubhouse_Sections::footer( array(
 			'club_name'  => $club,
 			'tagline'    => 'Nine sports, one club. A home ground for every team, and everyone who follows them.',
-			'socials'    => array( 'Facebook', 'Instagram', 'Community', 'Share' ),
+			'socials'    => array( 'Facebook', 'Instagram', 'LinkedIn', 'Community', 'Share' ),
 			'columns'    => array(
 				array( 'title' => 'Club', 'links' => self::nav_links( array(
 					array( 'label' => 'About', 'key' => 'about' ),
@@ -295,6 +295,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'lede'          => 'Match-day photos, results and behind-the-scenes — join us on socials.',
 				'facebook_url'  => $branding->get_facebook_url(),
 				'instagram_url' => $branding->get_instagram_url(),
+				'linkedin_url'  => $branding->get_linkedin_url(),
 			) );
 		}
 		$out .= '</main>';
@@ -554,6 +555,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'lede'          => 'Follow the club for match-day updates, results and event announcements.',
 				'facebook_url'  => $branding->get_facebook_url(),
 				'instagram_url' => $branding->get_instagram_url(),
+				'linkedin_url'  => $branding->get_linkedin_url(),
 			) );
 		}
 		$out .= '</main>' . self::shell_footer( $club, $visibility );

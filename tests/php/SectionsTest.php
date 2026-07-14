@@ -636,19 +636,23 @@ final class SectionsTest extends TestCase {
 
 	public function test_social_renders_links_with_labels_and_list_semantics(): void {
 		$html = Blueworx_Clubhouse_Sections::social( array(
-			'heading'        => 'Follow the club',
-			'lede'           => 'Match-day photos, results and behind-the-scenes.',
-			'facebook_url'   => 'https://facebook.com/clubhouse',
-			'instagram_url'  => 'https://instagram.com/clubhouse',
+			'heading'       => 'Follow the club',
+			'lede'          => 'Match-day photos, results and behind-the-scenes.',
+			'facebook_url'  => 'https://facebook.com/clubhouse',
+			'instagram_url' => 'https://instagram.com/clubhouse',
+			'linkedin_url'  => 'https://linkedin.com/company/clubhouse',
 		) );
 		$this->assertStringContainsString( 'class="ch-social"', $html );
 		$this->assertStringContainsString( 'href="https://facebook.com/clubhouse"', $html );
 		$this->assertStringContainsString( 'href="https://instagram.com/clubhouse"', $html );
+		$this->assertStringContainsString( 'href="https://linkedin.com/company/clubhouse"', $html );
 		$this->assertStringContainsString( 'aria-label="Follow us on Facebook"', $html );
 		$this->assertStringContainsString( 'aria-label="Follow us on Instagram"', $html );
+		$this->assertStringContainsString( 'aria-label="Follow us on LinkedIn"', $html );
 		$this->assertStringContainsString( '>Facebook<', $html );
 		$this->assertStringContainsString( '>Instagram<', $html );
-		$this->assertListSemantics( $html, 1, 2 );
+		$this->assertStringContainsString( '>LinkedIn<', $html );
+		$this->assertListSemantics( $html, 1, 3 );
 		$this->assertStringContainsString( 'Follow the club', $html );
 		$this->assertStringContainsString( 'Match-day photos, results and behind-the-scenes.', $html );
 		$this->assertNoHexColour( $html );
@@ -661,6 +665,7 @@ final class SectionsTest extends TestCase {
 			'lede'           => 'Join us <here> & now',
 			'facebook_url'   => 'https://facebook.com/club?ref=a&b="x"',
 			'instagram_url'  => 'https://instagram.com/club?ref=a&b="x"',
+			'linkedin_url'   => 'https://linkedin.com/x?a=b&c="d"',
 		) );
 		$this->assertStringNotContainsString( '<here>', $html );
 		$this->assertStringContainsString( '&lt;here&gt;', $html );
