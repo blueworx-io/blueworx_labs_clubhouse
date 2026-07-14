@@ -11,7 +11,7 @@ final class PreviewRenderTest extends TestCase {
 
 		$this->assertStringContainsString( '<!doctype html>', $html );
 		$this->assertStringContainsString( 'court-side.css', $html );
-		$this->assertStringContainsString( 'class="ch-hero"', $html );
+		$this->assertStringContainsString( 'class="ch-home-hero"', $html );
 		$this->assertStringContainsString( ':root{', $html );
 		// The accent switcher embeds pre-derived palettes (real engine output).
 		$this->assertStringContainsString( 'data-ch-palettes', $html );
@@ -25,7 +25,7 @@ final class PreviewRenderTest extends TestCase {
 		$coll = new Blueworx_Clubhouse_Demo_Collections();
 
 		$home = Blueworx_Clubhouse_Page_Map::render( '', $b, $vis, $coll );
-		$this->assertStringContainsString( 'class="ch-hero"', $home );
+		$this->assertStringContainsString( 'class="ch-home-hero"', $home );
 
 		// A known page (about) renders its own markup rather than Home's.
 		$other = Blueworx_Clubhouse_Page_Map::render( 'about', $b, $vis, $coll );
