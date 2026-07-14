@@ -5,11 +5,6 @@
 	if ( ! root ) { return; }
 	root.classList.add( 'clubhouse-setup--js' );
 
-	function activate( buttons, panels, key, attr ) {
-		buttons.forEach( function ( b ) { b.classList.toggle( 'is-active', b.getAttribute( attr ) === key ); } );
-		panels.forEach( function ( p ) { p.classList.toggle( 'is-active', p.getAttribute( 'data-' + attr.replace( 'data-', '' ).replace( 'tab', 'panel' ) ) === key ); } );
-	}
-
 	// Top tabs.
 	var tabs = [].slice.call( root.querySelectorAll( '.clubhouse-tab' ) );
 	var panels = [].slice.call( root.querySelectorAll( '.clubhouse-panel' ) );
