@@ -6,7 +6,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Owner-supplied brand inputs: one accent, club name, logo. Stored as a single
+ * Owner-supplied brand inputs: one accent, club name, logo, favicon, socials. Stored as a single
  * autoloaded option (via the storage abstraction). Colour derivation lives in
  * the colour engine — this class only holds the raw inputs.
  *
@@ -22,6 +22,8 @@ final class Blueworx_Clubhouse_Branding {
 		'logo'      => '',
 		'facebook'  => 'https://facebook.com/clubhouse',
 		'instagram' => 'https://instagram.com/clubhouse',
+		'linkedin'  => 'https://linkedin.com/company/clubhouse',
+		'favicon'   => '',
 	);
 
 	private Blueworx_Clubhouse_Storage $storage;
@@ -85,5 +87,21 @@ final class Blueworx_Clubhouse_Branding {
 
 	public function set_instagram_url( string $url ): void {
 		$this->put( 'instagram', $url );
+	}
+
+	public function get_linkedin_url(): string {
+		return (string) $this->value( 'linkedin' );
+	}
+
+	public function set_linkedin_url( string $url ): void {
+		$this->put( 'linkedin', $url );
+	}
+
+	public function get_favicon(): string {
+		return (string) $this->value( 'favicon' );
+	}
+
+	public function set_favicon( string $url_or_id ): void {
+		$this->put( 'favicon', $url_or_id );
 	}
 }

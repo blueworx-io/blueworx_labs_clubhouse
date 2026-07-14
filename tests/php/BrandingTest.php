@@ -57,4 +57,18 @@ final class BrandingTest extends TestCase {
 		$this->assertSame( 'https://facebook.com/marlowrugby', $again->get_facebook_url() );
 		$this->assertSame( 'https://instagram.com/marlowrugby', $again->get_instagram_url() );
 	}
+
+	public function test_favicon_defaults_empty_and_round_trips(): void {
+		$b = new Blueworx_Clubhouse_Branding( new Blueworx_Clubhouse_Fake_Storage() );
+		$this->assertSame( '', $b->get_favicon() );
+		$b->set_favicon( '77' );
+		$this->assertSame( '77', $b->get_favicon() );
+	}
+
+	public function test_linkedin_has_demo_default_and_round_trips(): void {
+		$b = new Blueworx_Clubhouse_Branding( new Blueworx_Clubhouse_Fake_Storage() );
+		$this->assertSame( 'https://linkedin.com/company/clubhouse', $b->get_linkedin_url() );
+		$b->set_linkedin_url( 'https://linkedin.com/company/riverside' );
+		$this->assertSame( 'https://linkedin.com/company/riverside', $b->get_linkedin_url() );
+	}
 }
