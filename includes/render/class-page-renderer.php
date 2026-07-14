@@ -161,7 +161,9 @@ final class Blueworx_Clubhouse_Page_Renderer {
 		}
 		$out .= '<main class="ch-main" id="ch-main" tabindex="-1">';
 		if ( $visibility->is_section_visible( 'home', 'hero' ) ) {
-			$out .= Blueworx_Clubhouse_Sections::hero( array(
+			// Home uses the full-bleed home_hero() (not the shared hero()); the
+			// quick-links live in its foot, so no separate quick_tiles section here.
+			$out .= Blueworx_Clubhouse_Sections::home_hero( array(
 				'eyebrow'            => 'Est. 1974 · Marlow, UK',
 				'title_lead'         => 'Every sport. Every age. ',
 				'title_highlight'    => 'One community.',
@@ -172,16 +174,12 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'cta_secondary_href' => Blueworx_Clubhouse_Links::url( 'about' ),
 				'image'              => '',
 				'image_alt'          => 'ClubHouse floodlit pitch on a Saturday',
-				'image_caption'      => 'Saturday, floodlights on',
-			) );
-		}
-		if ( $visibility->is_section_visible( 'home', 'quick_tiles' ) ) {
-			// Task-oriented shortcuts (verb-first), deliberately not a mirror of the nav.
-			$out .= Blueworx_Clubhouse_Sections::quick_tiles( array(
-				array( 'label' => 'Join the club', 'href' => Blueworx_Clubhouse_Links::url( 'membership' ) ),
-				array( 'label' => 'Take a tour', 'href' => Blueworx_Clubhouse_Links::url( 'about' ) ),
-				array( 'label' => 'See fixtures', 'href' => Blueworx_Clubhouse_Links::url( 'calendar' ) ),
-				array( 'label' => 'Get in touch', 'href' => Blueworx_Clubhouse_Links::url( 'contact' ) ),
+				'tiles'              => array(
+					array( 'label' => 'Join the club', 'href' => Blueworx_Clubhouse_Links::url( 'membership' ), 'icon' => 'join' ),
+					array( 'label' => 'Take a tour', 'href' => Blueworx_Clubhouse_Links::url( 'about' ), 'icon' => 'tour' ),
+					array( 'label' => 'See fixtures', 'href' => Blueworx_Clubhouse_Links::url( 'calendar' ), 'icon' => 'fixtures' ),
+					array( 'label' => 'Get in touch', 'href' => Blueworx_Clubhouse_Links::url( 'contact' ), 'icon' => 'contact' ),
+				),
 			) );
 		}
 		if ( $visibility->is_section_visible( 'home', 'ticker' ) ) {

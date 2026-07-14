@@ -114,6 +114,46 @@ final class Blueworx_Clubhouse_Sections {
 	}
 
 	/**
+	 * Home-only full-bleed hero: a background image (or toned fallback panel) with
+	 * the hero content and an integrated icon quick-link row overlaid. Distinct from
+	 * hero() so the four other pages that use hero() are unaffected.
+	 *
+	 * @param array{eyebrow:string,title_lead:string,title_highlight:string,lede:string,
+	 *   cta_primary:string,cta_primary_href:string,cta_secondary:string,cta_secondary_href:string,
+	 *   image:string,image_alt:string,
+	 *   tiles:array<int,array{label:string,href:string,icon:string}>} $data
+	 */
+	public static function home_hero( array $data ): string {
+		$has_img = '' !== $data['image'];
+		$bg      = '<div class="ch-home-hero__bg' . ( $has_img ? '' : ' ch-home-hero__bg--empty' ) . '">'
+			. ( $has_img ? '<img class="ch-home-hero__img" src="' . self::e( $data['image'] ) . '" alt="' . self::e( $data['image_alt'] ) . '">' : '' )
+			. '</div>';
+		$tiles = '';
+		foreach ( $data['tiles'] as $t ) {
+			$svg = self::TILE_ICONS[ $t['icon'] ] ?? '';
+			$ico = '' !== $svg ? '<span class="ch-home-hero__tile-ico" aria-hidden="true">' . $svg . '</span>' : '';
+			$tiles .= '<a class="ch-home-hero__tile" role="listitem" href="' . self::e( $t['href'] ) . '">'
+				. $ico
+				. '<span class="ch-home-hero__tile-label">' . self::e( $t['label'] ) . '</span>'
+				. '<span class="ch-home-hero__tile-arrow" aria-hidden="true">→</span></a>';
+		}
+		return '<section class="ch-home-hero">'
+			. $bg
+			. '<div class="ch-home-hero__scrim" aria-hidden="true"></div>'
+			. '<div class="ch-wrap ch-home-hero__in">'
+			. '<span class="ch-eyebrow">' . self::e( $data['eyebrow'] ) . '</span>'
+			. '<h1 class="ch-home-hero__title">' . self::e( $data['title_lead'] )
+			. '<span class="ch-home-hero__hl">' . self::e( $data['title_highlight'] ) . '</span></h1>'
+			. '<p class="ch-home-hero__lede">' . self::e( $data['lede'] ) . '</p>'
+			. '<div class="ch-home-hero__cta">'
+			. '<a class="ch-btn ch-btn--accent" href="' . self::e( $data['cta_primary_href'] ) . '">' . self::e( $data['cta_primary'] ) . '</a>'
+			. '<a class="ch-btn ch-btn--ghost" href="' . self::e( $data['cta_secondary_href'] ) . '">' . self::e( $data['cta_secondary'] ) . '</a>'
+			. '</div>'
+			. '<div class="ch-home-hero__foot" role="list">' . $tiles . '</div>'
+			. '</div></section>';
+	}
+
+	/**
 	 * @param array{eyebrow:string,title_lead:string,title_highlight:string,lede:string,
 	 *   filter_label:string,filters:array<int,array{label:string,href:string,active:bool}>} $data
 	 */
@@ -674,6 +714,14 @@ final class Blueworx_Clubhouse_Sections {
 			. '<h2 class="ch-sec__title">' . self::e( $data['heading'] ) . '</h2>'
 			. '<div class="ch-cal">' . $months . '</div></div></section>';
 	}
+
+	/** Task-tile icons — inline SVG, inherit colour via currentColor. */
+	private const TILE_ICONS = array(
+		'join'     => '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg>',
+		'tour'     => '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m16.2 7.8-2.9 6.3-6.3 2.9 2.9-6.3 6.3-2.9z"/></svg>',
+		'fixtures' => '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>',
+		'contact'  => '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/></svg>',
+	);
 
 	/** Self-hosted brand mark, inherits colour via currentColor — no hex, no icon font. */
 	private const FACEBOOK_ICON = '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true">'
