@@ -144,4 +144,17 @@ final class FrontendTest extends TestCase {
 		$this->assertSame( 'https://cdn.example/logo.svg', Blueworx_Clubhouse_Frontend::resolve_logo( 'https://cdn.example/logo.svg' ) );
 		$this->assertSame( '', Blueworx_Clubhouse_Frontend::resolve_logo( '' ) );
 	}
+
+	public function test_favicon_link_html_emits_link_when_set_and_nothing_when_empty(): void {
+		$this->assertSame( '', Blueworx_Clubhouse_Frontend::favicon_link_html( '' ) );
+		$html = Blueworx_Clubhouse_Frontend::favicon_link_html( 'https://club.test/favicon.png' );
+		$this->assertStringContainsString( '<link rel="icon"', $html );
+		$this->assertStringContainsString( 'href="https://club.test/favicon.png"', $html );
+	}
+
+	public function test_favicon_link_html_escapes_the_url(): void {
+		$html = Blueworx_Clubhouse_Frontend::favicon_link_html( 'https://club.test/f.png?a=b&c="x"' );
+		$this->assertStringContainsString( '&amp;', $html );
+		$this->assertStringNotContainsString( '="x"', $html );
+	}
 }

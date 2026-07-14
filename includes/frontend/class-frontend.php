@@ -55,6 +55,7 @@ final class Blueworx_Clubhouse_Frontend {
 		add_action( 'init', array( self::class, 'register_rewrites' ) );
 		add_action( 'init', array( Blueworx_Clubhouse_Collection_Types::class, 'register' ) );
 		add_action( 'wp_enqueue_scripts', array( self::class, 'enqueue_assets' ) );
+		add_action( 'wp_head', array( self::class, 'render_favicon' ) );
 		add_filter( 'template_include', array( self::class, 'filter_template' ) );
 	}
 
@@ -141,6 +142,23 @@ final class Blueworx_Clubhouse_Frontend {
 			return '';
 		}
 		return ctype_digit( $stored ) ? Blueworx_Clubhouse_Media::url( (int) $stored ) : $stored;
+	}
+
+	/** Build the favicon <link> for a resolved favicon URL; empty string when none. */
+	public static function favicon_link_html( string $favicon_url ): string {
+		if ( '' === $favicon_url ) {
+			return '';
+		}
+		return '<link rel="icon" href="' . htmlspecialchars( $favicon_url, ENT_QUOTES, 'UTF-8' ) . '">';
+	}
+
+	/** Echo the favicon <link> on clubhouse pages only (wp_head). */
+	public static function render_favicon(): void {
+		if ( null === self::current_slug() ) {
+			return;
+		}
+		$favicon = self::resolve_logo( self::context()->branding->get_favicon() );
+		echo self::favicon_link_html( $favicon ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in favicon_link_html.
 	}
 
 	/** Render the current page body (used by the canvas template). */
