@@ -533,7 +533,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 					'address' => array( '12 Riverside Lane', 'Marlow, SL7 1AA' ),
 					'email'   => 'hello@clubhouse.example',
 					'phone'   => '01628 000 000',
-					'socials' => array( 'Facebook', 'Instagram', 'Community', 'Share' ),
+					'socials' => array( 'Facebook', 'Instagram', 'LinkedIn', 'Community', 'Share' ),
 				),
 			) );
 		}
