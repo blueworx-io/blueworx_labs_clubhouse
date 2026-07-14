@@ -28,13 +28,33 @@ final class Blueworx_Clubhouse_Setup_Screen {
 		return $out;
 	}
 
+	/**
+	 * Join a token map into a raw CSS declaration string for embedding inside a
+	 * <style> block: "--k:v;--k2:v2;". Unlike inline_tokens() this does NOT run
+	 * values through esc() — a <style> element is raw text, so HTML character
+	 * references (e.g. &#039;) are not decoded by the browser and would corrupt
+	 * values such as font-family names. Values here are fully server-controlled
+	 * (hardcoded look tokens plus a sanitize_hex_color-validated accent), so raw
+	 * emission is safe; as defense-in-depth, strip characters that could break
+	 * out of the declaration block.
+	 */
+	private static function css_tokens( array $tokens ): string {
+		$out = '';
+		foreach ( $tokens as $name => $value ) {
+			$safe_name  = str_replace( array( '<', '}' ), '', (string) $name );
+			$safe_value = str_replace( array( '<', '}' ), '', (string) $value );
+			$out       .= $safe_name . ':' . $safe_value . ';';
+		}
+		return $out;
+	}
+
 	/** @param array<string,mixed> $model */
 	public static function render( array $model ): string {
 		$active_tokens = $model['look_tokens'][ $model['active_slug'] ] ?? array();
 
 		$out  = '<div class="wrap">';
 		$out .= '<style>' . $model['font_face_css']
-			. '.clubhouse-setup{' . self::inline_tokens( $active_tokens ) . '}</style>';
+			. '.clubhouse-setup{' . self::css_tokens( $active_tokens ) . '}</style>';
 		$out .= '<div class="clubhouse-setup">';
 		$out .= self::header( $model['progress'] );
 		$out .= self::notices( $model['notices'] );
@@ -43,17 +63,17 @@ final class Blueworx_Clubhouse_Setup_Screen {
 
 		// Tab nav.
 		$out .= '<div class="clubhouse-tabs" role="tablist">';
-		$out .= '<button type="button" class="clubhouse-tab is-active" data-tab="look">Base Look &amp; Branding</button>';
-		$out .= '<button type="button" class="clubhouse-tab" data-tab="visibility">Visibility</button>';
-		$out .= '<button type="button" class="clubhouse-tab" data-tab="demo">Demo Mode</button>';
+		$out .= '<button type="button" class="clubhouse-tab is-active" data-tab="look" role="tab" aria-selected="true">Base Look &amp; Branding</button>';
+		$out .= '<button type="button" class="clubhouse-tab" data-tab="visibility" role="tab" aria-selected="false">Visibility</button>';
+		$out .= '<button type="button" class="clubhouse-tab" data-tab="demo" role="tab" aria-selected="false">Demo Mode</button>';
 		$out .= '</div>';
 
-		$out .= '<section class="clubhouse-panel is-active" data-panel="look">'
+		$out .= '<section class="clubhouse-panel is-active" data-panel="look" role="tabpanel">'
 			. self::look_area( $model['looks'], $model['look_tokens'] )
 			. self::branding_area( $model['branding'] ) . '</section>';
-		$out .= '<section class="clubhouse-panel" data-panel="visibility">'
+		$out .= '<section class="clubhouse-panel" data-panel="visibility" role="tabpanel">'
 			. self::visibility_area( $model['inventory'], $model['visibility'] ) . '</section>';
-		$out .= '<section class="clubhouse-panel" data-panel="demo">'
+		$out .= '<section class="clubhouse-panel" data-panel="demo" role="tabpanel">'
 			. self::demo_area( (bool) ( $model['demo_active'] ?? false ) ) . '</section>';
 
 		$out .= self::save_bar( $model['progress'] );
@@ -168,9 +188,10 @@ final class Blueworx_Clubhouse_Setup_Screen {
 					$shown++;
 				}
 			}
-			$total = count( $page['sections'] );
-			$cls   = $first ? ' is-active' : '';
-			$out  .= '<button type="button" class="clubhouse-vistab' . $cls . '" data-vistab="' . self::esc( $page['page'] ) . '">'
+			$total    = count( $page['sections'] );
+			$cls      = $first ? ' is-active' : '';
+			$selected = $first ? 'true' : 'false';
+			$out     .= '<button type="button" class="clubhouse-vistab' . $cls . '" data-vistab="' . self::esc( $page['page'] ) . '" role="tab" aria-selected="' . $selected . '">'
 				. self::esc( $page['label'] ) . ' <span class="clubhouse-vistab__count">' . $shown . '/' . $total . '</span></button>';
 			$first = false;
 		}
@@ -181,7 +202,7 @@ final class Blueworx_Clubhouse_Setup_Screen {
 		foreach ( $inventory as $page ) {
 			$page_on = ( $visibility['pages'][ $page['page'] ] ?? true );
 			$cls     = $first ? ' is-active' : '';
-			$out .= '<div class="clubhouse-vispanel' . $cls . '" data-vispanel="' . self::esc( $page['page'] ) . '">';
+			$out .= '<div class="clubhouse-vispanel' . $cls . '" data-vispanel="' . self::esc( $page['page'] ) . '" role="tabpanel">';
 			$out .= '<div class="clubhouse-vispanel__head"><span class="clubhouse-vispanel__title">' . self::esc( $page['label'] ) . ' sections</span>';
 			$out .= self::toggle( 'clubhouse_page[' . $page['page'] . ']', 'Page shown', $page_on ) . '</div>';
 			$out .= '<div class="clubhouse-toggle-grid">';
@@ -205,7 +226,6 @@ final class Blueworx_Clubhouse_Setup_Screen {
 	}
 
 	private static function demo_area( bool $active ): string {
-		$checked = $active ? ' checked' : '';
 		$out  = '<div class="clubhouse-step"><p class="clubhouse-step__k">Step 4 · Demo mode</p><h2 class="clubhouse-step__h">Preview for everyone</h2>';
 		$out .= '<p class="clubhouse-step__lede">When on, every visitor sees a floating switcher to preview the base looks, and the site renders in a demo look. Your saved look isn\'t changed — only administrators can turn this on or off.</p>';
 		$out .= '<div class="clubhouse-demo-card">'

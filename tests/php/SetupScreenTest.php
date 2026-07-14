@@ -107,4 +107,13 @@ final class SetupScreenTest extends TestCase {
 		$html = Blueworx_Clubhouse_Setup_Screen::render( $model );
 		$this->assertMatchesRegularExpression( '/name="clubhouse_demo_active"[^>]*checked/', $html );
 	}
+
+	public function test_seeded_style_block_carries_unescaped_font_quote(): void {
+		$html = Blueworx_Clubhouse_Setup_Screen::render( $this->model() );
+		$this->assertStringContainsString( '.clubhouse-setup{', $html );
+		// The <style> block is raw CSS text — the font token must NOT be HTML-entity-escaped
+		// (browsers do not decode character references inside a <style> element), while the
+		// look-card preview `style="…"` attributes legitimately contain the escaped form.
+		$this->assertMatchesRegularExpression( '/\.clubhouse-setup\{[^}]*--font-display:\x27Syne\x27/', $html );
+	}
 }

@@ -11,7 +11,10 @@
 	tabs.forEach( function ( tab ) {
 		tab.addEventListener( 'click', function () {
 			var key = tab.getAttribute( 'data-tab' );
-			tabs.forEach( function ( t ) { t.classList.toggle( 'is-active', t === tab ); } );
+			tabs.forEach( function ( t ) {
+				t.classList.toggle( 'is-active', t === tab );
+				t.setAttribute( 'aria-selected', t === tab ? 'true' : 'false' );
+			} );
 			panels.forEach( function ( p ) { p.classList.toggle( 'is-active', p.getAttribute( 'data-panel' ) === key ); } );
 		} );
 	} );
@@ -22,7 +25,10 @@
 	vtabs.forEach( function ( tab ) {
 		tab.addEventListener( 'click', function () {
 			var key = tab.getAttribute( 'data-vistab' );
-			vtabs.forEach( function ( t ) { t.classList.toggle( 'is-active', t === tab ); } );
+			vtabs.forEach( function ( t ) {
+				t.classList.toggle( 'is-active', t === tab );
+				t.setAttribute( 'aria-selected', t === tab ? 'true' : 'false' );
+			} );
 			vpanels.forEach( function ( p ) { p.classList.toggle( 'is-active', p.getAttribute( 'data-vispanel' ) === key ); } );
 		} );
 	} );
@@ -36,7 +42,7 @@
 		if ( ! map ) { return; }
 		Object.keys( map ).forEach( function ( name ) { root.style.setProperty( name, map[ name ] ); } );
 	}
-	root.querySelectorAll( 'input[name="clubhouse_look"]' ).forEach( function ( radio ) {
+	[].slice.call( root.querySelectorAll( 'input[name="clubhouse_look"]' ) ).forEach( function ( radio ) {
 		radio.addEventListener( 'change', function () { if ( radio.checked ) { applyLook( radio.value ); } } );
 	} );
 
@@ -48,7 +54,7 @@
 	}
 
 	// Media pickers (logo + favicon) via wp.media.
-	root.querySelectorAll( '.clubhouse-media' ).forEach( function ( box ) {
+	[].slice.call( root.querySelectorAll( '.clubhouse-media' ) ).forEach( function ( box ) {
 		var field = box.querySelector( 'input[type="hidden"]' );
 		var pick = box.querySelector( '[data-media-pick]' );
 		var clear = box.querySelector( '[data-media-clear]' );
