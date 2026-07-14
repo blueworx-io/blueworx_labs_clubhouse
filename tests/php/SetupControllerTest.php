@@ -150,4 +150,29 @@ final class SetupControllerTest extends TestCase {
 		Blueworx_Clubhouse_Setup_Controller::enqueue( 'index.php' );
 		$this->assertSame( array(), wp_stub_calls( 'wp_enqueue_media' ) );
 	}
+
+	public function test_handle_save_persists_favicon_and_linkedin(): void {
+		$storage = new Blueworx_Clubhouse_Fake_Storage();
+		Blueworx_Clubhouse_Setup_Controller::handle_save( array(
+			'clubhouse_favicon'  => '88',
+			'clubhouse_linkedin' => 'https://linkedin.com/company/riverside',
+		), $storage );
+		$b = new Blueworx_Clubhouse_Branding( $storage );
+		$this->assertSame( '88', $b->get_favicon() );
+		$this->assertSame( 'https://linkedin.com/company/riverside', $b->get_linkedin_url() );
+	}
+
+	public function test_build_model_exposes_favicon_linkedin_and_per_look_tokens(): void {
+		$storage = new Blueworx_Clubhouse_Fake_Storage();
+		$model   = Blueworx_Clubhouse_Setup_Controller::build_model( $storage, array(), '<nonce>', 'https://x/y' );
+
+		$this->assertArrayHasKey( 'favicon', $model['branding'] );
+		$this->assertArrayHasKey( 'linkedin', $model['branding'] );
+		$this->assertArrayHasKey( 'look_tokens', $model );
+		$this->assertArrayHasKey( 'court-side', $model['look_tokens'] );
+		$this->assertArrayHasKey( '--color-bg', $model['look_tokens']['court-side'] );
+		$this->assertArrayHasKey( '--color-accent-deep', $model['look_tokens']['court-side'] );
+		$this->assertIsString( $model['font_face_css'] );
+		$this->assertStringContainsString( '@font-face', $model['font_face_css'] );
+	}
 }

@@ -66,6 +66,12 @@ final class Blueworx_Clubhouse_Setup_Controller {
 		if ( isset( $post['clubhouse_instagram'] ) ) {
 			$branding->set_instagram_url( esc_url_raw( (string) $post['clubhouse_instagram'] ) );
 		}
+		if ( isset( $post['clubhouse_linkedin'] ) ) {
+			$branding->set_linkedin_url( esc_url_raw( (string) $post['clubhouse_linkedin'] ) );
+		}
+		if ( isset( $post['clubhouse_favicon'] ) ) {
+			$branding->set_favicon( sanitize_text_field( (string) $post['clubhouse_favicon'] ) );
+		}
 
 		// 4. Visibility — a checkbox is present only when ticked; absence = hidden.
 		$pages    = isset( $post['clubhouse_page'] ) && is_array( $post['clubhouse_page'] ) ? $post['clubhouse_page'] : array();
@@ -168,6 +174,14 @@ final class Blueworx_Clubhouse_Setup_Controller {
 			$logo_preview = ctype_digit( $logo ) ? (string) wp_get_attachment_image_url( (int) $logo, 'medium' ) : $logo;
 		}
 
+		$favicon         = $branding->get_favicon();
+		$favicon_preview = '';
+		if ( '' !== $favicon ) {
+			$favicon_preview = ctype_digit( $favicon ) ? (string) wp_get_attachment_image_url( (int) $favicon, 'medium' ) : $favicon;
+		}
+		$plugin_url = defined( 'BLUEWORX_LABS_CLUBHOUSE_URL' ) ? BLUEWORX_LABS_CLUBHOUSE_URL : '';
+		$theming    = self::look_theming( $registry, $branding, $plugin_url );
+
 		$pages_state    = array();
 		$sections_state = array();
 		foreach ( Blueworx_Clubhouse_Setup_Sections::inventory() as $page ) {
@@ -178,22 +192,44 @@ final class Blueworx_Clubhouse_Setup_Controller {
 		}
 
 		return array(
-			'nonce_field' => $nonce_field,
-			'action_url'  => $action_url,
-			'notices'     => $notices,
-			'progress'    => Blueworx_Clubhouse_Setup_Progress::compute( $branding, $active_look ?? new Blueworx_Clubhouse_Court_Side(), '' !== $active_slug ),
-			'looks'       => $looks,
-			'branding'    => array(
-				'accent'       => $branding->get_accent(),
-				'club_name'    => $branding->get_club_name(),
-				'logo'         => $logo,
-				'logo_preview' => $logo_preview,
-				'facebook'     => $branding->get_facebook_url(),
-				'instagram'    => $branding->get_instagram_url(),
+			'nonce_field'   => $nonce_field,
+			'action_url'    => $action_url,
+			'notices'       => $notices,
+			'progress'      => Blueworx_Clubhouse_Setup_Progress::compute( $branding, $active_look ?? new Blueworx_Clubhouse_Court_Side(), '' !== $active_slug ),
+			'looks'         => $looks,
+			'branding'      => array(
+				'accent'          => $branding->get_accent(),
+				'club_name'       => $branding->get_club_name(),
+				'logo'            => $logo,
+				'logo_preview'    => $logo_preview,
+				'favicon'         => $favicon,
+				'favicon_preview' => $favicon_preview,
+				'facebook'        => $branding->get_facebook_url(),
+				'instagram'       => $branding->get_instagram_url(),
+				'linkedin'        => $branding->get_linkedin_url(),
 			),
-			'inventory'   => Blueworx_Clubhouse_Setup_Sections::inventory(),
-			'visibility'  => array( 'pages' => $pages_state, 'sections' => $sections_state ),
-			'demo_active' => ( new Blueworx_Clubhouse_Demo_State( $storage ) )->is_on(),
+			'inventory'     => Blueworx_Clubhouse_Setup_Sections::inventory(),
+			'visibility'    => array( 'pages' => $pages_state, 'sections' => $sections_state ),
+			'demo_active'   => ( new Blueworx_Clubhouse_Demo_State( $storage ) )->is_on(),
+			'active_slug'   => null !== $active_look ? $active_look->slug() : '',
+			'look_tokens'   => $theming['tokens'],
+			'font_face_css' => $theming['faces'],
 		);
+	}
+
+	/**
+	 * Compose each registered look's :root token map (at the current accent) plus
+	 * the combined @font-face CSS for all looks — powers the live re-skin preview.
+	 *
+	 * @return array{tokens:array<string,array<string,string>>,faces:string}
+	 */
+	private static function look_theming( Blueworx_Clubhouse_Base_Look_Registry $registry, Blueworx_Clubhouse_Branding $branding, string $plugin_url ): array {
+		$tokens = array();
+		$faces  = '';
+		foreach ( $registry->all() as $look ) {
+			$tokens[ $look->slug() ] = Blueworx_Clubhouse_Theme_Css::compose( $look, $branding );
+			$faces                  .= Blueworx_Clubhouse_Page_Renderer::font_face_css( $look, $plugin_url );
+		}
+		return array( 'tokens' => $tokens, 'faces' => $faces );
 	}
 }
