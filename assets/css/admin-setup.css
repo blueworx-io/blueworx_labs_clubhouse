@@ -4,7 +4,7 @@
 /* Fill the WP admin content area edge-to-edge and full height; drop wp chrome
    padding + footer on this screen only (scoped to the Setup page body class).
    The compound .wrap.clubhouse-wrap selector out-specifies WP core's .wrap margin. */
-.wrap.clubhouse-wrap { margin: 0; padding: 0; }
+.wrap.clubhouse-wrap { margin: 0; }
 body.toplevel_page_clubhouse-setup #wpcontent { padding-left: 0; }
 body.toplevel_page_clubhouse-setup #wpbody-content { padding-bottom: 0; }
 body.toplevel_page_clubhouse-setup #wpfooter { display: none; }
@@ -14,9 +14,11 @@ body.toplevel_page_clubhouse-setup #wpfooter { display: none; }
 	--pad: 24px;
 	display: flex;
 	flex-direction: column;
-	min-height: calc(100vh - 32px); /* fill below the 32px desktop admin bar */
+	max-width: 100%;
+	height: 100vh;
 	margin: 0;
 	padding: 0;
+	border-radius: 0;
 	background: var(--color-bg);
 	color: var(--color-ink);
 	font-family: var(--font-body);
@@ -43,7 +45,7 @@ body.toplevel_page_clubhouse-setup #wpfooter { display: none; }
 .clubhouse-tab.is-active { color: var(--color-ink); border-bottom-color: var(--color-accent-deep); }
 
 /* Panels — visible by default (no-JS); JS hides the inactive ones. */
-.clubhouse-panel { padding: 24px var(--pad); }
+.clubhouse-panel { padding: 24px var(--pad) 0; }
 .clubhouse-setup--js .clubhouse-panel { display: none; }
 .clubhouse-setup--js .clubhouse-panel.is-active { display: block; }
 
