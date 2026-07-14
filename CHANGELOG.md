@@ -5,6 +5,12 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.22.0
+
+- Redesigned the Clubhouse Setup screen: a bespoke, tabbed layout (Base Look & Branding · Visibility · Demo Mode) that inherits the selected Base Look's fonts, colours, radii and accent, and re-skins live as you pick a look.
+- Added Favicon and LinkedIn as brand inputs. The favicon renders in the browser tab; LinkedIn joins Facebook and Instagram in the site's social block and footer.
+- Setup progress now counts the main setup sections (base look, accent, club name, logo & favicon, social) — nothing is compulsory and Save is always available so you can return and finish later.
+
 ## [0.21.0] - 2026-07-13
 
 ### Phase 5 — Font self-hosting
