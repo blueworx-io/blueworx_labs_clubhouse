@@ -17,9 +17,9 @@ final class SetupScreenTest extends TestCase {
 			'action_url'    => 'https://club.test/wp-admin/admin.php?page=clubhouse-setup',
 			'notices'       => array( array( 'type' => 'error', 'text' => 'That accent is too low-contrast.' ) ),
 			'progress'      => array(
-				'items'     => array( 'look' => true, 'accent' => false, 'club_name' => true, 'logo_favicon' => false, 'social' => false ),
+				'items'     => array( 'look' => true, 'accent' => false, 'club_name' => true, 'logo_favicon' => false, 'social' => false, 'visibility' => false ),
 				'completed' => 2,
-				'total'     => 5,
+				'total'     => 6,
 			),
 			'looks'         => array(
 				array( 'slug' => 'court-side', 'name' => 'Court Side', 'description' => 'Bright & playful.', 'active' => true ),
@@ -38,22 +38,23 @@ final class SetupScreenTest extends TestCase {
 			),
 			'inventory'     => Blueworx_Clubhouse_Setup_Sections::inventory(),
 			'visibility'    => array( 'pages' => array( 'events' => false ), 'sections' => array( 'home.ticker' => false ) ),
-			'demo_active'   => false,
 		);
 	}
 
-	public function test_renders_nonce_action_and_progress_out_of_five(): void {
+	public function test_renders_nonce_action_and_progress_out_of_six(): void {
 		$html = Blueworx_Clubhouse_Setup_Screen::render( $this->model() );
 		$this->assertStringContainsString( 'name="_wpnonce" value="NONCE123"', $html );
 		$this->assertStringContainsString( 'action="https://club.test/wp-admin/admin.php?page=clubhouse-setup"', $html );
-		$this->assertStringContainsString( '2 of 5', $html );
+		$this->assertStringContainsString( '2 of 6', $html );
 	}
 
-	public function test_renders_three_tabs(): void {
+	public function test_renders_two_tabs_and_no_demo_step(): void {
 		$html = Blueworx_Clubhouse_Setup_Screen::render( $this->model() );
 		$this->assertStringContainsString( 'data-tab="look"', $html );
 		$this->assertStringContainsString( 'data-tab="visibility"', $html );
-		$this->assertStringContainsString( 'data-tab="demo"', $html );
+		// Demo mode is admin-only (admin bar), not a setup step.
+		$this->assertStringNotContainsString( 'data-tab="demo"', $html );
+		$this->assertStringNotContainsString( 'clubhouse_demo_active', $html );
 	}
 
 	public function test_renders_look_cards_with_active_marked_and_token_preview(): void {
@@ -94,18 +95,10 @@ final class SetupScreenTest extends TestCase {
 		$this->assertDoesNotMatchRegularExpression( '/<button[^>]*type="submit"[^>]*disabled/', $html );
 	}
 
-	public function test_renders_error_notice_and_demo_toggle(): void {
+	public function test_renders_error_notice(): void {
 		$html = Blueworx_Clubhouse_Setup_Screen::render( $this->model() );
 		$this->assertStringContainsString( 'notice notice-error', $html );
 		$this->assertStringContainsString( 'That accent is too low-contrast.', $html );
-		$this->assertStringContainsString( 'name="clubhouse_demo_active"', $html );
-	}
-
-	public function test_checks_demo_toggle_when_active(): void {
-		$model = $this->model();
-		$model['demo_active'] = true;
-		$html = Blueworx_Clubhouse_Setup_Screen::render( $model );
-		$this->assertMatchesRegularExpression( '/name="clubhouse_demo_active"[^>]*checked/', $html );
 	}
 
 	public function test_seeded_style_block_carries_unescaped_font_quote(): void {

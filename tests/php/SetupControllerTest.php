@@ -98,17 +98,20 @@ final class SetupControllerTest extends TestCase {
 		$this->assertContains( 'admin_enqueue_scripts', $actions );
 	}
 
-	public function test_handle_save_enables_demo_mode_when_checked(): void {
-		$storage = new Blueworx_Clubhouse_Fake_Storage();
-		Blueworx_Clubhouse_Setup_Controller::handle_save( array( 'clubhouse_demo_active' => '1' ), $storage );
-		$this->assertTrue( ( new Blueworx_Clubhouse_Demo_State( $storage ) )->is_on() );
-	}
-
-	public function test_handle_save_disables_demo_mode_when_absent(): void {
+	public function test_handle_save_leaves_demo_state_untouched(): void {
+		// Demo mode is an admin-only, admin-bar function — a setup save must never
+		// change it (there is no demo field on the setup screen).
 		$storage = new Blueworx_Clubhouse_Fake_Storage();
 		( new Blueworx_Clubhouse_Demo_State( $storage ) )->set( true );
 		Blueworx_Clubhouse_Setup_Controller::handle_save( array(), $storage );
-		$this->assertFalse( ( new Blueworx_Clubhouse_Demo_State( $storage ) )->is_on() );
+		$this->assertTrue( ( new Blueworx_Clubhouse_Demo_State( $storage ) )->is_on() );
+	}
+
+	public function test_handle_save_returns_a_success_notice(): void {
+		$storage = new Blueworx_Clubhouse_Fake_Storage();
+		$notices = Blueworx_Clubhouse_Setup_Controller::handle_save( array( 'clubhouse_club_name' => 'Riverside RFC' ), $storage );
+		$types   = array_map( static fn( $n ) => $n['type'], $notices );
+		$this->assertContains( 'success', $types );
 	}
 
 	public function test_build_model_reflects_live_state(): void {
@@ -123,7 +126,7 @@ final class SetupControllerTest extends TestCase {
 		$active = array_values( array_filter( $model['looks'], static fn( $l ) => $l['active'] ) );
 		$this->assertSame( 'floodlight', $active[0]['slug'] );
 		$this->assertCount( 3, $model['looks'] );
-		$this->assertSame( 5, $model['progress']['total'] );
+		$this->assertSame( 6, $model['progress']['total'] );
 	}
 
 	public function test_capability_is_the_custom_clubhouse_cap(): void {

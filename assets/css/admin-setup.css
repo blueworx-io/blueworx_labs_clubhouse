@@ -1,17 +1,29 @@
 /* Clubhouse Setup — bespoke admin skin. All colour/type via injected look tokens
    (var(--color-*) / var(--font-*) / var(--radius-*)); no literals, no font names. */
 
+/* Fill the WP admin content area edge-to-edge and full height; drop wp chrome
+   padding + footer on this screen only (scoped to the Setup page body class). */
+.clubhouse-wrap { margin: 0; }
+body.toplevel_page_clubhouse-setup #wpcontent { padding-left: 0; }
+body.toplevel_page_clubhouse-setup #wpbody-content { padding-bottom: 0; }
+body.toplevel_page_clubhouse-setup #wpfooter { display: none; }
+
 .clubhouse-setup {
 	--pad: 24px;
-	max-width: 1120px;
-	margin: 8px auto 0;
-	padding: 0 16px 120px;
+	display: flex;
+	flex-direction: column;
+	min-height: calc(100vh - 32px); /* fill below the 32px desktop admin bar */
+	margin: 0;
+	padding: 0;
 	background: var(--color-bg);
 	color: var(--color-ink);
 	font-family: var(--font-body);
-	border-radius: var(--radius-lg);
 }
 .clubhouse-setup * { box-sizing: border-box; }
+/* The form fills the remaining height so the save bar can pin to the bottom. */
+.clubhouse-form { display: flex; flex-direction: column; flex: 1 1 auto; }
+/* Notices sit flush to the container edges otherwise (container has no padding). */
+.clubhouse-setup .notice { margin: 12px var(--pad); }
 
 /* Header + progress */
 .clubhouse-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; padding: 32px var(--pad) 20px; border-bottom: 1px solid var(--color-line); }
@@ -96,14 +108,12 @@
 .clubhouse-toggle input:focus-visible + .clubhouse-toggle__track { outline: 2px solid var(--color-accent-deep); outline-offset: 2px; }
 .clubhouse-toggle__label { font-size: 13px; color: var(--color-ink); }
 
-/* Demo card */
-.clubhouse-demo-card { border: 1px solid var(--color-line); border-radius: var(--radius-md); padding: 18px; background: var(--color-bg); }
-
-/* Sticky save bar */
-.clubhouse-bar { position: sticky; bottom: 0; display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 16px var(--pad); margin-top: 8px; background: var(--color-paper); border-top: 1px solid var(--color-line); }
+/* Full-width save-bar footer, pinned to the bottom of the container. */
+.clubhouse-bar { margin-top: auto; display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 16px var(--pad); background: var(--color-paper); border-top: 1px solid var(--color-line); }
 .clubhouse-bar__hint { margin: 0; font-size: 13px; color: var(--color-ink-soft); }
 
 @media (max-width: 782px) {
+	.clubhouse-setup { min-height: calc(100vh - 46px); } /* taller mobile admin bar */
 	.clubhouse-head { flex-direction: column; align-items: flex-start; }
 	.clubhouse-head__progress { text-align: left; }
 	.clubhouse-fields { grid-template-columns: 1fr; }

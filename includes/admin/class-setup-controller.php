@@ -19,6 +19,8 @@ final class Blueworx_Clubhouse_Setup_Controller {
 	public const CAPABILITY = Blueworx_Clubhouse_Owner_Capabilities::SETUP_CAP; // manage_clubhouse — owner + admin.
 	public const PAGE_SLUG  = 'clubhouse-setup';
 	public const NONCE      = 'clubhouse_setup_save';
+	// Set true on any setup save — marks the Visibility section "reviewed" for progress.
+	public const VIS_SAVED_KEY = 'setup_visibility_saved';
 
 	/**
 	 * Apply a setup POST to storage. Returns notices (error/warning/success).
@@ -89,11 +91,17 @@ final class Blueworx_Clubhouse_Setup_Controller {
 			$notices[] = array( 'type' => 'warning', 'text' => 'Your saved accent colour is low-contrast on the selected look. Choose a new accent for best legibility.' );
 		}
 
-		// Demo mode (site-wide) — checkbox present = on.
-		( new Blueworx_Clubhouse_Demo_State( $storage ) )->set( isset( $post['clubhouse_demo_active'] ) );
+		// Demo mode is an admin-only function toggled from the admin bar, not a
+		// setup field — so a setup save deliberately never touches Demo_State.
 
-		// 6. Bust the composed :root cache so the new look/accent take effect.
+		// 6. Mark the Visibility section reviewed (saving with the defaults counts).
+		$storage->set( self::VIS_SAVED_KEY, true );
+
+		// 7. Bust the composed :root cache so the new look/accent take effect.
 		( new Blueworx_Clubhouse_Theme_Cache( $storage ) )->invalidate();
+
+		// 8. Confirm the save to the owner (green success notice at the top).
+		$notices[] = array( 'type' => 'success', 'text' => 'Your changes have been saved.' );
 
 		return $notices;
 	}
@@ -194,7 +202,7 @@ final class Blueworx_Clubhouse_Setup_Controller {
 			'nonce_field'   => $nonce_field,
 			'action_url'    => $action_url,
 			'notices'       => $notices,
-			'progress'      => Blueworx_Clubhouse_Setup_Progress::compute( $branding, $active_look ?? new Blueworx_Clubhouse_Court_Side(), '' !== $active_slug ),
+			'progress'      => Blueworx_Clubhouse_Setup_Progress::compute( $branding, $active_look ?? new Blueworx_Clubhouse_Court_Side(), '' !== $active_slug, (bool) $storage->get( self::VIS_SAVED_KEY, false ) ),
 			'looks'         => $looks,
 			'branding'      => array(
 				'accent'          => $branding->get_accent(),
@@ -209,7 +217,6 @@ final class Blueworx_Clubhouse_Setup_Controller {
 			),
 			'inventory'     => Blueworx_Clubhouse_Setup_Sections::inventory(),
 			'visibility'    => array( 'pages' => $pages_state, 'sections' => $sections_state ),
-			'demo_active'   => ( new Blueworx_Clubhouse_Demo_State( $storage ) )->is_on(),
 			'active_slug'   => null !== $active_look ? $active_look->slug() : '',
 			'look_tokens'   => $theming['tokens'],
 			'font_face_css' => $theming['faces'],

@@ -52,7 +52,7 @@ final class Blueworx_Clubhouse_Setup_Screen {
 	public static function render( array $model ): string {
 		$active_tokens = $model['look_tokens'][ $model['active_slug'] ] ?? array();
 
-		$out  = '<div class="wrap">';
+		$out  = '<div class="wrap clubhouse-wrap">';
 		$out .= '<style>' . $model['font_face_css']
 			. '.clubhouse-setup{' . self::css_tokens( $active_tokens ) . '}</style>';
 		$out .= '<div class="clubhouse-setup">';
@@ -61,11 +61,11 @@ final class Blueworx_Clubhouse_Setup_Screen {
 		$out .= '<form method="post" action="' . self::esc( (string) $model['action_url'] ) . '" class="clubhouse-form">';
 		$out .= $model['nonce_field'];
 
-		// Tab nav.
+		// Tab nav. (Demo mode is an admin-only function, toggled from the admin
+		// bar — deliberately not a setup step here.)
 		$out .= '<div class="clubhouse-tabs" role="tablist">';
 		$out .= '<button type="button" class="clubhouse-tab is-active" data-tab="look" role="tab" aria-selected="true">Base Look &amp; Branding</button>';
 		$out .= '<button type="button" class="clubhouse-tab" data-tab="visibility" role="tab" aria-selected="false">Visibility</button>';
-		$out .= '<button type="button" class="clubhouse-tab" data-tab="demo" role="tab" aria-selected="false">Demo Mode</button>';
 		$out .= '</div>';
 
 		$out .= '<section class="clubhouse-panel is-active" data-panel="look" role="tabpanel">'
@@ -73,8 +73,6 @@ final class Blueworx_Clubhouse_Setup_Screen {
 			. self::branding_area( $model['branding'] ) . '</section>';
 		$out .= '<section class="clubhouse-panel" data-panel="visibility" role="tabpanel">'
 			. self::visibility_area( $model['inventory'], $model['visibility'] ) . '</section>';
-		$out .= '<section class="clubhouse-panel" data-panel="demo" role="tabpanel">'
-			. self::demo_area( (bool) ( $model['demo_active'] ?? false ) ) . '</section>';
 
 		$out .= self::save_bar( $model['progress'] );
 		$out .= '</form>';
@@ -114,7 +112,7 @@ final class Blueworx_Clubhouse_Setup_Screen {
 	 * @param array<string,array<string,string>> $look_tokens
 	 */
 	private static function look_area( array $looks, array $look_tokens ): string {
-		$out  = '<div class="clubhouse-step"><p class="clubhouse-step__k">Step 1 · Foundation</p><h2 class="clubhouse-step__h">Base Look</h2>';
+		$out  = '<div class="clubhouse-step"><p class="clubhouse-step__k">Foundation</p><h2 class="clubhouse-step__h">Base Look</h2>';
 		$out .= '<p class="clubhouse-step__lede">Pick the visual foundation for your club site. Everything else adapts to it.</p>';
 		$out .= '<div class="clubhouse-looks" role="radiogroup" aria-label="Base Look">';
 		foreach ( $looks as $look ) {
@@ -135,7 +133,7 @@ final class Blueworx_Clubhouse_Setup_Screen {
 
 	/** @param array<string,string> $b */
 	private static function branding_area( array $b ): string {
-		$out  = '<div class="clubhouse-step"><p class="clubhouse-step__k">Step 2 · Branding</p><h2 class="clubhouse-step__h">Make it yours</h2>';
+		$out  = '<div class="clubhouse-step"><p class="clubhouse-step__k">Branding</p><h2 class="clubhouse-step__h">Make it yours</h2>';
 		$out .= '<div class="clubhouse-fields">';
 		$out .= '<div class="clubhouse-field"><label class="clubhouse-label" for="clubhouse_accent">Accent colour</label>'
 			. '<div class="clubhouse-accent"><span class="clubhouse-accent__swatch" id="clubhouse-accent-swatch" style="background:' . self::esc( (string) $b['accent'] ) . '"></span>'
@@ -175,7 +173,7 @@ final class Blueworx_Clubhouse_Setup_Screen {
 	 * @param array{pages:array<string,bool>,sections:array<string,bool>} $visibility
 	 */
 	private static function visibility_area( array $inventory, array $visibility ): string {
-		$out  = '<div class="clubhouse-step"><p class="clubhouse-step__k">Step 3 · Visibility</p><h2 class="clubhouse-step__h">What visitors see</h2>';
+		$out  = '<div class="clubhouse-step"><p class="clubhouse-step__k">Visibility</p><h2 class="clubhouse-step__h">What visitors see</h2>';
 		$out .= '<p class="clubhouse-step__lede">Everything is shown by default. Switch off any page or the sections within it.</p>';
 
 		// Sub-tab nav — one per page, counts from live state.
@@ -223,15 +221,6 @@ final class Blueworx_Clubhouse_Setup_Screen {
 		return '<label class="clubhouse-toggle"><input type="checkbox" name="' . self::esc( $name ) . '" value="1"' . $checked . '>'
 			. '<span class="clubhouse-toggle__track"><span class="clubhouse-toggle__thumb"></span></span>'
 			. '<span class="clubhouse-toggle__label">' . self::esc( $label ) . '</span></label>';
-	}
-
-	private static function demo_area( bool $active ): string {
-		$out  = '<div class="clubhouse-step"><p class="clubhouse-step__k">Step 4 · Demo mode</p><h2 class="clubhouse-step__h">Preview for everyone</h2>';
-		$out .= '<p class="clubhouse-step__lede">When on, every visitor sees a floating switcher to preview the base looks, and the site renders in a demo look. Your saved look isn\'t changed — only administrators can turn this on or off.</p>';
-		$out .= '<div class="clubhouse-demo-card">'
-			. self::toggle( 'clubhouse_demo_active', 'Enable demo mode for all visitors', $active )
-			. '</div></div>';
-		return $out;
 	}
 
 	/** @param array{completed:int,total:int} $p */
