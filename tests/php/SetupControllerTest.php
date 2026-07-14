@@ -123,7 +123,7 @@ final class SetupControllerTest extends TestCase {
 		$active = array_values( array_filter( $model['looks'], static fn( $l ) => $l['active'] ) );
 		$this->assertSame( 'floodlight', $active[0]['slug'] );
 		$this->assertCount( 3, $model['looks'] );
-		$this->assertSame( 6, $model['progress']['total'] );
+		$this->assertSame( 5, $model['progress']['total'] );
 	}
 
 	public function test_capability_is_the_custom_clubhouse_cap(): void {

@@ -6,9 +6,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Computes the six setup-progress booleans for the Clubhouse Setup screen.
+ * Computes the five setup-progress booleans for the Clubhouse Setup screen,
+ * grouped by section (look, accent, club name, logo/favicon, social).
  * Pure. An item counts when its value differs from the plugin's demo default
- * (logo: any non-empty value); the accent must additionally be legible for the
+ * (logo/favicon: any non-empty value); the accent must additionally be legible for the
  * active look (look-aware: text-bearing looks need ink+deep, glow-only need deep).
  *
  * @package BlueworxLabsClubhouse
@@ -20,9 +21,10 @@ final class Blueworx_Clubhouse_Setup_Progress {
 	private const DEMO_CLUB_NAME = 'ClubHouse';
 	private const DEMO_FACEBOOK  = 'https://facebook.com/clubhouse';
 	private const DEMO_INSTAGRAM = 'https://instagram.com/clubhouse';
+	private const DEMO_LINKEDIN  = 'https://linkedin.com/company/clubhouse';
 
 	/**
-	 * @return array{items:array{look:bool,accent:bool,club_name:bool,logo:bool,facebook:bool,instagram:bool},completed:int,total:int}
+	 * @return array{items:array{look:bool,accent:bool,club_name:bool,logo_favicon:bool,social:bool},completed:int,total:int}
 	 */
 	public static function compute(
 		Blueworx_Clubhouse_Branding $branding,
@@ -31,14 +33,17 @@ final class Blueworx_Clubhouse_Setup_Progress {
 	): array {
 		$accent = $branding->get_accent();
 
+		$social = ( '' !== $branding->get_facebook_url()  && self::DEMO_FACEBOOK  !== $branding->get_facebook_url() )
+			|| ( '' !== $branding->get_instagram_url() && self::DEMO_INSTAGRAM !== $branding->get_instagram_url() )
+			|| ( '' !== $branding->get_linkedin_url()  && self::DEMO_LINKEDIN  !== $branding->get_linkedin_url() );
+
 		$items = array(
-			'look'      => $look_chosen,
-			'accent'    => self::DEMO_ACCENT !== $accent
+			'look'         => $look_chosen,
+			'accent'       => self::DEMO_ACCENT !== $accent
 				&& Blueworx_Clubhouse_Color_Engine::accent_is_legible_for( $active_look, $accent ),
-			'club_name' => '' !== $branding->get_club_name() && self::DEMO_CLUB_NAME !== $branding->get_club_name(),
-			'logo'      => '' !== $branding->get_logo(),
-			'facebook'  => '' !== $branding->get_facebook_url() && self::DEMO_FACEBOOK !== $branding->get_facebook_url(),
-			'instagram' => '' !== $branding->get_instagram_url() && self::DEMO_INSTAGRAM !== $branding->get_instagram_url(),
+			'club_name'    => '' !== $branding->get_club_name() && self::DEMO_CLUB_NAME !== $branding->get_club_name(),
+			'logo_favicon' => '' !== $branding->get_logo() || '' !== $branding->get_favicon(),
+			'social'       => $social,
 		);
 
 		return array(
