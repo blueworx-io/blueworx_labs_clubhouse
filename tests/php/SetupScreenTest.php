@@ -48,13 +48,22 @@ final class SetupScreenTest extends TestCase {
 		$this->assertStringContainsString( '2 of 6', $html );
 	}
 
-	public function test_renders_two_tabs_and_no_demo_step(): void {
+	public function test_owner_sees_two_tabs_and_no_demo(): void {
+		// Default model has can_demo unset/false — the owner view.
 		$html = Blueworx_Clubhouse_Setup_Screen::render( $this->model() );
 		$this->assertStringContainsString( 'data-tab="look"', $html );
 		$this->assertStringContainsString( 'data-tab="visibility"', $html );
-		// Demo mode is admin-only (admin bar), not a setup step.
 		$this->assertStringNotContainsString( 'data-tab="demo"', $html );
 		$this->assertStringNotContainsString( 'clubhouse_demo_active', $html );
+	}
+
+	public function test_admin_sees_the_demo_tab_and_toggle(): void {
+		$model = $this->model();
+		$model['can_demo']    = true;
+		$model['demo_active'] = true;
+		$html = Blueworx_Clubhouse_Setup_Screen::render( $model );
+		$this->assertStringContainsString( 'data-tab="demo"', $html );
+		$this->assertMatchesRegularExpression( '/name="clubhouse_demo_active"[^>]*checked/', $html );
 	}
 
 	public function test_renders_look_cards_with_active_marked_and_token_preview(): void {

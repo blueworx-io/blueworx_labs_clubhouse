@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added Favicon and LinkedIn as brand inputs. The favicon renders in the browser tab; LinkedIn joins Facebook and Instagram in the site's social block and footer.
 - Setup progress counts the main setup sections (base look, accent, club name, logo & favicon, social, visibility) — nothing is compulsory and Save is always available so you can return and finish later. Visibility counts as done once you save (keeping the defaults is a valid choice).
 - Saving now shows a confirmation notice.
-- Demo mode is an admin-only function, toggled from the admin bar — it is no longer a setup step.
+- Demo mode is an admin-only control: its tab shows only to administrators and is never counted in the setup progress.
 
 ## [0.21.0] - 2026-07-13
 

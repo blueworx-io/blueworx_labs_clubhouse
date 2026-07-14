@@ -61,11 +61,15 @@ final class Blueworx_Clubhouse_Setup_Screen {
 		$out .= '<form method="post" action="' . self::esc( (string) $model['action_url'] ) . '" class="clubhouse-form">';
 		$out .= $model['nonce_field'];
 
-		// Tab nav. (Demo mode is an admin-only function, toggled from the admin
-		// bar — deliberately not a setup step here.)
+		// Tab nav. Demo mode is an admin-only control (manage_options) — shown only
+		// to admins, and never counted in setup progress.
+		$can_demo = (bool) ( $model['can_demo'] ?? false );
 		$out .= '<div class="clubhouse-tabs" role="tablist">';
 		$out .= '<button type="button" class="clubhouse-tab is-active" data-tab="look" role="tab" aria-selected="true">Base Look &amp; Branding</button>';
 		$out .= '<button type="button" class="clubhouse-tab" data-tab="visibility" role="tab" aria-selected="false">Visibility</button>';
+		if ( $can_demo ) {
+			$out .= '<button type="button" class="clubhouse-tab" data-tab="demo" role="tab" aria-selected="false">Demo Mode</button>';
+		}
 		$out .= '</div>';
 
 		$out .= '<section class="clubhouse-panel is-active" data-panel="look" role="tabpanel">'
@@ -73,6 +77,10 @@ final class Blueworx_Clubhouse_Setup_Screen {
 			. self::branding_area( $model['branding'] ) . '</section>';
 		$out .= '<section class="clubhouse-panel" data-panel="visibility" role="tabpanel">'
 			. self::visibility_area( $model['inventory'], $model['visibility'] ) . '</section>';
+		if ( $can_demo ) {
+			$out .= '<section class="clubhouse-panel" data-panel="demo" role="tabpanel">'
+				. self::demo_area( (bool) ( $model['demo_active'] ?? false ) ) . '</section>';
+		}
 
 		$out .= self::save_bar( $model['progress'] );
 		$out .= '</form>';
@@ -221,6 +229,16 @@ final class Blueworx_Clubhouse_Setup_Screen {
 		return '<label class="clubhouse-toggle"><input type="checkbox" name="' . self::esc( $name ) . '" value="1"' . $checked . '>'
 			. '<span class="clubhouse-toggle__track"><span class="clubhouse-toggle__thumb"></span></span>'
 			. '<span class="clubhouse-toggle__label">' . self::esc( $label ) . '</span></label>';
+	}
+
+	/** Admin-only demo-mode panel. Not a setup step and not counted in progress. */
+	private static function demo_area( bool $active ): string {
+		$out  = '<div class="clubhouse-step"><p class="clubhouse-step__k">Admins only</p><h2 class="clubhouse-step__h">Demo mode</h2>';
+		$out .= '<p class="clubhouse-step__lede">When on, every visitor sees a floating switcher to preview the base looks, and the site renders in a demo look. Your saved look isn\'t changed — only administrators can turn this on or off.</p>';
+		$out .= '<div class="clubhouse-demo-card">'
+			. self::toggle( 'clubhouse_demo_active', 'Enable demo mode for all visitors', $active )
+			. '</div></div>';
+		return $out;
 	}
 
 	/** @param array{completed:int,total:int} $p */

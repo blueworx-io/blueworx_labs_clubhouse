@@ -2,13 +2,15 @@
    (var(--color-*) / var(--font-*) / var(--radius-*)); no literals, no font names. */
 
 /* Fill the WP admin content area edge-to-edge and full height; drop wp chrome
-   padding + footer on this screen only (scoped to the Setup page body class). */
-.clubhouse-wrap { margin: 0; }
+   padding + footer on this screen only (scoped to the Setup page body class).
+   The compound .wrap.clubhouse-wrap selector out-specifies WP core's .wrap margin. */
+.wrap.clubhouse-wrap { margin: 0; padding: 0; }
 body.toplevel_page_clubhouse-setup #wpcontent { padding-left: 0; }
 body.toplevel_page_clubhouse-setup #wpbody-content { padding-bottom: 0; }
 body.toplevel_page_clubhouse-setup #wpfooter { display: none; }
 
-.clubhouse-setup {
+.clubhouse-setup,
+.clubhouse-setup.clubhouse-setup--js {
 	--pad: 24px;
 	display: flex;
 	flex-direction: column;
@@ -107,6 +109,9 @@ body.toplevel_page_clubhouse-setup #wpfooter { display: none; }
 .clubhouse-toggle input:checked + .clubhouse-toggle__track .clubhouse-toggle__thumb { transform: translateX(18px); }
 .clubhouse-toggle input:focus-visible + .clubhouse-toggle__track { outline: 2px solid var(--color-accent-deep); outline-offset: 2px; }
 .clubhouse-toggle__label { font-size: 13px; color: var(--color-ink); }
+
+/* Demo card (admin-only panel) */
+.clubhouse-demo-card { border: 1px solid var(--color-line); border-radius: var(--radius-md); padding: 18px; background: var(--color-bg); }
 
 /* Full-width save-bar footer, pinned to the bottom of the container. */
 .clubhouse-bar { margin-top: auto; display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 16px var(--pad); background: var(--color-paper); border-top: 1px solid var(--color-line); }

@@ -98,13 +98,22 @@ final class SetupControllerTest extends TestCase {
 		$this->assertContains( 'admin_enqueue_scripts', $actions );
 	}
 
-	public function test_handle_save_leaves_demo_state_untouched(): void {
-		// Demo mode is an admin-only, admin-bar function — a setup save must never
-		// change it (there is no demo field on the setup screen).
+	public function test_owner_save_leaves_demo_state_untouched(): void {
+		// An owner (can_demo=false) never sees the demo field, so their save must
+		// not change demo state — even though the checkbox is absent from $post.
 		$storage = new Blueworx_Clubhouse_Fake_Storage();
 		( new Blueworx_Clubhouse_Demo_State( $storage ) )->set( true );
-		Blueworx_Clubhouse_Setup_Controller::handle_save( array(), $storage );
+		Blueworx_Clubhouse_Setup_Controller::handle_save( array(), $storage, false );
 		$this->assertTrue( ( new Blueworx_Clubhouse_Demo_State( $storage ) )->is_on() );
+	}
+
+	public function test_admin_save_sets_demo_state_from_the_checkbox(): void {
+		$storage = new Blueworx_Clubhouse_Fake_Storage();
+		Blueworx_Clubhouse_Setup_Controller::handle_save( array( 'clubhouse_demo_active' => '1' ), $storage, true );
+		$this->assertTrue( ( new Blueworx_Clubhouse_Demo_State( $storage ) )->is_on() );
+
+		Blueworx_Clubhouse_Setup_Controller::handle_save( array(), $storage, true ); // admin unchecked it
+		$this->assertFalse( ( new Blueworx_Clubhouse_Demo_State( $storage ) )->is_on() );
 	}
 
 	public function test_handle_save_returns_a_success_notice(): void {

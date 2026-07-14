@@ -28,7 +28,7 @@ final class Blueworx_Clubhouse_Setup_Controller {
 	 * @param array<string,mixed> $post
 	 * @return array<int,array{type:string,text:string}>
 	 */
-	public static function handle_save( array $post, Blueworx_Clubhouse_Storage $storage ): array {
+	public static function handle_save( array $post, Blueworx_Clubhouse_Storage $storage, bool $can_demo = false ): array {
 		$notices  = array();
 		$registry = Blueworx_Clubhouse_Frontend::registry( $storage );
 		$branding = new Blueworx_Clubhouse_Branding( $storage );
@@ -91,8 +91,11 @@ final class Blueworx_Clubhouse_Setup_Controller {
 			$notices[] = array( 'type' => 'warning', 'text' => 'Your saved accent colour is low-contrast on the selected look. Choose a new accent for best legibility.' );
 		}
 
-		// Demo mode is an admin-only function toggled from the admin bar, not a
-		// setup field — so a setup save deliberately never touches Demo_State.
+		// Demo mode is an admin-only control — only an admin's save (with the demo
+		// panel present) may change it. An owner's save never touches Demo_State.
+		if ( $can_demo ) {
+			( new Blueworx_Clubhouse_Demo_State( $storage ) )->set( isset( $post['clubhouse_demo_active'] ) );
+		}
 
 		// 6. Mark the Visibility section reviewed (saving with the defaults counts).
 		$storage->set( self::VIS_SAVED_KEY, true );
@@ -138,27 +141,28 @@ final class Blueworx_Clubhouse_Setup_Controller {
 		if ( ! current_user_can( self::CAPABILITY ) ) {
 			return;
 		}
-		$storage = new Blueworx_Clubhouse_Options_Storage();
-		$notices = array();
+		$storage  = new Blueworx_Clubhouse_Options_Storage();
+		$can_demo = current_user_can( 'manage_options' ); // demo mode is admin-only.
+		$notices  = array();
 		if ( isset( $_POST['clubhouse_setup_submit'] ) ) {
 			check_admin_referer( self::NONCE );
-			$notices = self::handle_save( wp_unslash( $_POST ), $storage );
+			$notices = self::handle_save( wp_unslash( $_POST ), $storage, $can_demo );
 		}
-		echo self::screen_html( $storage, $notices ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped within Setup_Screen.
+		echo self::screen_html( $storage, $notices, $can_demo ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped within Setup_Screen.
 	}
 
 	/** Render the Setup screen HTML for a storage + notices — shared by the page and the owner dashboard. */
-	public static function screen_html( Blueworx_Clubhouse_Storage $storage, array $notices ): string {
+	public static function screen_html( Blueworx_Clubhouse_Storage $storage, array $notices, bool $can_demo = false ): string {
 		$nonce_field = wp_nonce_field( self::NONCE, '_wpnonce', true, false );
 		$action_url  = admin_url( 'admin.php?page=' . self::PAGE_SLUG );
-		return Blueworx_Clubhouse_Setup_Screen::render( self::build_model( $storage, $notices, $nonce_field, $action_url ) );
+		return Blueworx_Clubhouse_Setup_Screen::render( self::build_model( $storage, $notices, $nonce_field, $action_url, $can_demo ) );
 	}
 
 	/**
 	 * @param array<int,array{type:string,text:string}> $notices
 	 * @return array<string,mixed>
 	 */
-	public static function build_model( Blueworx_Clubhouse_Storage $storage, array $notices, string $nonce_field, string $action_url ): array {
+	public static function build_model( Blueworx_Clubhouse_Storage $storage, array $notices, string $nonce_field, string $action_url, bool $can_demo = false ): array {
 		$registry    = Blueworx_Clubhouse_Frontend::registry( $storage );
 		$branding    = new Blueworx_Clubhouse_Branding( $storage );
 		$vis         = new Blueworx_Clubhouse_Visibility( $storage );
@@ -220,6 +224,8 @@ final class Blueworx_Clubhouse_Setup_Controller {
 			'active_slug'   => null !== $active_look ? $active_look->slug() : '',
 			'look_tokens'   => $theming['tokens'],
 			'font_face_css' => $theming['faces'],
+			'can_demo'      => $can_demo,
+			'demo_active'   => $can_demo && ( new Blueworx_Clubhouse_Demo_State( $storage ) )->is_on(),
 		);
 	}
 
