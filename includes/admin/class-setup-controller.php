@@ -141,8 +141,7 @@ final class Blueworx_Clubhouse_Setup_Controller {
 
 	/** Render the Setup screen HTML for a storage + notices — shared by the page and the owner dashboard. */
 	public static function screen_html( Blueworx_Clubhouse_Storage $storage, array $notices ): string {
-		$nonce_field = wp_nonce_field( self::NONCE, '_wpnonce', true, false )
-			. '<input type="hidden" name="clubhouse_setup_submit" value="1">';
+		$nonce_field = wp_nonce_field( self::NONCE, '_wpnonce', true, false );
 		$action_url  = admin_url( 'admin.php?page=' . self::PAGE_SLUG );
 		return Blueworx_Clubhouse_Setup_Screen::render( self::build_model( $storage, $notices, $nonce_field, $action_url ) );
 	}
