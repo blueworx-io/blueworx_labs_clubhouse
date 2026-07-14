@@ -48,4 +48,17 @@ final class Blueworx_Clubhouse_Content_Store {
 		$all[ $section ][ $field ] = $value;
 		$this->storage->set( $this->page_key( $page ), $all );
 	}
+
+	private const ITEMS_KEY = 'items';
+
+	/** @return array<int,array<string,mixed>> */
+	public function get_items( string $page, string $section ): array {
+		$val = $this->get( $page, $section, self::ITEMS_KEY, array() );
+		return is_array( $val ) ? array_values( $val ) : array();
+	}
+
+	/** @param array<int,array<string,mixed>> $items */
+	public function set_items( string $page, string $section, array $items ): void {
+		$this->set( $page, $section, self::ITEMS_KEY, array_values( $items ) );
+	}
 }
