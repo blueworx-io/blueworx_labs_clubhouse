@@ -29,6 +29,17 @@
 		} );
 	}
 
+	// The chosen swatch has to say so, not just recolour the page: the recolour is
+	// invisible to a screen reader, so without this a click gives no feedback at all.
+	function markSelected( slug ) {
+		var nodes = document.querySelectorAll( '[data-clubhouse-accent]' );
+		Array.prototype.forEach.call( nodes, function ( node ) {
+			var on = node.getAttribute( 'data-clubhouse-accent' ) === slug;
+			node.setAttribute( 'aria-pressed', on ? 'true' : 'false' );
+			node.classList.toggle( 'is-current', on );
+		} );
+	}
+
 	function applyAccent( slug ) {
 		var p = palettes()[ slug ];
 		if ( ! p ) {
@@ -55,9 +66,13 @@
 			// Live: no reload. The cookie only makes it survive navigation — the head
 			// script re-applies it on the next page, re-derived for that look.
 			applyAccent( slug );
+			markSelected( slug );
 			setCookie( ACCENT, slug );
 		}
 	} );
 
 	paintSwatches();
+	// The head script already applied the cookie'd accent before paint and published
+	// which one; the swatches only exist now, in the footer, so they are flagged here.
+	markSelected( window.clubhouseDemoAccent || null );
 }() );

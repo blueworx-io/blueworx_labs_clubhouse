@@ -70,6 +70,25 @@ final class DemoModeSwitcherTest extends TestCase {
 		$this->assertStringNotContainsString( 'style=', $html );
 	}
 
+	/**
+	 * Swatches ship unpressed and the client flags the chosen one. The server cannot
+	 * do it: the accent cookie deliberately never reaches PHP, and this markup is
+	 * shared by every viewer — baking one viewer's choice in would be wrong the
+	 * moment a page cache served it to someone else. The look controls differ because
+	 * their cookie IS read server-side (the look switch reloads).
+	 */
+	public function test_swatches_start_unpressed_for_the_client_to_flag(): void {
+		$html = Blueworx_Clubhouse_Demo_Mode::switcher_html( $this->looks(), 'court-side', null );
+		$this->assertSame( 5, preg_match_all( '/data-clubhouse-accent="[^"]*"[^>]*aria-pressed="false"/', $html ) );
+	}
+
+	public function test_head_script_publishes_the_applied_accent_slug(): void {
+		$js = Blueworx_Clubhouse_Demo_Mode::head_script(
+			Blueworx_Clubhouse_Demo_Mode::palettes( new Blueworx_Clubhouse_Court_Side() )
+		);
+		$this->assertStringContainsString( 'window.clubhouseDemoAccent', $js, 'demo.js needs the applied slug to flag the swatch without re-parsing the cookie' );
+	}
+
 	public function test_head_script_defines_the_palettes_and_reads_the_cookie(): void {
 		$js = Blueworx_Clubhouse_Demo_Mode::head_script(
 			Blueworx_Clubhouse_Demo_Mode::palettes( new Blueworx_Clubhouse_Court_Side() )
