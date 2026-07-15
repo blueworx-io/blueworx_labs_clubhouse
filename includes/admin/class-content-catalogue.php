@@ -65,6 +65,22 @@ final class Blueworx_Clubhouse_Content_Catalogue {
 	}
 
 	/**
+	 * Filtered-hero field set, used by pages whose Hero section renders via
+	 * Sections::hero_filter() (sports, teams, events, calendar) rather than the
+	 * shared hero(). hero_filter() has no CTA or image inputs, so this is a
+	 * strict subset of hero_fields() — offering CTA or image fields on those
+	 * pages would edit fields the renderer never reads.
+	 */
+	private static function hero_filter_fields(): array {
+		return array(
+			self::f_text( 'eyebrow', 'Eyebrow', 'e.g. Est. 1974 · Marlow, UK' ),
+			self::f_text( 'title_lead', 'Heading' ),
+			self::f_text( 'title_highlight', 'Highlighted phrase' ),
+			self::f_area( 'lede', 'Subheading' ),
+		);
+	}
+
+	/**
 	 * Shared "call to action" band field set — keys (heading/lede/cta_label/
 	 * cta_href) match Sections::band()'s inputs; eyebrow stays hardcoded per
 	 * the design spec's scoped field list.
@@ -120,13 +136,14 @@ final class Blueworx_Clubhouse_Content_Catalogue {
 			array( 'tab' => 'about', 'label' => 'About', 'sections' => array(
 				array( 'key' => 'hero', 'label' => 'Hero', 'type' => 'fields', 'store_page' => 'about', 'fields' => self::hero_fields() ),
 				array( 'key' => 'history', 'label' => 'History', 'type' => 'fields', 'store_page' => 'about',
-					'fields' => array( self::f_text( 'heading', 'Heading' ), self::f_area( 'body', 'Body', 4 ), self::f_image( 'image', 'Image' ) ) ),
+					'fields' => array( self::f_text( 'heading', 'Heading' ) ) ),
 				array( 'key' => 'values', 'label' => 'Values', 'type' => 'loop', 'store_page' => 'about',
 					'loop' => array( 'name' => 'Value', 'plural' => 'Values', 'fields' => array( self::f_text( 'title', 'Title' ), self::f_area( 'description', 'Description' ) ) ) ),
 				array( 'key' => 'committee', 'label' => 'Committee', 'type' => 'linkout', 'store_page' => 'about',
 					'link' => array( 'kind' => 'cpt', 'cpt' => 'clubhouse_person', 'label' => 'Manage people', 'text' => 'The committee is managed in one place — the People collection.' ) ),
-				array( 'key' => 'facilities', 'label' => 'Facilities', 'type' => 'loop', 'store_page' => 'about',
-					'loop' => array( 'name' => 'Facility', 'plural' => 'Facilities', 'fields' => array( self::f_text( 'name', 'Name' ), self::f_area( 'description', 'Description' ), self::f_image( 'image', 'Image' ) ) ) ),
+				array( 'key' => 'facilities', 'label' => 'Facilities', 'type' => 'fields', 'store_page' => 'about',
+					'note' => 'This renders as a single image band, not a list of facilities.',
+					'fields' => array( self::f_text( 'eyebrow', 'Eyebrow' ), self::f_text( 'heading', 'Heading' ), self::f_image( 'image', 'Image' ), self::f_text( 'cta_label', 'Button label' ), self::f_url( 'cta_href', 'Button link' ) ) ),
 				array( 'key' => 'cta', 'label' => 'Call to action', 'type' => 'fields', 'store_page' => 'about', 'fields' => self::cta_fields() ),
 			) ),
 			array( 'tab' => 'membership', 'label' => 'Membership', 'sections' => array(
@@ -154,7 +171,8 @@ final class Blueworx_Clubhouse_Content_Catalogue {
 			array( 'tab' => 'contact', 'label' => 'Contact', 'sections' => array(
 				array( 'key' => 'hero', 'label' => 'Hero', 'type' => 'fields', 'store_page' => 'contact', 'fields' => self::hero_fields() ),
 				array( 'key' => 'form', 'label' => 'Contact form', 'type' => 'fields', 'store_page' => 'contact',
-					'fields' => array( self::f_area( 'intro', 'Intro' ), self::f_text( 'submissions_email', 'Submissions email' ), self::f_area( 'success_message', 'Success message' ) ) ),
+					'note' => 'This is a demo form — it does not send submissions anywhere yet.',
+					'fields' => array( self::f_text( 'eyebrow', 'Eyebrow' ), self::f_text( 'heading', 'Heading' ), self::f_text( 'submit_label', 'Submit button label' ) ) ),
 				array( 'key' => 'directory', 'label' => 'Directory', 'type' => 'linkout', 'store_page' => 'contact',
 					'link' => array( 'kind' => 'cpt', 'cpt' => 'clubhouse_person', 'label' => 'Manage people', 'text' => 'The directory is managed in one place — the People collection.' ) ),
 				array( 'key' => 'social', 'label' => 'Social', 'type' => 'fields', 'store_page' => 'contact',
@@ -163,22 +181,22 @@ final class Blueworx_Clubhouse_Content_Catalogue {
 			) ),
 			array( 'tab' => 'login', 'label' => 'Log in', 'sections' => array(
 				array( 'key' => 'form', 'label' => 'Login form', 'type' => 'fields', 'store_page' => 'login',
-					'fields' => array( self::f_text( 'heading', 'Heading' ), self::f_area( 'lede', 'Helper text' ), self::f_text( 'support_email', 'Support email' ) ) ),
+					'fields' => array( self::f_text( 'heading', 'Heading' ), self::f_area( 'lede', 'Helper text' ) ) ),
 			) ),
 			array( 'tab' => 'sports', 'label' => 'Sports', 'sections' => array(
-				array( 'key' => 'hero', 'label' => 'Hero', 'type' => 'fields', 'store_page' => 'sports', 'fields' => self::hero_fields() ),
+				array( 'key' => 'hero', 'label' => 'Hero', 'type' => 'fields', 'store_page' => 'sports', 'fields' => self::hero_filter_fields() ),
 				array( 'key' => 'directory', 'label' => 'Sports directory', 'type' => 'linkout', 'store_page' => 'sports',
 					'link' => array( 'kind' => 'cpt', 'cpt' => 'clubhouse_sport', 'label' => 'Manage sports', 'text' => 'Sports are managed in one place — the Sports collection.' ) ),
 				array( 'key' => 'cta', 'label' => 'Call to action', 'type' => 'fields', 'store_page' => 'sports', 'fields' => self::cta_fields() ),
 			) ),
 			array( 'tab' => 'teams', 'label' => 'Teams', 'sections' => array(
-				array( 'key' => 'hero', 'label' => 'Hero', 'type' => 'fields', 'store_page' => 'teams', 'fields' => self::hero_fields() ),
+				array( 'key' => 'hero', 'label' => 'Hero', 'type' => 'fields', 'store_page' => 'teams', 'fields' => self::hero_filter_fields() ),
 				array( 'key' => 'directory', 'label' => 'Teams directory', 'type' => 'linkout', 'store_page' => 'teams',
 					'link' => array( 'kind' => 'cpt', 'cpt' => 'clubhouse_team', 'label' => 'Manage teams', 'text' => 'Teams are managed in one place — the Teams collection.' ) ),
 				array( 'key' => 'cta', 'label' => 'Call to action', 'type' => 'fields', 'store_page' => 'teams', 'fields' => self::cta_fields() ),
 			) ),
 			array( 'tab' => 'events', 'label' => 'Events', 'sections' => array(
-				array( 'key' => 'hero', 'label' => 'Hero', 'type' => 'fields', 'store_page' => 'events', 'fields' => self::hero_fields() ),
+				array( 'key' => 'hero', 'label' => 'Hero', 'type' => 'fields', 'store_page' => 'events', 'fields' => self::hero_filter_fields() ),
 				array( 'key' => 'upcoming', 'label' => 'Upcoming events', 'type' => 'linkout', 'store_page' => 'events',
 					'link' => array( 'kind' => 'cpt', 'cpt' => 'clubhouse_event', 'label' => 'Manage events', 'text' => 'Upcoming events are managed in one place — the Events collection.' ) ),
 				array( 'key' => 'past', 'label' => 'Past events', 'type' => 'auto', 'store_page' => 'events',
@@ -186,7 +204,7 @@ final class Blueworx_Clubhouse_Content_Catalogue {
 				array( 'key' => 'cta', 'label' => 'Call to action', 'type' => 'fields', 'store_page' => 'events', 'fields' => self::cta_fields() ),
 			) ),
 			array( 'tab' => 'calendar', 'label' => 'Calendar', 'sections' => array(
-				array( 'key' => 'hero', 'label' => 'Hero', 'type' => 'fields', 'store_page' => 'calendar', 'fields' => self::hero_fields() ),
+				array( 'key' => 'hero', 'label' => 'Hero', 'type' => 'fields', 'store_page' => 'calendar', 'fields' => self::hero_filter_fields() ),
 				array( 'key' => 'schedule', 'label' => 'Schedule', 'type' => 'fields', 'store_page' => 'calendar',
 					'fields' => array( self::f_text( 'heading', 'Heading' ), self::f_area( 'eyebrow', 'Intro' ) ),
 					'auto' => array( 'text' => 'Built from each sport’s fixtures and results.', 'cpt' => 'clubhouse_fixture' ) ),

@@ -7,7 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## 0.24.0
 
-- **Site Content editor** — a new "Site Content" screen under Clubhouse in the admin menu lets you edit the page copy that used to be hardcoded: heroes, the news ticker, stats, bands, news, info strips, FAQ, steps, tiers, values, facilities and calls-to-action. Anything you haven't edited keeps rendering exactly as it does today. Sports, teams, events, sponsors, committee and directory content still live on their own dedicated screens, which the new screen links out to. It picks up your chosen Base Look automatically, and each section's Shown/Hidden switch is the same one used on the Setup screen.
+- **Site Content editor** — a new "Site Content" screen under Clubhouse in the admin menu lets you edit the page copy that used to be hardcoded: heroes, the news ticker, stats, bands, news, info strips, FAQ, steps, tiers, values, the facilities image band and the call-to-action bands. Anything you haven't edited keeps rendering exactly as it does today. Sports, teams, events, sponsors, committee and directory content still live on their own dedicated screens, which the new screen links out to. It picks up your chosen Base Look automatically, and each section's Shown/Hidden switch is the same one used on the Setup screen.
+- **Fix:** every field in the Site Content catalogue now genuinely changes the rendered site. Previously ~26 fields across About (history body/image, the Facilities loop), Contact (form intro/submissions email/success message), Log in (support email) and the Sports/Teams/Events/Calendar hero (CTAs, image) were editable but silently ignored by the renderer. Those sections have been reshaped to match what actually renders, or wired up where the renderer already supported the field — an owner's edit now always shows up on the site.
 
 ## 0.23.0
 

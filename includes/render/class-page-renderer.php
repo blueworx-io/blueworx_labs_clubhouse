@@ -443,10 +443,10 @@ final class Blueworx_Clubhouse_Page_Renderer {
 		}
 		if ( $visibility->is_section_visible( 'about', 'facilities' ) ) {
 			$out .= Blueworx_Clubhouse_Sections::image_band( array(
-				'eyebrow'   => 'The facilities',
-				'heading'   => 'Five pitches, four courts, one clubhouse',
-				'image'     => '', 'image_alt' => 'ClubHouse grounds from the air',
-				'cta_label' => 'Book a visit', 'cta_href' => Blueworx_Clubhouse_Links::url( 'contact' ),
+				'eyebrow'   => self::cget( $content, 'about', 'facilities', 'eyebrow', 'The facilities' ),
+				'heading'   => self::cget( $content, 'about', 'facilities', 'heading', 'Five pitches, four courts, one clubhouse' ),
+				'image'     => self::media_src( (string) self::cget( $content, 'about', 'facilities', 'image', '' ) ), 'image_alt' => 'ClubHouse grounds from the air',
+				'cta_label' => self::cget( $content, 'about', 'facilities', 'cta_label', 'Book a visit' ), 'cta_href' => self::cget( $content, 'about', 'facilities', 'cta_href', Blueworx_Clubhouse_Links::url( 'contact' ) ),
 			) );
 		}
 		if ( $visibility->is_section_visible( 'about', 'cta' ) ) {
@@ -652,14 +652,14 @@ final class Blueworx_Clubhouse_Page_Renderer {
 		}
 		if ( $visibility->is_section_visible( 'contact', 'form' ) ) {
 			$out .= Blueworx_Clubhouse_Sections::contact_form( array(
-				'eyebrow'         => 'Get in touch',
-				'heading'         => 'Send us a message',
+				'eyebrow'         => self::cget( $content, 'contact', 'form', 'eyebrow', 'Get in touch' ),
+				'heading'         => self::cget( $content, 'contact', 'form', 'heading', 'Send us a message' ),
 				'name_label'      => 'Full name',
 				'email_label'     => 'Email',
 				'enquiry_label'   => 'Enquiry type',
 				'enquiry_options' => array( 'General enquiry', 'Membership', 'Coaching', 'Venue hire', 'Volunteering', 'Something else' ),
 				'message_label'   => 'Message',
-				'submit_label'    => 'Send message',
+				'submit_label'    => self::cget( $content, 'contact', 'form', 'submit_label', 'Send message' ),
 				'info'            => array(
 					'heading' => 'Find us',
 					'address' => array( '12 Riverside Lane', 'Marlow, SL7 1AA' ),

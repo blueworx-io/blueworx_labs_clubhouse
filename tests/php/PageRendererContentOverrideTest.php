@@ -109,4 +109,38 @@ final class PageRendererContentOverrideTest extends TestCase {
 		$html = Blueworx_Clubhouse_Page_Renderer::home( $b, $v, $c, '', $content );
 		$this->assertStringContainsString( 'Custom tile', $html );
 	}
+
+	/**
+	 * Regression for the "dead field" defect: about.facilities was declared as a
+	 * loop but Sections::image_band() renders a single band — Page_Renderer now
+	 * wires each of the band's fields (mirroring home's clubhouse band).
+	 */
+	public function test_about_facilities_band_overrides_reach_output(): void {
+		[ $b, $v, $c, $content ] = $this->ctx();
+		$content->set( 'about', 'facilities', 'eyebrow', 'Custom facilities eyebrow' );
+		$content->set( 'about', 'facilities', 'heading', 'Custom facilities heading' );
+		$content->set( 'about', 'facilities', 'cta_label', 'Custom facilities CTA' );
+		$content->set( 'about', 'facilities', 'cta_href', '/custom-facilities' );
+		$html = Blueworx_Clubhouse_Page_Renderer::about( $b, $v, $c, '', $content );
+		$this->assertStringContainsString( 'Custom facilities eyebrow', $html );
+		$this->assertStringContainsString( 'Custom facilities heading', $html );
+		$this->assertStringContainsString( 'Custom facilities CTA', $html );
+		$this->assertStringContainsString( '/custom-facilities', $html );
+	}
+
+	/**
+	 * Regression: contact.form used to declare intro/submissions_email/success_message,
+	 * none of which Sections::contact_form() accepts. It now offers eyebrow/heading/
+	 * submit_label, which Page_Renderer threads through.
+	 */
+	public function test_contact_form_overrides_reach_output(): void {
+		[ $b, $v, $c, $content ] = $this->ctx();
+		$content->set( 'contact', 'form', 'eyebrow', 'Custom form eyebrow' );
+		$content->set( 'contact', 'form', 'heading', 'Custom form heading' );
+		$content->set( 'contact', 'form', 'submit_label', 'Custom submit label' );
+		$html = Blueworx_Clubhouse_Page_Renderer::contact( $b, $v, $c, '', $content );
+		$this->assertStringContainsString( 'Custom form eyebrow', $html );
+		$this->assertStringContainsString( 'Custom form heading', $html );
+		$this->assertStringContainsString( 'Custom submit label', $html );
+	}
 }
