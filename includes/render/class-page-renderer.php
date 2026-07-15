@@ -69,7 +69,25 @@ final class Blueworx_Clubhouse_Page_Renderer {
 		return '<script>' . $js . '</script>';
 	}
 
-	private static function shell_header( string $club, string $active, Blueworx_Clubhouse_Visibility $visibility, string $logo_url = '' ): string {
+	/** Read a single content field, falling back to the hardcoded default when unset or no store. */
+	private static function cget( ?Blueworx_Clubhouse_Content_Store $c, string $page, string $sec, string $field, mixed $default ): mixed {
+		if ( null === $c ) {
+			return $default;
+		}
+		$v = $c->get( $page, $sec, $field, null );
+		return ( null === $v || '' === $v ) ? $default : $v;
+	}
+
+	/** Read a loop's stored items, falling back to the hardcoded default array when none saved. */
+	private static function citems( ?Blueworx_Clubhouse_Content_Store $c, string $page, string $sec, array $default ): array {
+		if ( null === $c ) {
+			return $default;
+		}
+		$items = $c->get_items( $page, $sec );
+		return array() === $items ? $default : $items;
+	}
+
+	private static function shell_header( string $club, string $active, Blueworx_Clubhouse_Visibility $visibility, string $logo_url = '', ?Blueworx_Clubhouse_Content_Store $content = null ): string {
 		return Blueworx_Clubhouse_Sections::header( array(
 			'club_name'   => $club,
 			'banner'      => 'Summer sign-ups are open — register your interest for 2026/27 →',
@@ -93,7 +111,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 		) );
 	}
 
-	private static function shell_footer( string $club, Blueworx_Clubhouse_Visibility $visibility ): string {
+	private static function shell_footer( string $club, Blueworx_Clubhouse_Visibility $visibility, ?Blueworx_Clubhouse_Content_Store $content = null ): string {
 		return Blueworx_Clubhouse_Sections::footer( array(
 			'club_name'  => $club,
 			'tagline'    => 'Nine sports, one club. A home ground for every team, and everyone who follows them.',
@@ -151,20 +169,21 @@ final class Blueworx_Clubhouse_Page_Renderer {
 		Blueworx_Clubhouse_Branding $branding,
 		Blueworx_Clubhouse_Visibility $visibility,
 		Blueworx_Clubhouse_Collections $collections,
-		string $logo_url = ''
+		string $logo_url = '',
+		?Blueworx_Clubhouse_Content_Store $content = null
 	): string {
 		$club = $branding->get_club_name();
 		$out  = '';
 
 		if ( $visibility->is_section_visible( 'home', 'header' ) ) {
-			$out .= self::shell_header( $club, Blueworx_Clubhouse_Links::url( 'home' ), $visibility, $logo_url );
+			$out .= self::shell_header( $club, Blueworx_Clubhouse_Links::url( 'home' ), $visibility, $logo_url, $content );
 		}
 		$out .= '<main class="ch-main" id="ch-main" tabindex="-1">';
 		if ( $visibility->is_section_visible( 'home', 'hero' ) ) {
 			$out .= Blueworx_Clubhouse_Sections::hero( array(
 				'eyebrow'            => 'Est. 1974 · Marlow, UK',
 				'title_lead'         => 'Every sport. Every age. ',
-				'title_highlight'    => 'One community.',
+				'title_highlight'    => self::cget( $content, 'home', 'hero', 'title_highlight', 'One community.' ),
 				'lede'               => "Nine sports, twenty-four teams, and a clubhouse that's always open. Come for the game — stay for the people.",
 				'cta_primary'        => 'Explore membership',
 				'cta_primary_href'   => Blueworx_Clubhouse_Links::url( 'membership' ),
@@ -300,7 +319,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 		}
 		$out .= '</main>';
 		if ( $visibility->is_section_visible( 'home', 'footer' ) ) {
-			$out .= self::shell_footer( $club, $visibility );
+			$out .= self::shell_footer( $club, $visibility, $content );
 		}
 		return $out;
 	}
@@ -309,10 +328,11 @@ final class Blueworx_Clubhouse_Page_Renderer {
 		Blueworx_Clubhouse_Branding $branding,
 		Blueworx_Clubhouse_Visibility $visibility,
 		Blueworx_Clubhouse_Collections $collections,
-		string $logo_url = ''
+		string $logo_url = '',
+		?Blueworx_Clubhouse_Content_Store $content = null
 	): string {
 		$club = $branding->get_club_name();
-		$out  = self::shell_header( $club, Blueworx_Clubhouse_Links::url( 'about' ), $visibility, $logo_url ) . '<main class="ch-main" id="ch-main" tabindex="-1">';
+		$out  = self::shell_header( $club, Blueworx_Clubhouse_Links::url( 'about' ), $visibility, $logo_url, $content ) . '<main class="ch-main" id="ch-main" tabindex="-1">';
 
 		if ( $visibility->is_section_visible( 'about', 'hero' ) ) {
 			$out .= Blueworx_Clubhouse_Sections::hero( array(
@@ -385,7 +405,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'cta_href'  => Blueworx_Clubhouse_Links::url( 'membership' ),
 			) );
 		}
-		$out .= '</main>' . self::shell_footer( $club, $visibility );
+		$out .= '</main>' . self::shell_footer( $club, $visibility, $content );
 		return $out;
 	}
 
@@ -393,10 +413,11 @@ final class Blueworx_Clubhouse_Page_Renderer {
 		Blueworx_Clubhouse_Branding $branding,
 		Blueworx_Clubhouse_Visibility $visibility,
 		Blueworx_Clubhouse_Collections $collections,
-		string $logo_url = ''
+		string $logo_url = '',
+		?Blueworx_Clubhouse_Content_Store $content = null
 	): string {
 		$club = $branding->get_club_name();
-		$out  = self::shell_header( $club, Blueworx_Clubhouse_Links::url( 'membership' ), $visibility, $logo_url ) . '<main class="ch-main" id="ch-main" tabindex="-1">';
+		$out  = self::shell_header( $club, Blueworx_Clubhouse_Links::url( 'membership' ), $visibility, $logo_url, $content ) . '<main class="ch-main" id="ch-main" tabindex="-1">';
 
 		if ( $visibility->is_section_visible( 'membership', 'hero' ) ) {
 			$out .= Blueworx_Clubhouse_Sections::hero( array(
@@ -492,7 +513,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'cta_href'  => Blueworx_Clubhouse_Links::url( 'contact' ),
 			) );
 		}
-		$out .= '</main>' . self::shell_footer( $club, $visibility );
+		$out .= '</main>' . self::shell_footer( $club, $visibility, $content );
 		return $out;
 	}
 
@@ -500,10 +521,11 @@ final class Blueworx_Clubhouse_Page_Renderer {
 		Blueworx_Clubhouse_Branding $branding,
 		Blueworx_Clubhouse_Visibility $visibility,
 		Blueworx_Clubhouse_Collections $collections,
-		string $logo_url = ''
+		string $logo_url = '',
+		?Blueworx_Clubhouse_Content_Store $content = null
 	): string {
 		$club = $branding->get_club_name();
-		$out  = self::shell_header( $club, Blueworx_Clubhouse_Links::url( 'contact' ), $visibility, $logo_url ) . '<main class="ch-main" id="ch-main" tabindex="-1">';
+		$out  = self::shell_header( $club, Blueworx_Clubhouse_Links::url( 'contact' ), $visibility, $logo_url, $content ) . '<main class="ch-main" id="ch-main" tabindex="-1">';
 
 		if ( $visibility->is_section_visible( 'contact', 'hero' ) ) {
 			$out .= Blueworx_Clubhouse_Sections::hero( array(
@@ -558,7 +580,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'linkedin_url'  => $branding->get_linkedin_url(),
 			) );
 		}
-		$out .= '</main>' . self::shell_footer( $club, $visibility );
+		$out .= '</main>' . self::shell_footer( $club, $visibility, $content );
 		return $out;
 	}
 
@@ -566,10 +588,11 @@ final class Blueworx_Clubhouse_Page_Renderer {
 		Blueworx_Clubhouse_Branding $branding,
 		Blueworx_Clubhouse_Visibility $visibility,
 		Blueworx_Clubhouse_Collections $collections,
-		string $logo_url = ''
+		string $logo_url = '',
+		?Blueworx_Clubhouse_Content_Store $content = null
 	): string {
 		$club = $branding->get_club_name();
-		$out  = self::shell_header( $club, Blueworx_Clubhouse_Links::url( 'login' ), $visibility, $logo_url ) . '<main class="ch-main" id="ch-main" tabindex="-1">';
+		$out  = self::shell_header( $club, Blueworx_Clubhouse_Links::url( 'login' ), $visibility, $logo_url, $content ) . '<main class="ch-main" id="ch-main" tabindex="-1">';
 
 		if ( $visibility->is_section_visible( 'login', 'form' ) ) {
 			$out .= Blueworx_Clubhouse_Sections::auth( array(
@@ -587,7 +610,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'join_href'      => Blueworx_Clubhouse_Links::url( 'membership' ),
 			) );
 		}
-		$out .= '</main>' . self::shell_footer( $club, $visibility );
+		$out .= '</main>' . self::shell_footer( $club, $visibility, $content );
 		return $out;
 	}
 
@@ -595,10 +618,11 @@ final class Blueworx_Clubhouse_Page_Renderer {
 		Blueworx_Clubhouse_Branding $branding,
 		Blueworx_Clubhouse_Visibility $visibility,
 		Blueworx_Clubhouse_Collections $collections,
-		string $logo_url = ''
+		string $logo_url = '',
+		?Blueworx_Clubhouse_Content_Store $content = null
 	): string {
 		$club = $branding->get_club_name();
-		$out  = self::shell_header( $club, Blueworx_Clubhouse_Links::url( 'sports' ), $visibility, $logo_url ) . '<main class="ch-main" id="ch-main" tabindex="-1">';
+		$out  = self::shell_header( $club, Blueworx_Clubhouse_Links::url( 'sports' ), $visibility, $logo_url, $content ) . '<main class="ch-main" id="ch-main" tabindex="-1">';
 
 		if ( $visibility->is_section_visible( 'sports', 'hero' ) ) {
 			$out .= Blueworx_Clubhouse_Sections::hero_filter( array(
@@ -652,7 +676,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'cta_href'  => Blueworx_Clubhouse_Links::url( 'contact' ),
 			) );
 		}
-		$out .= '</main>' . self::shell_footer( $club, $visibility );
+		$out .= '</main>' . self::shell_footer( $club, $visibility, $content );
 		return $out;
 	}
 
@@ -660,10 +684,11 @@ final class Blueworx_Clubhouse_Page_Renderer {
 		Blueworx_Clubhouse_Branding $branding,
 		Blueworx_Clubhouse_Visibility $visibility,
 		Blueworx_Clubhouse_Collections $collections,
-		string $logo_url = ''
+		string $logo_url = '',
+		?Blueworx_Clubhouse_Content_Store $content = null
 	): string {
 		$club = $branding->get_club_name();
-		$out  = self::shell_header( $club, Blueworx_Clubhouse_Links::url( 'teams' ), $visibility, $logo_url ) . '<main class="ch-main" id="ch-main" tabindex="-1">';
+		$out  = self::shell_header( $club, Blueworx_Clubhouse_Links::url( 'teams' ), $visibility, $logo_url, $content ) . '<main class="ch-main" id="ch-main" tabindex="-1">';
 
 		if ( $visibility->is_section_visible( 'teams', 'hero' ) ) {
 			$out .= Blueworx_Clubhouse_Sections::hero_filter( array(
@@ -715,7 +740,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'cta_href'  => Blueworx_Clubhouse_Links::url( 'contact' ),
 			) );
 		}
-		$out .= '</main>' . self::shell_footer( $club, $visibility );
+		$out .= '</main>' . self::shell_footer( $club, $visibility, $content );
 		return $out;
 	}
 
@@ -723,10 +748,11 @@ final class Blueworx_Clubhouse_Page_Renderer {
 		Blueworx_Clubhouse_Branding $branding,
 		Blueworx_Clubhouse_Visibility $visibility,
 		Blueworx_Clubhouse_Collections $collections,
-		string $logo_url = ''
+		string $logo_url = '',
+		?Blueworx_Clubhouse_Content_Store $content = null
 	): string {
 		$club = $branding->get_club_name();
-		$out  = self::shell_header( $club, Blueworx_Clubhouse_Links::url( 'events' ), $visibility, $logo_url ) . '<main class="ch-main" id="ch-main" tabindex="-1">';
+		$out  = self::shell_header( $club, Blueworx_Clubhouse_Links::url( 'events' ), $visibility, $logo_url, $content ) . '<main class="ch-main" id="ch-main" tabindex="-1">';
 
 		if ( $visibility->is_section_visible( 'events', 'hero' ) ) {
 			$out .= Blueworx_Clubhouse_Sections::hero_filter( array(
@@ -785,7 +811,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'cta_href'  => Blueworx_Clubhouse_Links::url( 'contact' ),
 			) );
 		}
-		$out .= '</main>' . self::shell_footer( $club, $visibility );
+		$out .= '</main>' . self::shell_footer( $club, $visibility, $content );
 		return $out;
 	}
 
@@ -793,10 +819,11 @@ final class Blueworx_Clubhouse_Page_Renderer {
 		Blueworx_Clubhouse_Branding $branding,
 		Blueworx_Clubhouse_Visibility $visibility,
 		Blueworx_Clubhouse_Collections $collections,
-		string $logo_url = ''
+		string $logo_url = '',
+		?Blueworx_Clubhouse_Content_Store $content = null
 	): string {
 		$club = $branding->get_club_name();
-		$out  = self::shell_header( $club, Blueworx_Clubhouse_Links::url( 'calendar' ), $visibility, $logo_url ) . '<main class="ch-main" id="ch-main" tabindex="-1">';
+		$out  = self::shell_header( $club, Blueworx_Clubhouse_Links::url( 'calendar' ), $visibility, $logo_url, $content ) . '<main class="ch-main" id="ch-main" tabindex="-1">';
 
 		if ( $visibility->is_section_visible( 'calendar', 'hero' ) ) {
 			$out .= Blueworx_Clubhouse_Sections::hero_filter( array(
@@ -830,7 +857,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'cta_href'  => Blueworx_Clubhouse_Links::url( 'contact' ),
 			) );
 		}
-		$out .= '</main>' . self::shell_footer( $club, $visibility );
+		$out .= '</main>' . self::shell_footer( $club, $visibility, $content );
 		return $out;
 	}
 }
