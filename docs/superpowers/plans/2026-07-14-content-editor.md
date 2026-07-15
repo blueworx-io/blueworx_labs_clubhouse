@@ -10,7 +10,7 @@
 
 ## Global Constraints
 
-- **Version floor:** plugin currently 0.22.1. This is a feature → **minor bump to 0.23.0** in `blueworx-labs-clubhouse.php` (header comment + `BLUEWORX_LABS_CLUBHOUSE_VERSION`) and `package.json`; add a matching `CHANGELOG.md` entry. (House rule: bump alongside the change.)
+- **Version floor:** plugin currently 0.23.0. This is a feature → **minor bump to 0.24.0** in `blueworx-labs-clubhouse.php` (header comment + `BLUEWORX_LABS_CLUBHOUSE_VERSION`) and `package.json`; add a matching `CHANGELOG.md` entry. (House rule: bump alongside the change.)
 - **No new dependency** without approval — none are added here.
 - **Every new class file** starts with `<?php declare(strict_types=1);` then `if ( ! defined( 'ABSPATH' ) ) { exit; }` and `@package BlueworxLabsClubhouse`.
 - **All output escaped.** Pure render classes escape at emit (`htmlspecialchars` via the class's `esc()` helper, or `esc_html`/`esc_attr`/`esc_url` in WP-glue). Storage holds sanitised-but-raw text; escaping is a render concern.
@@ -20,6 +20,16 @@
 - **Menu slug `clubhouse-site-content`** (the slug `clubhouse-content` is already taken by the CPT collections group).
 - **Byte-identical guarantee:** with `$content === null` or an empty store, every `Page_Renderer` method must emit output identical to before this plan. The DB-free preview passes no content store, so preview + all existing render/preview tests stay green unchanged.
 - **Lockstep:** `Content_Catalogue` page slugs + section keys must equal `Setup_Sections::inventory()` page/section keys exactly (enforced by a test).
+
+### Reconciliation with v0.23.0 (full-bleed Home hero) — read before Task 4
+
+`main` shipped the full-bleed Home hero after this plan was written. Three consequences bind the remaining tasks:
+
+- **Home's hero renders via `Sections::home_hero()`, not `hero()`.** Its data contract dropped `image_caption` and gained `tiles`. The catalogue's shared `hero_fields()` (eyebrow, title_lead, title_highlight, lede, cta_primary(+href), cta_secondary(+href), image) maps onto it unchanged — no catalogue change needed for `home.hero`.
+- **Home no longer renders a separate `quick_tiles` section** — those four links are now the icon cards in the hero's foot. So `home.quick_tiles` stored items must be threaded into `home_hero()`'s `tiles` argument (via `citems()`), **not** a `quick_tiles()` call. The catalogue keeps the `quick_tiles` section key (the lockstep test requires it, and `Setup_Sections` still lists it) and its loop now carries an `icon` **select** (`Content_Catalogue::TILE_ICON_OPTIONS`, whose values are the keys of `Sections::TILE_ICONS`) so an owner-edited tile keeps its glyph.
+- **New field type `select`** (`f_select`) exists in the catalogue — **Task 7's screen must render it** (a `<select>` with the field's `options` map, current value selected) and **Task 6's save must sanitise it** (accept only keys present in `options`, else `''`).
+
+`Sections::home_hero()` already tolerates a stored tile with a missing/unknown `icon` (degrades to no glyph) — covered by `SectionsTest::test_home_hero_tiles_tolerate_missing_icon_key`. Keep that guarantee.
 
 ## Reference artifact
 
@@ -46,7 +56,7 @@ Design spec: `docs/superpowers/specs/2026-07-14-content-editor-design.md`.
 - `includes/frontend/class-frontend.php` — build `Content_Store` in `context()`; pass `$ctx->content` in `render_body()`.
 - `includes/content/class-content-store.php` — add `get_items()`/`set_items()` loop helpers.
 - `includes/admin/class-owner-capabilities.php` — add `clubhouse-site-content` to `menu_allowlist()`.
-- `blueworx-labs-clubhouse.php` — `require_once` the three new admin classes; `Content_Controller::register()` in init; version → 0.23.0.
+- `blueworx-labs-clubhouse.php` — `require_once` the three new admin classes; `Content_Controller::register()` in init; version → 0.24.0.
 - `tests/php/bootstrap.php` — `require_once` the three new admin classes (+ `Content_Store` if not already loaded).
 - `package.json`, `CHANGELOG.md` — version + changelog.
 
@@ -848,10 +858,10 @@ Blueworx_Clubhouse_Content_Controller::register();
 
 - [ ] **Step 2:** Ensure `tests/php/bootstrap.php` requires all three new admin classes + `Content_Store` (some added in earlier tasks — consolidate).
 
-- [ ] **Step 3:** Bump version to **0.23.0** in `blueworx-labs-clubhouse.php` (header `Version:` + `BLUEWORX_LABS_CLUBHOUSE_VERSION`) and `package.json`. Prepend a `CHANGELOG.md` entry:
+- [ ] **Step 3:** Bump version to **0.24.0** in `blueworx-labs-clubhouse.php` (header `Version:` + `BLUEWORX_LABS_CLUBHOUSE_VERSION`) and `package.json`. Prepend a `CHANGELOG.md` entry:
 
 ```markdown
-## 0.23.0 — 2026-07-14
+## 0.24.0 — 2026-07-15
 ### Added
 - **Site Content editor** — a bespoke, full-bleed tabbed admin screen (Clubhouse → Site Content) letting owners edit the singular page copy previously hardcoded (heroes, ticker, stats, bands, news, info strips, FAQ, steps, tiers, values, facilities, CTAs). Backed by the Content_Store as an override layer over the built-in defaults; unedited sites render identically. CPT-backed sections (sports/teams/events/sponsors/committee/directory) link out to their native screens. Inherits the active Base Look; per-section Shown/Hidden shares the visibility store with Setup.
 ```
@@ -861,7 +871,7 @@ Blueworx_Clubhouse_Content_Controller::register();
 Run: `composer test && composer lint`
 Expected: OK (all tests), lint clean (fix only obvious new-file issues; per house rule, present other lint findings to the user, don't loop).
 
-- [ ] **Step 5: Commit** — `git add -A && git commit -m "chore: wire Content editor + bump to 0.23.0"`
+- [ ] **Step 5: Commit** — `git add -A && git commit -m "chore: wire Content editor + bump to 0.24.0"`
 
 ---
 
@@ -870,7 +880,7 @@ Expected: OK (all tests), lint clean (fix only obvious new-file issues; per hous
 **Files:**
 - Modify: `docs/manual-smoke-test.md` (append the Content-editor smoke items from the spec)
 
-- [ ] **Step 1:** Append the spec's 9 "Manual WP smoke owed" items to `docs/manual-smoke-test.md` under a "Content editor (v0.23.0)" heading.
+- [ ] **Step 1:** Append the spec's 9 "Manual WP smoke owed" items to `docs/manual-smoke-test.md` under a "Content editor (v0.24.0)" heading.
 - [ ] **Step 2:** Run `composer test` (all green) and `composer lint`; capture counts.
 - [ ] **Step 3:** Spot-check the DB-free preview is unchanged: `php -S localhost:8124` → open `preview/` → Home/About/Membership render with demo copy (proves the null-store path). (Optional, runtime.)
 - [ ] **Step 4: Commit** — `git add docs/manual-smoke-test.md && git commit -m "docs: Content editor manual smoke checklist"`

@@ -29,6 +29,22 @@ final class Blueworx_Clubhouse_Content_Catalogue {
 	private static function f_toggle( string $key, string $label ): array {
 		return array( 'key' => $key, 'label' => $label, 'type' => 'toggle' );
 	}
+	/** @param array<string,string> $options value => label */
+	private static function f_select( string $key, string $label, array $options ): array {
+		return array( 'key' => $key, 'label' => $label, 'type' => 'select', 'options' => $options );
+	}
+
+	/**
+	 * Icon choices for the Home hero's tiles — these values are the keys of
+	 * Sections::TILE_ICONS. Any other value (or none) renders no glyph.
+	 */
+	private const TILE_ICON_OPTIONS = array(
+		''         => 'No icon',
+		'join'     => 'Join / membership',
+		'tour'     => 'Tour / explore',
+		'fixtures' => 'Fixtures / calendar',
+		'contact'  => 'Contact / email',
+	);
 
 	/**
 	 * Shared hero field set, used by every page's Hero section — keys map to
@@ -71,7 +87,8 @@ final class Blueworx_Clubhouse_Content_Catalogue {
 					'fields' => array( self::f_text( 'join', 'Menu CTA label', 'e.g. Join the Club' ), self::f_url( 'join_href', 'Menu CTA link' ) ) ),
 				array( 'key' => 'hero', 'label' => 'Hero', 'type' => 'fields', 'store_page' => 'home', 'fields' => self::hero_fields() ),
 				array( 'key' => 'quick_tiles', 'label' => 'Quick tiles', 'type' => 'loop', 'store_page' => 'home',
-					'loop' => array( 'name' => 'Tile', 'plural' => 'Tiles', 'fields' => array( self::f_text( 'label', 'Label' ), self::f_url( 'href', 'Link' ) ) ) ),
+					'note' => 'These render as the icon cards at the foot of the Home hero.',
+					'loop' => array( 'name' => 'Tile', 'plural' => 'Tiles', 'fields' => array( self::f_text( 'label', 'Label' ), self::f_url( 'href', 'Link' ), self::f_select( 'icon', 'Icon', self::TILE_ICON_OPTIONS ) ) ) ),
 				array( 'key' => 'ticker', 'label' => 'Ticker', 'type' => 'loop', 'store_page' => 'home',
 					'loop' => array( 'name' => 'Message', 'plural' => 'Messages', 'fields' => array( self::f_text( 'text', 'Message' ) ) ) ),
 				array( 'key' => 'stats', 'label' => 'Stats', 'type' => 'loop', 'store_page' => 'home',

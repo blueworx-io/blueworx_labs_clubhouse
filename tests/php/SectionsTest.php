@@ -148,6 +148,36 @@ final class SectionsTest extends TestCase {
 		$this->assertStringNotContainsString( 'style=', $html );
 	}
 
+	/**
+	 * The Home hero's tiles are owner-editable content, so a stored tile may carry
+	 * only label + href. A missing/unknown icon must degrade to no glyph — never a
+	 * PHP warning — and the tile must still render its label and link.
+	 */
+	public function test_home_hero_tiles_tolerate_missing_icon_key(): void {
+		$html = Blueworx_Clubhouse_Sections::home_hero( array(
+			'eyebrow'            => 'Est. 1974',
+			'title_lead'         => 'Every sport. ',
+			'title_highlight'    => 'One community.',
+			'lede'               => 'Lede.',
+			'cta_primary'        => 'Join',
+			'cta_primary_href'   => '?page=membership',
+			'cta_secondary'      => 'Tour',
+			'cta_secondary_href' => '?page=about',
+			'image'              => '',
+			'image_alt'          => '',
+			'tiles'              => array(
+				array( 'label' => 'Stored tile', 'href' => '?page=contact' ), // no 'icon' key at all
+				array( 'label' => 'Unknown icon', 'href' => '?page=about', 'icon' => 'nope' ),
+				array( 'label' => 'Known icon', 'href' => '?page=membership', 'icon' => 'join' ),
+			),
+		) );
+		$this->assertSame( 3, substr_count( $html, 'ch-home-hero__tile"' ) );
+		$this->assertStringContainsString( 'Stored tile', $html );
+		$this->assertStringContainsString( '?page=contact', $html );
+		// Only the one known icon key emits a glyph.
+		$this->assertSame( 1, substr_count( $html, 'ch-home-hero__tile-ico' ) );
+	}
+
 	public function test_quick_tiles_render_each_link(): void {
 		$html = Blueworx_Clubhouse_Sections::quick_tiles( array(
 			array( 'label' => 'Membership', 'href' => '?page=membership' ),
