@@ -68,6 +68,7 @@ final class DemoControllerTest extends TestCase {
 	}
 
 	public function test_enqueue_serves_assets_when_on_regardless_of_cap(): void {
+		wp_stub_on_clubhouse_page();
 		( new Blueworx_Clubhouse_Demo_State( new Blueworx_Clubhouse_Options_Storage() ) )->set( true );
 		Blueworx_Clubhouse_Demo_Controller::enqueue();
 		$styles = array_map( static fn( $c ) => $c['args'][0], wp_stub_calls( 'wp_enqueue_style' ) );
@@ -75,8 +76,68 @@ final class DemoControllerTest extends TestCase {
 	}
 
 	public function test_enqueue_serves_nothing_when_off(): void {
+		wp_stub_on_clubhouse_page();
 		Blueworx_Clubhouse_Demo_Controller::enqueue();
 		$this->assertSame( array(), wp_stub_calls( 'wp_enqueue_style' ) );
+	}
+
+	/**
+	 * Demo mode's three front-end entry points follow the same rule as the look
+	 * stylesheet (Frontend::enqueue_assets guards on current_slug()): they render
+	 * only where the clubhouse CSS loads. --color-accent* on a blog post is inert
+	 * at best — there is no clubhouse stylesheet there to consume it — and collides
+	 * with a host theme using the same generic token names at worst.
+	 */
+	public function test_enqueue_serves_nothing_off_a_clubhouse_page(): void {
+		wp_stub_off_clubhouse_page();
+		( new Blueworx_Clubhouse_Demo_State( new Blueworx_Clubhouse_Options_Storage() ) )->set( true );
+		Blueworx_Clubhouse_Demo_Controller::enqueue();
+		$this->assertSame( array(), wp_stub_calls( 'wp_enqueue_style' ), 'no demo.css on a non-clubhouse page' );
+		$this->assertSame( array(), wp_stub_calls( 'wp_enqueue_script' ), 'no demo.js on a non-clubhouse page' );
+	}
+
+	public function test_head_script_emits_nothing_off_a_clubhouse_page(): void {
+		wp_stub_off_clubhouse_page();
+		( new Blueworx_Clubhouse_Demo_State( new Blueworx_Clubhouse_Options_Storage() ) )->set( true );
+		ob_start();
+		Blueworx_Clubhouse_Demo_Controller::render_head_script();
+		$this->assertSame( '', (string) ob_get_clean(), 'no accent tokens on a non-clubhouse page' );
+	}
+
+	public function test_switcher_emits_nothing_off_a_clubhouse_page(): void {
+		wp_stub_off_clubhouse_page();
+		( new Blueworx_Clubhouse_Demo_State( new Blueworx_Clubhouse_Options_Storage() ) )->set( true );
+		ob_start();
+		Blueworx_Clubhouse_Demo_Controller::render_switcher();
+		$this->assertSame( '', (string) ob_get_clean(), 'no demo bar on a non-clubhouse page' );
+	}
+
+	public function test_switcher_renders_on_a_clubhouse_page_when_on(): void {
+		wp_stub_on_clubhouse_page();
+		( new Blueworx_Clubhouse_Demo_State( new Blueworx_Clubhouse_Options_Storage() ) )->set( true );
+		ob_start();
+		Blueworx_Clubhouse_Demo_Controller::render_switcher();
+		$this->assertStringContainsString( 'clubhouse-demo', (string) ob_get_clean() );
+	}
+
+	/**
+	 * The guards must NOT strand an admin: the admin-bar toggle is how demo mode is
+	 * turned off, so it stays unguarded and reachable from a blog post or wp-admin,
+	 * where the bar itself no longer renders.
+	 */
+	public function test_admin_bar_toggle_is_reachable_off_a_clubhouse_page(): void {
+		wp_stub_off_clubhouse_page();
+		( new Blueworx_Clubhouse_Demo_State( new Blueworx_Clubhouse_Options_Storage() ) )->set( true );
+		$bar = new class() {
+			/** @var array<int,array<string,mixed>> */
+			public array $nodes = array();
+			public function add_node( array $node ): void {
+				$this->nodes[] = $node;
+			}
+		};
+		Blueworx_Clubhouse_Demo_Controller::admin_bar_node( $bar );
+		$this->assertCount( 1, $bar->nodes, 'admins must still be able to turn demo mode off' );
+		$this->assertSame( 'clubhouse-demo-toggle', $bar->nodes[0]['id'] );
 	}
 
 	/**
@@ -89,6 +150,7 @@ final class DemoControllerTest extends TestCase {
 	 * the viewer's look, conflating the two. This test is the only guard.
 	 */
 	public function test_head_script_derives_for_the_viewers_demo_look_not_the_saved_look(): void {
+		wp_stub_on_clubhouse_page();
 		$storage = new Blueworx_Clubhouse_Options_Storage();
 		( new Blueworx_Clubhouse_Demo_State( $storage ) )->set( true );
 		$registry = Blueworx_Clubhouse_Frontend::registry( $storage );

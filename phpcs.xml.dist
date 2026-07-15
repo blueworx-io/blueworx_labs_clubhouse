@@ -7,6 +7,14 @@
 		escaping/i18n sniffs don't understand the custom template engine's e()
 		wrapper and would flag escaped output as unescaped, so they're omitted to
 		keep findings actionable. Escalate to WPCS later if that trade changes.
+
+		Because no WordPress.* sniff is enabled below, the `phpcs:ignore
+		WordPress.Security.*` annotations in includes/ currently suppress NOTHING —
+		they are inert. They are kept deliberately, not by oversight: each records
+		why a specific echo or superglobal read is safe, and each is already in
+		place for the WPCS escalation named above. Read them as review notes that
+		will become live suppressions, not as evidence a sniff is being silenced
+		today. Adding one changes no lint result — justify it on its own terms.
 	</description>
 
 	<!-- Only lint php files, show sniff codes (s) and progress (p). -->

@@ -72,6 +72,13 @@
 	border-radius: 50%;
 	background: transparent;
 }
+/* The chosen swatch: a white halo held off the swatch by a bar-coloured gap, so it
+   reads against any accent the swatch happens to be painted. Paired with
+   aria-pressed in demo.js — this is the sighted half of the same signal. */
+.clubhouse-demo__swatch.is-current {
+	border-color: #fff;
+	box-shadow: 0 0 0 2px #1e1e1e, 0 0 0 4px #fff;
+}
 .clubhouse-demo__swatch:focus-visible {
 	outline: 2px solid #fff;
 	outline-offset: 2px;

@@ -12,6 +12,8 @@ $GLOBALS['wp_stub_posts']       = array();
 $GLOBALS['wp_stub_postmeta']    = array();
 $GLOBALS['wp_stub_roles']       = array( 'administrator' => array( 'display' => 'Administrator', 'caps' => array() ) );
 $GLOBALS['wp_stub_current_user'] = (object) array( 'roles' => array() );
+$GLOBALS['wp_stub_is_front_page'] = false;
+$GLOBALS['wp_stub_query_vars']    = array();
 
 function wp_stub_reset(): void {
 	$GLOBALS['wp_stub_calls']       = array();
@@ -20,7 +22,23 @@ function wp_stub_reset(): void {
 	$GLOBALS['wp_stub_postmeta']    = array();
 	$GLOBALS['wp_stub_roles']       = array( 'administrator' => array( 'display' => 'Administrator', 'caps' => array() ) );
 	$GLOBALS['wp_stub_current_user'] = (object) array( 'roles' => array() );
+	$GLOBALS['wp_stub_is_front_page'] = false;
+	$GLOBALS['wp_stub_query_vars']    = array();
 	unset( $GLOBALS['menu'], $GLOBALS['wp_meta_boxes'] );
+}
+
+/** Put the request on a clubhouse page: the front page, or a mapped page slug. */
+function wp_stub_on_clubhouse_page( string $slug = '' ): void {
+	$GLOBALS['wp_stub_is_front_page'] = '' === $slug;
+	$GLOBALS['wp_stub_query_vars']    = '' === $slug
+		? array()
+		: array( Blueworx_Clubhouse_Frontend::QUERY_VAR => $slug );
+}
+
+/** Put the request somewhere the plugin does not render: a blog post, WooCommerce, etc. */
+function wp_stub_off_clubhouse_page(): void {
+	$GLOBALS['wp_stub_is_front_page'] = false;
+	$GLOBALS['wp_stub_query_vars']    = array();
 }
 function wp_stub_calls( string $fn ): array {
 	return array_values( array_filter(
@@ -230,4 +248,13 @@ if ( ! function_exists( 'get_role' ) ) {
 }
 if ( ! function_exists( 'wp_add_dashboard_widget' ) ) {
 	function wp_add_dashboard_widget( ...$a ) { wp_stub_record( 'wp_add_dashboard_widget', $a ); }
+}
+// Routing shims for Frontend::current_slug(). The defaults (not the front page, no
+// query var) resolve to "not a clubhouse page" — identical to the function_exists()
+// fallback these replace, so tests that never touch them behave as before.
+if ( ! function_exists( 'is_front_page' ) ) {
+	function is_front_page(): bool { return (bool) ( $GLOBALS['wp_stub_is_front_page'] ?? false ); }
+}
+if ( ! function_exists( 'get_query_var' ) ) {
+	function get_query_var( string $var, $default = '' ) { return $GLOBALS['wp_stub_query_vars'][ $var ] ?? $default; }
 }

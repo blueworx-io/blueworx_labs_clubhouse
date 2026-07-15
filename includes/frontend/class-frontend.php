@@ -79,6 +79,16 @@ final class Blueworx_Clubhouse_Frontend {
 		return self::resolve_slug( (bool) $is_front, $qv, self::context()->visibility );
 	}
 
+	/**
+	 * True when this request renders a clubhouse page. Anything that decorates the
+	 * clubhouse look must gate on this, because enqueue_assets() does: off a
+	 * clubhouse page there is no look stylesheet, so the design tokens it would
+	 * modify are not on the page to modify.
+	 */
+	public static function is_clubhouse_page(): bool {
+		return null !== self::current_slug();
+	}
+
 	public static function filter_template( string $template ): string {
 		$slug = self::current_slug();
 		if ( null === $slug ) {
