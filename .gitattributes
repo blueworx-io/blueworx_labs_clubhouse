@@ -1,2 +1,6 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+# Shell scripts must stay LF even when checked out on Windows: bin/build-zip.sh
+# runs on Linux CI, and a CRLF shebang fails there with "bad interpreter".
+*.sh text eol=lf

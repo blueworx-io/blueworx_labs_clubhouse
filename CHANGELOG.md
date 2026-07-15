@@ -5,6 +5,10 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.25.1
+
+- **Internal:** the deployment zip is now built by a script from an explicit list of what ships, and every pull request builds and inspects the real artifact. Previously the zip was assembled by hand, and nothing stopped a future one from accidentally including the developer preview harness — a file that renders without WordPress and so must never reach a live site. No shipped zip has ever contained it; this closes the gap that made it possible. Nothing about the plugin itself changes.
+
 ## 0.25.0
 
 - **The demo colour swatches now show which one you picked.** Clicking a swatch recoloured the site but left every swatch looking identical, so there was no confirmation of your choice — and for anyone using a screen reader, no feedback at all that the click had done anything. The chosen swatch now carries a ring and announces itself as selected, and the mark follows you across pages just as the colour does.
