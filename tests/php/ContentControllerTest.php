@@ -345,14 +345,40 @@ final class ContentControllerTest extends TestCase {
 	}
 
 	/** Regression for Minor 3: a non-scalar posted image value must not become the literal "Array". */
-	public function test_non_scalar_image_field_sanitises_to_zero(): void {
+	public function test_non_scalar_image_field_sanitises_to_the_unset_sentinel(): void {
 		$s = $this->storage();
 		Blueworx_Clubhouse_Content_Controller::handle_save( array(
 			'clubhouse_content_tab' => 'global',
 			'field' => array( 'home' => array( 'clubhouse' => array( 'image' => array( '1' ) ) ) ),
 		), $s );
 		$store = new Blueworx_Clubhouse_Content_Store( $s );
-		$this->assertSame( 0, $store->get( 'home', 'clubhouse', 'image' ) );
+		$this->assertSame( '', $store->get( 'home', 'clubhouse', 'image' ) );
+	}
+
+	/**
+	 * An image field's hidden input always posts, so an untouched image sanitises
+	 * from ''. It must store the '' sentinel that cget() falls back on — storing 0
+	 * would read back as a real override and render src="0".
+	 */
+	public function test_untouched_image_field_stores_the_unset_sentinel_not_zero(): void {
+		$s = $this->storage();
+		Blueworx_Clubhouse_Content_Controller::handle_save( array(
+			'clubhouse_content_tab' => 'global',
+			'field' => array( 'home' => array( 'hero' => array( 'title_lead' => 'x', 'image' => '' ) ) ),
+		), $s );
+		$store = new Blueworx_Clubhouse_Content_Store( $s );
+		$this->assertSame( '', $store->get( 'home', 'hero', 'image' ) );
+	}
+
+	/** A real attachment id still round-trips as an int. */
+	public function test_image_field_keeps_a_real_attachment_id(): void {
+		$s = $this->storage();
+		Blueworx_Clubhouse_Content_Controller::handle_save( array(
+			'clubhouse_content_tab' => 'global',
+			'field' => array( 'home' => array( 'hero' => array( 'image' => '42' ) ) ),
+		), $s );
+		$store = new Blueworx_Clubhouse_Content_Store( $s );
+		$this->assertSame( 42, $store->get( 'home', 'hero', 'image' ) );
 	}
 
 	/** Regression for Minor 4: an empty remove value must not delete item 0. */

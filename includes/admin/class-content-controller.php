@@ -265,7 +265,14 @@ final class Blueworx_Clubhouse_Content_Controller {
 			case 'url':
 				return $present ? esc_url_raw( (string) $raw ) : '';
 			case 'image':
-				return $present ? absint( $raw ) : 0;
+				// '' — not 0 — is the "unset" sentinel every other type uses, and the
+				// one Page_Renderer::cget() falls back on. An image field's hidden
+				// input always posts, so absint('') === 0 would otherwise land on every
+				// untouched image on the first Save and read back as a real override
+				// (rendering src="0" and dropping the empty-state fallback).
+				// Attachment IDs start at 1, so nothing legitimate is lost.
+				$id = $present ? absint( $raw ) : 0;
+				return $id > 0 ? $id : '';
 			case 'toggle':
 				return $present;
 			case 'select':

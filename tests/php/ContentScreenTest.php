@@ -214,4 +214,46 @@ final class ContentScreenTest extends TestCase {
 		$this->assertDoesNotMatchRegularExpression( '/(?<!&)#[0-9a-fA-F]{3,6}\b/', $css );
 		$this->assertDoesNotMatchRegularExpression( '/(Syne|Fraunces|Bricolage|Mulish|Hanken)/i', $css );
 	}
+
+	/**
+	 * The guarantee that guards this whole class of defect: pressing Save without
+	 * editing anything must leave the rendered site byte-identical.
+	 *
+	 * Every field on a tab posts on every Save, so each type's "untouched" value
+	 * has to sanitise to the same sentinel cget() falls back on. When it doesn't,
+	 * a no-edit Save silently rewrites the site while reporting success — which is
+	 * exactly what shipped: `image` stored 0, cget treated 0 as a real override,
+	 * and the Home hero rendered <img src="0"> with its fallback panel gone.
+	 *
+	 * Asserts the full document, so it covers every field type on the tab at once
+	 * rather than one hand-picked field.
+	 */
+	public function test_a_no_edit_save_leaves_the_rendered_site_byte_identical(): void {
+		$storage  = new Blueworx_Clubhouse_Fake_Storage();
+		$branding = new Blueworx_Clubhouse_Branding( $storage );
+		$vis      = new Blueworx_Clubhouse_Visibility( $storage );
+		$coll     = new Blueworx_Clubhouse_Demo_Collections();
+
+		$before = Blueworx_Clubhouse_Page_Map::render( '', $branding, $vis, $coll, '', new Blueworx_Clubhouse_Content_Store( $storage ) );
+
+		// The $_POST a real "Save" click produces on the Global tab, with nothing edited:
+		// every rendered input posts its current (empty) value.
+		$model = Blueworx_Clubhouse_Content_Controller::build_model( $storage, array(), '', 'http://x.test/admin.php?page=clubhouse-site-content' );
+		$global = $model['catalogue'][0];
+		$this->assertSame( 'global', $global['tab'] );
+		$posted = 0;
+		$post   = array( 'clubhouse_content_tab' => 'global', 'clubhouse_content_submit' => '1', 'field' => array(), 'hidden' => array() );
+		foreach ( $global['sections'] as $section ) {
+			foreach ( (array) ( $section['fields'] ?? array() ) as $field ) {
+				$post['field'][ (string) $section['store_page'] ][ (string) $section['key'] ][ (string) $field['key'] ] = '';
+				++$posted;
+			}
+		}
+		// Guard against this test silently passing by posting nothing at all.
+		$this->assertGreaterThan( 20, $posted, 'the Global tab must actually post its fields for this to prove anything' );
+		Blueworx_Clubhouse_Content_Controller::handle_save( $post, $storage );
+
+		$after = Blueworx_Clubhouse_Page_Map::render( '', $branding, $vis, $coll, '', new Blueworx_Clubhouse_Content_Store( $storage ) );
+		$this->assertSame( $before, $after, 'a Save with no edits must not change the rendered page' );
+	}
 }
