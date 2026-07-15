@@ -80,10 +80,14 @@ properties your stylesheet consumes:
   keeps your look's weight and polarity while carrying the club's colour, and it is
   guaranteed ≥4.5:1 against `--color-bg` — which means `--color-bg` is always a legible
   mark **on** it. Use it instead of `--color-ink` for any large block you would
-  otherwise fill with flat ink. **Marks on this block must not use `--color-accent` or
-  `--color-accent-deep`** — both derive from the same accent and converge with the
-  field; route them through `--color-bg`. A look opts in by referencing this token:
-  Floodlight does not, because it fills those blocks with `--color-paper` instead.
+  otherwise fill with flat ink. **Any mark on this block that carries meaning, indicates
+  state, or must stay legible — text, focus rings, icons you rely on — must not use
+  `--color-accent` or `--color-accent-deep`**: both derive from the same accent as the
+  field, so they converge with it (a focus ring measured 1.48:1 before this rule
+  existed). Route those through `--color-bg`. Purely decorative marks whose meaning is
+  carried elsewhere may still use the raw accent — the ticker's separator dots do. A
+  look opts in by referencing this token: Floodlight does not, because it fills those
+  blocks with `--color-paper` instead.
 
 ### `accent_bears_text()` — the legibility switch
 
