@@ -42,4 +42,14 @@ final class FloodlightStylesheetTest extends TestCase {
 		$css = (string) file_get_contents( dirname( __DIR__, 2 ) . '/assets/looks/floodlight.css' );
 		$this->assertStringContainsString( '.ch-brand__logo', $css );
 	}
+
+	/**
+	 * Floodlight fills its banner/hero/ticker with --color-paper and uses ink as
+	 * their TEXT colour, so the ink-as-fill rule never reaches it. This is an
+	 * emergent property of the rule, not an exception carved out for this look:
+	 * if this assertion ever fails, the rule has been applied by hand somewhere.
+	 */
+	public function test_does_not_use_the_tinted_block_token(): void {
+		$this->assertStringNotContainsString( '--color-accent-block', $this->css() );
+	}
 }

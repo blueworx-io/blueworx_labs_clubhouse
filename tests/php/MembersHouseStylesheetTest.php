@@ -41,4 +41,19 @@ final class MembersHouseStylesheetTest extends TestCase {
 		$css = (string) file_get_contents( dirname( __DIR__, 2 ) . '/assets/looks/members-house.css' );
 		$this->assertStringContainsString( '.ch-brand__logo', $css );
 	}
+
+	public function test_backbone_blocks_use_the_tinted_block_token(): void {
+		$css = $this->css();
+		$this->assertStringContainsString( '.ch-banner{background:var(--color-accent-block)', $css );
+		$this->assertStringContainsString( '.ch-ticker{display:flex;align-items:center;gap:0;background:var(--color-accent-block)', $css );
+		$this->assertStringContainsString( '.ch-home-hero__bg{position:absolute;inset:0;z-index:-2;background:var(--color-accent-block)}', $css );
+		$this->assertStringContainsString( 'transparent 60%),var(--color-accent-block)}', $css ); // __bg--empty
+	}
+
+	public function test_hero_scrim_stays_neutral_ink(): void {
+		$this->assertStringContainsString(
+			'.ch-home-hero__scrim{position:absolute;inset:0;z-index:-1;background:linear-gradient(180deg,color-mix(in oklab,var(--color-ink) 22%,transparent)',
+			$this->css()
+		);
+	}
 }
