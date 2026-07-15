@@ -130,11 +130,13 @@ final class Blueworx_Clubhouse_Sections {
 			. '</div>';
 		$tiles = '';
 		foreach ( $data['tiles'] as $t ) {
-			$svg = self::TILE_ICONS[ $t['icon'] ] ?? '';
+			// Tiles may be owner-edited content, where optional keys can be absent —
+			// an unset/unknown icon degrades to no glyph rather than a warning.
+			$svg = self::TILE_ICONS[ $t['icon'] ?? '' ] ?? '';
 			$ico = '' !== $svg ? '<span class="ch-home-hero__tile-ico" aria-hidden="true">' . $svg . '</span>' : '';
-			$tiles .= '<a class="ch-home-hero__tile" role="listitem" href="' . self::e( $t['href'] ) . '">'
+			$tiles .= '<a class="ch-home-hero__tile" role="listitem" href="' . self::e( $t['href'] ?? '#' ) . '">'
 				. $ico
-				. '<span class="ch-home-hero__tile-label">' . self::e( $t['label'] ) . '</span>'
+				. '<span class="ch-home-hero__tile-label">' . self::e( $t['label'] ?? '' ) . '</span>'
 				. '<span class="ch-home-hero__tile-arrow" aria-hidden="true">→</span></a>';
 		}
 		return '<section class="ch-home-hero">'

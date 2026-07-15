@@ -106,6 +106,23 @@ if ( ! function_exists( 'get_the_title' ) ) {
 if ( ! function_exists( 'sanitize_text_field' ) ) {
 	function sanitize_text_field( $str ) { return is_string( $str ) ? trim( preg_replace( '/[\r\n\t ]+/', ' ', preg_replace( '/<[^>]*>/', '', $str ) ) ) : ''; }
 }
+if ( ! function_exists( 'sanitize_textarea_field' ) ) {
+	function sanitize_textarea_field( $str ) {
+		if ( ! is_string( $str ) ) {
+			return '';
+		}
+		$str   = preg_replace( '/<[^>]*>/', '', $str );
+		$str   = str_replace( array( "\r\n", "\r" ), "\n", (string) $str );
+		$lines = array_map(
+			static fn( $line ) => trim( preg_replace( '/[\t ]+/', ' ', $line ) ),
+			explode( "\n", $str )
+		);
+		return trim( implode( "\n", $lines ) );
+	}
+}
+if ( ! function_exists( 'absint' ) ) {
+	function absint( $maybeint ) { return abs( (int) $maybeint ); }
+}
 if ( ! function_exists( 'esc_url_raw' ) ) {
 	function esc_url_raw( $url ) { $u = trim( (string) $url ); return preg_match( '#^https?://#i', $u ) ? $u : ''; }
 }

@@ -107,7 +107,8 @@ final class Blueworx_Clubhouse_Frontend {
 			new Blueworx_Clubhouse_Visibility( $storage ),
 			new Blueworx_Clubhouse_Theme_Cache( $storage ),
 			new Blueworx_Clubhouse_WP_Collections(),
-			$registry
+			$registry,
+			new Blueworx_Clubhouse_Content_Store( $storage )
 		);
 	}
 
@@ -170,7 +171,7 @@ final class Blueworx_Clubhouse_Frontend {
 		Blueworx_Clubhouse_Links::set_resolver( array( self::class, 'link_url' ) );
 		$ctx      = self::context();
 		$logo_url = self::resolve_logo( $ctx->branding->get_logo() );
-		return Blueworx_Clubhouse_Page_Map::render( $slug, $ctx->branding, $ctx->visibility, $ctx->collections, $logo_url );
+		return Blueworx_Clubhouse_Page_Map::render( $slug, $ctx->branding, $ctx->visibility, $ctx->collections, $logo_url, $ctx->content );
 	}
 
 	/**

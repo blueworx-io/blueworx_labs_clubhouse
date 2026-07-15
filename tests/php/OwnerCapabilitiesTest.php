@@ -38,7 +38,7 @@ final class OwnerCapabilitiesTest extends TestCase {
 
 	public function test_menu_allowlist_is_exactly_the_owner_surfaces(): void {
 		$this->assertSame(
-			array( 'index.php', 'clubhouse-content', 'upload.php', 'edit.php', 'edit-comments.php', 'users.php', 'profile.php' ),
+			array( 'index.php', 'clubhouse-content', 'clubhouse-site-content', 'upload.php', 'edit.php', 'edit-comments.php', 'users.php', 'profile.php' ),
 			Blueworx_Clubhouse_Owner_Capabilities::menu_allowlist()
 		);
 	}

@@ -45,6 +45,8 @@ require_once __DIR__ . '/admin/class-setup-progress.php';
 require_once __DIR__ . '/admin/class-setup-sections.php';
 require_once __DIR__ . '/admin/class-setup-screen.php';
 require_once __DIR__ . '/admin/class-owner-capabilities.php';
+require_once __DIR__ . '/admin/class-content-catalogue.php';
+require_once __DIR__ . '/admin/class-content-screen.php';
 
 // Collections (pure)
 require_once __DIR__ . '/collections/interface-collections.php';
