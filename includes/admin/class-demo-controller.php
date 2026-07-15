@@ -45,6 +45,22 @@ final class Blueworx_Clubhouse_Demo_Controller {
 		return ( new Blueworx_Clubhouse_Demo_State( new Blueworx_Clubhouse_Options_Storage() ) )->is_on();
 	}
 
+	/**
+	 * Whether this request should carry demo mode's front-end furniture: the bar,
+	 * its assets, and the accent tokens. All three gate on this together.
+	 *
+	 * Demo mode decorates the clubhouse look, so it follows the look stylesheet's
+	 * rule (Frontend::enqueue_assets) rather than being site-wide: off a clubhouse
+	 * page no clubhouse CSS is loaded, so --color-accent* has nothing to act on and
+	 * would only risk colliding with a host theme's own tokens of the same name.
+	 *
+	 * The admin-bar toggle deliberately does NOT gate on this — it is how demo mode
+	 * is turned off, and must stay reachable from wherever the admin happens to be.
+	 */
+	private static function shows_furniture(): bool {
+		return self::is_on() && Blueworx_Clubhouse_Frontend::is_clubhouse_page();
+	}
+
 	public static function look_slug( Blueworx_Clubhouse_Base_Look_Registry $registry ): ?string {
 		return Blueworx_Clubhouse_Demo_Mode::resolve_look_slug(
 			self::is_on(),
@@ -77,7 +93,7 @@ final class Blueworx_Clubhouse_Demo_Controller {
 	}
 
 	public static function enqueue(): void {
-		if ( ! self::is_on() ) {
+		if ( ! self::shows_furniture() ) {
 			return;
 		}
 		wp_enqueue_style( 'clubhouse-demo', BLUEWORX_LABS_CLUBHOUSE_URL . 'assets/css/demo.css', array(), BLUEWORX_LABS_CLUBHOUSE_VERSION );
@@ -104,7 +120,7 @@ final class Blueworx_Clubhouse_Demo_Controller {
 	 * applying there would flash the club's saved colour before the demo one.
 	 */
 	public static function render_head_script(): void {
-		if ( ! self::is_on() ) {
+		if ( ! self::shows_furniture() ) {
 			return;
 		}
 		$registry = Blueworx_Clubhouse_Frontend::registry( new Blueworx_Clubhouse_Options_Storage() );
@@ -124,7 +140,7 @@ final class Blueworx_Clubhouse_Demo_Controller {
 	}
 
 	public static function render_switcher(): void {
-		if ( ! self::is_on() ) {
+		if ( ! self::shows_furniture() ) {
 			return;
 		}
 		$registry = Blueworx_Clubhouse_Frontend::registry( new Blueworx_Clubhouse_Options_Storage() );
