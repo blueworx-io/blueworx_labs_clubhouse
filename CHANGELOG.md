@@ -5,6 +5,12 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.24.1
+
+- **Fix:** the news ticker now sits flush against the bottom of the full-bleed home hero, with no gap between them — the hero's dark background runs straight into the ticker as one continuous block.
+- **Fix (Court Side):** the "Follow the club" social block has lost its rounded corners and now seats directly on top of the footer with no gap, closing the page off as a single square-edged band. Applies to the home and contact pages, which both end with the block; every other page keeps its usual footer spacing.
+- **Change:** the home stat strip (Members / Sports / Teams / Founded) now ships hidden. It stays available — switch "Stats" to Shown on either the Setup or Site Content screen to bring it back, and any site that has already saved a visibility choice keeps whatever it chose. Every other section still ships visible.
+
 ## 0.24.0
 
 - **Site Content editor** — a new "Site Content" screen under Clubhouse in the admin menu lets you edit the page copy that used to be hardcoded: heroes, the news ticker, stats, bands, news, info strips, FAQ, steps, tiers, values, the facilities image band and the call-to-action bands. Anything you haven't edited keeps rendering exactly as it does today. Sports, teams, events, sponsors, committee and directory content still live on their own dedicated screens, which the new screen links out to. It picks up your chosen Base Look automatically, and each section's Shown/Hidden switch is the same one used on the Setup screen.

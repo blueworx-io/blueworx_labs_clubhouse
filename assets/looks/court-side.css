@@ -18,7 +18,9 @@ a{color:inherit;text-decoration:none}
    sections keep their own internal padding (below); spacing lives here only. */
 .ch-main > *{margin-block:0}
 .ch-main > * + *{margin-top:var(--flow-lg)}
-.ch-tiles-sec,.ch-ticker,.ch-stats,.ch-tiers-sec{margin-top:var(--flow-sm)}
+.ch-tiles-sec,.ch-stats,.ch-tiers-sec{margin-top:var(--flow-sm)}
+/* Ticker butts straight onto the full-bleed home hero — no gap. */
+.ch-ticker{margin-top:0}
 
 /* Scroll-reveal: a small IntersectionObserver (emitted once per page) adds .ch-reveal
    to each top-level block, then .is-in as it scrolls into view. The base class is added
@@ -497,7 +499,11 @@ a{color:inherit;text-decoration:none}
 }
 
 /* ---- Social — a "follow us" band linking out to Facebook/Instagram (no live feed). ---- */
-.ch-social{background:var(--color-paper);border-radius:var(--radius-xl);padding:var(--space-12) var(--space-10)}
+.ch-social{background:var(--color-paper);padding:var(--space-12) var(--space-10)}
+/* Social closes the page, so it seats directly onto the footer with no gap. Scoped
+   via :has() because .ch-footer's --flow-lg top margin must survive on every other
+   page, where a different section is the last block. */
+.ch-main:has(> .ch-social:last-child) + .ch-footer{margin-top:0}
 .ch-social__in{display:flex;align-items:center;justify-content:space-between;gap:var(--space-8);flex-wrap:wrap}
 .ch-social__title{font-family:var(--font-display);font-weight:800;font-size:clamp(26px,3.6vw,38px);letter-spacing:-.03em;line-height:1.05}
 .ch-social__lede{margin-top:10px;max-width:52ch;color:var(--color-ink-soft);font-size:16px}

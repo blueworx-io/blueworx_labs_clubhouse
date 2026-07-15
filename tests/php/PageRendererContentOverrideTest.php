@@ -96,6 +96,7 @@ final class PageRendererContentOverrideTest extends TestCase {
 
 	public function test_home_stats_loop_override(): void {
 		[ $b, $v, $c, $content ] = $this->ctx();
+		$v->set_section_visible( 'home', 'stats', true ); // ships hidden — opt in to render it.
 		$content->set_items( 'home', 'stats', array( array( 'value' => '1234', 'label' => 'Custom stat', 'featured' => true ) ) );
 		$html = Blueworx_Clubhouse_Page_Renderer::home( $b, $v, $c, '', $content );
 		$this->assertStringContainsString( 'Custom stat', $html );
