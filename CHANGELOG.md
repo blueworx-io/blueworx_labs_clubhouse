@@ -5,6 +5,10 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.24.0
+
+- **Site Content editor** — a new "Site Content" screen under Clubhouse in the admin menu lets you edit the page copy that used to be hardcoded: heroes, the news ticker, stats, bands, news, info strips, FAQ, steps, tiers, values, facilities and calls-to-action. Anything you haven't edited keeps rendering exactly as it does today. Sports, teams, events, sponsors, committee and directory content still live on their own dedicated screens, which the new screen links out to. It picks up your chosen Base Look automatically, and each section's Shown/Hidden switch is the same one used on the Setup screen.
+
 ## 0.23.0
 
 - Full-bleed Home hero: the home page hero is now a full-bleed background image (with a graceful toned fallback panel when no photo is set) with the heading, intro and calls-to-action overlaid, the quick-links folded in as an icon-card row, and the news ticker directly beneath. Applied across all three Base Looks (Court Side, Floodlight, Members' House), each in its own style. Existing copy is unchanged, and the shared hero used by the other pages is untouched.
