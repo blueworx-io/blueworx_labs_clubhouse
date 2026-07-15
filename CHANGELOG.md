@@ -5,6 +5,14 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.25.0
+
+- **The demo colour swatches now show which one you picked.** Clicking a swatch recoloured the site but left every swatch looking identical, so there was no confirmation of your choice — and for anyone using a screen reader, no feedback at all that the click had done anything. The chosen swatch now carries a ring and announces itself as selected, and the mark follows you across pages just as the colour does.
+
+- **Change:** while demo mode is on, the demo bar now appears only on Clubhouse pages, instead of on every page of the site. On a blog post or shop page there is no Clubhouse design for it to restyle, so the bar did nothing useful there and its colour settings could clash with your theme's own. Turning demo mode on and off is unchanged — that control lives in the admin bar and is still available everywhere.
+
+- **Fix:** a corrupted demo colour cookie could stop the saved colour being applied on page load until the cookie was cleared. It is now ignored safely and the site falls back to the club's own colour.
+
 ## 0.24.3
 
 - **Demo mode now lets you try colours, not just looks.** While demo mode is on, the bar gains five brand colours — click one and the whole site recolours instantly, no page reload. Your choice follows you as you browse, and switching Base Look keeps your colour while re-fitting it to that look's style. It only ever changes what *you* see: the club's saved colour is untouched, and other visitors are unaffected.
