@@ -7,9 +7,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Projects canonical fixtures to the three renderer shapes: Home upcoming
- * (activity_tabs fixtures), Home played (results), and Calendar month groups.
+ * Projects canonical fixtures to the two renderer shapes: Home upcoming
+ * (activity_tabs fixtures) and Calendar month groups.
  * Pure — no WordPress, no ambient time; ordering is by the stored match_date.
+ *
+ * A fixture's `outcome` still matters even though the Results view is gone (0.26.0):
+ * an empty outcome is what marks a fixture as not yet played, which is how Home
+ * picks the upcoming ones and how the calendar decides what to show for a row.
  *
  * @package BlueworxLabsClubhouse
  */
@@ -42,26 +46,6 @@ final class Blueworx_Clubhouse_Fixture_Projection {
 				);
 			},
 			$upcoming
-		);
-	}
-
-	/** @param array<int,array<string,mixed>> $fixtures @return array<int,array<string,string>> */
-	public static function home_results( array $fixtures, int $limit = 3 ): array {
-		$played = array_values( array_filter( $fixtures, static fn( $f ) => '' !== $f['outcome'] && null !== self::try_date( $f['match_date'] ) ) );
-		usort( $played, static fn( $a, $b ) => strcmp( $b['match_date'], $a['match_date'] ) );
-		$played = array_slice( $played, 0, $limit );
-		return array_map(
-			static function ( array $f ): array {
-				$d = self::try_date( $f['match_date'] );
-				return array(
-					'date'    => strtoupper( $d->format( 'M' ) ) . ' ' . $d->format( 'j' ),
-					'home'    => $f['home'],
-					'away'    => $f['away'],
-					'score'   => $f['score'],
-					'outcome' => $f['outcome'],
-				);
-			},
-			$played
 		);
 	}
 

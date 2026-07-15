@@ -17,13 +17,17 @@ final class FixtureProjectionTest extends TestCase {
 		$this->assertSame( 'ClubHouse vs Riverside RFC', $rows[0]['matchup'] );
 	}
 
-	public function test_home_results_are_played_only_desc(): void {
-		$rows = Blueworx_Clubhouse_Fixture_Projection::home_results( $this->fx() );
-		$this->assertCount( 3, $rows );
-		$this->assertSame( array( 'date', 'home', 'away', 'score', 'outcome' ), array_keys( $rows[0] ) );
-		// Most recent played first: Cricket 2026-07-05.
-		$this->assertSame( 'JUL 5', $rows[0]['date'] );
-		$this->assertContains( $rows[0]['outcome'], array( 'W', 'L', 'D' ) );
+	/**
+	 * Results was removed in 0.26.0, but `outcome` was NOT: it is how a played
+	 * fixture is told from an upcoming one, so home_fixtures() and the calendar
+	 * both still depend on it. This pins that the projection no longer offers a
+	 * results view while the outcome field keeps doing its other job.
+	 */
+	public function test_home_results_projection_is_gone(): void {
+		$this->assertFalse(
+			method_exists( Blueworx_Clubhouse_Fixture_Projection::class, 'home_results' ),
+			'home_results() was removed with the Results tab'
+		);
 	}
 
 	public function test_calendar_groups_by_month_with_detail(): void {
@@ -65,12 +69,17 @@ final class FixtureProjectionTest extends TestCase {
 		$this->assertSame( 'TBC', $tbc[0]['date'] );
 	}
 
-	public function test_home_results_omit_undated_played_fixtures(): void {
-		$dated   = array( 'sport' => 'Rugby', 'match_date' => '2026-05-01', 'kickoff_time' => '14:00', 'venue' => 'H', 'home' => 'A', 'away' => 'B', 'score' => '1-0', 'outcome' => 'W', 'result_summary' => 'Won' );
-		$undated = array( 'sport' => 'Rugby', 'match_date' => '', 'kickoff_time' => '14:00', 'venue' => 'H', 'home' => 'C', 'away' => 'D', 'score' => '2-2', 'outcome' => 'D', 'result_summary' => 'Draw' );
-		$rows = Blueworx_Clubhouse_Fixture_Projection::home_results( array( $dated, $undated ), 10 );
+	/**
+	 * The other half of the outcome contract: a played fixture must stay OUT of the
+	 * upcoming list. Results is gone, but this behaviour is load-bearing for the
+	 * Fixtures tab and is exactly what a careless removal of `outcome` would break.
+	 */
+	public function test_home_fixtures_exclude_played_matches(): void {
+		$played   = array( 'sport' => 'Rugby', 'match_date' => '2026-05-01', 'kickoff_time' => '14:00', 'venue' => 'H', 'home' => 'A', 'away' => 'B', 'score' => '1-0', 'outcome' => 'W', 'result_summary' => 'Won' );
+		$upcoming = array( 'sport' => 'Rugby', 'match_date' => '2026-05-02', 'kickoff_time' => '14:00', 'venue' => 'H', 'home' => 'C', 'away' => 'D', 'score' => '', 'outcome' => '', 'result_summary' => '' );
+		$rows     = Blueworx_Clubhouse_Fixture_Projection::home_fixtures( array( $played, $upcoming ) );
 		$this->assertCount( 1, $rows );
-		$this->assertSame( 'A', $rows[0]['home'] );
+		$this->assertSame( 'C vs D', $rows[0]['matchup'] );
 	}
 
 	/** @return array<string,mixed> A minimal upcoming fixture with the given match_date. */

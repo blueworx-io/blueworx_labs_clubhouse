@@ -303,7 +303,6 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'eyebrow'  => 'Club activity',
 				'heading'  => "What\u{2019}s happening",
 				'fixtures' => Blueworx_Clubhouse_Fixture_Projection::home_fixtures( $collections->fixtures() ),
-				'results'  => Blueworx_Clubhouse_Fixture_Projection::home_results( $collections->fixtures() ),
 				'events'   => array_map(
 					static function ( array $e ): array {
 						return array( 'tag' => $e['tag'], 'date' => $e['date'], 'title' => $e['title'], 'detail' => $e['detail'] );

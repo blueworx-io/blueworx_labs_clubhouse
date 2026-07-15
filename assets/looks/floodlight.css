@@ -252,9 +252,9 @@ a{color:inherit;text-decoration:none}
 .ch-tabs__btn{font-size:13px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;padding:10px 20px;border-radius:999px;border:1px solid var(--color-line);background:transparent;color:var(--color-ink-soft);cursor:pointer}
 .ch-tabs__btn--on{background:color-mix(in oklab,var(--color-accent) 12%,transparent);color:var(--color-accent-deep);border-color:var(--color-accent-deep);box-shadow:0 0 18px -8px color-mix(in oklab,var(--color-accent) 70%,transparent)}
 .ch-tabs__panel--off{display:none}
-.ch-fx-list,.ch-res-list{background:var(--color-bg);border:1px solid var(--color-line);border-radius:var(--radius-lg);padding:14px;display:flex;flex-direction:column;gap:6px}
-.ch-fx,.ch-res{display:flex;align-items:center;gap:16px;padding:14px 16px;border-radius:var(--radius-md);color:var(--color-ink)}
-.ch-fx:hover,.ch-res:hover{background:color-mix(in oklab,var(--color-ink) 6%,transparent)}
+.ch-fx-list{background:var(--color-bg);border:1px solid var(--color-line);border-radius:var(--radius-lg);padding:14px;display:flex;flex-direction:column;gap:6px}
+.ch-fx{display:flex;align-items:center;gap:16px;padding:14px 16px;border-radius:var(--radius-md);color:var(--color-ink)}
+.ch-fx:hover{background:color-mix(in oklab,var(--color-ink) 6%,transparent)}
 .ch-fx__date{text-align:center;line-height:1;min-width:44px}
 .ch-fx__date b{font-family:var(--font-display);font-size:22px;color:var(--color-accent-deep)}
 .ch-fx__date span{font-size:11px;letter-spacing:.1em;color:var(--color-ink-soft)}
@@ -262,10 +262,7 @@ a{color:inherit;text-decoration:none}
 .ch-fx__comp{font-size:12px;color:var(--color-ink-soft)}
 .ch-fx__match{font-weight:600}
 .ch-fx__time{font-family:var(--font-display);font-weight:700}
-.ch-res{gap:14px}
-.ch-res__date{min-width:64px;font-size:13px;color:var(--color-ink-soft)}
-.ch-res__teams{flex:1;font-weight:500}
-.ch-res__score{font-family:var(--font-display);font-weight:700}
+/* Badges outlived the Results tab: the calendar tags each played row with one. */
 .ch-badge{min-width:26px;text-align:center;font-size:12px;font-weight:700;padding:4px 8px;border-radius:999px}
 .ch-badge--w{background:color-mix(in oklab,var(--color-accent) 14%,transparent);color:var(--color-accent-deep);border:1px solid var(--color-accent-deep)}
 .ch-badge--l{background:color-mix(in oklab,var(--color-ink) 12%,transparent);color:var(--color-ink-soft)}
