@@ -2,7 +2,7 @@
   if (!('IntersectionObserver' in window) || matchMedia('(prefers-reduced-motion:reduce)').matches) {
     return;
   }
-  var els = document.querySelectorAll('.ch-main > *:not(.ch-hero)');
+  var els = document.querySelectorAll('.ch-main > *:not(.ch-hero):not(.ch-home-hero)');
   if (!els.length) {
     return;
   }

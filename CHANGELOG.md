@@ -5,6 +5,10 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.23.0
+
+- Full-bleed Home hero: the home page hero is now a full-bleed background image (with a graceful toned fallback panel when no photo is set) with the heading, intro and calls-to-action overlaid, the quick-links folded in as an icon-card row, and the news ticker directly beneath. Applied across all three Base Looks (Court Side, Floodlight, Members' House), each in its own style. Existing copy is unchanged, and the shared hero used by the other pages is untouched.
+
 ## 0.22.1
 
 - Setup screen full-bleed CSS tidy: the container now uses `height: 100vh` with `max-width: 100%` and `border-radius: 0`, the `.wrap.clubhouse-wrap` padding is dropped, and panels lose their bottom padding — all still scoped to the Setup page body class so no other admin screen is affected.
