@@ -33,7 +33,7 @@ final class Blueworx_Clubhouse_Preview_Storage implements Blueworx_Clubhouse_Sto
 	}
 }
 
-/** @return array<int,array{name:string,c:string,ink:string,deep:string,wash:string}> */
+/** @return array<int,array{name:string,c:string,ink:string,deep:string,wash:string,block:string}> */
 function blueworx_clubhouse_preview_palettes( Blueworx_Clubhouse_Base_Look $look ): array {
 	$tokens  = $look->tokens();
 	$accents = array(
@@ -47,11 +47,12 @@ function blueworx_clubhouse_preview_palettes( Blueworx_Clubhouse_Base_Look $look
 	foreach ( $accents as $name => $hex ) {
 		$d     = Blueworx_Clubhouse_Color_Engine::derive( $hex, $tokens['--color-bg'], $tokens['--color-ink'] );
 		$out[] = array(
-			'name' => $name,
-			'c'    => $d['--color-accent'],
-			'ink'  => $d['--color-accent-ink'],
-			'deep' => $d['--color-accent-deep'],
-			'wash' => $d['--color-accent-wash'],
+			'name'  => $name,
+			'c'     => $d['--color-accent'],
+			'ink'   => $d['--color-accent-ink'],
+			'deep'  => $d['--color-accent-deep'],
+			'wash'  => $d['--color-accent-wash'],
+			'block' => $d['--color-accent-block'],
 		);
 	}
 	return $out;
@@ -89,7 +90,8 @@ function blueworx_clubhouse_preview_document(): string {
 		. 's.style.background=p.c;s.title=p.name;'
 		. 's.onclick=function(){var r=document.documentElement.style;'
 		. 'r.setProperty("--color-accent",p.c);r.setProperty("--color-accent-ink",p.ink);'
-		. 'r.setProperty("--color-accent-deep",p.deep);r.setProperty("--color-accent-wash",p.wash);};'
+		. 'r.setProperty("--color-accent-deep",p.deep);r.setProperty("--color-accent-wash",p.wash);'
+		. 'r.setProperty("--color-accent-block",p.block);};'
 		. 'box.appendChild(s);});'
 		. '})();</script>';
 	$style     = '<style>.ch-switcher{position:fixed;right:16px;bottom:16px;z-index:90;background:#fff;border:1px solid #e9e4d8;border-radius:16px;padding:8px;display:flex;flex-wrap:wrap;max-width:150px}</style>';
