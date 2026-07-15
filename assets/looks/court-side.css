@@ -38,11 +38,12 @@ a{color:inherit;text-decoration:none}
 /* One branded, guaranteed-contrast focus indicator for every interactive element. */
 :where(a,button,summary,input,select,textarea,[tabindex]):focus-visible{outline:3px solid var(--color-accent-deep);outline-offset:2px;border-radius:6px}
 
-/* Focus ring on the tinted blocks: --color-accent-deep is derived from the same
-   accent as --color-accent-block, so on a tinted field the two converge and the
-   ring falls under 1.4.11's 3:1 (as low as 1.48:1). --color-bg is >=4.5:1 on the
-   block by the token's own guarantee, so it is legible for every club colour. */
-.ch-banner :focus-visible,.ch-ticker :focus-visible{outline-color:var(--color-bg)}
+/* Focus ring on the tinted blocks (banner, home hero, ticker): --color-accent-deep
+   is derived from the same accent as --color-accent-block, so on a tinted field
+   the two converge and the ring falls under 1.4.11's 3:1 (as low as 1.48:1).
+   --color-bg is >=4.5:1 on the block by the token's own guarantee, so it is
+   legible for every club colour. */
+.ch-banner :focus-visible,.ch-home-hero :focus-visible,.ch-ticker :focus-visible{outline-color:var(--color-bg)}
 
 .ch-eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--color-ink);background:var(--color-accent);padding:7px 14px;border-radius:999px}
 

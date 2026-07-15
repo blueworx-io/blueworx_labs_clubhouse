@@ -64,7 +64,7 @@ final class MembersHouseStylesheetTest extends TestCase {
 	 */
 	public function test_tinted_blocks_use_a_legible_focus_ring(): void {
 		$css = $this->css();
-		$this->assertStringContainsString( '.ch-banner :focus-visible,.ch-ticker :focus-visible{outline-color:var(--color-bg)}', $css );
+		$this->assertStringContainsString( '.ch-banner :focus-visible,.ch-home-hero :focus-visible,.ch-ticker :focus-visible{outline-color:var(--color-bg)}', $css );
 		$this->assertStringNotContainsString( 'outline:3px solid var(--color-accent);outline-offset:-3px', $css );
 		$this->assertStringNotContainsString( 'outline:2px solid var(--color-accent);outline-offset:-3px', $css );
 	}
