@@ -40,7 +40,17 @@ a{color:inherit;text-decoration:none}
 /* One branded, guaranteed-contrast focus indicator for every interactive element. */
 :where(a,button,summary,input,select,textarea,[tabindex]):focus-visible{outline:3px solid var(--color-accent-deep);outline-offset:2px;border-radius:6px}
 
-.ch-eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--color-ink);background:var(--color-accent);padding:7px 14px;border-radius:999px}
+/* Focus ring on the tinted blocks (banner, home hero, ticker): --color-accent-deep
+   is derived from the same accent as --color-accent-block, so on a tinted field
+   the two converge and the ring falls under 1.4.11's 3:1 (as low as 1.48:1).
+   --color-bg is >=4.5:1 on the block by the token's own guarantee, so it is
+   legible for every club colour. */
+.ch-banner :focus-visible,.ch-home-hero :focus-visible,.ch-ticker :focus-visible{outline-color:var(--color-bg)}
+
+/* Pill text is --color-accent-ink, the engine's guaranteed-legible-on-accent token.
+   --color-ink only happens to work for pale accents: it fails AA on darker brand
+   colours (Cobalt 3.04, Berry 3.32). */
+.ch-eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--color-accent-ink);background:var(--color-accent);padding:7px 14px;border-radius:999px}
 
 .ch-btn{display:inline-flex;align-items:center;justify-content:center;gap:.5em;font-family:var(--font-body);font-weight:600;font-size:15px;padding:15px 28px;border-radius:999px;white-space:nowrap;transition:transform .16s ease,background-color .18s ease,color .18s ease,box-shadow .2s ease}
 /* Every button lifts on hover and presses on click; the fills deepen per variant so
@@ -89,10 +99,14 @@ a{color:inherit;text-decoration:none}
    the drawer (kept in the bar on tablet, where there's room). */
 @media(max-width:520px){.ch-nav__cta .ch-btn--ink{display:none}.ch-nav__disc[open] .ch-nav__drawer-join{display:inline-flex}.ch-brand{font-size:20px}.ch-brand__mark{width:30px;height:30px;font-size:15px}}
 
-.ch-banner{background:var(--color-ink);color:var(--color-bg)}
+.ch-banner{background:var(--color-accent-block);color:var(--color-bg)}
 .ch-banner__in{display:flex;justify-content:center;height:40px;align-items:center}
 .ch-banner__link{font-size:13px;font-weight:600;text-align:center}
-.ch-banner__link:hover{color:var(--color-accent)}
+/* Hover is an underline, not a colour shift: --color-accent on the tinted banner
+   falls under AA for some club colours (orange 3.56, teal 4.32). The inherited
+   --color-bg stays >=4.5:1 by the token's guarantee, and an underline is a
+   stronger affordance than colour alone. */
+.ch-banner__link:hover{text-decoration:underline}
 .ch-nav__cta{display:flex;gap:10px;align-items:center}
 /* Active link uses full-contrast ink text with an accent underline, so the current
    page is signalled by more than colour and clears AA (the olive accent-deep alone
@@ -136,12 +150,15 @@ a{color:inherit;text-decoration:none}
 
 /* Full-bleed Home hero (home_hero) — Court Side: punchy, high-contrast. */
 .ch-home-hero{position:relative;isolation:isolate;overflow:hidden;min-height:clamp(560px,84vh,820px);display:flex;align-items:flex-end;padding-top:var(--space-16)}
-.ch-home-hero__bg{position:absolute;inset:0;z-index:-2;background:var(--color-ink)}
-.ch-home-hero__bg--empty{background:radial-gradient(96% 82% at 82% -12%,var(--color-accent-wash),transparent 55%),var(--color-ink)}
+.ch-home-hero__bg{position:absolute;inset:0;z-index:-2;background:var(--color-accent-block)}
+.ch-home-hero__bg--empty{background:radial-gradient(96% 82% at 82% -12%,var(--color-accent-wash),transparent 55%),var(--color-accent-block)}
 .ch-home-hero__img{width:100%;height:100%;object-fit:cover;display:block}
 .ch-home-hero__scrim{position:absolute;inset:0;z-index:-1;background:linear-gradient(180deg,color-mix(in oklab,var(--color-ink) 26%,transparent),color-mix(in oklab,var(--color-ink) 80%,transparent))}
 .ch-home-hero__in{width:100%;padding-top:var(--space-12);padding-bottom:var(--space-8);color:var(--color-bg)}
-.ch-home-hero .ch-eyebrow{color:var(--color-accent)}
+/* No colour override here: .ch-eyebrow is a filled pill, so recolouring only its
+   text painted the accent onto the accent — a 1:1, invisible label. It keeps the
+   base pill instead. (Members' House can override colour because its eyebrow is
+   bare text with no fill.) */
 .ch-home-hero__title{font-family:var(--font-display);font-weight:800;font-size:clamp(40px,8.5vw,116px);letter-spacing:-.03em;line-height:.96;color:var(--color-bg);overflow-wrap:break-word;hyphens:auto}
 .ch-home-hero__hl{background:var(--color-accent);color:var(--color-accent-ink);padding:0 .12em;border-radius:14px;display:inline-block;max-width:100%;transform:rotate(-1.5deg)}
 .ch-home-hero__lede{max-width:44ch;font-size:19px;margin-top:22px;color:color-mix(in oklab,var(--color-bg) 88%,transparent)}
@@ -166,7 +183,7 @@ a{color:inherit;text-decoration:none}
 .ch-tiles__arrow{color:var(--color-accent-deep)}
 .ch-tiles__tile:hover .ch-tiles__arrow{color:var(--color-accent)}
 
-.ch-ticker{display:flex;align-items:center;gap:0;background:var(--color-ink);color:var(--color-bg);overflow:hidden}
+.ch-ticker{display:flex;align-items:center;gap:0;background:var(--color-accent-block);color:var(--color-bg);overflow:hidden}
 .ch-ticker__label{flex:none;background:var(--color-accent);color:var(--color-accent-ink);font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;padding:12px 16px}
 .ch-ticker__viewport{position:relative;display:flex;overflow:hidden;white-space:nowrap;flex:1}
 .ch-ticker__track{display:inline-flex;align-items:center;gap:34px;padding:0 17px;animation:ch-marquee 28s linear infinite}
@@ -182,7 +199,7 @@ a{color:inherit;text-decoration:none}
 .ch-ticker__pause-cb:checked ~ .ch-ticker__viewport .ch-ticker__track{animation-play-state:paused}
 .ch-ticker__pause-cb:checked ~ .ch-ticker__pause .ch-ticker__ico-pause{display:none}
 .ch-ticker__pause-cb:checked ~ .ch-ticker__pause .ch-ticker__ico-play{display:block}
-.ch-ticker__pause-cb:focus-visible ~ .ch-ticker__pause{outline:3px solid var(--color-accent);outline-offset:-3px}
+.ch-ticker__pause-cb:focus-visible ~ .ch-ticker__pause{outline:3px solid var(--color-bg);outline-offset:-3px}
 @keyframes ch-marquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
 @media(prefers-reduced-motion:reduce){.ch-ticker__track{animation:none}.ch-ticker__viewport{overflow-x:auto}.ch-ticker__track[aria-hidden="true"]{display:none}.ch-ticker__pause,.ch-ticker__pause-cb{display:none}}
 
