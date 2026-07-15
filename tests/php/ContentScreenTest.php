@@ -200,4 +200,18 @@ final class ContentScreenTest extends TestCase {
 		$html  = Blueworx_Clubhouse_Content_Screen::render( $model );
 		$this->assertMatchesRegularExpression( '/name="hidden\[home\]\[ticker\]"[^>]*value="1"[^>]*checked/', $html );
 	}
+
+	/**
+	 * Task 8's stylesheet must be tokens-only (var(--color-*)/var(--font-*)/
+	 * var(--radius-*)) — no literal hex colours, no hardcoded look font names.
+	 * Mirrors the existing AdminSetupStylesheetTest guard: intentionally omits
+	 * "Inter" from the font blocklist, since it's a substring of the entirely
+	 * legitimate CSS value "cursor: pointer" (used throughout admin-setup.css
+	 * too) and would otherwise false-positive on ordinary, token-only CSS.
+	 */
+	public function test_stylesheet_file_has_no_literal_colours_or_font_names(): void {
+		$css = file_get_contents( dirname( __DIR__, 2 ) . '/assets/css/admin-content.css' );
+		$this->assertDoesNotMatchRegularExpression( '/(?<!&)#[0-9a-fA-F]{3,6}\b/', $css );
+		$this->assertDoesNotMatchRegularExpression( '/(Syne|Fraunces|Bricolage|Mulish|Hanken)/i', $css );
+	}
 }

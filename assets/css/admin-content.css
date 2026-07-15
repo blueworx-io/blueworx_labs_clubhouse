@@ -1,0 +1,164 @@
+/* Clubhouse Site Content — bespoke admin skin. Colour/type via injected look
+   tokens only (var(--color-*)/var(--font-*)/var(--radius-*)); no literals. */
+
+/* Fill the WP admin content area edge-to-edge and full height; drop wp chrome
+   padding + footer on this screen only (scoped to the Content page body class).
+   The compound .wrap.clubhouse-wrap selector out-specifies WP core's .wrap margin. */
+.wrap.clubhouse-wrap { margin: 0; }
+body.toplevel_page_clubhouse-site-content #wpcontent { padding-left: 0; }
+body.toplevel_page_clubhouse-site-content #wpbody-content { padding-bottom: 0; }
+body.toplevel_page_clubhouse-site-content #wpfooter { display: none; }
+
+.clubhouse-content,
+.clubhouse-content.clubhouse-content--js {
+	--pad: 24px;
+	display: flex;
+	flex-direction: column;
+	max-width: 100%;
+	min-height: calc(100vh - 32px);
+	margin: 0;
+	padding: 0;
+	border-radius: 0;
+	background: var(--color-bg);
+	color: var(--color-ink);
+	font-family: var(--font-body);
+}
+.clubhouse-content * { box-sizing: border-box; }
+.clubhouse-content .notice { margin: 12px var(--pad); }
+
+/* Header */
+.clubhouse-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; padding: 32px var(--pad) 20px; border-bottom: 1px solid var(--color-line); }
+.clubhouse-head__titles { display: flex; flex-direction: column; }
+.clubhouse-eyebrow { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--color-accent-deep); margin: 0 0 6px; }
+.clubhouse-head__h1 { font-family: var(--font-display); font-size: 30px; line-height: 1.1; margin: 0; color: var(--color-ink); text-transform: uppercase; }
+
+/* Page tabs — one per catalogue page/form. Horizontal-scrolling strip with
+   pointer drag-to-scroll (see admin-content.js); native overflow scroll is the
+   no-JS fallback so every tab stays reachable without a mouse drag. */
+.clubhouse-pagetabs {
+	display: flex;
+	gap: 6px;
+	padding: 14px var(--pad) 0;
+	border-bottom: 1px solid var(--color-line);
+	overflow-x: auto;
+	-webkit-overflow-scrolling: touch;
+	scrollbar-width: thin;
+	cursor: grab;
+}
+.clubhouse-pagetabs.is-dragging { cursor: grabbing; user-select: none; scroll-snap-type: none; }
+.clubhouse-pagetab {
+	flex: none;
+	font-family: var(--font-body);
+	font-size: 12px;
+	letter-spacing: .1em;
+	text-transform: uppercase;
+	text-decoration: none;
+	color: var(--color-ink-soft);
+	padding: 10px 14px;
+	white-space: nowrap;
+	border-bottom: 2px solid transparent;
+}
+.clubhouse-pagetab.is-active { color: var(--color-ink); border-bottom-color: var(--color-accent-deep); }
+.clubhouse-pagetab:focus-visible { outline: 2px solid var(--color-accent-deep); outline-offset: 2px; }
+
+/* Page panels — one <section><form> per catalogue page. Visible by default
+   (no-JS); JS shows a single active one and fills the remaining height so the
+   save bar can pin to the bottom via margin-top:auto. */
+.clubhouse-pagepanel { display: flex; flex-direction: column; }
+.clubhouse-content--js .clubhouse-pagepanel { display: none; }
+.clubhouse-content--js .clubhouse-pagepanel.is-active { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; }
+.clubhouse-form { display: flex; flex-direction: column; flex: 1 1 auto; }
+
+/* Two-column body: section nav (left) + section panels (right). */
+.clubhouse-body { display: flex; align-items: flex-start; gap: 24px; padding: 24px var(--pad) 0; flex: 1 1 auto; }
+
+.clubhouse-secnav { flex: 0 0 220px; display: flex; flex-direction: column; gap: 4px; }
+.clubhouse-secnav__item {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	gap: 8px;
+	padding: 10px 14px;
+	border-radius: 999px;
+	border: 1px solid transparent;
+	font-size: 13px;
+	color: var(--color-ink-soft);
+	text-decoration: none;
+}
+.clubhouse-secnav__item:hover { border-color: var(--color-line); }
+.clubhouse-secnav__item.is-active { background: var(--color-ink); color: var(--color-bg); }
+.clubhouse-secnav__item:focus-visible { outline: 2px solid var(--color-accent-deep); outline-offset: 2px; }
+.clubhouse-secnav__meta { font-size: 11px; opacity: .7; }
+
+.clubhouse-panels { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 20px; }
+
+/* Section panel — a card. Visible by default (no-JS, all sections stacked);
+   JS shows a single active one per page. */
+.clubhouse-panel { background: var(--color-paper); border: 1px solid var(--color-line); border-radius: var(--radius-lg); padding: 24px; }
+.clubhouse-content--js .clubhouse-panel { display: none; }
+.clubhouse-content--js .clubhouse-panel.is-active { display: block; }
+.clubhouse-panel__head { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin: 0 0 14px; }
+.clubhouse-panel__eyebrow { font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--color-accent-deep); margin: 0; }
+.clubhouse-panel__note { font-size: 13px; color: var(--color-ink-soft); margin: 0 0 16px; max-width: 60ch; }
+
+/* Visibility toggle (shown/hidden switch) */
+.clubhouse-toggle { display: inline-flex; align-items: center; gap: 10px; cursor: pointer; padding: 6px 10px; border: 1px solid var(--color-line); border-radius: var(--radius-md); background: var(--color-bg); flex: none; }
+.clubhouse-toggle input { position: absolute; opacity: 0; width: 0; height: 0; }
+.clubhouse-toggle__track { position: relative; width: 40px; height: 22px; border-radius: 999px; background: var(--color-line); flex: none; transition: background .2s ease; }
+.clubhouse-toggle__thumb { position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: var(--color-bg); transition: transform .2s ease; }
+.clubhouse-toggle input:checked + .clubhouse-toggle__track { background: var(--color-ink); }
+.clubhouse-toggle input:checked + .clubhouse-toggle__track .clubhouse-toggle__thumb { transform: translateX(18px); }
+.clubhouse-toggle input:focus-visible + .clubhouse-toggle__track { outline: 2px solid var(--color-accent-deep); outline-offset: 2px; }
+.clubhouse-toggle__label { font-size: 12px; color: var(--color-ink); }
+
+/* Fields */
+.clubhouse-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+.clubhouse-field { display: flex; flex-direction: column; gap: 6px; }
+.clubhouse-field--toggle { flex-direction: row; align-items: center; gap: 8px; }
+.clubhouse-field--toggle input { width: 16px; height: 16px; flex: none; }
+.clubhouse-field__label { font-size: 13px; color: var(--color-ink); }
+.clubhouse-label { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--color-ink-soft); }
+.clubhouse-input { font-family: var(--font-body); font-size: 14px; color: var(--color-ink); background: var(--color-bg); border: 1px solid var(--color-line); border-radius: var(--radius-md); padding: 9px 12px; width: 100%; }
+.clubhouse-input:focus-visible { outline: 2px solid var(--color-accent-deep); outline-offset: 1px; }
+textarea.clubhouse-input { resize: vertical; }
+
+/* Image field (per-field "Choose image" / "Remove") */
+.clubhouse-media { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
+.clubhouse-media__preview { flex: none; }
+.clubhouse-media__img { display: block; max-height: 48px; max-width: 88px; border-radius: var(--radius-md); border: 1px solid var(--color-line); }
+.clubhouse-media__hint { font-size: 12px; color: var(--color-ink-soft); flex: 1 1 auto; }
+
+/* Buttons */
+.clubhouse-btn { font-family: var(--font-body); font-size: 13px; border-radius: 999px; padding: 8px 16px; border: 1px solid var(--color-ink); background: transparent; color: var(--color-ink); cursor: pointer; }
+.clubhouse-btn--sm { padding: 6px 12px; font-size: 12px; }
+.clubhouse-btn--primary { background: var(--color-ink); color: var(--color-bg); border-color: var(--color-ink); }
+.clubhouse-btn:focus-visible { outline: 2px solid var(--color-accent-deep); outline-offset: 2px; }
+.clubhouse-btn-link { background: transparent; border: 0; color: var(--color-ink-soft); text-decoration: underline; cursor: pointer; font-size: 12px; padding: 0; }
+.clubhouse-btn-link--danger { color: var(--color-accent-deep); }
+.clubhouse-btn-link:focus-visible { outline: 2px solid var(--color-accent-deep); outline-offset: 2px; }
+
+/* Loop rows (repeatable items) */
+.clubhouse-loop { display: flex; flex-direction: column; gap: 14px; }
+.clubhouse-loop__item { display: flex; flex-direction: column; gap: 12px; border: 1px solid var(--color-line); border-radius: var(--radius-md); padding: 16px; background: var(--color-bg); }
+
+/* Link-out card (jumps to a CPT list or another section) */
+.clubhouse-linkout { display: flex; justify-content: space-between; align-items: center; gap: 16px; border: 1px dashed var(--color-line); border-radius: var(--radius-md); padding: 16px; }
+.clubhouse-linkout__text { margin: 0; font-size: 13px; color: var(--color-ink-soft); max-width: 46ch; }
+
+/* Auto (read-only, derived) section note */
+.clubhouse-autonote { display: flex; align-items: flex-start; gap: 10px; border: 1px solid var(--color-line); border-radius: var(--radius-md); padding: 16px; background: var(--color-bg); }
+.clubhouse-autonote__text { margin: 0; font-size: 13px; color: var(--color-ink-soft); flex: 1 1 auto; }
+.clubhouse-badge { display: inline-block; font-size: 10px; letter-spacing: .08em; text-transform: uppercase; border-radius: 999px; padding: 3px 8px; flex: none; }
+.clubhouse-badge--auto { background: var(--color-accent-wash); color: var(--color-accent-deep); }
+
+/* Full-width save-bar footer, pinned to the bottom of the active page panel. */
+.clubhouse-bar { margin-top: auto; display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 16px var(--pad); background: var(--color-paper); border-top: 1px solid var(--color-line); }
+.clubhouse-bar__hint { margin: 0; font-size: 13px; color: var(--color-ink-soft); }
+
+@media (max-width: 782px) {
+	.clubhouse-content { min-height: calc(100vh - 46px); } /* taller mobile admin bar */
+	.clubhouse-head { flex-direction: column; align-items: flex-start; }
+	.clubhouse-body { flex-direction: column; }
+	.clubhouse-secnav { flex-direction: row; flex-wrap: wrap; width: 100%; }
+	.clubhouse-fields { grid-template-columns: 1fr; }
+}
