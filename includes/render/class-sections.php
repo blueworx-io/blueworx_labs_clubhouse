@@ -332,7 +332,6 @@ final class Blueworx_Clubhouse_Sections {
 	/**
 	 * @param array{eyebrow:string,heading:string,
 	 *   fixtures:array<int,array{month:string,day:string,competition:string,time:string,matchup:string}>,
-	 *   results:array<int,array{date:string,home:string,away:string,score:string,outcome:string}>,
 	 *   events:array<int,array{tag:string,date:string,title:string,detail:string}>} $data
 	 */
 	public static function activity_tabs( array $data ): string {
@@ -343,15 +342,6 @@ final class Blueworx_Clubhouse_Sections {
 				. '<span class="ch-fx__match">' . self::e( $f['matchup'] ) . '</span></div>'
 				. '<span class="ch-fx__time">' . self::e( $f['time'] ) . '</span></div>';
 		}
-		$rs = '';
-		foreach ( $data['results'] as $r ) {
-			$o    = strtolower( $r['outcome'] );
-			$mod  = in_array( $o, array( 'w', 'l', 'd' ), true ) ? $o : 'd';
-			$rs  .= '<div class="ch-res" role="listitem"><span class="ch-res__date">' . self::e( $r['date'] ) . '</span>'
-				. '<span class="ch-res__teams">' . self::e( $r['home'] ) . ' v ' . self::e( $r['away'] ) . '</span>'
-				. '<span class="ch-res__score">' . self::e( $r['score'] ) . '</span>'
-				. '<span class="ch-badge ch-badge--' . $mod . '">' . self::e( $r['outcome'] ) . '</span></div>';
-		}
 		$ev = '';
 		foreach ( $data['events'] as $e ) {
 			$ev .= '<div class="ch-evt" role="listitem"><div class="ch-evt__meta"><span class="ch-evt__tag">' . self::e( $e['tag'] ) . '</span>'
@@ -360,7 +350,7 @@ final class Blueworx_Clubhouse_Sections {
 				. '<p class="ch-evt__detail">' . self::e( $e['detail'] ) . '</p></div>';
 		}
 		$tabs = '';
-		foreach ( array( 'fixtures' => 'Fixtures', 'results' => 'Results', 'events' => 'Events' ) as $key => $label ) {
+		foreach ( array( 'fixtures' => 'Fixtures', 'events' => 'Events' ) as $key => $label ) {
 			$on    = 'fixtures' === $key ? ' ch-tabs__btn--on' : '';
 			$tabs .= '<button type="button" class="ch-tabs__btn' . $on . '" data-ch-tabbtn="' . $key . '">' . self::e( $label ) . '</button>';
 		}
@@ -370,7 +360,6 @@ final class Blueworx_Clubhouse_Sections {
 			. '<div class="ch-tabs" data-ch-tabs>'
 			. '<div class="ch-tabs__bar">' . $tabs . '</div>'
 			. '<div data-ch-tab="fixtures"><div class="ch-fx-list" role="list">' . $fx . '</div></div>'
-			. '<div class="ch-tabs__panel--off" data-ch-tab="results"><div class="ch-res-list" role="list">' . $rs . '</div></div>'
 			. '<div class="ch-tabs__panel--off" data-ch-tab="events"><div class="ch-evt-grid" role="list">' . $ev . '</div></div>'
 			. '</div></div>'
 			. '<script>(function(){var r=document.querySelector("[data-ch-tabs]");if(!r)return;'

@@ -5,6 +5,14 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.26.0
+
+- **Removed: the Results tab.** The "What's happening" section on the home page now has two tabs, Fixtures and Events, instead of three. The Results tab and its list of recent scores are gone.
+
+  **Your fixture data is untouched.** Score, Outcome and Result note remain on the fixture editor exactly as before, and nothing you have recorded has been deleted. Outcome still does its other job: a fixture with no outcome set is treated as upcoming, which is how the Fixtures tab knows what to list.
+
+  **The Calendar is unaffected** — it still shows every played match with its result note and W/D/L badge, as it always has.
+
 ## 0.25.3
 
 - **Internal:** reverts the 0.25.2 documentation change. It edited this repo's copy of the shared contributor instructions; that file's source of truth is the `bluegroup_core_foundation` template, so the edit belongs there and would have been lost on the next sync. No change to the plugin.

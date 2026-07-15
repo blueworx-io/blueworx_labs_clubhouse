@@ -316,40 +316,42 @@ final class SectionsTest extends TestCase {
 		$this->assertNoHexColour( $html );
 	}
 
-	public function test_activity_tabs_render_all_three_panels(): void {
+	public function test_activity_tabs_render_fixtures_and_events(): void {
 		$html = Blueworx_Clubhouse_Sections::activity_tabs( array(
 			'eyebrow'  => 'Club activity',
 			'heading'  => "What\u{2019}s happening",
 			'fixtures' => array( array( 'month' => 'JUL', 'day' => '12', 'competition' => 'Rugby · 1st XV', 'time' => '14:00', 'matchup' => 'ClubHouse vs Riverside' ) ),
-			'results'  => array( array( 'date' => 'JUL 5', 'home' => 'ClubHouse 1st XI', 'away' => 'Hartfield', 'score' => '+34', 'outcome' => 'W' ) ),
 			'events'   => array( array( 'tag' => 'Open day', 'date' => 'Sat 26 Jul', 'title' => 'Club Open Day', 'detail' => '10:00–14:00' ) ),
 		) );
 		$this->assertStringContainsString( 'class="ch-tabs"', $html );
 		$this->assertStringContainsString( 'data-ch-tab="fixtures"', $html );
-		$this->assertStringContainsString( 'data-ch-tab="results"', $html );
 		$this->assertStringContainsString( 'data-ch-tab="events"', $html );
 		$this->assertStringContainsString( 'ClubHouse vs Riverside', $html );
-		$this->assertStringContainsString( 'ch-badge--w', $html );
-		// Fixtures / results / events are three lists of one item each.
-		$this->assertListSemantics( $html, 3, 3 );
+		// Fixtures / events are two lists of one item each.
+		$this->assertListSemantics( $html, 2, 2 );
 		$this->assertNoHexColour( $html );
 		$this->assertStringNotContainsString( 'style=', $html );
 	}
 
-	public function test_activity_result_badge_maps_each_outcome(): void {
-		$mk = static function ( string $outcome ): string {
-			return Blueworx_Clubhouse_Sections::activity_tabs( array(
-				'eyebrow'  => 'x', 'heading' => 'x',
-				'fixtures' => array(),
-				'results'  => array( array( 'date' => 'JUL 1', 'home' => 'A', 'away' => 'B', 'score' => '1-0', 'outcome' => $outcome ) ),
-				'events'   => array(),
-			) );
-		};
-		$this->assertStringContainsString( 'ch-badge--w', $mk( 'W' ) );
-		$this->assertStringContainsString( 'ch-badge--l', $mk( 'L' ) );
-		$this->assertStringContainsString( 'ch-badge--d', $mk( 'D' ) );
-		// Unknown outcome falls back to the draw modifier.
-		$this->assertStringContainsString( 'ch-badge--d', $mk( 'X' ) );
+	/**
+	 * Results was removed in 0.26.0. The section takes fixtures and events only —
+	 * no tab, no panel, no result markup, and a stray 'results' key in the data is
+	 * ignored rather than resurrecting it.
+	 */
+	public function test_activity_tabs_have_no_results(): void {
+		$html = Blueworx_Clubhouse_Sections::activity_tabs( array(
+			'eyebrow'  => 'Club activity',
+			'heading'  => 'x',
+			'fixtures' => array( array( 'month' => 'JUL', 'day' => '12', 'competition' => 'c', 'time' => '14:00', 'matchup' => 'A vs B' ) ),
+			'results'  => array( array( 'date' => 'JUL 5', 'home' => 'A', 'away' => 'B', 'score' => '+34', 'outcome' => 'W' ) ),
+			'events'   => array( array( 'tag' => 't', 'date' => 'd', 'title' => 'ti', 'detail' => 'de' ) ),
+		) );
+		$this->assertStringNotContainsString( 'data-ch-tab="results"', $html );
+		$this->assertStringNotContainsString( 'data-ch-tabbtn="results"', $html );
+		$this->assertStringNotContainsString( '>Results<', $html );
+		$this->assertStringNotContainsString( 'ch-res', $html );
+		$this->assertStringNotContainsString( 'ch-badge', $html );
+		$this->assertStringNotContainsString( '+34', $html, 'a stray results key must not render' );
 	}
 
 	public function test_news_cards_render_each_post(): void {
