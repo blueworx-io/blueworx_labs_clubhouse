@@ -13,7 +13,9 @@ a{color:inherit;text-decoration:none}
 @media(max-width:640px){:root{--flow-lg:56px;--flow-sm:20px}}
 .ch-main > *{margin-block:0}
 .ch-main > * + *{margin-top:var(--flow-lg)}
-.ch-tiles-sec,.ch-ticker,.ch-stats,.ch-tiers-sec{margin-top:var(--flow-sm)}
+.ch-tiles-sec,.ch-stats,.ch-tiers-sec{margin-top:var(--flow-sm)}
+/* Ticker butts straight onto the full-bleed home hero — no gap. */
+.ch-ticker{margin-top:0}
 
 /* Scroll-reveal / skip link / focus — identical progressive-enhancement mechanics to
    Court Side (no-JS and reduced-motion get fully-visible content). */

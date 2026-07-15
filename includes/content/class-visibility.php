@@ -7,13 +7,25 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 /**
  * Show/hide state for pages and sections. Defaults to visible; owners hide by
- * opting out. Persisted as one storage entry mirroring the feature-toggle pattern.
+ * opting out — except the sections listed in SECTION_DEFAULTS, which ship hidden
+ * and are opted into. Persisted as one storage entry mirroring the feature-toggle
+ * pattern.
  *
  * @package BlueworxLabsClubhouse
  */
 final class Blueworx_Clubhouse_Visibility {
 
 	private const KEY = 'visibility';
+
+	/**
+	 * Sections that ship hidden, keyed "page.section" — owners opt in rather than
+	 * out. Anything absent here defaults to visible.
+	 *
+	 * @var array<string, bool>
+	 */
+	private const SECTION_DEFAULTS = array(
+		'home.stats' => false,
+	);
 
 	private Blueworx_Clubhouse_Storage $storage;
 
@@ -38,7 +50,8 @@ final class Blueworx_Clubhouse_Visibility {
 
 	public function is_section_visible( string $page, string $section ): bool {
 		$state = $this->state();
-		return (bool) ( $state['sections'][ $this->section_key( $page, $section ) ] ?? true );
+		$key   = $this->section_key( $page, $section );
+		return (bool) ( $state['sections'][ $key ] ?? self::SECTION_DEFAULTS[ $key ] ?? true );
 	}
 
 	public function set_page_visible( string $page, bool $visible ): void {

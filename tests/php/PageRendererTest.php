@@ -68,10 +68,22 @@ final class PageRendererTest extends TestCase {
 		$this->assertStringContainsString( 'class="ch-nav"', $body );
 		$this->assertStringContainsString( 'class="ch-home-hero"', $body );
 		$this->assertStringContainsString( 'class="ch-home-hero__foot"', $body );
-		$this->assertStringContainsString( 'class="ch-stats"', $body );
 		$this->assertStringContainsString( 'class="ch-cards"', $body );
 		$this->assertStringContainsString( 'class="ch-tiers"', $body );
 		$this->assertStringContainsString( 'class="ch-footer"', $body );
+	}
+
+	public function test_home_omits_the_stat_strip_by_default(): void {
+		$vis  = new Blueworx_Clubhouse_Visibility( new Blueworx_Clubhouse_Fake_Storage() );
+		$body = Blueworx_Clubhouse_Page_Renderer::home( $this->branding(), $vis, $this->collections() );
+		$this->assertStringNotContainsString( 'class="ch-stats"', $body );
+	}
+
+	public function test_home_renders_the_stat_strip_once_switched_on(): void {
+		$vis = new Blueworx_Clubhouse_Visibility( new Blueworx_Clubhouse_Fake_Storage() );
+		$vis->set_section_visible( 'home', 'stats', true );
+		$body = Blueworx_Clubhouse_Page_Renderer::home( $this->branding(), $vis, $this->collections() );
+		$this->assertStringContainsString( 'class="ch-stats"', $body );
 	}
 
 	public function test_home_respects_visibility(): void {
