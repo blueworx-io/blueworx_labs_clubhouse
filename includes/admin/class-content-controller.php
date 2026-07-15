@@ -95,12 +95,21 @@ final class Blueworx_Clubhouse_Content_Controller {
 			$section_key = (string) $section['key'];
 
 			if ( ! empty( $section['fields'] ) ) {
-				$group = self::as_array( $fields_post[ $store_page ][ $section_key ] ?? null );
-				foreach ( $section['fields'] as $field_def ) {
-					$fkey    = (string) $field_def['key'];
-					$present = array_key_exists( $fkey, $group );
-					$value   = self::sanitise_field( $field_def, $present ? $group[ $fkey ] : null, $present );
-					$content_store->set( $store_page, $section_key, $fkey, $value );
+				// Invariant: a wholly-absent field group (the section's key never
+				// appears under field[<store_page>]) must NOT blank stored content —
+				// PHP's max_input_vars silently truncates large POSTs, and treating a
+				// truncated request as "every field was cleared" is silent data loss.
+				// Only once the group is present does an individual absent key mean
+				// "cleared" (real unchecked-checkbox / emptied-input form semantics).
+				$store_scope = self::as_array( $fields_post[ $store_page ] ?? null );
+				if ( array_key_exists( $section_key, $store_scope ) ) {
+					$group = self::as_array( $store_scope[ $section_key ] );
+					foreach ( $section['fields'] as $field_def ) {
+						$fkey    = (string) $field_def['key'];
+						$present = array_key_exists( $fkey, $group );
+						$value   = self::sanitise_field( $field_def, $present ? $group[ $fkey ] : null, $present );
+						$content_store->set( $store_page, $section_key, $fkey, $value );
+					}
 				}
 			}
 
@@ -121,12 +130,17 @@ final class Blueworx_Clubhouse_Content_Controller {
 				}
 
 				if ( array_key_exists( $section_key, self::as_array( $remove_post[ $store_page ] ?? null ) ) ) {
-					$idx = (int) $remove_post[ $store_page ][ $section_key ];
-					if ( array_key_exists( $idx, $items ) ) {
-						unset( $items[ $idx ] );
-						$items = array_values( $items );
+					$raw_idx = $remove_post[ $store_page ][ $section_key ];
+					// An empty/non-numeric value (e.g. '') must not resolve to index 0
+					// via (int) '' === 0 — that would delete the first item outright.
+					if ( is_numeric( $raw_idx ) ) {
+						$idx = (int) $raw_idx;
+						if ( array_key_exists( $idx, $items ) ) {
+							unset( $items[ $idx ] );
+							$items = array_values( $items );
+						}
+						$mutated = true;
 					}
-					$mutated = true;
 				}
 
 				if ( $submitted || $mutated ) {
@@ -176,14 +190,21 @@ final class Blueworx_Clubhouse_Content_Controller {
 				$items = ! empty( $section['loop'] ) ? $content_store->get_items( $store_page, $section_key ) : array();
 
 				$sections[] = $section + array(
-					'values' => $values,
-					'items'  => $items,
-					'hidden' => ! $vis->is_section_visible( $vis_page, $section_key ),
+					'values'   => $values,
+					'items'    => $items,
+					'hidden'   => ! $vis->is_section_visible( $vis_page, $section_key ),
+					// Visibility's inventory key — distinct from 'store_page' when a
+					// section's content lives on one page but its show/hide flag is
+					// keyed to another (e.g. Global tab's Header/Footer store under
+					// 'global' but hide under 'home'). Task 7 must key hide inputs by
+					// this, not 'store_page', or unticking "show" silently no-ops.
+					'vis_page' => $vis_page,
 				);
 			}
 			$catalogue[] = array(
 				'tab'      => $page['tab'],
 				'label'    => $page['label'],
+				'vis_page' => $vis_page,
 				'sections' => $sections,
 			);
 		}
@@ -229,6 +250,13 @@ final class Blueworx_Clubhouse_Content_Controller {
 	 * @param array<string,mixed> $field_def
 	 */
 	private static function sanitise_field( array $field_def, mixed $raw, bool $present ): mixed {
+		// A posted value that isn't scalar (e.g. field[key][]=x submitted as an
+		// array, or a nested array under an image/select field) must never reach
+		// string coercion below — PHP would emit "Array to string conversion" and
+		// store the literal "Array". Treat it as though the field were absent.
+		if ( $present && ! is_scalar( $raw ) ) {
+			$present = false;
+		}
 		switch ( $field_def['type'] ) {
 			case 'text':
 				return $present ? sanitize_text_field( (string) $raw ) : '';
