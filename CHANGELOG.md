@@ -5,6 +5,10 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.25.3
+
+- **Internal:** reverts the 0.25.2 documentation change. It edited this repo's copy of the shared contributor instructions; that file's source of truth is the `bluegroup_core_foundation` template, so the edit belongs there and would have been lost on the next sync. No change to the plugin.
+
 ## 0.25.2
 
 - **Internal:** the project's contributor instructions now point at the zip build script added in 0.25.1, rather than describing a hand-built zip that would bypass its checks. Documentation only — no change to the plugin.

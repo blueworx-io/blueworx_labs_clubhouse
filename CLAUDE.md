@@ -47,8 +47,7 @@ Every build or change starts from an approved GitHub Issue.
 Do this proactively at the end of any session with deployable changes — never wait to be asked.
 
 - Standalone: `npm install`, `npm run build`, then remove `node_modules` to leave the folder clean for manual zipping
-- WordPress plugin: bump the plugin version, then build the zip at `<plugin-parent-dir>/<plugin-slug>.zip`, replacing any older zip there. The zip is the deployment artifact, never copy individual files
-  - **If the repo has a zip build script, run it — never hand-roll the zip.** A repo that ships one (e.g. `npm run build:zip`) encodes which files are allowed into the artifact and verifies the result, and CI checks the same thing on every PR. Zipping the folder by hand bypasses that: it is how development-only files reach a live site, which is exactly what the script exists to prevent. Change the script's allowlist, not the zip
+- WordPress plugin: bump the plugin version, then zip the plugin folder and place the zip at `<plugin-parent-dir>/<plugin-slug>.zip` — remove any older versioned zips in that same directory before creating the new one. The zip is the deployment artifact, never copy individual files
 - Headless: nothing manual — CI and Netlify handle install, build, and deploy once merged
 
 ## Approved Tools & Styles
