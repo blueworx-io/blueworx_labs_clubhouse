@@ -61,6 +61,6 @@ final class Blueworx_Clubhouse_Owner_Capabilities {
 
 	/** Top-level admin-menu slugs the owner keeps; everything else is removed. @return array<int,string> */
 	public static function menu_allowlist(): array {
-		return array( 'index.php', 'clubhouse-content', 'upload.php', 'edit.php', 'edit-comments.php', 'users.php', 'profile.php' );
+		return array( 'index.php', 'clubhouse-content', 'clubhouse-site-content', 'upload.php', 'edit.php', 'edit-comments.php', 'users.php', 'profile.php' );
 	}
 }
