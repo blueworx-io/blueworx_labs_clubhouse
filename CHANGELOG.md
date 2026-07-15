@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## 0.24.2
 
+- **Fix (Court Side):** the small label above the home hero headline ("Est. 1974 · Marlow, UK") was invisible — its text was the same colour as the pill behind it. It now reads correctly, and the label's text automatically switches between dark and light so it stays readable whatever colour your club picks.
+
 - **Change:** the top banner and news ticker now carry your club's colour instead of near-black, and the home hero does too whenever no hero photo is set. Each is filled with the Base Look's own ink pulled 30% toward your accent, so the site reads as tinted with your brand while keeping the same weight and readability. Every club colour is handled automatically — no setting to configure, and contrast is guaranteed by the colour engine. Applies to Court Side and Members' House; Floodlight is unchanged, as its blocks were never near-black. Hero photographs are unaffected: the scrim over them stays neutral so your images keep their true colours.
 
 ## 0.24.0

@@ -18,6 +18,19 @@ final class CourtSideStylesheetTest extends TestCase {
 		}
 	}
 
+	/**
+	 * The eyebrow is a filled accent pill, so its text must route through
+	 * --color-accent-ink (the engine's guaranteed-legible-on-accent token).
+	 * --color-ink only works for pale accents — it fails AA on Cobalt (3.04) and
+	 * Berry (3.32). The Home hero must not recolour it either: recolouring the text
+	 * of a filled pill painted the accent onto the accent, a 1:1 invisible label.
+	 */
+	public function test_eyebrow_pill_text_is_legible_on_the_accent(): void {
+		$css = $this->css();
+		$this->assertStringContainsString( 'color:var(--color-accent-ink);background:var(--color-accent)', $css );
+		$this->assertStringNotContainsString( '.ch-home-hero .ch-eyebrow{color:var(--color-accent)}', $css );
+	}
+
 	public function test_accent_is_referenced_via_custom_property_not_literals(): void {
 		$css = $this->css();
 		$this->assertStringContainsString( 'var(--color-accent)', $css );
