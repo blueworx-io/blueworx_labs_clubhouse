@@ -36,4 +36,77 @@ final class PageRendererContentOverrideTest extends TestCase {
 		$html = Blueworx_Clubhouse_Page_Map::render( '', $b, $v, $c, '', $content );
 		$this->assertStringContainsString( 'Threaded!', $html );
 	}
+
+	public function test_membership_faq_loop_override(): void {
+		[ $b, $v, $c, $content ] = $this->ctx();
+		$content->set_items( 'membership', 'faq', array( array( 'question' => 'Custom Q?', 'answer' => 'Custom A.' ) ) );
+		$html = Blueworx_Clubhouse_Page_Renderer::membership( $b, $v, $c, '', $content );
+		$this->assertStringContainsString( 'Custom Q?', $html );
+	}
+
+	public function test_about_history_heading_override(): void {
+		[ $b, $v, $c, $content ] = $this->ctx();
+		$content->set( 'about', 'history', 'heading', 'Our custom story' );
+		$html = Blueworx_Clubhouse_Page_Renderer::about( $b, $v, $c, '', $content );
+		$this->assertStringContainsString( 'Our custom story', $html );
+	}
+
+	public function test_header_menu_cta_override_applies_across_pages(): void {
+		[ $b, $v, $c, $content ] = $this->ctx();
+		// Catalogue key for the header's menu CTA is 'join' (class-content-catalogue.php).
+		$content->set( 'global', 'header', 'join', 'Sign up' );
+		$html = Blueworx_Clubhouse_Page_Renderer::contact( $b, $v, $c, '', $content );
+		$this->assertStringContainsString( 'Sign up', $html );
+	}
+
+	public function test_sports_hero_override(): void {
+		[ $b, $v, $c, $content ] = $this->ctx();
+		$content->set( 'sports', 'hero', 'title_highlight', 'one custom club.' );
+		$html = Blueworx_Clubhouse_Page_Renderer::sports( $b, $v, $c, '', $content );
+		$this->assertStringContainsString( 'one custom club.', $html );
+	}
+
+	public function test_teams_hero_override(): void {
+		[ $b, $v, $c, $content ] = $this->ctx();
+		$content->set( 'teams', 'hero', 'title_highlight', 'every custom level.' );
+		$html = Blueworx_Clubhouse_Page_Renderer::teams( $b, $v, $c, '', $content );
+		$this->assertStringContainsString( 'every custom level.', $html );
+	}
+
+	public function test_events_hero_override(): void {
+		[ $b, $v, $c, $content ] = $this->ctx();
+		$content->set( 'events', 'hero', 'title_highlight', 'custom open days.' );
+		$html = Blueworx_Clubhouse_Page_Renderer::events( $b, $v, $c, '', $content );
+		$this->assertStringContainsString( 'custom open days.', $html );
+	}
+
+	public function test_calendar_hero_override(): void {
+		[ $b, $v, $c, $content ] = $this->ctx();
+		$content->set( 'calendar', 'hero', 'title_highlight', 'custom all season.' );
+		$html = Blueworx_Clubhouse_Page_Renderer::calendar( $b, $v, $c, '', $content );
+		$this->assertStringContainsString( 'custom all season.', $html );
+	}
+
+	public function test_login_form_heading_override(): void {
+		[ $b, $v, $c, $content ] = $this->ctx();
+		$content->set( 'login', 'form', 'heading', 'Welcome back, custom.' );
+		$html = Blueworx_Clubhouse_Page_Renderer::login( $b, $v, $c, '', $content );
+		$this->assertStringContainsString( 'Welcome back, custom.', $html );
+	}
+
+	public function test_home_stats_loop_override(): void {
+		[ $b, $v, $c, $content ] = $this->ctx();
+		$content->set_items( 'home', 'stats', array( array( 'value' => '1234', 'label' => 'Custom stat', 'featured' => true ) ) );
+		$html = Blueworx_Clubhouse_Page_Renderer::home( $b, $v, $c, '', $content );
+		$this->assertStringContainsString( 'Custom stat', $html );
+	}
+
+	/** Reconciliation with v0.23.0: Home's quick_tiles loop has no quick_tiles() call of
+	 *  its own any more — it threads into home_hero()'s 'tiles' argument instead. */
+	public function test_home_quick_tiles_loop_threads_into_hero_foot(): void {
+		[ $b, $v, $c, $content ] = $this->ctx();
+		$content->set_items( 'home', 'quick_tiles', array( array( 'label' => 'Custom tile', 'href' => '#custom', 'icon' => 'join' ) ) );
+		$html = Blueworx_Clubhouse_Page_Renderer::home( $b, $v, $c, '', $content );
+		$this->assertStringContainsString( 'Custom tile', $html );
+	}
 }
