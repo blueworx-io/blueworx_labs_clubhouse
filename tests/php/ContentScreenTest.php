@@ -248,6 +248,12 @@ final class ContentScreenTest extends TestCase {
 				$post['field'][ (string) $section['store_page'] ][ (string) $section['key'] ][ (string) $field['key'] ] = '';
 				++$posted;
 			}
+			// The screen renders a Hidden switch per section, so a real no-edit POST
+			// carries back the ones already switched on. Omitting them would post
+			// "nothing is hidden" and silently re-show every default-hidden section.
+			if ( ! empty( $section['hidden'] ) ) {
+				$post['hidden'][ (string) $section['vis_page'] ][ (string) $section['key'] ] = '1';
+			}
 		}
 		// Guard against this test silently passing by posting nothing at all.
 		$this->assertGreaterThan( 20, $posted, 'the Global tab must actually post its fields for this to prove anything' );
