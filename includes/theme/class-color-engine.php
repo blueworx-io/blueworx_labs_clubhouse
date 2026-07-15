@@ -73,7 +73,7 @@ class Blueworx_Clubhouse_Color_Engine {
 	/**
 	 * Derive the legible accent token set for a look's shell.
 	 *
-	 * @return array{'--color-accent':string,'--color-accent-ink':string,'--color-accent-deep':string,'--color-accent-wash':string}
+	 * @return array{'--color-accent':string,'--color-accent-ink':string,'--color-accent-deep':string,'--color-accent-wash':string,'--color-accent-block':string}
 	 */
 	public static function derive( string $accent, string $shell_bg, string $shell_ink ): array {
 		$accent = self::normalize_hex( $accent );
@@ -107,11 +107,36 @@ class Blueworx_Clubhouse_Color_Engine {
 			}
 		}
 
+		// The fill for large inverted blocks (banner, Home hero, ticker): the look's
+		// OWN ink pulled up to 30% toward the accent, so each club's site is tinted
+		// with its brand while keeping the look's weight and polarity. Deriving from
+		// $shell_ink rather than a fixed colour is what makes this a system-wide rule
+		// instead of per-look config — any look inherits it, and a look that fills
+		// those blocks with --color-paper (Floodlight) simply never references it.
+		//
+		// One constraint does double duty: these blocks are painted
+		// `background:var(--color-accent-block); color:var(--color-bg)`, so
+		// contrast(block, shell_bg) >= 4.5 guarantees BOTH that the block reads
+		// against the page AND that the bg-coloured text on it is legible.
+		//
+		// Floor is plain ink, so the token is never worse than the untinted block it
+		// replaces; on a shell whose ink cannot itself clear AA, nothing ink-derived
+		// can, and we degrade to exactly ink rather than returning a worse value.
+		$block = self::normalize_hex( $shell_ink );
+		for ( $i = 6; $i >= 0; $i-- ) { // 6/20 = the 0.30 ceiling; twentieths match accent-deep's grid.
+			$candidate = self::mix( $accent, self::normalize_hex( $shell_ink ), $i / 20 );
+			if ( self::contrast_ratio( $candidate, $shell_bg ) >= 4.5 ) {
+				$block = $candidate;
+				break;
+			}
+		}
+
 		return array(
-			'--color-accent'      => $accent,
-			'--color-accent-ink'  => $ink,
-			'--color-accent-deep' => $deep,
-			'--color-accent-wash' => self::mix( $accent, self::normalize_hex( $shell_bg ), 0.12 ),
+			'--color-accent'       => $accent,
+			'--color-accent-ink'   => $ink,
+			'--color-accent-deep'  => $deep,
+			'--color-accent-wash'  => self::mix( $accent, self::normalize_hex( $shell_bg ), 0.12 ),
+			'--color-accent-block' => $block,
 		);
 	}
 

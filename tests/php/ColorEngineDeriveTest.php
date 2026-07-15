@@ -23,7 +23,7 @@ final class ColorEngineDeriveTest extends TestCase {
 	public function test_returns_expected_keys(): void {
 		$t = $this->derive( '#c6f24e' );
 		$this->assertSame(
-			array( '--color-accent', '--color-accent-ink', '--color-accent-deep', '--color-accent-wash' ),
+			array( '--color-accent', '--color-accent-ink', '--color-accent-deep', '--color-accent-wash', '--color-accent-block' ),
 			array_keys( $t )
 		);
 	}
@@ -118,6 +118,72 @@ final class ColorEngineDeriveTest extends TestCase {
 		// A faint tint sits nearer the shell than the raw accent.
 		$to_shell = Blueworx_Clubhouse_Color_Engine::contrast_ratio( $t['--color-accent-wash'], self::LIGHT_BG );
 		$this->assertLessThan( 1.6, $to_shell );
+	}
+
+	/**
+	 * The block fill is the look's OWN ink pulled 30% toward the accent. This exact
+	 * value is the regression anchor: mix() weights toward its FIRST argument, and
+	 * swapping the arguments yields #93b23e (2.28 contrast), which fails the guard
+	 * at every step and silently falls through to plain ink — i.e. the tint just
+	 * disappears rather than erroring. Only this assertion catches that.
+	 */
+	public function test_accent_block_is_the_ink_tinted_toward_the_accent(): void {
+		$this->assertSame( '#4f5c28', $this->derive( '#c6f24e' )['--color-accent-block'] );
+	}
+
+	/**
+	 * The block is painted `background:var(--color-accent-block); color:var(--color-bg)`,
+	 * so this one ratio guarantees BOTH that the block reads against the page and
+	 * that the bg-coloured text on it is legible.
+	 */
+	#[DataProvider('hues')]
+	public function test_accent_block_clears_AA_on_light_shell( string $accent ): void {
+		$t = $this->derive( $accent );
+		$this->assertGreaterThanOrEqual(
+			4.5,
+			Blueworx_Clubhouse_Color_Engine::contrast_ratio( $t['--color-accent-block'], self::LIGHT_BG ),
+			"accent-block for {$accent} fails AA on the light shell"
+		);
+	}
+
+	/** Same guarantee on a dark shell — the token must follow the look's polarity. */
+	#[DataProvider('hues')]
+	public function test_accent_block_clears_AA_on_dark_shell( string $accent ): void {
+		$t = $this->derive( $accent, true );
+		$this->assertGreaterThanOrEqual(
+			4.5,
+			Blueworx_Clubhouse_Color_Engine::contrast_ratio( $t['--color-accent-block'], self::DARK_BG ),
+			"accent-block for {$accent} fails AA on the dark shell"
+		);
+	}
+
+	/**
+	 * The guard steps back when the full 30% tint would fail, and still lands on a
+	 * TINTED value rather than collapsing to ink. Needs a synthetic shell: the guard
+	 * never fires on the shipped light shells at 30% (verified across every hue in
+	 * hues() plus #ffffff and #ffff00). Here ink #444444 clears AA at 9.18, the 30%
+	 * lime tint measures 4.49 and fails, so the guard steps back one notch to
+	 * #657047 at 4.99.
+	 */
+	public function test_guard_steps_back_but_keeps_a_tint(): void {
+		$block = Blueworx_Clubhouse_Color_Engine::derive( '#c6f24e', self::LIGHT_BG, '#444444' )['--color-accent-block'];
+		$this->assertGreaterThanOrEqual(
+			4.5,
+			Blueworx_Clubhouse_Color_Engine::contrast_ratio( $block, self::LIGHT_BG ),
+			'guard must land on a value that clears AA'
+		);
+		$this->assertNotSame( '#444444', $block, 'guard must keep a tint, not collapse to ink' );
+	}
+
+	/**
+	 * The floor is the look's ink. On a shell whose ink cannot itself clear AA
+	 * (#ffffff on #808080 measures 3.95), no tint can either, so the token degrades
+	 * to exactly the ink — never worse than today's background:var(--color-ink).
+	 * AA is unreachable on such a shell and is not claimed.
+	 */
+	public function test_accent_block_falls_back_to_ink_when_no_tint_clears(): void {
+		$t = Blueworx_Clubhouse_Color_Engine::derive( '#c6f24e', self::MID_BG, self::MID_INK );
+		$this->assertSame( self::MID_INK, $t['--color-accent-block'] );
 	}
 
 	/** @return array<string,array{0:string}> */
