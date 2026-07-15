@@ -51,4 +51,41 @@ final class DemoModeSwitcherTest extends TestCase {
 		$this->assertDoesNotMatchRegularExpression( '/(?<!&)#[0-9a-fA-F]{3,6}\b/', $html, 'switcher must not hardcode colours' );
 		$this->assertStringNotContainsString( 'var(--color-accent', $html );
 	}
+
+	public function test_renders_one_swatch_per_accent(): void {
+		$html = Blueworx_Clubhouse_Demo_Mode::switcher_html( $this->looks(), 'court-side', null );
+		$this->assertSame( 5, substr_count( $html, 'data-clubhouse-accent="' ) );
+		$this->assertStringContainsString( 'data-clubhouse-accent="berry"', $html );
+		$this->assertStringContainsString( 'aria-label="Accent: Volt Lime"', $html );
+	}
+
+	/**
+	 * The swatch markup carries no colour: demo.css is neutral tooling chrome and
+	 * test_skin_agnostic_no_colour_literals pins that. demo.js paints each swatch
+	 * from window.clubhouseDemoPalettes instead.
+	 */
+	public function test_swatches_carry_no_colour(): void {
+		$html = Blueworx_Clubhouse_Demo_Mode::switcher_html( $this->looks(), 'court-side', null );
+		$this->assertDoesNotMatchRegularExpression( '/(?<!&)#[0-9a-fA-F]{3,6}\b/', $html );
+		$this->assertStringNotContainsString( 'style=', $html );
+	}
+
+	public function test_head_script_defines_the_palettes_and_reads_the_cookie(): void {
+		$js = Blueworx_Clubhouse_Demo_Mode::head_script(
+			Blueworx_Clubhouse_Demo_Mode::palettes( new Blueworx_Clubhouse_Court_Side() )
+		);
+		$this->assertStringContainsString( 'window.clubhouseDemoPalettes', $js );
+		$this->assertStringContainsString( 'clubhouse_demo_accent', $js );
+		$this->assertStringContainsString( '#c6f24e', $js, 'palettes must reach the client' );
+		$this->assertStringNotContainsString( '</script>', $js, 'must not be able to break out of its script tag' );
+	}
+
+	/** The JSON must be embeddable in an inline script without breaking out of it. */
+	public function test_head_script_json_is_tag_safe(): void {
+		$js = Blueworx_Clubhouse_Demo_Mode::head_script(
+			Blueworx_Clubhouse_Demo_Mode::palettes( new Blueworx_Clubhouse_Floodlight() )
+		);
+		$this->assertStringNotContainsString( '<\/script', $js );
+		$this->assertStringNotContainsString( '<script', $js );
+	}
 }

@@ -105,10 +105,42 @@ final class Blueworx_Clubhouse_Demo_Mode {
 				. self::esc( $look['name'] ) . '</button>';
 		}
 		$out .= '</div>';
+		$out .= '<div class="clubhouse-demo__accents" role="group" aria-label="Try an accent colour">';
+		foreach ( self::SWATCHES as $slug => $swatch ) {
+			// No colour here by design: demo.js paints the swatch from the palettes
+			// global, so this markup stays free of colour literals.
+			$out .= '<button type="button" class="clubhouse-demo__swatch"'
+				. ' data-clubhouse-accent="' . self::esc( $slug ) . '"'
+				. ' title="' . self::esc( $swatch['name'] ) . '"'
+				. ' aria-label="Accent: ' . self::esc( $swatch['name'] ) . '"></button>';
+		}
+		$out .= '</div>';
 		if ( null !== $deactivate_url ) {
 			$out .= '<a class="clubhouse-demo__exit" href="' . self::esc( $deactivate_url ) . '">Turn off demo mode</a>';
 		}
 		$out .= '</div>';
 		return $out;
+	}
+
+	/**
+	 * Inline JS for wp_head: publishes the palettes and applies the viewer's cookie'd
+	 * accent BEFORE first paint. This must run in the head — demo.js is a footer
+	 * script, so applying there would flash the club's saved colour first.
+	 *
+	 * JSON_HEX_TAG makes the payload safe to inline inside a <script> element.
+	 *
+	 * @param array<string,array{name:string,hex:string,tokens:array<string,string>}> $palettes
+	 */
+	public static function head_script( array $palettes ): string {
+		$json = json_encode( $palettes, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT );
+		return '(function(){var P=' . ( false === $json ? '{}' : $json ) . ';'
+			. 'window.clubhouseDemoPalettes=P;'
+			. 'var m=document.cookie.match(/(?:^|;\s*)' . self::COOKIE_ACCENT . '=([^;]*)/);'
+			. 'if(!m){return;}'
+			. 'var p=P[decodeURIComponent(m[1])];'
+			. 'if(!p){return;}'
+			. 'var r=document.documentElement.style;'
+			. 'for(var k in p.tokens){r.setProperty(k,p.tokens[k]);}'
+			. '})();';
 	}
 }
