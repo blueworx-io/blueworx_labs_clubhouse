@@ -19,8 +19,8 @@ test('demo bar renders five swatches, painted from the palettes', async ({ page 
 
 test('clicking a swatch recolours the page live, with no reload', async ({ page }) => {
   await page.goto('?demo=1');
-  // A reload wipes this flag — a more reliable "did not navigate" probe than
-  // listening for framenavigated, which does not fire when nothing navigates.
+  // The swatch is a <button type="button">, so this is not about default navigation —
+  // it proves the accent branch never calls location.reload() the way the look branch does.
   await page.evaluate(() => { window.__stillHere = true; });
   await page.locator('[data-clubhouse-accent="berry"]').click();
   expect(await page.evaluate(() => window.__stillHere), 'page must not reload').toBe(true);
