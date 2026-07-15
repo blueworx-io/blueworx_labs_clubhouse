@@ -66,10 +66,13 @@ Add one derived token, `--color-accent-block`, to `Color_Engine::derive()`:
 
 > **Implementer's note.** `mix( string $a, string $b, float $weight_a )` weights
 > toward its **first** argument, so `mix( $accent, $shell_ink, 0.30 )` is 30%
-> accent / 70% ink — not the reverse. Getting this backwards yields a 70%-accent
-> block that still passes a naive contrast check on some hues, so it will not
-> necessarily fail loudly. The `#4f5c28` value in the table below is the
-> regression anchor for Court Side + Volt Lime.
+> accent / 70% ink — not the reverse. Swapping the arguments produces a
+> 70%-accent block (`#93b23e` for Court Side + lime) at 2.28 contrast, which
+> fails the guard at *every* step, so the loop falls through to its floor and
+> returns plain ink. The failure mode is therefore **the tint silently
+> disappearing** — the page looks exactly like it does today rather than throwing.
+> The `#4f5c28` anchor test below is what catches it. `normalize_hex()` is
+> `protected`, so it is callable from inside the engine but not from tests.
 
 ### Why one constraint is sufficient
 
@@ -162,12 +165,24 @@ that does not exist.
 
 - `--color-accent-block` clears AA (>= 4.5) against the shell background across
   saturated hues on all three shipped shells — mirroring the existing
-  `test_accent_ink_clears_AA_across_saturated_hues`.
-- The guard pulls the blend back toward ink for a pathological light accent that
-  would otherwise fail, and the result clears AA.
-- The guard's floor is ink: an accent that can never clear resolves to ink rather
-  than looping or returning an illegible value.
-- `derive()` returns the new key alongside the existing four.
+  `test_accent_ink_clears_AA_across_saturated_hues`. **Verified**: passes for all
+  seven hues in the existing `hues()` provider on every real shell.
+- **Regression anchor:** Court Side + Volt Lime resolves to exactly `#4f5c28`.
+  This is the test that catches an inverted `mix()`.
+- **The guard fires and still lands legible.** Note the guard **never fires on the
+  shipped light shells at 30%** — verified across the full hue provider plus
+  `#ffffff` and `#ffff00` — so this needs a synthetic shell: on
+  `bg #faf8f3 / ink #444444`, the 30% lime tint measures 4.49 and fails, so the
+  guard steps back one notch to `#657047` at 4.99 — still tinted, now legible.
+- **The floor is ink.** On a shell whose ink cannot itself clear AA
+  (`bg #808080 / ink #ffffff`, where ink measures 3.95), the token degrades to
+  exactly the ink. The honest guarantee is therefore *"never worse than plain
+  ink"* — anything ink-derived is bounded by ink's own legibility, and today's
+  `background:var(--color-ink)` blocks have precisely the same property. AA on
+  such a shell is not achievable and is not claimed.
+- `derive()` returns the new key alongside the existing four. Note
+  `ColorEngineDeriveTest::test_returns_expected_keys` asserts the exact key list
+  via `assertSame` on `array_keys`, so it must be updated.
 
 **Stylesheets (PHPUnit)**
 
