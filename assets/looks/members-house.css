@@ -25,6 +25,12 @@ a{color:inherit;text-decoration:none}
 .ch-main:focus{outline:none}
 :where(a,button,summary,input,select,textarea,[tabindex]):focus-visible{outline:2px solid var(--color-accent-deep);outline-offset:2px;border-radius:2px}
 
+/* Focus ring on the tinted blocks: --color-accent-deep is derived from the same
+   accent as --color-accent-block, so on a tinted field the two converge and the
+   ring falls under 1.4.11's 3:1 (as low as 1.48:1). --color-bg is >=4.5:1 on the
+   block by the token's own guarantee, so it is legible for every club colour. */
+.ch-banner :focus-visible,.ch-ticker :focus-visible{outline-color:var(--color-bg)}
+
 /* Eyebrow — no filled pill; a letter-spaced label preceded by a short accent rule. */
 .ch-eyebrow{display:inline-flex;align-items:center;gap:12px;font-family:var(--font-body);font-size:12px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--color-ink-soft)}
 .ch-eyebrow::before{content:"";width:26px;height:2px;background:var(--color-accent-deep);flex:none}
@@ -76,7 +82,11 @@ a{color:inherit;text-decoration:none}
 .ch-banner{background:var(--color-accent-block);color:var(--color-bg)}
 .ch-banner__in{display:flex;justify-content:center;height:40px;align-items:center}
 .ch-banner__link{font-size:13px;font-weight:600;text-align:center}
-.ch-banner__link:hover{color:var(--color-accent)}
+/* Hover is an underline, not a colour shift: --color-accent on the tinted banner
+   falls under AA for some club colours (orange 3.56, teal 4.32). The inherited
+   --color-bg stays >=4.5:1 by the token's guarantee, and an underline is a
+   stronger affordance than colour alone. */
+.ch-banner__link:hover{text-decoration:underline}
 .ch-nav__cta{display:flex;gap:10px;align-items:center}
 /* Active link — full-contrast ink with a fine accent underline (signal beyond colour). */
 .ch-nav__links .ch-nav__link--active{color:var(--color-ink);font-weight:700;text-decoration:underline;text-decoration-color:var(--color-accent-deep);text-decoration-thickness:2px;text-underline-offset:6px}
@@ -158,7 +168,7 @@ a{color:inherit;text-decoration:none}
 .ch-ticker__pause-cb:checked ~ .ch-ticker__viewport .ch-ticker__track{animation-play-state:paused}
 .ch-ticker__pause-cb:checked ~ .ch-ticker__pause .ch-ticker__ico-pause{display:none}
 .ch-ticker__pause-cb:checked ~ .ch-ticker__pause .ch-ticker__ico-play{display:block}
-.ch-ticker__pause-cb:focus-visible ~ .ch-ticker__pause{outline:2px solid var(--color-accent);outline-offset:-3px}
+.ch-ticker__pause-cb:focus-visible ~ .ch-ticker__pause{outline:2px solid var(--color-bg);outline-offset:-3px}
 @keyframes ch-marquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
 @media(prefers-reduced-motion:reduce){.ch-ticker__track{animation:none}.ch-ticker__viewport{overflow-x:auto}.ch-ticker__track[aria-hidden="true"]{display:none}.ch-ticker__pause,.ch-ticker__pause-cb{display:none}}
 

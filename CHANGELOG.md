@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## 0.24.2
 
-- **Change:** the top banner, home hero and news ticker now carry your club's colour instead of near-black. Each is filled with the Base Look's own ink pulled 30% toward your accent, so the site reads as tinted with your brand while keeping the same weight and readability. Every club colour is handled automatically — no setting to configure, and contrast is guaranteed by the colour engine. Applies to Court Side and Members' House; Floodlight is unchanged, as its blocks were never near-black. Hero photographs are unaffected: the scrim over them stays neutral so your images keep their true colours.
+- **Change:** the top banner and news ticker now carry your club's colour instead of near-black, and the home hero does too whenever no hero photo is set. Each is filled with the Base Look's own ink pulled 30% toward your accent, so the site reads as tinted with your brand while keeping the same weight and readability. Every club colour is handled automatically — no setting to configure, and contrast is guaranteed by the colour engine. Applies to Court Side and Members' House; Floodlight is unchanged, as its blocks were never near-black. Hero photographs are unaffected: the scrim over them stays neutral so your images keep their true colours.
 
 ## 0.24.0
 

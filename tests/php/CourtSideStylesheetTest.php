@@ -70,4 +70,22 @@ final class CourtSideStylesheetTest extends TestCase {
 			$this->css()
 		);
 	}
+
+	/**
+	 * Accent-derived marks converge with the tinted field, so the blocks re-point
+	 * their focus ring at --color-bg, which the token's rule guarantees is >=4.5:1
+	 * on the block for every club colour.
+	 */
+	public function test_tinted_blocks_use_a_legible_focus_ring(): void {
+		$css = $this->css();
+		$this->assertStringContainsString( '.ch-banner :focus-visible,.ch-ticker :focus-visible{outline-color:var(--color-bg)}', $css );
+		$this->assertStringNotContainsString( 'outline:3px solid var(--color-accent);outline-offset:-3px', $css );
+		$this->assertStringNotContainsString( 'outline:2px solid var(--color-accent);outline-offset:-3px', $css );
+	}
+
+	public function test_banner_link_hover_does_not_rely_on_accent_colour(): void {
+		$css = $this->css();
+		$this->assertStringContainsString( '.ch-banner__link:hover{text-decoration:underline}', $css );
+		$this->assertStringNotContainsString( '.ch-banner__link:hover{color:var(--color-accent)}', $css );
+	}
 }

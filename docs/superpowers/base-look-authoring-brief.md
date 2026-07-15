@@ -63,10 +63,10 @@ Keep the shell warm and never pure `#000`/`#fff` (house convention). Choose ligh
 dark deliberately — a light look is the easy path; a **second dark** look (different
 from Floodlight) is a strong differentiator if you want one.
 
-### The accent — one colour in, four derived out
+### The accent — one colour in, five derived out
 
 The club owner sets **one** accent. At save-time the engine
-(`Color_Engine::derive(accent, shell_bg, shell_ink)`) produces four CSS custom
+(`Color_Engine::derive(accent, shell_bg, shell_ink)`) produces five CSS custom
 properties your stylesheet consumes:
 
 - `--color-accent` — the raw club accent. Decorative/light effects only.
@@ -75,6 +75,15 @@ properties your stylesheet consumes:
 - `--color-accent-deep` — accent used **as text** on the shell. **AA-guaranteed**
   (≥4.5:1 vs `--color-bg`). Route all accent-coloured text/marks/rules through this.
 - `--color-accent-wash` — a soft accent tint for fields/washes.
+- `--color-accent-block` — the fill for large inverted blocks (banner, Home hero,
+  ticker). It is your look's **own** `--color-ink` pulled 30% toward the accent, so it
+  keeps your look's weight and polarity while carrying the club's colour, and it is
+  guaranteed ≥4.5:1 against `--color-bg` — which means `--color-bg` is always a legible
+  mark **on** it. Use it instead of `--color-ink` for any large block you would
+  otherwise fill with flat ink. **Marks on this block must not use `--color-accent` or
+  `--color-accent-deep`** — both derive from the same accent and converge with the
+  field; route them through `--color-bg`. A look opts in by referencing this token:
+  Floodlight does not, because it fills those blocks with `--color-paper` instead.
 
 ### `accent_bears_text()` — the legibility switch
 
