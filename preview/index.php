@@ -119,11 +119,29 @@ function blueworx_clubhouse_preview_document(): string {
 			. '})();</script>';
 	}
 
+	// Preview-only: mount the REAL Demo mode bar (Demo_Mode is WP-free, demo.js is
+	// plain JS) so its picker can be driven in a browser. Demo_Controller itself is
+	// WordPress-coupled and cannot run here. Additive and opt-in — the preview's own
+	// .ch-switcher is unaffected.
+	$demo = '';
+	if ( isset( $_GET['demo'] ) && '1' === $_GET['demo'] ) {
+		$demo_looks = array();
+		foreach ( $registry->all() as $demo_look ) {
+			$demo_looks[] = array( 'slug' => $demo_look->slug(), 'name' => $demo_look->name() );
+		}
+		$demo = '<link rel="stylesheet" href="/assets/css/demo.css">'
+			. '<script>' . Blueworx_Clubhouse_Demo_Mode::head_script(
+				Blueworx_Clubhouse_Demo_Mode::palettes( $registry->active() )
+			) . '</script>'
+			. Blueworx_Clubhouse_Demo_Mode::switcher_html( $demo_looks, (string) $look_slug, null )
+			. '<script src="/assets/js/demo.js"></script>';
+	}
+
 	// Served with docroot = plugin root, so the look stylesheet resolves from '/'.
 	return Blueworx_Clubhouse_Page_Renderer::document(
 		$registry->active(),
 		$branding,
-		$body . $switcher . $look_toggle . $look_persist . $style,
+		$body . $switcher . $look_toggle . $look_persist . $style . $demo,
 		'/'
 	);
 }

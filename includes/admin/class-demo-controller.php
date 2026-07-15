@@ -25,6 +25,7 @@ final class Blueworx_Clubhouse_Demo_Controller {
 	public static function register(): void {
 		add_action( 'admin_bar_menu', array( self::class, 'admin_bar_node' ), 100 );
 		add_action( 'wp_enqueue_scripts', array( self::class, 'enqueue' ) );
+		add_action( 'wp_head', array( self::class, 'render_head_script' ), 1 );
 		add_action( 'wp_footer', array( self::class, 'render_switcher' ) );
 		add_action( 'admin_post_' . self::TOGGLE_ACTION, array( self::class, 'handle_toggle' ) );
 	}
@@ -95,6 +96,31 @@ final class Blueworx_Clubhouse_Demo_Controller {
 			'href'  => self::toggle_url(),
 			'meta'  => array( 'class' => $on ? 'clubhouse-demo-on' : 'clubhouse-demo-off' ),
 		) );
+	}
+
+	/**
+	 * Publish the palettes and re-apply the viewer's accent before first paint.
+	 * Priority 1 on wp_head, not the footer bundle: demo.js is a footer script, so
+	 * applying there would flash the club's saved colour before the demo one.
+	 */
+	public static function render_head_script(): void {
+		if ( ! self::is_on() ) {
+			return;
+		}
+		$registry = Blueworx_Clubhouse_Frontend::registry( new Blueworx_Clubhouse_Options_Storage() );
+		// Resolve the look the VIEWER is seeing, not the club's saved one. The demo
+		// look never becomes the registry's active look — Frontend::context() keeps
+		// them apart the same way, and render_switcher() below already resolves it
+		// like this. Deriving from active() here would emit palettes for the wrong
+		// shell whenever a viewer is demoing a look.
+		$slug = self::look_slug( $registry );
+		$look = null !== $slug ? $registry->get( $slug ) : $registry->active();
+		if ( ! $look instanceof Blueworx_Clubhouse_Base_Look ) {
+			return;
+		}
+		echo '<script id="clubhouse-demo-accent">'
+			. Blueworx_Clubhouse_Demo_Mode::head_script( Blueworx_Clubhouse_Demo_Mode::palettes( $look ) ) // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- head_script JSON-encodes with JSON_HEX_TAG; asserted tag-safe by DemoModeSwitcherTest.
+			. '</script>';
 	}
 
 	public static function render_switcher(): void {

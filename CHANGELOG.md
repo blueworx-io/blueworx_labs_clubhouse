@@ -5,6 +5,10 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.24.3
+
+- **Demo mode now lets you try colours, not just looks.** While demo mode is on, the bar gains five brand colours — click one and the whole site recolours instantly, no page reload. Your choice follows you as you browse, and switching Base Look keeps your colour while re-fitting it to that look's style. It only ever changes what *you* see: the club's saved colour is untouched, and other visitors are unaffected.
+
 ## 0.24.2
 
 - **Fix (Court Side):** the small label above the home hero headline ("Est. 1974 · Marlow, UK") was invisible — its text was the same colour as the pill behind it. It now reads correctly, and the label's text automatically switches between dark and light so it stays readable whatever colour your club picks.

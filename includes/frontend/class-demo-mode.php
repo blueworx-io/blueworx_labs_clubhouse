@@ -17,6 +17,24 @@ final class Blueworx_Clubhouse_Demo_Mode {
 
 	public const COOKIE_LOOK = 'clubhouse_demo_look';
 
+	public const COOKIE_ACCENT = 'clubhouse_demo_accent';
+
+	/**
+	 * The demo swatch set, in display order. Curated rather than a free colour
+	 * input: an arbitrary accent can fail the engine's legibility gate (the admin
+	 * Setup screen already rejects some), which would need a warning UI. These five
+	 * are known-good on every shipped look.
+	 *
+	 * @var array<string,array{name:string,hex:string}>
+	 */
+	public const SWATCHES = array(
+		'volt-lime'     => array( 'name' => 'Volt Lime', 'hex' => '#c6f24e' ),
+		'signal-orange' => array( 'name' => 'Signal Orange', 'hex' => '#ff5b23' ),
+		'court-teal'    => array( 'name' => 'Court Teal', 'hex' => '#12c3b0' ),
+		'cobalt'        => array( 'name' => 'Cobalt', 'hex' => '#3b5bdb' ),
+		'berry'         => array( 'name' => 'Berry', 'hex' => '#c2337a' ),
+	);
+
 	/**
 	 * The Base Look slug to render in place of the saved active look, or null to
 	 * fall through to the saved look. Unknown/stale slugs fall through (never fatal).
@@ -30,6 +48,34 @@ final class Blueworx_Clubhouse_Demo_Mode {
 			return null;
 		}
 		return in_array( $look_cookie, $available_slugs, true ) ? $look_cookie : null;
+	}
+
+	/**
+	 * Derive each swatch's accent token set for a look, through the real engine.
+	 * Keyed by slug so the client can look up a cookie'd choice directly.
+	 *
+	 * Derivation depends on the look's shell, so these must be recomputed per look —
+	 * which is exactly why the cookie stores a slug and not a hex: on a look switch
+	 * the server re-derives for the new shell instead of the client replaying a
+	 * colour computed for the old one.
+	 *
+	 * @return array<string,array{name:string,hex:string,tokens:array<string,string>}>
+	 */
+	public static function palettes( Blueworx_Clubhouse_Base_Look $look ): array {
+		$shell = $look->tokens();
+		$out   = array();
+		foreach ( self::SWATCHES as $slug => $swatch ) {
+			$out[ $slug ] = array(
+				'name'   => $swatch['name'],
+				'hex'    => $swatch['hex'],
+				'tokens' => Blueworx_Clubhouse_Color_Engine::derive(
+					$swatch['hex'],
+					$shell['--color-bg'],
+					$shell['--color-ink']
+				),
+			);
+		}
+		return $out;
 	}
 
 	private static function esc( string $v ): string {
@@ -59,10 +105,42 @@ final class Blueworx_Clubhouse_Demo_Mode {
 				. self::esc( $look['name'] ) . '</button>';
 		}
 		$out .= '</div>';
+		$out .= '<div class="clubhouse-demo__accents" role="group" aria-label="Try an accent colour">';
+		foreach ( self::SWATCHES as $slug => $swatch ) {
+			// No colour here by design: demo.js paints the swatch from the palettes
+			// global, so this markup stays free of colour literals.
+			$out .= '<button type="button" class="clubhouse-demo__swatch"'
+				. ' data-clubhouse-accent="' . self::esc( $slug ) . '"'
+				. ' title="' . self::esc( $swatch['name'] ) . '"'
+				. ' aria-label="Accent: ' . self::esc( $swatch['name'] ) . '"></button>';
+		}
+		$out .= '</div>';
 		if ( null !== $deactivate_url ) {
 			$out .= '<a class="clubhouse-demo__exit" href="' . self::esc( $deactivate_url ) . '">Turn off demo mode</a>';
 		}
 		$out .= '</div>';
 		return $out;
+	}
+
+	/**
+	 * Inline JS for wp_head: publishes the palettes and applies the viewer's cookie'd
+	 * accent BEFORE first paint. This must run in the head — demo.js is a footer
+	 * script, so applying there would flash the club's saved colour first.
+	 *
+	 * JSON_HEX_TAG makes the payload safe to inline inside a <script> element.
+	 *
+	 * @param array<string,array{name:string,hex:string,tokens:array<string,string>}> $palettes
+	 */
+	public static function head_script( array $palettes ): string {
+		$json = json_encode( $palettes, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT );
+		return '(function(){var P=' . ( false === $json ? '{}' : $json ) . ';'
+			. 'window.clubhouseDemoPalettes=P;'
+			. 'var m=document.cookie.match(/(?:^|;\s*)' . self::COOKIE_ACCENT . '=([^;]*)/);'
+			. 'if(!m){return;}'
+			. 'var p=P[decodeURIComponent(m[1])];'
+			. 'if(!p){return;}'
+			. 'var r=document.documentElement.style;'
+			. 'for(var k in p.tokens){r.setProperty(k,p.tokens[k]);}'
+			. '})();';
 	}
 }
