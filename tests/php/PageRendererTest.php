@@ -66,8 +66,8 @@ final class PageRendererTest extends TestCase {
 		$vis  = new Blueworx_Clubhouse_Visibility( new Blueworx_Clubhouse_Fake_Storage() );
 		$body = Blueworx_Clubhouse_Page_Renderer::home( $this->branding(), $vis, $this->collections() );
 		$this->assertStringContainsString( 'class="ch-nav"', $body );
-		$this->assertStringContainsString( 'class="ch-hero"', $body );
-		$this->assertStringContainsString( 'class="ch-tiles"', $body );
+		$this->assertStringContainsString( 'class="ch-home-hero"', $body );
+		$this->assertStringContainsString( 'class="ch-home-hero__foot"', $body );
 		$this->assertStringContainsString( 'class="ch-stats"', $body );
 		$this->assertStringContainsString( 'class="ch-cards"', $body );
 		$this->assertStringContainsString( 'class="ch-tiers"', $body );
@@ -80,7 +80,7 @@ final class PageRendererTest extends TestCase {
 		$vis->set_section_visible( 'home', 'stats', false );
 		$body = Blueworx_Clubhouse_Page_Renderer::home( $this->branding(), $vis, $this->collections() );
 		$this->assertStringNotContainsString( 'class="ch-stats"', $body );
-		$this->assertStringContainsString( 'class="ch-hero"', $body ); // others still present
+		$this->assertStringContainsString( 'class="ch-home-hero"', $body ); // others still present
 	}
 
 	public function test_about_composes_its_sections(): void {
@@ -177,7 +177,7 @@ final class PageRendererTest extends TestCase {
 		$branding = new Blueworx_Clubhouse_Branding( new Blueworx_Clubhouse_Fake_Storage() );
 		$html     = Blueworx_Clubhouse_Page_Renderer::document( $look, $branding, '<main></main>', '/' );
 		$this->assertStringContainsString( 'IntersectionObserver', $html );
-		$this->assertStringContainsString( "querySelectorAll('.ch-main > *:not(.ch-hero)')", $html );
+		$this->assertStringContainsString( "querySelectorAll('.ch-main > *:not(.ch-hero):not(.ch-home-hero)')", $html );
 	}
 
 	public function test_sports_page_renders_collection_sports(): void {
