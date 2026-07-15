@@ -57,3 +57,19 @@ Current scope: **v0.20.0** — Admin Phases 1–4 plus the site-wide Demo mode r
 - [ ] The club's **saved look is never changed** — turn demo off, confirm the saved look returns.
 - [ ] A **non-admin** viewer sees the look controls but **no "Turn off demo mode"** control.
 - [ ] The toggle is **nonce + capability gated**: a non-admin (or a forged/stale nonce) hitting `admin-post.php?action=clubhouse_demo_toggle` cannot flip the flag.
+
+## Content editor (v0.24.0)
+
+Runtime-only — the Site Content screen is a wp-admin screen, so the DB-free preview
+cannot render it. These must be checked on a real WordPress install.
+
+- [ ] Activate → a **Site Content** screen appears under Clubhouse (owner + admin). Guards the init wiring (a past merge silently dropped such wiring).
+- [ ] The screen is skinned to the saved Base Look **including fonts on first paint**; switching look in Setup re-skins it.
+- [ ] Edit Global → Hero heading, Save → the front-end Home hero shows the new heading, and every field you did **not** edit is unchanged.
+- [ ] Add two FAQ items on Membership → they render on `/membership/`; remove one → it's gone.
+- [ ] Toggle a section **Hidden** here → it disappears from the front end **and** shows unticked in Setup → Visibility (shared store). Check the **Global tab's Header/Footer** specifically — they store under `global` but hide under `home`, which is exactly where this silently failed in review.
+- [ ] A link-out (e.g. Teams directory) opens the native `clubhouse_team` list screen; the **"Edit tiers"** link-out (Global → Membership tiers) stays on the Site Content screen rather than landing on a WordPress error page.
+- [ ] An Image field opens `wp.media`, stores the attachment, and the image renders on the front end. Two image fields on one screen must not cross-wire.
+- [ ] Everything reachable and submittable **JS-off**: tabs via links, Save via submit, **and Add/Remove via their submit buttons** (these were silent no-ops until review caught it — worth an explicit JS-off check).
+- [ ] Content editor styles do **not** bleed into the rest of wp-admin (scoped to the page body class).
+- [ ] Home hero **quick tiles**: edit a tile's label/link and pick an Icon → the icon card at the foot of the Home hero updates. A tile saved with "No icon" renders without a glyph (not a broken/blank icon).
