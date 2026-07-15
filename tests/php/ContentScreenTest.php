@@ -62,10 +62,75 @@ final class ContentScreenTest extends TestCase {
 		$this->assertStringNotContainsString( 'name="hidden[global][header]"', $html );
 	}
 
-	/** Regression guard: handle_save only runs when this POST key is present. */
-	public function test_save_submit_key_present_once_per_page_form(): void {
+	/**
+	 * Regression guard: handle_save() only runs when clubhouse_content_submit is
+	 * posted. Per the HTML spec only the *activated* submit button contributes its
+	 * name/value, so the Save button alone does NOT cover the Add/Remove buttons —
+	 * each form must also carry the key as a HIDDEN input, or those clicks are
+	 * silent no-ops. Asserting the hidden input specifically (not just the name
+	 * anywhere) is what makes this guard real: the earlier count-of-9 assertion
+	 * passed while Add/Remove were broken.
+	 */
+	public function test_every_page_form_posts_the_submit_key_as_a_hidden_input(): void {
 		$html = Blueworx_Clubhouse_Content_Screen::render( $this->model() );
-		$this->assertSame( 9, substr_count( $html, 'name="clubhouse_content_submit"' ) );
+		$this->assertSame(
+			9,
+			preg_match_all( '/<input type="hidden" name="clubhouse_content_submit" value="1">/', $html ),
+			'each of the 9 page forms must post the submit key regardless of which button was activated'
+		);
+	}
+
+	/** The hidden inputs of the first <form> — i.e. what any submission from it carries. */
+	private function hidden_inputs_of_first_form( string $html ): array {
+		$start = strpos( $html, '<form' );
+		$end   = strpos( $html, '</form>', (int) $start );
+		$form  = substr( $html, (int) $start, (int) $end - (int) $start );
+		preg_match_all( '/<input type="hidden" name="([^"]+)" value="([^"]*)">/', $form, $m, PREG_SET_ORDER );
+		$post = array();
+		foreach ( $m as $hit ) {
+			$post[ html_entity_decode( $hit[1], ENT_QUOTES ) ] = html_entity_decode( $hit[2], ENT_QUOTES );
+		}
+		return $post;
+	}
+
+	/**
+	 * End-to-end guard for the defect this screen shipped with: render the real
+	 * screen, derive the $_POST an "Add item" click actually produces (the form's
+	 * hidden inputs + only the activated button, per the HTML spec), and feed it to
+	 * the real controller. Before the fix this POST carried no clubhouse_content_submit,
+	 * so handle_save() never ran and the row was never added — with no error shown.
+	 */
+	public function test_add_item_click_round_trips_through_handle_save(): void {
+		$storage = new Blueworx_Clubhouse_Fake_Storage();
+		$model   = Blueworx_Clubhouse_Content_Controller::build_model( $storage, array(), '', 'http://x.test/admin.php?page=clubhouse-site-content' );
+		$html    = Blueworx_Clubhouse_Content_Screen::render( $model );
+
+		$post = $this->hidden_inputs_of_first_form( $html );
+		$this->assertArrayHasKey( 'clubhouse_content_submit', $post, 'an Add click must still post the save gate' );
+		$this->assertSame( 'global', $post['clubhouse_content_tab'] );
+		$post['clubhouse_content_add'] = array( 'home' => array( 'stats' => '1' ) );
+
+		Blueworx_Clubhouse_Content_Controller::handle_save( $post, $storage );
+		$this->assertCount( 1, ( new Blueworx_Clubhouse_Content_Store( $storage ) )->get_items( 'home', 'stats' ) );
+	}
+
+	/** The mirror of the Add round-trip: a Remove click must also reach handle_save. */
+	public function test_remove_item_click_round_trips_through_handle_save(): void {
+		$storage = new Blueworx_Clubhouse_Fake_Storage();
+		( new Blueworx_Clubhouse_Content_Store( $storage ) )->set_items( 'home', 'stats', array(
+			array( 'value' => '900+', 'label' => 'Members' ),
+			array( 'value' => '9', 'label' => 'Sports' ),
+		) );
+		$model = Blueworx_Clubhouse_Content_Controller::build_model( $storage, array(), '', 'http://x.test/admin.php?page=clubhouse-site-content' );
+		$html  = Blueworx_Clubhouse_Content_Screen::render( $model );
+
+		$post = $this->hidden_inputs_of_first_form( $html );
+		$post['clubhouse_content_remove'] = array( 'home' => array( 'stats' => '0' ) );
+
+		Blueworx_Clubhouse_Content_Controller::handle_save( $post, $storage );
+		$items = ( new Blueworx_Clubhouse_Content_Store( $storage ) )->get_items( 'home', 'stats' );
+		$this->assertCount( 1, $items );
+		$this->assertSame( '9', $items[0]['value'], 'item 0 removed, item 1 survives' );
 	}
 
 	/** Regression guard: the 'select' field type must render a <select> with the option map, current value selected. */

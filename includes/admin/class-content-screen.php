@@ -30,7 +30,23 @@ final class Blueworx_Clubhouse_Content_Screen {
 		return htmlspecialchars( $v, ENT_QUOTES, 'UTF-8' );
 	}
 
+	/**
+	 * Escape a URL for use in an href/src attribute, rejecting dangerous
+	 * schemes (javascript:, data:, vbscript:, etc.) before entity-escaping.
+	 * Every href in this screen is currently built from trusted, server-side
+	 * strings (the controller's admin_url() action_url, or catalogue tab/sec/
+	 * cpt slugs) — never a value pulled straight from Content_Store — but the
+	 * name "esc_url" promises scheme-level URL safety, not just character
+	 * escaping, so it must actually provide that guarantee rather than trap
+	 * the first caller who routes a stored value into an href.
+	 */
 	private static function esc_url( string $v ): string {
+		if ( preg_match( '/^\s*([a-zA-Z][a-zA-Z0-9+.\-]*):/', $v, $m ) ) {
+			$scheme = strtolower( $m[1] );
+			if ( ! in_array( $scheme, array( 'http', 'https', 'mailto' ), true ) ) {
+				return '';
+			}
+		}
 		return self::esc( $v );
 	}
 
@@ -132,11 +148,20 @@ final class Blueworx_Clubhouse_Content_Screen {
 		$out .= '<form method="post" action="' . self::esc_url( $action_url ) . '" class="clubhouse-form">';
 		$out .= $nonce_field;
 		$out .= '<input type="hidden" name="clubhouse_content_tab" value="' . self::esc( $tab ) . '">';
+		// Per the HTML spec, only the activated submit button contributes its
+		// name/value to a submission — so a click on the Add/Remove loop buttons
+		// (named clubhouse_content_add[…]/clubhouse_content_remove[…]) carries no
+		// clubhouse_content_submit, and Content_Controller::render_page() only
+		// calls handle_save() when that key is present. This hidden field makes
+		// every submission path from this form persist, regardless of which
+		// submit button was activated; the Save button below shares the same
+		// name so its own click still works identically.
+		$out .= '<input type="hidden" name="clubhouse_content_submit" value="1">';
 		$out .= '<div class="clubhouse-body">';
 		$out .= self::section_nav( $page, $action_url );
 		$out .= '<div class="clubhouse-panels">';
 		foreach ( $page['sections'] as $sindex => $section ) {
-			$out .= self::section_panel( $section, $tab, 0 === $sindex );
+			$out .= self::section_panel( $section, $tab, 0 === $sindex, $action_url );
 		}
 		$out .= '</div></div>';
 		$out .= self::save_bar();
@@ -144,16 +169,26 @@ final class Blueworx_Clubhouse_Content_Screen {
 		return $out;
 	}
 
-	/** @param array{tab:string,sections:array<int,array<string,mixed>>} $page */
+	/**
+	 * Section jump-nav for one page. These anchors are plain in-page links —
+	 * every section panel renders simultaneously (no request-driven filtering
+	 * and, absent Task 8's JS, no single-panel switching), so `role="tab"` /
+	 * `role="tablist"` would announce a tab widget that doesn't exist to a
+	 * screen reader. Left as plain links; Task 8 can layer real tab semantics
+	 * (aria-selected, aria-controls) back on once it drives single-panel
+	 * visibility.
+	 *
+	 * @param array{tab:string,sections:array<int,array<string,mixed>>} $page
+	 */
 	private static function section_nav( array $page, string $action_url ): string {
 		$tab = (string) $page['tab'];
-		$out = '<nav class="clubhouse-secnav" role="tablist">';
+		$out = '<nav class="clubhouse-secnav">';
 		foreach ( $page['sections'] as $index => $section ) {
 			$key   = (string) $section['key'];
 			$cls   = 0 === $index ? ' is-active' : '';
 			$href  = self::sec_href( $action_url, $tab, $key );
 			$meta  = self::section_meta_badge( $section );
-			$out  .= '<a class="clubhouse-secnav__item' . $cls . '" href="' . self::esc_url( $href ) . '" data-sec="' . self::esc( $key ) . '" role="tab">'
+			$out  .= '<a class="clubhouse-secnav__item' . $cls . '" href="' . self::esc_url( $href ) . '" data-sec="' . self::esc( $key ) . '">'
 				. self::esc( (string) $section['label'] );
 			if ( '' !== $meta ) {
 				$out .= '<span class="clubhouse-secnav__meta">' . self::esc( $meta ) . '</span>';
@@ -178,17 +213,24 @@ final class Blueworx_Clubhouse_Content_Screen {
 		return '';
 	}
 
-	/** @param array<string,mixed> $section */
-	private static function section_panel( array $section, string $tab, bool $is_active ): string {
+	/**
+	 * Renders one section panel. Not given `role="tabpanel"`: every section
+	 * panel on the page renders simultaneously (see section_nav()'s docblock),
+	 * so that role would be false ARIA. The section title is a real `<h2>` —
+	 * this is the only heading level below the screen's single `<h1>`.
+	 *
+	 * @param array<string,mixed> $section
+	 */
+	private static function section_panel( array $section, string $tab, bool $is_active, string $action_url ): string {
 		$key         = (string) $section['key'];
 		$store_page  = (string) $section['store_page'];
 		$vis_page    = (string) $section['vis_page'];
 		$hidden      = (bool) ( $section['hidden'] ?? false );
 		$cls         = $is_active ? ' is-active' : '';
 
-		$out  = '<div class="clubhouse-panel' . $cls . '" id="' . self::esc( self::slug_id( 'clubhouse-sec', $tab, $key ) ) . '" data-panel="' . self::esc( $key ) . '" role="tabpanel">';
+		$out  = '<div class="clubhouse-panel' . $cls . '" id="' . self::esc( self::slug_id( 'clubhouse-sec', $tab, $key ) ) . '" data-panel="' . self::esc( $key ) . '">';
 		$out .= '<div class="clubhouse-panel__head">'
-			. '<p class="clubhouse-panel__eyebrow">' . self::esc( $tab ) . ' page · ' . self::esc( strtoupper( (string) $section['label'] ) ) . '</p>'
+			. '<h2 class="clubhouse-panel__eyebrow">' . self::esc( $tab ) . ' page · ' . self::esc( strtoupper( (string) $section['label'] ) ) . '</h2>'
 			. self::visibility_toggle( $vis_page, $key, $hidden )
 			. '</div>';
 
@@ -205,7 +247,7 @@ final class Blueworx_Clubhouse_Content_Screen {
 		}
 
 		if ( ! empty( $section['link'] ) ) {
-			$out .= self::linkout_card( $section['link'] );
+			$out .= self::linkout_card( $section['link'], $action_url );
 		}
 
 		if ( ! empty( $section['auto'] ) ) {
@@ -322,11 +364,17 @@ final class Blueworx_Clubhouse_Content_Screen {
 		return $out;
 	}
 
-	/** @param array{kind:string,label:string,text:string,cpt?:string,tab?:string,sec?:string} $link */
-	private static function linkout_card( array $link ): string {
+	/**
+	 * @param array{kind:string,label:string,text:string,cpt?:string,tab?:string,sec?:string} $link
+	 */
+	private static function linkout_card( array $link, string $action_url ): string {
+		// A 'section' link jumps to another catalogue page/section within this
+		// same screen, so it must be built against this screen's own action_url
+		// (like tab_href/sec_href elsewhere) — an empty base here would drop the
+		// page= query param and land on a bare WordPress error page.
 		$href = 'cpt' === $link['kind']
 			? 'edit.php?post_type=' . (string) ( $link['cpt'] ?? '' )
-			: self::sec_href( '', (string) ( $link['tab'] ?? '' ), (string) ( $link['sec'] ?? '' ) );
+			: self::sec_href( $action_url, (string) ( $link['tab'] ?? '' ), (string) ( $link['sec'] ?? '' ) );
 		return '<div class="clubhouse-linkout">'
 			. '<p class="clubhouse-linkout__text">' . self::esc( (string) $link['text'] ) . '</p>'
 			. '<a class="clubhouse-btn clubhouse-btn--primary" href="' . self::esc_url( $href ) . '">' . self::esc( (string) $link['label'] ) . '</a>'
@@ -344,8 +392,16 @@ final class Blueworx_Clubhouse_Content_Screen {
 		return $out;
 	}
 
+	/**
+	 * Hidden by default via the native `hidden` attribute — true on first load
+	 * and with JavaScript disabled, so an owner is never told about "unsaved
+	 * changes" they haven't made. Task 8's JS is expected to clear this
+	 * attribute once it observes an actual edit (mirrors the project's
+	 * `--js`-gated-visibility pattern used in admin-setup.css/admin-setup.js,
+	 * adapted here since this markup ships ahead of its own CSS/JS bundle).
+	 */
 	private static function save_bar(): string {
-		return '<div class="clubhouse-bar"><p class="clubhouse-bar__hint">You have unsaved changes.</p>'
+		return '<div class="clubhouse-bar"><p class="clubhouse-bar__hint" hidden>You have unsaved changes.</p>'
 			. '<button type="submit" name="clubhouse_content_submit" value="1" class="clubhouse-btn clubhouse-btn--primary">Save changes</button></div>';
 	}
 }
