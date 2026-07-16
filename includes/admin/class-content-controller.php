@@ -27,12 +27,12 @@ final class Blueworx_Clubhouse_Content_Controller {
 
 	public static function add_menu(): void {
 		add_menu_page(
-			'Site Content',
-			'Site Content',
+			'Club Content',
+			'Club Content',
 			self::CAPABILITY,
 			self::PAGE_SLUG,
 			array( self::class, 'render_page' ),
-			'dashicons-edit',
+			Blueworx_Clubhouse_Admin_Menu_Icons::data_uri( self::PAGE_SLUG ),
 			5
 		);
 	}

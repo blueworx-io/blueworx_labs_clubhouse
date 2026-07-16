@@ -121,7 +121,7 @@ final class Blueworx_Clubhouse_Setup_Controller {
 			self::CAPABILITY,
 			self::PAGE_SLUG,
 			array( self::class, 'render_page' ),
-			'dashicons-megaphone',
+			Blueworx_Clubhouse_Admin_Menu_Icons::data_uri( self::PAGE_SLUG ),
 			3
 		);
 	}
