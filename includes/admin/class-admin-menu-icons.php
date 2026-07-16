@@ -15,8 +15,8 @@ if ( ! defined( 'ABSPATH' ) ) {
  * with currentColor, so the icon brightens on hover / active / current state
  * exactly like the native menu icons around it.
  *
- * Icons (lucide.dev): setup → trophy, content → square-pen, collections →
- * library. Vectors are the exact current Lucide geometry.
+ * Icons (lucide.dev): setup → trophy, content → panels-top-left, collections
+ * → library. Vectors are the exact current Lucide geometry.
  *
  * @package BlueworxLabsClubhouse
  */
@@ -25,7 +25,7 @@ final class Blueworx_Clubhouse_Admin_Menu_Icons {
 	/** Menu slug => inner Lucide SVG paths (24×24 viewBox). */
 	private const ICONS = array(
 		'clubhouse-setup'        => '<path d="M10 14.66v1.626a2 2 0 0 1-.976 1.696A5 5 0 0 0 7 21.978"/><path d="M14 14.66v1.626a2 2 0 0 0 .976 1.696A5 5 0 0 1 17 21.978"/><path d="M18 9h1.5a1 1 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M6 9a6 6 0 0 0 12 0V3a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1z"/><path d="M6 9H4.5a1 1 0 0 1 0-5H6"/>',
-		'clubhouse-site-content' => '<path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"/>',
+		'clubhouse-site-content' => '<rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/>',
 		'clubhouse-content'      => '<path d="m16 6 4 14"/><path d="M12 6v14"/><path d="M8 8v12"/><path d="M4 4v16"/>',
 	);
 

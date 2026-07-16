@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Changed: clearer admin menu names.** The **Site Content** editor is now **Club Content**, and the **Content** menu the collections (sports, teams, events…) nest under is now **Collections** — so the two are no longer easily confused. Same screens, same links; only the labels changed.
 
-- **Changed: the three Clubhouse admin menus now use crisp Lucide line icons.** Clubhouse → trophy, Club Content → edit/pen, Collections → library, replacing the old megaphone/pencil/clipboard dashicons. The icons are tinted with the menu's own colour, so they brighten on hover and when active just like WordPress's built-in menu icons.
+- **Changed: the three Clubhouse admin menus now use crisp Lucide line icons.** Clubhouse → trophy, Club Content → page-panels, Collections → library, replacing the old megaphone/pencil/clipboard dashicons. The icons are tinted with the menu's own colour, so they brighten on hover and when active just like WordPress's built-in menu icons.
 
 ## 0.26.2
 
