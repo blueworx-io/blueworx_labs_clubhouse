@@ -719,14 +719,15 @@ final class SectionsTest extends TestCase {
 		$this->assertStringNotContainsString( 'ch-brand__mark', $html );
 	}
 
-	public function test_header_falls_back_to_the_mark_glyph_without_a_logo(): void {
+	public function test_header_without_a_logo_shows_the_name_alone_no_placeholder_glyph(): void {
 		$html = Blueworx_Clubhouse_Sections::header( array(
 			'club_name' => 'ClubHouse', 'banner' => '', 'banner_href' => '',
 			'nav' => array( array( 'label' => 'Home', 'href' => '?page=home' ) ),
 			'active' => '?page=home', 'login' => 'Log in', 'login_href' => '?page=login',
 			'join' => 'Join', 'join_href' => '?page=membership',
 		) );
-		$this->assertStringContainsString( 'ch-brand__mark', $html );
-		$this->assertStringNotContainsString( 'ch-brand__logo', $html );
+		$this->assertStringNotContainsString( 'ch-brand__mark', $html, 'no "C" placeholder glyph' );
+		$this->assertStringNotContainsString( 'ch-brand__logo', $html, 'no logo image without a logo' );
+		$this->assertStringContainsString( 'ClubHouse', $html, 'the club name still labels the brand link' );
 	}
 }

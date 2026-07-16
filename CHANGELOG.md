@@ -5,6 +5,12 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.26.2
+
+- **Changed: the placeholder "C" logo mark is gone.** Until you upload a logo, the header and footer now show your club name on its own instead of a generic "C" badge. Upload a logo in Clubhouse → Setup and it appears in the header exactly as before.
+
+- **Fixed: your favicon now shows across the whole site.** Once you add a favicon in Clubhouse → Setup, it appears in the browser tab on every front-end page — including blog posts — not just the main clubhouse pages. Nothing shows until you add one.
+
 ## 0.26.1
 
 - **Fixed: Demo mode look swaps now appear immediately for every visitor.** While Demo mode is on, clubhouse pages are no longer stored in the page cache, so when anyone picks a different Base Look in the switcher the page re-skins on reload instead of showing the previous look until a hard refresh. This affects installs fronted by a caching plugin (WP Rocket, W3 Total Cache, WP Super Cache), a host page cache, or a CDN. Normal caching is untouched when Demo mode is off.

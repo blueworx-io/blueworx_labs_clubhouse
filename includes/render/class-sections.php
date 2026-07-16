@@ -29,12 +29,17 @@ final class Blueworx_Clubhouse_Sections {
 		return '<div class="' . $cls . '">' . $img . '</div>';
 	}
 
-	/** @param array{club_name:string,logo?:string} $data */
+	/**
+	 * The brand image when a logo is set; nothing otherwise. Without a logo the
+	 * club name stands alone — no placeholder glyph.
+	 *
+	 * @param array{club_name:string,logo?:string} $data
+	 */
 	private static function brand_mark( array $data ): string {
 		$logo = $data['logo'] ?? '';
 		return '' !== $logo
 			? '<img class="ch-brand__logo" src="' . self::e( $logo ) . '" alt="' . self::e( $data['club_name'] ) . '">'
-			: '<span class="ch-brand__mark">C</span>';
+			: '';
 	}
 
 	/** Up-to-two-letter initials for a photo-less avatar (first + last word). */
@@ -488,7 +493,7 @@ final class Blueworx_Clubhouse_Sections {
 		return '<footer class="ch-footer"><div class="ch-wrap">'
 			. '<div class="ch-footer__grid">'
 			. '<div class="ch-footer__brand-col">'
-			. '<a class="ch-brand" href="' . self::e( Blueworx_Clubhouse_Links::url( 'home' ) ) . '"><span class="ch-brand__mark">C</span>' . self::e( $data['club_name'] ) . '</a>'
+			. '<a class="ch-brand" href="' . self::e( Blueworx_Clubhouse_Links::url( 'home' ) ) . '">' . self::e( $data['club_name'] ) . '</a>'
 			. '<p class="ch-footer__tagline">' . self::e( $data['tagline'] ) . '</p>'
 			. '<div class="ch-footer__socials">' . $socials . '</div></div>'
 			. $cols . $nl . '</div>'
