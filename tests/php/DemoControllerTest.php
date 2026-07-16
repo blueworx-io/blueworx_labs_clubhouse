@@ -21,6 +21,28 @@ final class DemoControllerTest extends TestCase {
 		$this->assertContains( 'wp_footer', $actions );
 		$this->assertContains( 'wp_enqueue_scripts', $actions );
 		$this->assertContains( 'admin_post_' . Blueworx_Clubhouse_Demo_Controller::TOGGLE_ACTION, $actions );
+		$this->assertContains( 'template_redirect', $actions, 'cache bypass must be wired to run per front-end request' );
+	}
+
+	public function test_bypass_cache_fires_on_a_clubhouse_page_when_on(): void {
+		wp_stub_on_clubhouse_page();
+		( new Blueworx_Clubhouse_Demo_State( new Blueworx_Clubhouse_Options_Storage() ) )->set( true );
+		Blueworx_Clubhouse_Demo_Controller::maybe_bypass_cache();
+		$this->assertCount( 1, wp_stub_calls( 'nocache_headers' ), 'no-cache headers must be sent so the reload re-renders' );
+		$this->assertTrue( defined( 'DONOTCACHEPAGE' ) && DONOTCACHEPAGE, 'the page-cache opt-out constant must be set' );
+	}
+
+	public function test_bypass_cache_does_nothing_off_a_clubhouse_page(): void {
+		wp_stub_off_clubhouse_page();
+		( new Blueworx_Clubhouse_Demo_State( new Blueworx_Clubhouse_Options_Storage() ) )->set( true );
+		Blueworx_Clubhouse_Demo_Controller::maybe_bypass_cache();
+		$this->assertSame( array(), wp_stub_calls( 'nocache_headers' ), 'a non-clubhouse page keeps normal caching' );
+	}
+
+	public function test_bypass_cache_does_nothing_when_demo_off(): void {
+		wp_stub_on_clubhouse_page();
+		Blueworx_Clubhouse_Demo_Controller::maybe_bypass_cache();
+		$this->assertSame( array(), wp_stub_calls( 'nocache_headers' ), 'demo off = normal caching' );
 	}
 
 	/**
