@@ -168,6 +168,9 @@ if ( ! function_exists( 'current_user_can' ) ) {
 if ( ! function_exists( 'wp_enqueue_media' ) ) {
 	function wp_enqueue_media( ...$a ) { wp_stub_record( 'wp_enqueue_media', $a ); }
 }
+if ( ! function_exists( 'nocache_headers' ) ) {
+	function nocache_headers( ...$a ) { wp_stub_record( 'nocache_headers', $a ); }
+}
 if ( ! function_exists( 'admin_url' ) ) {
 	function admin_url( $path = '' ) { return 'https://club.test/wp-admin/' . ltrim( (string) $path, '/' ); }
 }

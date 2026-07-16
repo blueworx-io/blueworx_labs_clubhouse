@@ -78,4 +78,16 @@ final class DemoModeTest extends TestCase {
 			'derived tokens MUST differ per shell — this is why the cookie stores a slug'
 		);
 	}
+
+	/**
+	 * A clubhouse page must bypass the page cache ONLY while demo mode is on, so
+	 * each visitor's look-cookie forces a fresh render on the switcher's reload. Off
+	 * a clubhouse page, or with demo off, normal caching stands.
+	 */
+	public function test_should_bypass_cache_only_when_on_and_on_a_clubhouse_page(): void {
+		$this->assertTrue( Blueworx_Clubhouse_Demo_Mode::should_bypass_cache( true, true ) );
+		$this->assertFalse( Blueworx_Clubhouse_Demo_Mode::should_bypass_cache( true, false ) );
+		$this->assertFalse( Blueworx_Clubhouse_Demo_Mode::should_bypass_cache( false, true ) );
+		$this->assertFalse( Blueworx_Clubhouse_Demo_Mode::should_bypass_cache( false, false ) );
+	}
 }

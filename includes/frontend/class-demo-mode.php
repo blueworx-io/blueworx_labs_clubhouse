@@ -78,6 +78,17 @@ final class Blueworx_Clubhouse_Demo_Mode {
 		return $out;
 	}
 
+	/**
+	 * Whether a clubhouse response must skip the page cache. While demo mode is on,
+	 * a visitor switches looks by setting a cookie and reloading, so the server has
+	 * to re-render every time — a full-page cache would otherwise serve stale HTML
+	 * and the swap would never appear. Gated to clubhouse pages, mirroring where the
+	 * rest of demo mode's furniture renders; off, normal caching stands.
+	 */
+	public static function should_bypass_cache( bool $demo_on, bool $is_clubhouse_page ): bool {
+		return $demo_on && $is_clubhouse_page;
+	}
+
 	private static function esc( string $v ): string {
 		return htmlspecialchars( $v, ENT_QUOTES, 'UTF-8' );
 	}

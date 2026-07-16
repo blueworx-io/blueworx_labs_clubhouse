@@ -28,6 +28,27 @@ final class Blueworx_Clubhouse_Demo_Controller {
 		add_action( 'wp_head', array( self::class, 'render_head_script' ), 1 );
 		add_action( 'wp_footer', array( self::class, 'render_switcher' ) );
 		add_action( 'admin_post_' . self::TOGGLE_ACTION, array( self::class, 'handle_toggle' ) );
+		add_action( 'template_redirect', array( self::class, 'maybe_bypass_cache' ) );
+	}
+
+	/**
+	 * Keep clubhouse pages out of the page cache while demo mode is on, so a
+	 * visitor's look-cookie forces a fresh render on the switcher's reload instead
+	 * of a caching layer replaying the previous look. nocache_headers() covers the
+	 * browser/CDN; DONOTCACHEPAGE is the constant WP Rocket / W3TC / WP Super Cache
+	 * and most host caches honour to skip this request. Runs on template_redirect —
+	 * after the query resolves (so is_clubhouse_page() is accurate) and before output.
+	 */
+	public static function maybe_bypass_cache(): void {
+		if ( ! Blueworx_Clubhouse_Demo_Mode::should_bypass_cache( self::is_on(), Blueworx_Clubhouse_Frontend::is_clubhouse_page() ) ) {
+			return;
+		}
+		if ( function_exists( 'nocache_headers' ) ) {
+			nocache_headers();
+		}
+		if ( ! defined( 'DONOTCACHEPAGE' ) ) {
+			define( 'DONOTCACHEPAGE', true );
+		}
 	}
 
 	private static function can_manage(): bool {
