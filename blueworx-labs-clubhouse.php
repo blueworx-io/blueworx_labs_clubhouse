@@ -3,7 +3,7 @@
  * Plugin Name:       Blueworx Labs | Clubhouse
  * Plugin URI:        https://github.com/blueworx-io/blueworx_labs_clubhouse
  * Description:        Blueworx Labs Clubhouse WordPress plugin.
- * Version:           0.26.2
+ * Version:           0.26.3
  * Requires at least: 6.0
  * Requires PHP:      8.2
  * Author:            Blueworx
@@ -21,7 +21,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'BLUEWORX_LABS_CLUBHOUSE_VERSION', '0.26.2' );
+define( 'BLUEWORX_LABS_CLUBHOUSE_VERSION', '0.26.3' );
 define( 'BLUEWORX_LABS_CLUBHOUSE_FILE', __FILE__ );
 define( 'BLUEWORX_LABS_CLUBHOUSE_DIR', plugin_dir_path( __FILE__ ) );
 define( 'BLUEWORX_LABS_CLUBHOUSE_URL', plugin_dir_url( __FILE__ ) );
@@ -29,6 +29,7 @@ define( 'BLUEWORX_LABS_CLUBHOUSE_URL', plugin_dir_url( __FILE__ ) );
 require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/bootstrap.php';
 require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/frontend/class-clubhouse-context.php';
 require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/frontend/class-frontend.php';
+require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/admin/class-admin-menu-icons.php';
 require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/admin/class-setup-controller.php';
 require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/admin/class-content-controller.php';
 require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/admin/class-demo-controller.php';
@@ -48,6 +49,7 @@ require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/collections/class-collectio
  */
 function blueworx_labs_clubhouse_init() {
 	Blueworx_Clubhouse_Frontend::register();
+	Blueworx_Clubhouse_Admin_Menu_Icons::register();
 	Blueworx_Clubhouse_Setup_Controller::register();
 	Blueworx_Clubhouse_Content_Controller::register();
 	Blueworx_Clubhouse_Demo_Controller::register();

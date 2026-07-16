@@ -99,7 +99,7 @@ final class Blueworx_Clubhouse_Content_Screen {
 
 	private static function header(): string {
 		return '<header class="clubhouse-head">'
-			. '<div class="clubhouse-head__titles"><p class="clubhouse-eyebrow">Clubhouse · Site content</p>'
+			. '<div class="clubhouse-head__titles"><p class="clubhouse-eyebrow">Clubhouse · Club content</p>'
 			. '<h1 class="clubhouse-head__h1">Clubhouse Content</h1></div>'
 			. '<a class="clubhouse-btn-link" href="admin.php?page=clubhouse-setup">Site setup →</a>'
 			. '</header>';

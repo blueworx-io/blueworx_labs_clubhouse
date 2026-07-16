@@ -70,12 +70,12 @@ final class Blueworx_Clubhouse_Collection_Types {
 	}
 
 	/**
-	 * Registers the top-level "Content" menu the six CPTs nest under, and removes
+	 * Registers the top-level "Collections" menu the six CPTs nest under, and removes
 	 * the auto-created duplicate submenu so the parent link opens the first CPT.
 	 * Hooked on admin_menu.
 	 */
 	public static function register_content_menu(): void {
-		add_menu_page( 'Content', 'Content', 'edit_posts', self::CONTENT_SLUG, '', 'dashicons-clipboard', 4 );
+		add_menu_page( 'Collections', 'Collections', 'edit_posts', self::CONTENT_SLUG, '', Blueworx_Clubhouse_Admin_Menu_Icons::data_uri( self::CONTENT_SLUG ), 4 );
 		remove_submenu_page( self::CONTENT_SLUG, self::CONTENT_SLUG );
 	}
 }

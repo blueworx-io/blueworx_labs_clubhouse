@@ -5,6 +5,14 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.26.3
+
+- **Changed: the home hero quick-tile icons are now crisp, current Lucide line icons.** The Explore/tour and Contact/email glyphs were hand-simplified approximations; they (and the Join and Fixtures icons) now use the exact official Lucide vector geometry, so the compass needle and envelope flap render cleanly at every size. No content or settings change — existing tiles keep their icons.
+
+- **Changed: clearer admin menu names.** The **Site Content** editor is now **Club Content**, and the **Content** menu the collections (sports, teams, events…) nest under is now **Collections** — so the two are no longer easily confused. Same screens, same links; only the labels changed.
+
+- **Changed: the three Clubhouse admin menus now use crisp Lucide line icons.** Clubhouse → trophy, Club Content → edit/pen, Collections → library, replacing the old megaphone/pencil/clipboard dashicons. The icons are tinted with the menu's own colour, so they brighten on hover and when active just like WordPress's built-in menu icons.
+
 ## 0.26.2
 
 - **Changed: the placeholder "C" logo mark is gone.** Until you upload a logo, the header and footer now show your club name on its own instead of a generic "C" badge. Upload a logo in Clubhouse → Setup and it appears in the header exactly as before.
