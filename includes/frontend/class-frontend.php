@@ -163,12 +163,15 @@ final class Blueworx_Clubhouse_Frontend {
 		return '<link rel="icon" href="' . htmlspecialchars( $favicon_url, ENT_QUOTES, 'UTF-8' ) . '">';
 	}
 
-	/** Echo the favicon <link> on clubhouse pages only (wp_head). */
+	/**
+	 * Echo the favicon <link> on every front-end page (wp_head), not only clubhouse
+	 * pages: the favicon identifies the whole site, including native blog posts the
+	 * neutral theme renders. Self-guards — favicon_link_html emits nothing until the
+	 * owner sets a favicon, so no gate on the clubhouse route is needed or wanted.
+	 */
 	public static function render_favicon(): void {
-		if ( null === self::current_slug() ) {
-			return;
-		}
-		$favicon = self::resolve_logo( self::context()->branding->get_favicon() );
+		$branding = new Blueworx_Clubhouse_Branding( new Blueworx_Clubhouse_Options_Storage() );
+		$favicon  = self::resolve_logo( $branding->get_favicon() );
 		echo self::favicon_link_html( $favicon ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in favicon_link_html.
 	}
 

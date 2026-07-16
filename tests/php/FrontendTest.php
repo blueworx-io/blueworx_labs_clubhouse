@@ -152,6 +152,28 @@ final class FrontendTest extends TestCase {
 		$this->assertStringContainsString( 'href="https://club.test/favicon.png"', $html );
 	}
 
+	public function test_render_favicon_emits_nothing_until_one_is_set(): void {
+		wp_stub_off_clubhouse_page();
+		ob_start();
+		Blueworx_Clubhouse_Frontend::render_favicon();
+		$this->assertSame( '', (string) ob_get_clean(), 'no favicon link before the owner sets one' );
+	}
+
+	/**
+	 * The favicon identifies the whole site, so it must render on every front-end
+	 * page — including native blog posts, which are NOT clubhouse pages. Guards the
+	 * removal of the old clubhouse-page gate.
+	 */
+	public function test_render_favicon_emits_site_wide_once_set_even_off_a_clubhouse_page(): void {
+		wp_stub_off_clubhouse_page();
+		( new Blueworx_Clubhouse_Branding( new Blueworx_Clubhouse_Options_Storage() ) )->set_favicon( '42' );
+		ob_start();
+		Blueworx_Clubhouse_Frontend::render_favicon();
+		$out = (string) ob_get_clean();
+		$this->assertStringContainsString( '<link rel="icon"', $out );
+		$this->assertStringContainsString( 'att-42', $out, 'resolves the attachment id to its URL' );
+	}
+
 	public function test_favicon_link_html_escapes_the_url(): void {
 		$html = Blueworx_Clubhouse_Frontend::favicon_link_html( 'https://club.test/f.png?a=b&c="x"' );
 		$this->assertStringContainsString( '&amp;', $html );
