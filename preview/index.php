@@ -73,7 +73,12 @@ function blueworx_clubhouse_preview_document(): string {
 	$branding   = new Blueworx_Clubhouse_Branding( $storage );
 	$visibility = new Blueworx_Clubhouse_Visibility( $storage );
 
-	$page = isset( $_GET['page'] ) && is_string( $_GET['page'] ) ? preg_replace( '/[^a-z]/', '', $_GET['page'] ) : 'home';
+	// Accepts WordPress's real query var (`clubhouse_page`, see Frontend::QUERY_VAR)
+	// as well as the preview's own `?page=`. The specs navigate with the former so a
+	// single URL form works against both this harness and a real WordPress install;
+	// `?page=` stays supported because the on-page nav emits it via Links::url().
+	$raw  = $_GET['clubhouse_page'] ?? $_GET['page'] ?? 'home';
+	$page = is_string( $raw ) ? (string) preg_replace( '/[^a-z]/', '', $raw ) : 'home';
 	$slug = 'home' === $page ? '' : (string) $page;
 	if ( ! Blueworx_Clubhouse_Page_Map::has( $slug ) ) {
 		$slug = '';

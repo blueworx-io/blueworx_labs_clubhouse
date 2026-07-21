@@ -11,3 +11,6 @@ composer.lock
 # Local verification artifacts (Playwright MCP snapshots + preview screenshots)
 .playwright-mcp/
 /*.png
+
+# Disposable local WordPress test instance (foundation wp-test-env.mjs)
+.wp-test/

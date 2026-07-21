@@ -33,7 +33,7 @@ test('the demo bar renders one look control per registered look', async ({ page 
   await expect(page.locator('[data-clubhouse-look="floodlight"]')).toBeVisible();
 });
 
-test('the current look is the only one flagged', async ({ page }) => {
+test('the current look is the only one flagged @preview', async ({ page }) => {
   await page.goto('?demo=1&look=floodlight');
   await expect(page.locator('[data-clubhouse-look="floodlight"]')).toHaveAttribute('aria-pressed', 'true');
   await expect(page.locator('[data-clubhouse-look][aria-pressed="true"]')).toHaveCount(1);

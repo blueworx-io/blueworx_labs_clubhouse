@@ -5,7 +5,7 @@ const { test, expect } = require('@playwright/test');
 // Structural assertions only — look-agnostic (markup is identical across looks).
 
 test('home renders the full-bleed hero, not the shared hero', async ({ page }) => {
-  const response = await page.goto('?page=home');
+  const response = await page.goto('?clubhouse_page=home');
   expect(response?.status(), 'HTTP status for home').toBe(200);
   await expect(page).toHaveTitle(/.+/);
   await expect(page.locator('#ch-main')).toBeVisible();
@@ -14,7 +14,7 @@ test('home renders the full-bleed hero, not the shared hero', async ({ page }) =
 });
 
 test('home hero contains the four icon quick-links with their labels', async ({ page }) => {
-  await page.goto('?page=home');
+  await page.goto('?clubhouse_page=home');
   const tiles = page.locator('.ch-home-hero .ch-home-hero__tile');
   await expect(tiles).toHaveCount(4);
   await expect(tiles.filter({ hasText: 'Join the club' })).toHaveCount(1);
@@ -24,12 +24,12 @@ test('home hero contains the four icon quick-links with their labels', async ({ 
 });
 
 test('home no longer emits a separate quick_tiles section', async ({ page }) => {
-  await page.goto('?page=home');
+  await page.goto('?clubhouse_page=home');
   await expect(page.locator('.ch-tiles-sec')).toHaveCount(0);
 });
 
 test('the ticker immediately follows the home hero', async ({ page }) => {
-  await page.goto('?page=home');
+  await page.goto('?clubhouse_page=home');
   const nextTag = await page.evaluate(() => {
     const hero = document.querySelector('.ch-home-hero');
     return hero?.nextElementSibling?.className || '';

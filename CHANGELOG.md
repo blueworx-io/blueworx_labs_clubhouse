@@ -5,6 +5,12 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.26.4
+
+- **Changed: the test suite now runs against a real WordPress.** Nothing about the plugin's behaviour changes — this is a development and CI change. Previously every test ran against the DB-free PHP preview, which meant WordPress's own routing, template loading and stored settings were never exercised. Tests now run against a disposable WordPress the run provisions itself (PHP + SQLite, no Docker, no staging site), with the handful of preview-only tests still pointed at the preview. Bringing the suite up against real WordPress immediately showed that page routing had never been covered there.
+
+- **Changed: local test ports are derived from the plugin slug**, so several plugin repos can be worked on at once without their local WordPress and preview servers landing on the same port and quietly serving the wrong plugin. `npm run ports` prints this plugin's pair.
+
 ## 0.26.3
 
 - **Changed: the home hero quick-tile icons are now crisp, current Lucide line icons.** The Explore/tour and Contact/email glyphs were hand-simplified approximations; they (and the Join and Fixtures icons) now use the exact official Lucide vector geometry, so the compass needle and envelope flap render cleanly at every size. No content or settings change — existing tiles keep their icons.
