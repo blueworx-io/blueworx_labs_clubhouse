@@ -196,7 +196,7 @@ git commit -m "feat: add shared base.css layer loaded before every look"
 
 Written before the components move, so it fails and documents the gap first.
 
-The invariant is parity, not absolute coverage: the 15 classes Court Side leaves unstyled are genuinely emitted and genuinely unstyled in every look (markup hooks like `ch-tiles__label` that inherit and render fine). Requiring every emitted class to carry a rule would mean styling hooks that need none.
+The invariant is parity, not absolute coverage: the 14 classes Court Side leaves unstyled are genuinely emitted and genuinely unstyled in every look (markup hooks like `ch-tiles__label` that inherit and render fine). Requiring every emitted class to carry a rule would mean styling hooks that need none.
 
 **Files:**
 - Create: `tests/php/LookCoverageTest.php`
@@ -354,7 +354,7 @@ final class LookCoverageTest extends TestCase {
 Run: `vendor/bin/phpunit --filter LookCoverageTest`
 Expected: FAIL on `test_every_look_leaves_the_same_classes_unstyled` — floodlight and members-house each report 47 extra unstyled classes (`ch-cal*`, `ch-scard*`, `ch-event*`, `ch-archive*`, `ch-hero-f*`, `ch-filter*`, `ch-social*`).
 
-`test_the_shared_unstyled_set_has_not_grown` should already PASS, since Court Side's set is the documented 15.
+`test_the_shared_unstyled_set_has_not_grown` should already PASS, since Court Side's set is the documented 14.
 
 - [ ] **Step 3: Commit the failing guardrail**
 
@@ -419,7 +419,7 @@ Insert immediately before the `/* ---- Filter hero` comment that step 2 appended
 - [ ] **Step 5: Run the guardrail to verify it passes**
 
 Run: `vendor/bin/phpunit --filter LookCoverageTest`
-Expected: PASS — both tests green. All three looks now report the same 15 unstyled classes.
+Expected: PASS — both tests green. All three looks now report the same 14 unstyled classes.
 
 - [ ] **Step 6: Run the full PHP suite**
 

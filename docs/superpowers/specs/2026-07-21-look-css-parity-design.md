@@ -21,11 +21,11 @@ Measured on `main` at 0.26.4:
 | | classes |
 |---|---|
 | Emitted by `class-sections.php` | 259 |
-| Unstyled under `court-side` | 15 |
+| Unstyled under `court-side` | 14 |
 | Unstyled under `floodlight` | 62 |
 | Unstyled under `members-house` | 62 |
 
-The Floodlight and Members House gaps are **identical**, and 15 of the 62 are the
+The Floodlight and Members House gaps are **identical**, and 14 of the 62 are the
 same entries Court Side "lacks" — these are not real gaps (see Exemptions). So the
 genuine shortfall is **47 classes, forming six whole components**:
 
@@ -151,7 +151,7 @@ Two checks, deliberately covering different failure modes.
 ### `LookCoverageTest` (PHPUnit)
 
 The invariant is **parity, not absolute coverage**. Planning established that all
-15 classes Court Side leaves unstyled are genuinely emitted and genuinely
+14 classes Court Side leaves unstyled are genuinely emitted and genuinely
 unstyled in every look — markup hooks such as `ch-tiles__label` and
 `ch-social__label` that inherit and render correctly. Requiring every emitted
 class to carry a rule would therefore mean either styling hooks that need no
@@ -162,7 +162,7 @@ identical across all three looks.** That is the "same building blocks"
 requirement stated directly, and it needs no exemption maintenance.
 
 A secondary assertion pins that shared set to a documented constant of the known
-15, so all three looks drifting *together* is still caught. Growing that constant
+14, so all three looks drifting *together* is still caught. Growing that constant
 is a deliberate review point.
 
 Mechanics:
