@@ -18,13 +18,6 @@ final class Blueworx_Clubhouse_Frontend {
 
 	public const QUERY_VAR = 'clubhouse_page';
 
-	/**
-	 * Structural rules shared by every look, loaded before the look's own
-	 * stylesheet. Deliberately not a Base_Look method: a look substituting its
-	 * own base is the drift this file prevents.
-	 */
-	public const BASE_STYLESHEET = 'assets/looks/base.css';
-
 	public static function resolve_slug( bool $is_front_page, mixed $query_var, ?Blueworx_Clubhouse_Visibility $visibility = null ): ?string {
 		$slug = null;
 		if ( is_string( $query_var ) && '' !== $query_var && Blueworx_Clubhouse_Page_Map::has( $query_var ) ) {
@@ -52,7 +45,7 @@ final class Blueworx_Clubhouse_Frontend {
 	): array {
 		return array(
 			'font_face_css'       => Blueworx_Clubhouse_Page_Renderer::font_face_css( $look, $plugin_url ),
-			'base_stylesheet_url' => $plugin_url . self::BASE_STYLESHEET,
+			'base_stylesheet_url' => $plugin_url . Blueworx_Clubhouse_Page_Renderer::BASE_STYLESHEET,
 			'stylesheet_url'      => $plugin_url . $look->stylesheet(),
 			'inline_css'          => $root_css,
 			'reveal_url'          => $plugin_url . 'assets/js/reveal.js',

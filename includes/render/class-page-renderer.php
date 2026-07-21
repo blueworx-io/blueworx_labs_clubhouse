@@ -17,6 +17,15 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 final class Blueworx_Clubhouse_Page_Renderer {
 
+	/**
+	 * Structural rules shared by every look, loaded before the look's own
+	 * stylesheet. Deliberately not a Base_Look method: a look substituting its
+	 * own base is the drift this file prevents. Lives on the pure render layer
+	 * (not Frontend) because Frontend::enqueue_specs() consumes it — the pure
+	 * layer must not depend on the WordPress-coupled class that depends on it.
+	 */
+	public const BASE_STYLESHEET = 'assets/looks/base.css';
+
 	public static function font_face_css( Blueworx_Clubhouse_Base_Look $look, string $base_url ): string {
 		// Normalise to exactly one trailing slash so callers may pass the base with or
 		// without it; an empty base stays empty (relative paths). Guards a future caller
@@ -46,7 +55,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 		$vars     = Blueworx_Clubhouse_Theme_Css::compose( $look, $branding );
 		$css      = Blueworx_Clubhouse_Theme_Css::to_css( $vars );
 		$faces    = self::font_face_css( $look, $plugin_url );
-		$base     = htmlspecialchars( $plugin_url . Blueworx_Clubhouse_Frontend::BASE_STYLESHEET, ENT_QUOTES, 'UTF-8' );
+		$base     = htmlspecialchars( $plugin_url . self::BASE_STYLESHEET, ENT_QUOTES, 'UTF-8' );
 		$sheet    = htmlspecialchars( $plugin_url . $look->stylesheet(), ENT_QUOTES, 'UTF-8' );
 
 		return '<!doctype html><html lang="en"><head>'
