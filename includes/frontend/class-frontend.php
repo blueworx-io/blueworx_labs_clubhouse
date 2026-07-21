@@ -36,7 +36,7 @@ final class Blueworx_Clubhouse_Frontend {
 	}
 
 	/**
-	 * @return array{font_face_css:string,stylesheet_url:string,inline_css:string,reveal_url:string}
+	 * @return array{font_face_css:string,base_stylesheet_url:string,stylesheet_url:string,inline_css:string,reveal_url:string}
 	 */
 	public static function enqueue_specs(
 		Blueworx_Clubhouse_Base_Look $look,
@@ -44,10 +44,11 @@ final class Blueworx_Clubhouse_Frontend {
 		string $plugin_url
 	): array {
 		return array(
-			'font_face_css'  => Blueworx_Clubhouse_Page_Renderer::font_face_css( $look, $plugin_url ),
-			'stylesheet_url' => $plugin_url . $look->stylesheet(),
-			'inline_css'     => $root_css,
-			'reveal_url'     => $plugin_url . 'assets/js/reveal.js',
+			'font_face_css'       => Blueworx_Clubhouse_Page_Renderer::font_face_css( $look, $plugin_url ),
+			'base_stylesheet_url' => $plugin_url . Blueworx_Clubhouse_Page_Renderer::BASE_STYLESHEET,
+			'stylesheet_url'      => $plugin_url . $look->stylesheet(),
+			'inline_css'          => $root_css,
+			'reveal_url'          => $plugin_url . 'assets/js/reveal.js',
 		);
 	}
 
@@ -141,7 +142,8 @@ final class Blueworx_Clubhouse_Frontend {
 			$ctx->cache->root_css( $ctx->look, $ctx->branding ),
 			BLUEWORX_LABS_CLUBHOUSE_URL
 		);
-		wp_enqueue_style( 'clubhouse-look', $specs['stylesheet_url'], array(), BLUEWORX_LABS_CLUBHOUSE_VERSION );
+		wp_enqueue_style( 'clubhouse-base', $specs['base_stylesheet_url'], array(), BLUEWORX_LABS_CLUBHOUSE_VERSION );
+		wp_enqueue_style( 'clubhouse-look', $specs['stylesheet_url'], array( 'clubhouse-base' ), BLUEWORX_LABS_CLUBHOUSE_VERSION );
 		wp_add_inline_style( 'clubhouse-look', $specs['font_face_css'], 'before' );
 		wp_add_inline_style( 'clubhouse-look', $specs['inline_css'] );
 		wp_enqueue_script( 'clubhouse-reveal', $specs['reveal_url'], array(), BLUEWORX_LABS_CLUBHOUSE_VERSION, true );

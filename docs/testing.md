@@ -72,3 +72,23 @@ before debugging anything else:
 ```bash
 netstat -ano | grep ":8705.*LISTENING"
 ```
+
+## Look parity
+
+Every Base Look must render every page. Two checks enforce it, because they
+fail on different things:
+
+- `tests/php/LookCoverageTest.php` — asserts the three looks leave the *same*
+  classes unstyled. Parity rather than absolute coverage: some emitted classes
+  are markup hooks that need no rule, and demanding one for each would mean an
+  exemption list that grows forever.
+- `tests/look-parity.spec.js` — loads each look in a browser and reads computed
+  styles off the six components that were once Court Side only. Catches a rule
+  that exists but never matches the markup, which the static check cannot.
+
+Structural rules belong in `assets/looks/base.css`, which loads before the look
+and uses design tokens only. Selectors there stay at single-class specificity by
+default — a base rule that out-specifies a look rule wins silently, which is the
+bug this whole layer exists to prevent — with five deliberate exceptions, each
+individually verified cascade-safe against all three looks. See the heading
+comment in `base.css` for the list.

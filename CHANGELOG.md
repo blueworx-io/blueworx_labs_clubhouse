@@ -5,6 +5,10 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.26.5
+
+- **Fixed: the Floodlight and Members House looks now render every page.** The calendar, teams, sports and events pages were missing their styling entirely under those two looks — filters, cards and fixture lists showed as unstyled text — because six components were only ever styled for Court Side. All three looks now share one set of building blocks, so switching look re-skins the whole site rather than part of it. Court Side is unchanged.
+
 ## 0.26.4
 
 - **Changed: the test suite now runs against a real WordPress.** Nothing about the plugin's behaviour changes — this is a development and CI change. Previously every test ran against the DB-free PHP preview, which meant WordPress's own routing, template loading and stored settings were never exercised. Tests now run against a disposable WordPress the run provisions itself (PHP + SQLite, no Docker, no staging site), with the handful of preview-only tests still pointed at the preview. Bringing the suite up against real WordPress immediately showed that page routing had never been covered there.

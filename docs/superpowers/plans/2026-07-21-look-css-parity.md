@@ -10,12 +10,13 @@
 
 ## Global Constraints
 
-- **Specificity:** every selector in `base.css` stays at single-class specificity. No `!important`, no ID selectors. The one documented exception is `.ch-main:has(> .ch-social:last-child) + .ch-footer`, moved verbatim and safe because it wins on specificity (0,4,0) over `.ch-footer` (0,1,0) at `court-side.css:217` regardless of order.
+- **Specificity:** every selector in `base.css` stays at single-class specificity by default. No `!important`, no ID selectors. Five documented exceptions, each individually verified cascade-safe: `.ch-main:has(> .ch-social:last-child) + .ch-footer`, moved verbatim and safe because it wins on specificity (0,4,0) over `.ch-footer` (0,1,0) at `court-side.css:217` regardless of order; `.ch-cal__month + .ch-cal__month`; `.ch-cal__row .ch-badge--l`; `.ch-cal__row .ch-badge--d`; and `.ch-social__icon svg`.
 - **No literals in `base.css`:** colours and font families come from tokens only — `var(--color-*)`, `var(--font-*)`. This mirrors the existing per-look stylesheet tests.
 - **Court Side must not change visually.** It is the reviewed, shipping look.
 - **Version:** bump the patch version in `blueworx-labs-clubhouse.php` (header + `BLUEWORX_LABS_CLUBHOUSE_VERSION`) and `package.json`, and add a `CHANGELOG.md` entry. CI fails the PR otherwise.
 - **Linting:** run `composer lint` once at the end. Do not loop lint → fix → lint.
-- **Branch:** work on `look-css-parity`, branched from `main`. Never commit to `main`.
+- **Branch:** work on `look-css-parity`, branched from **`local-wordpress-test-harness`** (not `main`). The verification steps here depend on the local WordPress harness — `npm run wp:up`, `npm run test:wp`, and the demo-mode seeding in `tests/global-setup.js` — which is not yet merged to `main`. Never commit to `main`.
+- **Spec routing:** `tests/look-parity.spec.js` is tagged `@wordpress` and must not run against the DB-free preview. It switches look via the demo cookie, which the preview ignores (it resolves look from `?look=`), so under the preview every look would resolve to Court Side. Preview-only runs exclude these specs and say so on stdout — never silently.
 
 ---
 
@@ -195,7 +196,7 @@ git commit -m "feat: add shared base.css layer loaded before every look"
 
 Written before the components move, so it fails and documents the gap first.
 
-The invariant is parity, not absolute coverage: the 15 classes Court Side leaves unstyled are genuinely emitted and genuinely unstyled in every look (markup hooks like `ch-tiles__label` that inherit and render fine). Requiring every emitted class to carry a rule would mean styling hooks that need none.
+The invariant is parity, not absolute coverage: the 14 classes Court Side leaves unstyled are genuinely emitted and genuinely unstyled in every look (markup hooks like `ch-tiles__label` that inherit and render fine). Requiring every emitted class to carry a rule would mean styling hooks that need none.
 
 **Files:**
 - Create: `tests/php/LookCoverageTest.php`
@@ -353,7 +354,7 @@ final class LookCoverageTest extends TestCase {
 Run: `vendor/bin/phpunit --filter LookCoverageTest`
 Expected: FAIL on `test_every_look_leaves_the_same_classes_unstyled` — floodlight and members-house each report 47 extra unstyled classes (`ch-cal*`, `ch-scard*`, `ch-event*`, `ch-archive*`, `ch-hero-f*`, `ch-filter*`, `ch-social*`).
 
-`test_the_shared_unstyled_set_has_not_grown` should already PASS, since Court Side's set is the documented 15.
+`test_the_shared_unstyled_set_has_not_grown` should already PASS, since Court Side's set is the documented 14.
 
 - [ ] **Step 3: Commit the failing guardrail**
 
@@ -418,7 +419,7 @@ Insert immediately before the `/* ---- Filter hero` comment that step 2 appended
 - [ ] **Step 5: Run the guardrail to verify it passes**
 
 Run: `vendor/bin/phpunit --filter LookCoverageTest`
-Expected: PASS — both tests green. All three looks now report the same 15 unstyled classes.
+Expected: PASS — both tests green. All three looks now report the same 14 unstyled classes.
 
 - [ ] **Step 6: Run the full PHP suite**
 
@@ -451,10 +452,36 @@ The PHPUnit guardrail is static — it cannot catch a rule that exists but never
 
 **Files:**
 - Create: `tests/look-parity.spec.js`
+- Modify: `playwright.config.js` (route `@wordpress` specs)
 
 **Interfaces:**
 - Consumes: `base.css` styling the six components (Task 3).
 - Produces: nothing consumed by later tasks.
+
+- [ ] **Step 0: Route `@wordpress` specs away from preview-only runs**
+
+These specs switch look via the demo cookie. The preview ignores it (look comes from `?look=`), so under the preview all three looks resolve to Court Side and the suite would test one look three times. Exclude them from preview-only runs, loudly.
+
+In `playwright.config.js`, replace the `wordpress` project entry with:
+
+```js
+    {
+      name: 'wordpress',
+      // @preview specs belong to the preview harness. @wordpress specs need real
+      // WordPress — against the preview they would pass while testing nothing, so
+      // they are dropped when no WordPress URL is set, and the drop is announced.
+      grepInvert: externalBaseURL ? /@preview/ : /@preview|@wordpress/,
+      use: { ...devices['Desktop Chrome'], baseURL: externalBaseURL || previewURL },
+    },
+```
+
+And directly above `module.exports = defineConfig({`, add:
+
+```js
+if (!externalBaseURL) {
+  console.log('No WordPress URL set — skipping @wordpress specs. Run "npm run test:wp" for those.');
+}
+```
 
 - [ ] **Step 1: Write the failing test**
 
@@ -504,7 +531,7 @@ async function useLook(page, look, slug) {
 
 for (const look of LOOKS) {
   for (const { page: slug, selector, prop, expected } of CHECKS) {
-    test(`${look}: ${selector} on ${slug} is styled`, async ({ page }) => {
+    test(`${look}: ${selector} on ${slug} is styled @wordpress`, async ({ page }) => {
       await useLook(page, look, slug);
 
       const el = page.locator(selector).first();
@@ -516,7 +543,7 @@ for (const look of LOOKS) {
 }
 
 for (const look of LOOKS) {
-  test(`${look}: the social band is styled`, async ({ page }) => {
+  test(`${look}: the social band is styled @wordpress`, async ({ page }) => {
     await useLook(page, look, 'contact');
     const link = page.locator('.ch-social__link').first();
     await expect(link).toBeAttached();
@@ -528,7 +555,7 @@ for (const look of LOOKS) {
 
 // The looks must actually differ. If this passes while the others fail, the
 // cookie is being ignored and the suite above is testing Court Side three times.
-test('the three looks resolve to three different display fonts', async ({ page }) => {
+test('the three looks resolve to three different display fonts @wordpress', async ({ page }) => {
   const seen = new Set();
   for (const look of LOOKS) {
     seen.add(await useLook(page, look, 'home'));
@@ -636,7 +663,7 @@ composer lint
 npm run build:zip
 ```
 
-Expected, in order: PHPUnit PASS; `27 passed`; `40 passed`; PHPCS `0 errors`; zip verification all `ok:` lines.
+Expected, in order: PHPUnit PASS; `27 passed`; `43 passed`; PHPCS `0 errors`; zip verification all `ok:` lines.
 
 Per the project's linting rule, run `composer lint` **once** here. If it reports findings, present them and wait — do not auto-fix in a loop.
 

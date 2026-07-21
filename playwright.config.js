@@ -29,6 +29,10 @@ const previewURL = `http://127.0.0.1:${PORT}/preview/`;
 // local WordPress harness.
 const externalBaseURL = process.env.PLAYWRIGHT_BASE_URL || process.env.BASE_URL || '';
 
+if (!externalBaseURL) {
+  console.log('No WordPress URL set — skipping @wordpress specs. Run "npm run test:wp" for those.');
+}
+
 module.exports = defineConfig({
   testDir: './tests',
   // Seeds the site-wide state the specs cannot set themselves (demo mode).
@@ -61,7 +65,10 @@ module.exports = defineConfig({
     },
     {
       name: 'wordpress',
-      grepInvert: /@preview/,
+      // @preview specs belong to the preview harness. @wordpress specs need real
+      // WordPress — against the preview they would pass while testing nothing, so
+      // they are dropped when no WordPress URL is set, and the drop is announced.
+      grepInvert: externalBaseURL ? /@preview/ : /@preview|@wordpress/,
       use: { ...devices['Desktop Chrome'], baseURL: externalBaseURL || previewURL },
     },
   ],

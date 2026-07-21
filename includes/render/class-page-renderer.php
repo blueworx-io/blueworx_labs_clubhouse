@@ -7,8 +7,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 /**
  * Assembles a full HTML document for a Base Look + branding: <head> carries the
- * self-hosted @font-face rules (injected inline), the look stylesheet, and the
- * derived :root variables; <body> is a string of rendered sections. home()
+ * self-hosted @font-face rules (injected inline), the base stylesheet link, the
+ * look stylesheet, and the derived :root variables; <body> is a string of
+ * rendered sections. home()
  * composes the demo Home shell, honouring per-section visibility. The same
  * output is what WordPress template_include will later echo — the preview is
  * just an earlier caller.
@@ -16,6 +17,15 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @package BlueworxLabsClubhouse
  */
 final class Blueworx_Clubhouse_Page_Renderer {
+
+	/**
+	 * Structural rules shared by every look, loaded before the look's own
+	 * stylesheet. Deliberately not a Base_Look method: a look substituting its
+	 * own base is the drift this file prevents. Lives on the pure render layer
+	 * (not Frontend) because Frontend::enqueue_specs() consumes it — the pure
+	 * layer must not depend on the WordPress-coupled class that depends on it.
+	 */
+	public const BASE_STYLESHEET = 'assets/looks/base.css';
 
 	public static function font_face_css( Blueworx_Clubhouse_Base_Look $look, string $base_url ): string {
 		// Normalise to exactly one trailing slash so callers may pass the base with or
@@ -46,12 +56,14 @@ final class Blueworx_Clubhouse_Page_Renderer {
 		$vars     = Blueworx_Clubhouse_Theme_Css::compose( $look, $branding );
 		$css      = Blueworx_Clubhouse_Theme_Css::to_css( $vars );
 		$faces    = self::font_face_css( $look, $plugin_url );
+		$base     = htmlspecialchars( $plugin_url . self::BASE_STYLESHEET, ENT_QUOTES, 'UTF-8' );
 		$sheet    = htmlspecialchars( $plugin_url . $look->stylesheet(), ENT_QUOTES, 'UTF-8' );
 
 		return '<!doctype html><html lang="en"><head>'
 			. '<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">'
 			. '<title>' . htmlspecialchars( $branding->get_club_name(), ENT_QUOTES, 'UTF-8' ) . '</title>'
 			. '<style>' . $faces . '</style>'
+			. '<link rel="stylesheet" href="' . $base . '">'
 			. '<link rel="stylesheet" href="' . $sheet . '">'
 			. '<style>' . $css . '</style>'
 			. '</head><body>' . $body . self::reveal_script() . '</body></html>';
