@@ -115,16 +115,34 @@ visual pass before merge exists to verify it held.
 
 ## Scope of `base.css` in this slice
 
-The six components only, ported from `court-side.css` with literals replaced by
-tokens:
+The six components only:
 
 `ch-hero-f`/`ch-filter` · `ch-scard` · `ch-event` · `ch-archive` · `ch-cal` ·
 `ch-social`
 
-Where a value is genuinely Court Side *character* rather than structure, it stays
-in `court-side.css` as an override. When in doubt, the value goes in the look, not
-the base — a base rule that shouldn't be shared is harder to detect than a look
-rule that could have been.
+**These rules are moved, not copied.** Planning established that
+`court-side.css:450-531` is already fully tokenized — `var(--color-*)`,
+`var(--space-*)`, `var(--font-*)` throughout, with no literal colours or
+families. So there is no porting work, and duplicating the rules into `base.css`
+while leaving them in `court-side.css` would only guarantee the two copies drift.
+
+Moving them is verified safe:
+
+- Nothing in `court-side.css:1-449` references any of those selectors, so no
+  cascade order changes for them.
+- The single compound rule,
+  `.ch-main:has(> .ch-social:last-child) + .ch-footer{margin-top:0}`, moves ahead
+  of `.ch-footer{margin-top:var(--flow-lg)}` at `court-side.css:217`, but wins on
+  specificity (0,4,0 against 0,1,0) regardless of order.
+
+This completes the incremental migration for these six components immediately,
+rather than deferring it.
+
+`base.css` also declares its own `:root` fallbacks for the `--space-*` and
+`--flow-*` scales. Those are currently defined in each look's own `:root`
+(duplicated three ways, and Members House deliberately differs on `--flow-lg`).
+Fallbacks in the base make it self-sufficient, so a future look that omits the
+scale still renders; look values continue to win by load order.
 
 ## Guardrail
 
@@ -132,21 +150,32 @@ Two checks, deliberately covering different failure modes.
 
 ### `LookCoverageTest` (PHPUnit)
 
-Fails when any class the renderer emits is styled by neither `base.css` nor the
-look under test.
+The invariant is **parity, not absolute coverage**. Planning established that all
+15 classes Court Side leaves unstyled are genuinely emitted and genuinely
+unstyled in every look — markup hooks such as `ch-tiles__label` and
+`ch-social__label` that inherit and render correctly. Requiring every emitted
+class to carry a rule would therefore mean either styling hooks that need no
+styling, or maintaining a growing exemption list.
+
+So the primary assertion is: **the set of emitted-but-unstyled classes is
+identical across all three looks.** That is the "same building blocks"
+requirement stated directly, and it needs no exemption maintenance.
+
+A secondary assertion pins that shared set to a documented constant of the known
+15, so all three looks drifting *together* is still caught. Growing that constant
+is a deliberate review point.
+
+Mechanics:
 
 - Extracts emitted classes from `class-sections.php` and `class-page-renderer.php`.
-- Extracts defined selectors from `base.css` and each look stylesheet.
-- The selector extractor understands **descendant and child combinators**, so a
-  wrapper styled via `.ch-split > *` counts as covered. This keeps the exemption
-  list small and honest rather than papering over real gaps.
-
-**Exemptions.** A single `EXEMPT` constant, one commented entry each. It exists
-because a handful of extracted strings are not selectors at all — chiefly
-`ch-badge--`, an artifact of `class="ch-badge--<?php echo $variant; ?>"`. The
-list is written from the known 15 and each entry must state why. It is not to be
-extended to make a failing check pass; a new entry means either a real gap or an
-extractor bug.
+  The extractor must ignore PHP interpolation artifacts — `class="ch-badge--<?php
+  echo $mod; ?>"` yields the non-class `ch-badge--`, which is fixed in the
+  extractor rather than exempted.
+- Extracts defined selectors from `base.css` and each look stylesheet, matching
+  on whole class tokens so `.ch-contact__lines` does not falsely satisfy
+  `ch-contact__line`.
+- Understands descendant and child combinators, so a wrapper styled via
+  `.ch-split > *` counts as covered.
 
 ### `look-parity.spec.js` (Playwright)
 
@@ -184,9 +213,9 @@ Migration is explicitly *not* part of this slice's completion criteria.
 
 | Risk | Mitigation |
 |---|---|
-| A `base.css` rule out-specifies Court Side and changes it | Single-class specificity constraint; explicit Court Side visual pass before merge |
-| Tokenizing a Court Side literal loses intended character in that look | Court Side keeps its own rules — base is additive here, so its rendering is driven by its own stylesheet either way |
-| The exemption list becomes a dumping ground | Every entry carries a reason; adding one is a review point, not a routine fix |
+| A `base.css` rule out-specifies Court Side and changes it | Single-class specificity constraint (one documented exception, verified on specificity); explicit Court Side visual pass before merge |
+| Moving rules out of `court-side.css` changes the cascade | Verified: nothing in `court-side.css:1-449` references those selectors, and the one compound rule wins on specificity irrespective of order |
+| The known-unstyled constant becomes a dumping ground | Parity is the primary assertion and needs no upkeep; growing the constant is a review point, not a routine fix |
 | Floodlight / Members House inherit Court Side's *proportions* and look derivative | Accepted for this slice — a complete page in the wrong proportions beats an unstyled one. Refining per-look character is follow-on work, and the base makes it an override rather than a rewrite |
 
 ## Where this sits
