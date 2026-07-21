@@ -62,6 +62,21 @@ final class PageRendererTest extends TestCase {
 		$this->assertStringContainsString( '<main>hi</main>', $doc );
 	}
 
+	public function test_document_links_base_stylesheet_before_the_look(): void {
+		$html = Blueworx_Clubhouse_Page_Renderer::document(
+			new Blueworx_Clubhouse_Court_Side(),
+			new Blueworx_Clubhouse_Branding( new Blueworx_Clubhouse_Fake_Storage() ),
+			'<main></main>',
+			'/'
+		);
+		$base = strpos( $html, '/assets/looks/base.css' );
+		$look = strpos( $html, '/assets/looks/court-side.css' );
+		$this->assertNotFalse( $base, 'base.css must be linked' );
+		$this->assertNotFalse( $look, 'the look stylesheet must be linked' );
+		// Order is load-bearing: look rules must be able to override base rules.
+		$this->assertLessThan( $look, $base );
+	}
+
 	public function test_home_includes_the_shell_sections(): void {
 		$vis  = new Blueworx_Clubhouse_Visibility( new Blueworx_Clubhouse_Fake_Storage() );
 		$body = Blueworx_Clubhouse_Page_Renderer::home( $this->branding(), $vis, $this->collections() );

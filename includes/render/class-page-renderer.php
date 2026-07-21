@@ -46,12 +46,14 @@ final class Blueworx_Clubhouse_Page_Renderer {
 		$vars     = Blueworx_Clubhouse_Theme_Css::compose( $look, $branding );
 		$css      = Blueworx_Clubhouse_Theme_Css::to_css( $vars );
 		$faces    = self::font_face_css( $look, $plugin_url );
+		$base     = htmlspecialchars( $plugin_url . Blueworx_Clubhouse_Frontend::BASE_STYLESHEET, ENT_QUOTES, 'UTF-8' );
 		$sheet    = htmlspecialchars( $plugin_url . $look->stylesheet(), ENT_QUOTES, 'UTF-8' );
 
 		return '<!doctype html><html lang="en"><head>'
 			. '<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">'
 			. '<title>' . htmlspecialchars( $branding->get_club_name(), ENT_QUOTES, 'UTF-8' ) . '</title>'
 			. '<style>' . $faces . '</style>'
+			. '<link rel="stylesheet" href="' . $base . '">'
 			. '<link rel="stylesheet" href="' . $sheet . '">'
 			. '<style>' . $css . '</style>'
 			. '</head><body>' . $body . self::reveal_script() . '</body></html>';

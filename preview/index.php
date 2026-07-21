@@ -18,6 +18,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 require_once dirname( __DIR__ ) . '/includes/bootstrap.php';
 
+// Page_Renderer::document() links Frontend::BASE_STYLESHEET (a shared constant,
+// not a Base Look method — see class-frontend.php). That class is WordPress-
+// coupled and deliberately excluded from bootstrap.php's pure require list, but
+// merely loading the class definition is safe here: none of its WP-calling
+// methods are ever invoked by this harness.
+require_once dirname( __DIR__ ) . '/includes/frontend/class-frontend.php';
+
 /** Minimal in-memory storage so the preview needs no WordPress/DB. */
 final class Blueworx_Clubhouse_Preview_Storage implements Blueworx_Clubhouse_Storage {
 	/** @var array<string,mixed> */

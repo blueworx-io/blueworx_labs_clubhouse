@@ -94,6 +94,31 @@ final class FrontendTest extends TestCase {
 		$this->assertFalse( method_exists( Blueworx_Clubhouse_Frontend::class, 'resource_hints' ) );
 	}
 
+	public function test_enqueue_specs_includes_the_base_stylesheet_before_the_look(): void {
+		$look  = new Blueworx_Clubhouse_Court_Side();
+		$specs = Blueworx_Clubhouse_Frontend::enqueue_specs( $look, ':root{}', 'https://club.test/plugins/clubhouse/' );
+
+		$this->assertSame(
+			'https://club.test/plugins/clubhouse/assets/looks/base.css',
+			$specs['base_stylesheet_url']
+		);
+		// The look stylesheet is still resolved separately — base does not replace it.
+		$this->assertSame(
+			'https://club.test/plugins/clubhouse/assets/looks/court-side.css',
+			$specs['stylesheet_url']
+		);
+	}
+
+	public function test_base_stylesheet_is_the_same_for_every_look(): void {
+		$urls = array();
+		foreach ( array( new Blueworx_Clubhouse_Court_Side(), new Blueworx_Clubhouse_Floodlight(), new Blueworx_Clubhouse_Members_House() ) as $look ) {
+			$specs  = Blueworx_Clubhouse_Frontend::enqueue_specs( $look, ':root{}', 'https://club.test/' );
+			$urls[] = $specs['base_stylesheet_url'];
+		}
+		// Base is look-independent by design: a look cannot substitute its own.
+		$this->assertSame( array( 'https://club.test/assets/looks/base.css' ), array_values( array_unique( $urls ) ) );
+	}
+
 	public function test_club_name_reads_branding_through_context(): void {
 		wp_stub_reset();
 		update_option( 'clubhouse_branding', array( 'club_name' => 'Riverside RFC' ) );

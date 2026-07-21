@@ -1,0 +1,18 @@
+/*
+ * Shared structural layer for every Base Look.
+ *
+ * Loaded BEFORE the active look's stylesheet, so a look can override anything
+ * here. Rules use design tokens only — never a literal colour or font family —
+ * so the same structure re-skins with the look's tokens.
+ *
+ * Selectors stay at single-class specificity. A base rule that out-specifies a
+ * look rule would silently win, which is exactly the bug this file exists to
+ * prevent.
+ */
+
+/*
+ * Spacing and flow scales. Each look also declares these; because the look
+ * loads later its values win. These exist so the base is self-sufficient and a
+ * look that omits the scale still renders.
+ */
+:root{--space-2:8px;--space-3:12px;--space-4:16px;--space-6:24px;--space-8:32px;--space-10:40px;--space-12:48px;--space-16:64px;--space-20:80px;--flow-lg:88px;--flow-sm:24px}
