@@ -3,11 +3,15 @@
  *
  * Loaded BEFORE the active look's stylesheet, so a look can override anything
  * here. Rules use design tokens only — never a literal colour or font family —
- * so the same structure re-skins with the look's tokens.
+ * so the same structure re-skins with the look's tokens, with one known gap:
+ * two rgba(0,0,0,.4) box-shadow literals on .ch-scard:hover and
+ * .ch-event:hover, inherited verbatim from the court-side.css move below. The
+ * same literal is used the same way in all three look stylesheets; it's
+ * awaiting a shadow token rather than being rewritten here.
  *
- * Selectors stay at single-class specificity. A base rule that out-specifies a
- * look rule would silently win, which is exactly the bug this file exists to
- * prevent.
+ * Selectors stay at single-class specificity by default. A base rule that
+ * out-specifies a look rule would silently win, which is exactly the bug this
+ * file exists to prevent.
  */
 
 /*
@@ -23,9 +27,18 @@
  * Floodlight and Members House. They were already fully tokenized, so they are
  * shared as-is rather than rewritten.
  *
- * The .ch-main:has(...) + .ch-footer rule below is the one compound selector in
- * this file. It is safe above court-side.css's own .ch-footer rule because it
- * wins on specificity (0,4,0 against 0,1,0), not on order.
+ * Selectors stay at single-class specificity by default — a base rule that
+ * out-specifies a look rule would win silently, which is exactly the bug this
+ * layer exists to prevent. Five selectors in this moved block exceed that on
+ * purpose, each verified cascade-safe: no rule in any of the three look
+ * stylesheets targets the same class(es) at equal-or-higher specificity, so
+ * higher-specificity-wins holds regardless of load order.
+ *   - .ch-main:has(> .ch-social:last-child) + .ch-footer (0,4,0) — wins above
+ *     court-side.css's own .ch-footer rule (0,1,0).
+ *   - .ch-cal__month + .ch-cal__month (0,2,0)
+ *   - .ch-cal__row .ch-badge--l (0,2,0)
+ *   - .ch-cal__row .ch-badge--d (0,2,0)
+ *   - .ch-social__icon svg (0,1,1)
  */
 /* ---- Filter hero (Sports/Teams/Events/Calendar) ---- */
 .ch-hero-f{padding:var(--space-12) 0 0}
