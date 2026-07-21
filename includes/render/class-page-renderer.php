@@ -7,8 +7,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 /**
  * Assembles a full HTML document for a Base Look + branding: <head> carries the
- * self-hosted @font-face rules (injected inline), the look stylesheet, and the
- * derived :root variables; <body> is a string of rendered sections. home()
+ * self-hosted @font-face rules (injected inline), the base stylesheet link, the
+ * look stylesheet, and the derived :root variables; <body> is a string of
+ * rendered sections. home()
  * composes the demo Home shell, honouring per-section visibility. The same
  * output is what WordPress template_include will later echo — the preview is
  * just an earlier caller.

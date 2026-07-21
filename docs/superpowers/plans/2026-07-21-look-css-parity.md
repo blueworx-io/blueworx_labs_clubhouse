@@ -10,7 +10,7 @@
 
 ## Global Constraints
 
-- **Specificity:** every selector in `base.css` stays at single-class specificity. No `!important`, no ID selectors. The one documented exception is `.ch-main:has(> .ch-social:last-child) + .ch-footer`, moved verbatim and safe because it wins on specificity (0,4,0) over `.ch-footer` (0,1,0) at `court-side.css:217` regardless of order.
+- **Specificity:** every selector in `base.css` stays at single-class specificity by default. No `!important`, no ID selectors. Five documented exceptions, each individually verified cascade-safe: `.ch-main:has(> .ch-social:last-child) + .ch-footer`, moved verbatim and safe because it wins on specificity (0,4,0) over `.ch-footer` (0,1,0) at `court-side.css:217` regardless of order; `.ch-cal__month + .ch-cal__month`; `.ch-cal__row .ch-badge--l`; `.ch-cal__row .ch-badge--d`; and `.ch-social__icon svg`.
 - **No literals in `base.css`:** colours and font families come from tokens only — `var(--color-*)`, `var(--font-*)`. This mirrors the existing per-look stylesheet tests.
 - **Court Side must not change visually.** It is the reviewed, shipping look.
 - **Version:** bump the patch version in `blueworx-labs-clubhouse.php` (header + `BLUEWORX_LABS_CLUBHOUSE_VERSION`) and `package.json`, and add a `CHANGELOG.md` entry. CI fails the PR otherwise.

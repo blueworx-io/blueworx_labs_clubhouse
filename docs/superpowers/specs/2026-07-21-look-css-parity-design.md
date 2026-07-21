@@ -107,8 +107,11 @@ own base, which is the opposite of the intent.
 Court Side is expected to be unchanged because its rules load later and win. That
 guarantee **only holds if `base.css` does not out-specify them**. Therefore:
 
-> Every selector in `base.css` stays at single-class specificity. No compound
-> selectors, no `!important`, no ID selectors.
+> Every selector in `base.css` stays at single-class specificity by default. No
+> `!important`, no ID selectors, and five deliberate, individually verified
+> exceptions: `.ch-main:has(> .ch-social:last-child) + .ch-footer`,
+> `.ch-cal__month + .ch-cal__month`, `.ch-cal__row .ch-badge--l`,
+> `.ch-cal__row .ch-badge--d`, and `.ch-social__icon svg`.
 
 This is a correctness constraint, not a style preference, and the Court Side
 visual pass before merge exists to verify it held.
@@ -213,7 +216,7 @@ Migration is explicitly *not* part of this slice's completion criteria.
 
 | Risk | Mitigation |
 |---|---|
-| A `base.css` rule out-specifies Court Side and changes it | Single-class specificity constraint (one documented exception, verified on specificity); explicit Court Side visual pass before merge |
+| A `base.css` rule out-specifies Court Side and changes it | Single-class specificity constraint (five documented exceptions, each verified on specificity); explicit Court Side visual pass before merge |
 | Moving rules out of `court-side.css` changes the cascade | Verified: nothing in `court-side.css:1-449` references those selectors, and the one compound rule wins on specificity irrespective of order |
 | The known-unstyled constant becomes a dumping ground | Parity is the primary assertion and needs no upkeep; growing the constant is a review point, not a routine fix |
 | Floodlight / Members House inherit Court Side's *proportions* and look derivative | Accepted for this slice — a complete page in the wrong proportions beats an unstyled one. Refining per-look character is follow-on work, and the base makes it an override rather than a rewrite |

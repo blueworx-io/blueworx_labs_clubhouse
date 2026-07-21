@@ -36,8 +36,13 @@
  *   - .ch-main:has(> .ch-social:last-child) + .ch-footer (0,4,0) — wins above
  *     court-side.css's own .ch-footer rule (0,1,0).
  *   - .ch-cal__month + .ch-cal__month (0,2,0)
- *   - .ch-cal__row .ch-badge--l (0,2,0)
- *   - .ch-cal__row .ch-badge--d (0,2,0)
+ *   - .ch-cal__row .ch-badge--l (0,2,0) and .ch-cal__row .ch-badge--d (0,2,0) —
+ *     deliberately override any look's bare .ch-badge--l / .ch-badge--d rule
+ *     (0,1,0) within the calendar, re-toning the result badges for the light
+ *     .ch-cal__row background rather than the dark fixtures-panel one they're
+ *     otherwise styled for. Verified against Court Side; also the live case for
+ *     Floodlight, whose own .ch-badge--l / .ch-badge--d are equally (0,1,0) and
+ *     so are equally, intentionally overridden inside .ch-cal__row.
  *   - .ch-social__icon svg (0,1,1)
  */
 /* ---- Filter hero (Sports/Teams/Events/Calendar) ---- */

@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## 0.26.5
 
-- **Fixed: the Floodlight and Members House looks now render every page.** The fixtures, teams, sports and events pages were missing their styling entirely under those two looks — filters, cards and the calendar showed as unstyled text — because six components were only ever styled for Court Side. All three looks now share one set of building blocks, so switching look re-skins the whole site rather than part of it. Court Side is unchanged.
+- **Fixed: the Floodlight and Members House looks now render every page.** The calendar, teams, sports and events pages were missing their styling entirely under those two looks — filters, cards and fixture lists showed as unstyled text — because six components were only ever styled for Court Side. All three looks now share one set of building blocks, so switching look re-skins the whole site rather than part of it. Court Side is unchanged.
 
 ## 0.26.4
 

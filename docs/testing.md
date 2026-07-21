@@ -87,6 +87,8 @@ fail on different things:
   that exists but never matches the markup, which the static check cannot.
 
 Structural rules belong in `assets/looks/base.css`, which loads before the look
-and uses design tokens only. Selectors there stay at single-class specificity —
-a base rule that out-specifies a look rule wins silently, which is the bug this
-whole layer exists to prevent.
+and uses design tokens only. Selectors there stay at single-class specificity by
+default — a base rule that out-specifies a look rule wins silently, which is the
+bug this whole layer exists to prevent — with five deliberate exceptions, each
+individually verified cascade-safe against all three looks. See the heading
+comment in `base.css` for the list.

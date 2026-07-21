@@ -13,6 +13,14 @@ use PHPUnit\Framework\TestCase;
  * carry no rule in any look — markup hooks such as ch-tiles__label that inherit
  * and render correctly. Demanding a rule for each would mean styling hooks that
  * need none, or maintaining an ever-growing exemption list.
+ *
+ * Known limit: `emitted_classes()` only sees classes written literally in a
+ * `class="…"` attribute. A class built by string concatenation — e.g.
+ * `'ch-badge--' . $mod` in class-sections.php — is invisible to the scraper.
+ * `test_no_classes_render_outside_scraped_files()` keeps that blind spot
+ * honest by asserting no other rendering file has moved markup out from under
+ * this check; it says nothing about concatenated classes within the files it
+ * does scrape.
  */
 final class LookCoverageTest extends TestCase {
 
@@ -52,9 +60,11 @@ final class LookCoverageTest extends TestCase {
 	 * separator is a truncated interpolation and is dropped.
 	 */
 	private function emitted_classes(): array {
-		$out = array();
-		foreach ( array( 'includes/render/class-sections.php', 'includes/render/class-page-renderer.php' ) as $rel ) {
-			$php = (string) file_get_contents( $this->root() . '/' . $rel );
+		$out   = array();
+		$files = glob( $this->root() . '/includes/render/*.php' );
+		sort( $files );
+		foreach ( $files as $path ) {
+			$php = (string) file_get_contents( $path );
 			preg_match_all( '/class="([^"]*)"/', $php, $attrs );
 			foreach ( $attrs[1] as $attr ) {
 				preg_match_all( '/\bch-[a-z0-9_-]+/', $attr, $classes );
@@ -82,7 +92,13 @@ final class LookCoverageTest extends TestCase {
 			$css = (string) file_get_contents( $path );
 			$css = (string) preg_replace( '#/\*.*?\*/#s', '', $css ); // Comments name classes too.
 			// Blank out declaration bodies so a class named in a property value
-			// (a content: string, say) is never mistaken for a selector.
+			// (a content: string, say) is never mistaken for a selector. Single
+			// pass, non-recursive: `[^{}]*` cannot match a nested `{ }`, so this
+			// assumes today's CSS never nests at-rules more than one level deep
+			// (e.g. one `@media { .sel { ... } }`, not `@media { @supports { ... } }`).
+			// A second level of nesting would leave the outer block's own
+			// declarations unblanked, and a class named in one of them would be
+			// misread as a selector.
 			$selectors = preg_replace( '/\{[^{}]*\}/', '|', $css );
 			preg_match_all( '/\.(ch-[a-z0-9_-]+)/', (string) $selectors, $found );
 			foreach ( $found[1] as $class ) {
@@ -132,6 +148,68 @@ final class LookCoverageTest extends TestCase {
 			$this->unstyled_for( 'court-side' ),
 			'The set of unstyled classes changed. If a new component is genuinely '
 				. 'style-free, add it to KNOWN_UNSTYLED with a reason; otherwise style it.'
+		);
+	}
+
+	/**
+	 * Every `.php` file under includes/ and templates/, excluding includes/render/
+	 * itself (that's the set emitted_classes() already scrapes).
+	 *
+	 * @return array<int,string> absolute paths
+	 */
+	private function files_outside_render(): array {
+		$out = array();
+		foreach ( array( 'includes', 'templates' ) as $dir ) {
+			$base = $this->root() . '/' . $dir;
+			if ( ! is_dir( $base ) ) {
+				continue;
+			}
+			$iterator = new RecursiveIteratorIterator( new RecursiveDirectoryIterator( $base, FilesystemIterator::SKIP_DOTS ) );
+			foreach ( $iterator as $file ) {
+				$path = str_replace( '\\', '/', $file->getPathname() );
+				if ( 'php' !== $file->getExtension() ) {
+					continue;
+				}
+				if ( str_contains( $path, '/includes/render/' ) ) {
+					continue; // Already scraped by emitted_classes().
+				}
+				$out[] = $path;
+			}
+		}
+		sort( $out );
+		return $out;
+	}
+
+	/**
+	 * The glob in emitted_classes() only scrapes includes/render/. That is only a
+	 * trustworthy stand-in for "all rendered markup" if no ch-* class attribute
+	 * lives anywhere else. This asserts that boundary rather than assuming it: if
+	 * markup ever moves (or is added) outside includes/render/, this fails and
+	 * names the offending files instead of the coverage check silently narrowing.
+	 *
+	 * A failure here is not something to weaken — it means real markup is now
+	 * invisible to test_every_look_leaves_the_same_classes_unstyled() and
+	 * test_the_shared_unstyled_set_has_not_grown().
+	 */
+	public function test_no_classes_render_outside_scraped_files(): void {
+		$offenders = array();
+		foreach ( $this->files_outside_render() as $path ) {
+			$php = (string) file_get_contents( $path );
+			preg_match_all( '/class="([^"]*)"/', $php, $attrs );
+			foreach ( $attrs[1] as $attr ) {
+				if ( preg_match( '/\bch-[a-z0-9_-]+/', $attr ) ) {
+					$offenders[] = $path;
+					break;
+				}
+			}
+		}
+		$this->assertSame(
+			array(),
+			$offenders,
+			'ch-* classes found in class="…" attributes outside includes/render/: '
+				. implode( ', ', $offenders )
+				. '. The static coverage check only scrapes includes/render/, so markup '
+				. 'here is invisible to it — move it under includes/render/ or widen the scrape.'
 		);
 	}
 }
