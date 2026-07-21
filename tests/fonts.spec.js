@@ -18,7 +18,7 @@ test('fonts are self-hosted, no Google CDN requests', async ({ page }) => {
     }
   });
 
-  await page.goto('?page=home');
+  await page.goto('?clubhouse_page=home');
   await expect(page.locator('#ch-main')).toBeVisible();
   // Let font requests settle.
   await page.waitForLoadState('networkidle');

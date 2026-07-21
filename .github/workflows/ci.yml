@@ -4,10 +4,12 @@ jobs:
   guardrails:
     uses: blueworx-io/bluegroup_core_foundation/.github/workflows/ci-wordpress.yml@main
     with:
-      # Playwright boots the plugin's DB-free PHP preview via its webServer config
-      # (see playwright.config.js) and runs against it — no deployed staging site.
-      # This URL must match the webServer URL in playwright.config.js.
-      preview_url: http://127.0.0.1:8124/preview/
+      # Tests run against a disposable real WordPress the run provisions itself
+      # (PHP + SQLite, no Docker). The DB-free PHP preview is still exercised:
+      # playwright.config.js defines two projects, and the @preview specs — which
+      # drive preview-only affordances — target the preview server it boots. So a
+      # single run covers both harnesses, each with the specs it can actually serve.
+      use_local_wordpress: true
       plugin_slug: blueworx-labs-clubhouse
 
   # Builds the real deployment artifact and fails if anything outside the

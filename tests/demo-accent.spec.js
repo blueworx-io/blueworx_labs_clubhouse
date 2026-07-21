@@ -37,7 +37,7 @@ test('the accent survives navigation via the cookie', async ({ page }) => {
   expect(await rootToken(page, '--color-accent')).toBe('#c2337a');
 });
 
-test('the same swatch re-derives for a different look', async ({ page }) => {
+test('the same swatch re-derives for a different look @preview', async ({ page }) => {
   await page.goto('?demo=1');
   await page.locator('[data-clubhouse-accent="berry"]').click();
   const light = await rootToken(page, '--color-accent-block');
@@ -92,8 +92,8 @@ test('a mangled accent cookie is survivable, not fatal', async ({ page }) => {
   await expect(page.locator('[data-clubhouse-accent][aria-pressed="true"]')).toHaveCount(0);
 });
 
-test('no demo bar without ?demo=1', async ({ page }) => {
-  await page.goto('?page=home');
+test('no demo bar without ?demo=1 @preview', async ({ page }) => {
+  await page.goto('?clubhouse_page=home');
   await expect(page.locator('.clubhouse-demo')).toHaveCount(0);
   await expect(page.locator('.clubhouse-demo__swatch')).toHaveCount(0);
 });
