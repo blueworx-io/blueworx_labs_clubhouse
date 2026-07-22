@@ -126,10 +126,17 @@ final class Blueworx_Clubhouse_Page_Renderer {
 	}
 
 	private static function shell_header( string $club, string $active, Blueworx_Clubhouse_Visibility $visibility, string $logo_url = '', ?Blueworx_Clubhouse_Content_Store $content = null ): string {
+		// The announcement bar is owner-configurable (Content → Global → Header):
+		// a show/hide toggle plus editable text + link. When off — or when the text
+		// is cleared — Sections::header()'s empty-string guard drops the markup.
+		$banner_on   = (bool) self::cget( $content, 'global', 'header', 'banner_show', true );
+		$banner_text = $banner_on
+			? self::cget( $content, 'global', 'header', 'banner', 'Summer sign-ups are open — register your interest for 2026/27 →' )
+			: '';
 		return Blueworx_Clubhouse_Sections::header( array(
 			'club_name'   => $club,
-			'banner'      => 'Summer sign-ups are open — register your interest for 2026/27 →',
-			'banner_href' => Blueworx_Clubhouse_Links::url( 'membership' ),
+			'banner'      => $banner_text,
+			'banner_href' => self::cget( $content, 'global', 'header', 'banner_href', Blueworx_Clubhouse_Links::url( 'membership' ) ),
 			'nav'         => self::nav_links( array(
 				array( 'label' => 'Home', 'key' => 'home' ),
 				array( 'label' => 'About', 'key' => 'about' ),

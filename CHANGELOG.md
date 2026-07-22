@@ -5,6 +5,10 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.29.0
+
+- **The top announcement bar is now yours to edit or switch off.** In Clubhouse → Club Content → Global → Header you can change its message and link, or turn the whole bar off with a single toggle — your drafted wording is kept even while it's hidden. Until you change anything it reads exactly as before.
+
 ## 0.28.0
 
 - **A tidier, better-flowing home page.** Contact and location details now sit at the foot of the page, nearest the footer, instead of interrupting the middle. The news ticker is bolder and easier to read, with its label filling the strip. The dark "clubhouse" band no longer shows a broken-image icon when you haven't set a photo, and its wording no longer echoes the footer. The big lime highlight in the hero has a little more breathing room so letters don't touch its edge, and the fixtures list's small print (e.g. "Rugby · 1st XV") is now larger and easier to read.
