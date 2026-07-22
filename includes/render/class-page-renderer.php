@@ -178,12 +178,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'placeholder' => 'Your email',
 				'cta'         => 'Subscribe',
 			),
-			'legal'      => array(
-				array( 'label' => 'Privacy Policy', 'href' => '#' ),
-				array( 'label' => 'Terms', 'href' => '#' ),
-				array( 'label' => 'Club Rules', 'href' => '#' ),
-				array( 'label' => 'Safeguarding', 'href' => '#' ),
-			),
+			'legal'      => array(),
 		) );
 	}
 
@@ -356,7 +351,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				array( 'label' => 'Location', 'lines' => array( '12 Riverside Lane', 'Marlow, SL7 1AA' ), 'link_label' => '', 'link_href' => '' ),
 				array( 'label' => 'Opening hours', 'lines' => array( 'Mon–Sun', '7:00am – 10:00pm' ), 'link_label' => '', 'link_href' => '' ),
 				array( 'label' => 'Contact', 'lines' => array( 'hello@clubhouse.example', '01628 000 000' ), 'link_label' => '', 'link_href' => '' ),
-				array( 'label' => 'Find us', 'lines' => array(), 'link_label' => 'Open in Maps', 'link_href' => '#' ),
+				array( 'label' => 'Find us', 'lines' => array(), 'link_label' => 'Open in Maps', 'link_href' => Blueworx_Clubhouse_Sections::maps_url( array( '12 Riverside Lane', 'Marlow, SL7 1AA' ) ) ),
 			);
 			$items = self::citems( $content, 'home', 'info', $default );
 			$out .= Blueworx_Clubhouse_Sections::info_strip( array_map(
@@ -373,7 +368,8 @@ final class Blueworx_Clubhouse_Page_Renderer {
 		}
 		if ( $visibility->is_section_visible( 'home', 'sponsors' ) ) {
 			$out .= Blueworx_Clubhouse_Sections::sponsors( array(
-				'heading' => 'Our sponsors & partners', 'link_label' => 'Become a sponsor', 'link_href' => '#',
+				'eyebrow' => 'Our partners', 'heading' => 'Our sponsors & partners', 'link_label' => 'Become a sponsor',
+				'link_href' => Blueworx_Clubhouse_Links::url( 'contact' ),
 				'names'   => array_map( static fn( array $s ): string => $s['name'], $collections->sponsors() ),
 			) );
 		}
@@ -732,7 +728,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'password_label' => 'Password',
 				'remember_label' => 'Remember me',
 				'forgot_label'   => 'Forgot password?',
-				'forgot_href'    => '#',
+				'forgot_href'    => '',
 				'submit_label'   => 'Log in',
 				'join_prompt'    => 'Not a member yet?',
 				'join_label'     => Blueworx_Clubhouse_Cta::JOIN,

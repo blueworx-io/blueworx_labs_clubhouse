@@ -382,11 +382,11 @@ final class Blueworx_Clubhouse_Sections {
 	public static function news_cards( array $data ): string {
 		$cards = '';
 		foreach ( $data['cards'] as $c ) {
-			$cards .= '<a class="ch-news__card" role="listitem" href="#">'
+			$cards .= '<article class="ch-news__card" role="listitem">'
 				. self::media( $c['image'], $c['image_alt'], 'ch-news__media' )
 				. '<div class="ch-news__meta"><span class="ch-news__tag">' . self::e( $c['tag'] ) . '</span>'
 				. '<span class="ch-news__date">' . self::e( $c['date'] ) . '</span></div>'
-				. '<h3 class="ch-news__title">' . self::e( $c['title'] ) . '</h3></a>';
+				. '<h3 class="ch-news__title">' . self::e( $c['title'] ) . '</h3></article>';
 		}
 		return '<section class="ch-sec"><div class="ch-wrap">'
 			. '<span class="ch-eyebrow">' . self::e( $data['eyebrow'] ) . '</span>'
@@ -441,7 +441,7 @@ final class Blueworx_Clubhouse_Sections {
 			foreach ( $c['lines'] as $line ) {
 				$lines .= '<span class="ch-info__line">' . self::e( $line ) . '</span>';
 			}
-			$link = '' !== $c['link_label']
+			$link = ( '' !== $c['link_label'] && '' !== $c['link_href'] )
 				? '<a class="ch-info__link" href="' . self::e( $c['link_href'] ) . '">' . self::e( $c['link_label'] ) . ' →</a>' : '';
 			$out .= '<div class="ch-info__col" role="listitem"><div class="ch-info__label">' . self::e( $c['label'] ) . '</div>'
 				. '<div class="ch-info__body">' . $lines . $link . '</div></div>';
@@ -449,15 +449,35 @@ final class Blueworx_Clubhouse_Sections {
 		return '<section class="ch-info"><div class="ch-wrap ch-info__in" role="list">' . $out . '</div></section>';
 	}
 
-	/** @param array{heading:string,link_label:string,link_href:string,names:array<int,string>} $data */
+	/**
+	 * Google Maps search URL for a club address, built from the address lines we
+	 * already render. Empty when there is no address, so the caller omits the link
+	 * rather than emitting a dead one.
+	 *
+	 * @param array<int,string> $lines address lines
+	 */
+	public static function maps_url( array $lines ): string {
+		$query = trim( implode( ', ', array_filter( array_map( 'trim', $lines ) ) ) );
+		if ( '' === $query ) {
+			return '';
+		}
+		return 'https://www.google.com/maps/search/?api=1&query=' . rawurlencode( $query );
+	}
+
+	/** @param array{eyebrow:string,heading:string,link_label:string,link_href:string,names:array<int,string>} $data */
 	public static function sponsors( array $data ): string {
 		$tiles = '';
 		foreach ( $data['names'] as $name ) {
 			$tiles .= '<div class="ch-sponsors__tile" role="listitem">' . self::e( $name ) . '</div>';
 		}
+		$cta = '' !== $data['link_href']
+			? '<a class="ch-btn ch-btn--ghost" href="' . self::e( $data['link_href'] ) . '">' . self::e( $data['link_label'] ) . '</a>'
+			: '';
 		return '<section class="ch-sec"><div class="ch-wrap">'
-			. '<div class="ch-sec__head"><h2 class="ch-sec__title ch-sec__title--sm">' . self::e( $data['heading'] ) . '</h2>'
-			. '<a class="ch-link" href="' . self::e( $data['link_href'] ) . '">' . self::e( $data['link_label'] ) . ' →</a></div>'
+			. '<div class="ch-sec__head">'
+			. '<span class="ch-eyebrow">' . self::e( $data['eyebrow'] ) . '</span>'
+			. '<h2 class="ch-sec__title ch-sec__title--sm">' . self::e( $data['heading'] ) . '</h2>'
+			. $cta . '</div>'
 			. '<div class="ch-sponsors" role="list">' . $tiles . '</div></div></section>';
 	}
 
@@ -485,6 +505,7 @@ final class Blueworx_Clubhouse_Sections {
 		foreach ( $data['legal'] as $l ) {
 			$legal .= '<a class="ch-footer__legal-link" href="' . self::e( $l['href'] ) . '">' . self::e( $l['label'] ) . '</a>';
 		}
+		$legal_row = '' !== $legal ? '<div class="ch-footer__legal">' . $legal . '</div>' : '';
 		return '<footer class="ch-footer"><div class="ch-wrap">'
 			. '<div class="ch-footer__grid">'
 			. '<div class="ch-footer__brand-col">'
@@ -492,7 +513,7 @@ final class Blueworx_Clubhouse_Sections {
 			. '<p class="ch-footer__tagline">' . self::e( $data['tagline'] ) . '</p>'
 			. '<div class="ch-footer__socials ch-social__links" role="list">' . self::social_links( $data['socials'] ) . '</div></div>'
 			. $cols . $nl . '</div>'
-			. '<div class="ch-footer__legal">' . $legal . '</div>'
+			. $legal_row
 			. '</div></footer>';
 	}
 
@@ -649,6 +670,8 @@ final class Blueworx_Clubhouse_Sections {
 	 *   submit_label:string,join_prompt:string,join_label:string,join_href:string} $data
 	 */
 	public static function auth( array $data ): string {
+		$forgot = '' !== $data['forgot_href']
+			? '<a class="ch-auth__forgot" href="' . self::e( $data['forgot_href'] ) . '">' . self::e( $data['forgot_label'] ) . '</a>' : '';
 		$form = '<form class="ch-auth__form" onsubmit="return false">'
 			. '<label class="ch-field"><span class="ch-field__label">' . self::e( $data['email_label'] ) . '</span>'
 			. '<input class="ch-field__input" type="email" name="email" autocomplete="email"></label>'
@@ -656,7 +679,7 @@ final class Blueworx_Clubhouse_Sections {
 			. '<input class="ch-field__input" type="password" name="password" autocomplete="current-password"></label>'
 			. '<div class="ch-auth__row">'
 			. '<label class="ch-auth__remember"><input type="checkbox" name="remember"><span>' . self::e( $data['remember_label'] ) . '</span></label>'
-			. '<a class="ch-auth__forgot" href="' . self::e( $data['forgot_href'] ) . '">' . self::e( $data['forgot_label'] ) . '</a></div>'
+			. $forgot . '</div>'
 			. '<button class="ch-btn ch-btn--accent ch-auth__submit" type="submit">' . self::e( $data['submit_label'] ) . '</button></form>';
 		return '<section class="ch-sec"><div class="ch-wrap ch-auth-wrap"><div class="ch-auth">'
 			. '<span class="ch-eyebrow">' . self::e( $data['eyebrow'] ) . '</span>'

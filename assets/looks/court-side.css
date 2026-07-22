@@ -315,7 +315,6 @@ a{color:inherit;text-decoration:none}
 
 .ch-news{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(240px,100%),1fr));gap:28px}
 .ch-news__card{display:block;transition:transform .25s ease}
-.ch-news__card:hover{transform:translateY(-4px)}
 .ch-news__media{height:200px;border-radius:var(--radius-md);margin-bottom:16px}
 .ch-news__meta{display:flex;align-items:center;gap:10px;margin-bottom:8px;font-size:12px}
 .ch-news__tag{color:var(--color-accent-deep);font-weight:700;text-transform:uppercase;letter-spacing:.08em}
@@ -422,7 +421,7 @@ a{color:inherit;text-decoration:none}
 .ch-person:hover .ch-person__avatar{transform:scale(1.03)}
 .ch-faq__q:hover{color:var(--color-accent-deep)}
 @media(prefers-reduced-motion:reduce){
-	.ch-benefit:hover,.ch-step:hover,.ch-tier:hover,.ch-person:hover,.ch-person:hover .ch-person__avatar,.ch-card:hover,.ch-news__card:hover,.ch-tiles__tile:hover{transform:none}
+	.ch-benefit:hover,.ch-step:hover,.ch-tier:hover,.ch-person:hover,.ch-person:hover .ch-person__avatar,.ch-card:hover,.ch-tiles__tile:hover{transform:none}
 }
 
 /* Member sign-in card — narrow and centred by intent (it's the whole page, and reads

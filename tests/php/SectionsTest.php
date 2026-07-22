@@ -384,7 +384,7 @@ final class SectionsTest extends TestCase {
 
 	public function test_sponsors_render_each_tile(): void {
 		$html = Blueworx_Clubhouse_Sections::sponsors( array(
-			'heading' => 'Our sponsors & partners', 'link_label' => 'Become a sponsor', 'link_href' => '#',
+			'eyebrow' => 'Our partners', 'heading' => 'Our sponsors & partners', 'link_label' => 'Become a sponsor', 'link_href' => '#',
 			'names'   => array( 'Sponsor 01', 'Sponsor 02', 'Sponsor 03' ),
 		) );
 		$this->assertStringContainsString( 'class="ch-sponsors"', $html );
@@ -392,6 +392,49 @@ final class SectionsTest extends TestCase {
 		$this->assertListSemantics( $html, 1, 3 );
 		$this->assertStringContainsString( 'Become a sponsor', $html );
 		$this->assertStringNotContainsString( 'style=', $html );
+	}
+
+	public function test_maps_url_encodes_the_address(): void {
+		$url = Blueworx_Clubhouse_Sections::maps_url( array( '12 Riverside Lane', 'Marlow, SL7 1AA' ) );
+		$this->assertStringStartsWith( 'https://www.google.com/maps/search/?api=1&query=', $url );
+		$this->assertStringContainsString( '12%20Riverside%20Lane', $url );
+		$this->assertStringContainsString( 'Marlow', $url );
+	}
+
+	public function test_maps_url_is_empty_for_a_blank_address(): void {
+		$this->assertSame( '', Blueworx_Clubhouse_Sections::maps_url( array( '', '' ) ) );
+	}
+
+	public function test_sponsors_has_an_eyebrow_and_a_real_cta(): void {
+		$html = Blueworx_Clubhouse_Sections::sponsors( array(
+			'eyebrow'    => 'Our partners',
+			'heading'    => 'Our sponsors & partners',
+			'link_label' => 'Become a sponsor',
+			'link_href'  => 'https://example.test/contact/',
+			'names'      => array( 'Acme' ),
+		) );
+		$this->assertStringContainsString( 'ch-eyebrow', $html );
+		$this->assertStringContainsString( 'ch-btn', $html, 'sponsor CTA is a pill, not a plain link' );
+		$this->assertStringNotContainsString( 'href="#"', $html );
+	}
+
+	public function test_news_cards_are_not_links(): void {
+		$html = Blueworx_Clubhouse_Sections::news_cards( $this->newsData() );
+		$this->assertStringNotContainsString( 'href="#"', $html );
+		$this->assertStringNotContainsString( '<a class="ch-news__card"', $html );
+	}
+
+	/** @return array{eyebrow:string,heading:string,cards:array<int,array{image:string,image_alt:string,tag:string,date:string,title:string}>} */
+	private function newsData(): array {
+		return array(
+			'eyebrow' => 'Latest news',
+			'heading' => 'From the clubhouse',
+			'cards'   => array(
+				array( 'image' => '', 'image_alt' => 'Clubhouse interior', 'tag' => 'Club news', 'date' => '2 Jul', 'title' => 'Clubhouse refurbishment complete' ),
+				array( 'image' => '', 'image_alt' => 'Junior footballers', 'tag' => 'Sections', 'date' => '28 Jun', 'title' => 'Junior Football signs 40 new players' ),
+				array( 'image' => '', 'image_alt' => 'Volunteers', 'tag' => 'Volunteering', 'date' => '24 Jun', 'title' => 'Volunteers needed for the Open Day' ),
+			),
+		);
 	}
 
 	public function test_benefit_grid_renders_each_card(): void {
