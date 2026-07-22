@@ -236,7 +236,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'image'              => self::media_src( (string) self::cget( $content, 'home', 'hero', 'image', '' ) ),
 				'image_alt'          => 'ClubHouse floodlit pitch on a Saturday',
 				'tiles'              => self::citems( $content, 'home', 'quick_tiles', array(
-					array( 'label' => 'Join the club', 'href' => Blueworx_Clubhouse_Links::url( 'membership' ), 'icon' => 'join' ),
+					array( 'label' => Blueworx_Clubhouse_Cta::JOIN, 'href' => Blueworx_Clubhouse_Links::url( 'membership' ), 'icon' => 'join' ),
 					array( 'label' => 'Take a tour', 'href' => Blueworx_Clubhouse_Links::url( 'about' ), 'icon' => 'tour' ),
 					array( 'label' => 'See fixtures', 'href' => Blueworx_Clubhouse_Links::url( 'calendar' ), 'icon' => 'fixtures' ),
 					array( 'label' => 'Get in touch', 'href' => Blueworx_Clubhouse_Links::url( 'contact' ), 'icon' => 'contact' ),
