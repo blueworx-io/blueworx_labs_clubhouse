@@ -5,6 +5,10 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.34.0
+
+- **WordPress's built-in "Pages" are now hidden.** The clubhouse plugin provides every page of your site, so the native Pages editor was redundant and only invited editing content that never appears. The "Pages" item in the admin sidebar and the "+ New → Page" shortcut are both gone. Nothing is deleted and blog Posts are untouched — this only tidies the admin so you edit your site in one place (Clubhouse → Club Content).
+
 ## 0.28.0
 
 - **A tidier, better-flowing home page.** Contact and location details now sit at the foot of the page, nearest the footer, instead of interrupting the middle. The news ticker is bolder and easier to read, with its label filling the strip. The dark "clubhouse" band no longer shows a broken-image icon when you haven't set a photo, and its wording no longer echoes the footer. The big lime highlight in the hero has a little more breathing room so letters don't touch its edge, and the fixtures list's small print (e.g. "Rugby · 1st XV") is now larger and easier to read.
