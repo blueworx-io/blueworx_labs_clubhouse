@@ -472,13 +472,22 @@ final class Blueworx_Clubhouse_Page_Renderer {
 			$out .= Blueworx_Clubhouse_Sections::timeline( array(
 				'eyebrow'    => 'Our story',
 				'heading'    => self::cget( $content, 'about', 'history', 'heading', 'From one pitch to nine sports' ),
-				'milestones' => array(
-					array( 'year' => '1974', 'title' => 'One pitch, one team', 'desc' => 'A handful of rugby players lease a field by the river.' ),
-					array( 'year' => '1982', 'title' => 'Cricket joins', 'desc' => 'Summer cricket takes over the square; the first pavilion goes up.' ),
-					array( 'year' => '1991', 'title' => 'Juniors take root', 'desc' => 'Minis and colts sections launch across rugby and cricket.' ),
-					array( 'year' => '2003', 'title' => 'Courts & clubhouse', 'desc' => 'Four tennis courts and the current clubhouse open.' ),
-					array( 'year' => '2015', 'title' => 'Nine sports', 'desc' => 'Hockey, netball and squash complete the multi-sport club.' ),
-					array( 'year' => '2024', 'title' => 'A modern home', 'desc' => 'A full clubhouse refurbishment for the next generation.' ),
+				'milestones' => array_map(
+					static function ( array $m ): array {
+						return array(
+							'year'  => (string) ( $m['year'] ?? '' ),
+							'title' => (string) ( $m['title'] ?? '' ),
+							'desc'  => (string) ( $m['desc'] ?? '' ),
+						);
+					},
+					self::citems( $content, 'about', 'history', array(
+						array( 'year' => '1974', 'title' => 'One pitch, one team', 'desc' => 'A handful of rugby players lease a field by the river.' ),
+						array( 'year' => '1982', 'title' => 'Cricket joins', 'desc' => 'Summer cricket takes over the square; the first pavilion goes up.' ),
+						array( 'year' => '1991', 'title' => 'Juniors take root', 'desc' => 'Minis and colts sections launch across rugby and cricket.' ),
+						array( 'year' => '2003', 'title' => 'Courts & clubhouse', 'desc' => 'Four tennis courts and the current clubhouse open.' ),
+						array( 'year' => '2015', 'title' => 'Nine sports', 'desc' => 'Hockey, netball and squash complete the multi-sport club.' ),
+						array( 'year' => '2024', 'title' => 'A modern home', 'desc' => 'A full clubhouse refurbishment for the next generation.' ),
+					) )
 				),
 			) );
 		}
@@ -494,6 +503,16 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				) ),
 			) );
 		}
+		// Facilities — the tangible "what we've got" — moves up above the committee,
+		// so it lands right after the club's values.
+		if ( $visibility->is_section_visible( 'about', 'facilities' ) ) {
+			$out .= Blueworx_Clubhouse_Sections::image_band( array(
+				'eyebrow'   => self::cget( $content, 'about', 'facilities', 'eyebrow', 'The facilities' ),
+				'heading'   => self::cget( $content, 'about', 'facilities', 'heading', 'Five pitches, four courts, one clubhouse' ),
+				'image'     => self::media_src( (string) self::cget( $content, 'about', 'facilities', 'image', '' ) ), 'image_alt' => 'ClubHouse grounds from the air',
+				'cta_label' => self::cget( $content, 'about', 'facilities', 'cta_label', 'Book a visit' ), 'cta_href' => self::cget( $content, 'about', 'facilities', 'cta_href', Blueworx_Clubhouse_Links::url( 'contact' ) ),
+			) );
+		}
 		if ( $visibility->is_section_visible( 'about', 'committee' ) ) {
 			$out .= Blueworx_Clubhouse_Sections::people_grid( array(
 				'eyebrow' => 'Who runs the club',
@@ -506,18 +525,23 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				),
 			) );
 		}
-		if ( $visibility->is_section_visible( 'about', 'facilities' ) ) {
-			$out .= Blueworx_Clubhouse_Sections::image_band( array(
-				'eyebrow'   => self::cget( $content, 'about', 'facilities', 'eyebrow', 'The facilities' ),
-				'heading'   => self::cget( $content, 'about', 'facilities', 'heading', 'Five pitches, four courts, one clubhouse' ),
-				'image'     => self::media_src( (string) self::cget( $content, 'about', 'facilities', 'image', '' ) ), 'image_alt' => 'ClubHouse grounds from the air',
-				'cta_label' => self::cget( $content, 'about', 'facilities', 'cta_label', 'Book a visit' ), 'cta_href' => self::cget( $content, 'about', 'facilities', 'cta_href', Blueworx_Clubhouse_Links::url( 'contact' ) ),
+		// "Get involved" — non-playing ways to support the club, distinct from the
+		// membership Join CTA that closes the page.
+		if ( $visibility->is_section_visible( 'about', 'get_involved' ) ) {
+			$out .= Blueworx_Clubhouse_Sections::benefit_grid( array(
+				'eyebrow' => self::cget( $content, 'about', 'get_involved', 'eyebrow', 'Beyond the pitch' ),
+				'heading' => self::cget( $content, 'about', 'get_involved', 'heading', 'Get involved' ),
+				'cards'   => self::citems( $content, 'about', 'get_involved', array(
+					array( 'title' => 'Volunteer', 'description' => 'Help on match days, run the bar, or join the committee — every hand counts.' ),
+					array( 'title' => 'Coach & officiate', 'description' => 'Gain qualifications and give the next generation their start.' ),
+					array( 'title' => 'Sponsor & partner', 'description' => 'Back a team or the clubhouse and reach the whole community.' ),
+				) ),
 			) );
 		}
 		if ( $visibility->is_section_visible( 'about', 'cta' ) ) {
 			$out .= Blueworx_Clubhouse_Sections::band( array(
 				'variant'   => 'ink',
-				'eyebrow'   => 'Get involved',
+				'eyebrow'   => 'Membership',
 				'heading'   => self::cget( $content, 'about', 'cta', 'heading', 'Want to be part of it?' ),
 				'lede'      => self::cget( $content, 'about', 'cta', 'lede', 'Play, volunteer, or just come for the atmosphere.' ),
 				'cta_label' => self::cget( $content, 'about', 'cta', 'cta_label', Blueworx_Clubhouse_Cta::JOIN . ' →' ),
@@ -553,6 +577,11 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'image_caption'      => '',
 			) );
 		}
+		// Tiers sit above the fold — the pricing is the primary intent, so it comes
+		// straight after the hero, before the supporting "Why join" benefits.
+		if ( $visibility->is_section_visible( 'membership', 'tiers' ) ) {
+			$out .= Blueworx_Clubhouse_Sections::tier_grid( self::membership_tiers( $content ) );
+		}
 		if ( $visibility->is_section_visible( 'membership', 'why' ) ) {
 			$out .= Blueworx_Clubhouse_Sections::benefit_grid( array(
 				'eyebrow' => self::cget( $content, 'membership', 'why', 'eyebrow', 'Why join' ),
@@ -564,9 +593,6 @@ final class Blueworx_Clubhouse_Page_Renderer {
 					array( 'title' => 'Kit discounts', 'description' => 'Save on team kit at our partner suppliers.' ),
 				) ),
 			) );
-		}
-		if ( $visibility->is_section_visible( 'membership', 'tiers' ) ) {
-			$out .= Blueworx_Clubhouse_Sections::tier_grid( self::membership_tiers( $content ) );
 		}
 		if ( $visibility->is_section_visible( 'membership', 'detail' ) ) {
 			$default = array_merge(

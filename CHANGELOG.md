@@ -5,6 +5,11 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.31.0
+
+- **A clearer About page.** The club's facilities now sit higher up, right after its values, and a new **"Get involved"** section highlights ways to help beyond playing — volunteering, coaching and sponsorship — separate from the join-the-club call to action that closes the page. The history timeline is now fully editable in Clubhouse → Club Content → About, so you can add, remove or reword your own milestones.
+- **Membership pricing is now front and centre.** The tier cards move above the "Why join" benefits, so visitors see the options and prices immediately after the page intro rather than after scrolling.
+
 ## 0.30.0
 
 - **Membership tiers are now managed in one place.** The tier cards on the Home page previously showed a fixed, separate set that ignored your Membership page edits and left out the Junior tier. Home now mirrors the tiers you set on the Membership page — edit them once and both pages update. On Home the cards link through to the Membership page (where the full detail and "register interest" live); the Membership page itself is unchanged.
