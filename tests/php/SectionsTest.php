@@ -289,17 +289,31 @@ final class SectionsTest extends TestCase {
 	}
 
 	public function test_image_band_renders_overlay_heading_and_cta(): void {
+		// With no image the band is the plain coloured variant and emits NO media
+		// slot — the empty-media placeholder glyph reads as a broken image here.
 		$html = Blueworx_Clubhouse_Sections::image_band( array(
 			'eyebrow'   => 'The clubhouse',
 			'heading'   => 'A home ground for every team',
 			'image'     => '', 'image_alt' => '',
 			'cta_label' => 'Visit us', 'cta_href' => '?page=contact',
 		) );
-		$this->assertStringContainsString( 'class="ch-band-img"', $html );
+		$this->assertStringContainsString( 'class="ch-band-img ch-band-img--plain"', $html );
+		$this->assertStringNotContainsString( 'ch-media--empty', $html, 'no broken-image glyph when unset' );
 		$this->assertStringContainsString( 'A home ground for every team', $html );
 		$this->assertStringContainsString( 'Visit us', $html );
 		$this->assertNoHexColour( $html );
 		$this->assertStringNotContainsString( 'style=', $html );
+
+		// With an image, the media slot renders and the plain modifier is absent.
+		$withImg = Blueworx_Clubhouse_Sections::image_band( array(
+			'eyebrow'   => 'The clubhouse',
+			'heading'   => 'A home ground for every team',
+			'image'     => 'https://cdn.test/pavilion.jpg', 'image_alt' => 'Pavilion',
+			'cta_label' => 'Visit us', 'cta_href' => '?page=contact',
+		) );
+		$this->assertStringContainsString( 'ch-band-img__media', $withImg );
+		$this->assertStringContainsString( 'https://cdn.test/pavilion.jpg', $withImg );
+		$this->assertStringNotContainsString( 'ch-band-img--plain', $withImg );
 	}
 
 	public function test_no_colour_literals_leak_into_markup(): void {

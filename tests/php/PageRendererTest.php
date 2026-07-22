@@ -88,6 +88,27 @@ final class PageRendererTest extends TestCase {
 		$this->assertStringContainsString( 'class="ch-footer"', $body );
 	}
 
+	public function test_home_hero_has_no_cta_buttons_by_default(): void {
+		// The quick-tile row carries the actions, so the hero CTA pair is off unless
+		// an owner sets a label. The tiles must still be present.
+		$vis  = new Blueworx_Clubhouse_Visibility( new Blueworx_Clubhouse_Fake_Storage() );
+		$body = Blueworx_Clubhouse_Page_Renderer::home( $this->branding(), $vis, $this->collections() );
+		$this->assertStringNotContainsString( 'ch-home-hero__cta', $body );
+		$this->assertStringContainsString( 'ch-home-hero__foot', $body );
+	}
+
+	public function test_home_places_the_info_strip_after_the_social_band(): void {
+		// Contact / Find-us closes the page — it renders below the social band, not
+		// mid-scroll between content sections.
+		$vis  = new Blueworx_Clubhouse_Visibility( new Blueworx_Clubhouse_Fake_Storage() );
+		$body = Blueworx_Clubhouse_Page_Renderer::home( $this->branding(), $vis, $this->collections() );
+		$social = strpos( $body, 'class="ch-social"' );
+		$info   = strpos( $body, 'class="ch-info"' );
+		$this->assertNotFalse( $social );
+		$this->assertNotFalse( $info, 'info strip renders' );
+		$this->assertGreaterThan( $social, $info, 'info strip comes after the social band' );
+	}
+
 	public function test_home_omits_the_stat_strip_by_default(): void {
 		$vis  = new Blueworx_Clubhouse_Visibility( new Blueworx_Clubhouse_Fake_Storage() );
 		$body = Blueworx_Clubhouse_Page_Renderer::home( $this->branding(), $vis, $this->collections() );
@@ -117,7 +138,7 @@ final class PageRendererTest extends TestCase {
 		$this->assertStringContainsString( 'class="ch-timeline"', $body );
 		$this->assertStringContainsString( 'class="ch-benefits"', $body );
 		$this->assertStringContainsString( 'class="ch-people"', $body );
-		$this->assertStringContainsString( 'class="ch-band-img"', $body );
+		$this->assertStringContainsString( 'class="ch-band-img', $body ); // plain or with-image variant
 		$this->assertStringContainsString( 'class="ch-footer"', $body );
 		$this->assertStringContainsString( 'ch-nav__link--active', $body );
 	}

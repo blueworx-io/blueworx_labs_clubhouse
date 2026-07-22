@@ -224,9 +224,12 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'title_lead'         => self::cget( $content, 'home', 'hero', 'title_lead', 'Every sport. Every age. ' ),
 				'title_highlight'    => self::cget( $content, 'home', 'hero', 'title_highlight', 'One community.' ),
 				'lede'               => self::cget( $content, 'home', 'hero', 'lede', "Nine sports, twenty-four teams, and a clubhouse that's always open. Come for the game — stay for the people." ),
-				'cta_primary'        => self::cget( $content, 'home', 'hero', 'cta_primary', Blueworx_Clubhouse_Cta::JOIN ),
+				// Off by default — the quick-tile row below repeats these actions. Still
+				// configurable: an owner who sets a label in the catalogue gets the
+				// button pair back (see home_hero()).
+				'cta_primary'        => self::cget( $content, 'home', 'hero', 'cta_primary', '' ),
 				'cta_primary_href'   => self::cget( $content, 'home', 'hero', 'cta_primary_href', Blueworx_Clubhouse_Links::url( 'membership' ) ),
-				'cta_secondary'      => self::cget( $content, 'home', 'hero', 'cta_secondary', 'Take a tour →' ),
+				'cta_secondary'      => self::cget( $content, 'home', 'hero', 'cta_secondary', '' ),
 				'cta_secondary_href' => self::cget( $content, 'home', 'hero', 'cta_secondary_href', Blueworx_Clubhouse_Links::url( 'about' ) ),
 				'image'              => self::media_src( (string) self::cget( $content, 'home', 'hero', 'image', '' ) ),
 				'image_alt'          => 'ClubHouse floodlit pitch on a Saturday',
@@ -283,7 +286,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 		if ( $visibility->is_section_visible( 'home', 'clubhouse' ) ) {
 			$out .= Blueworx_Clubhouse_Sections::image_band( array(
 				'eyebrow'   => self::cget( $content, 'home', 'clubhouse', 'eyebrow', 'The clubhouse' ),
-				'heading'   => self::cget( $content, 'home', 'clubhouse', 'heading', 'A home ground for every team, and everyone who follows them' ),
+				'heading'   => self::cget( $content, 'home', 'clubhouse', 'heading', "Bar, kitchen and a full social calendar — the club doesn\u{2019}t stop at the final whistle" ),
 				'image'     => self::media_src( (string) self::cget( $content, 'home', 'clubhouse', 'image', '' ) ), 'image_alt' => 'ClubHouse pavilion at dusk',
 				'cta_label' => self::cget( $content, 'home', 'clubhouse', 'cta_label', 'Visit us' ), 'cta_href' => self::cget( $content, 'home', 'clubhouse', 'cta_href', Blueworx_Clubhouse_Links::url( 'contact' ) ),
 			) );
@@ -346,6 +349,24 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				),
 			) );
 		}
+		if ( $visibility->is_section_visible( 'home', 'sponsors' ) ) {
+			$out .= Blueworx_Clubhouse_Sections::sponsors( array(
+				'eyebrow' => 'Our partners', 'heading' => 'Our sponsors & partners', 'link_label' => 'Become a sponsor',
+				'link_href' => Blueworx_Clubhouse_Links::url( 'contact' ),
+				'names'   => array_map( static fn( array $s ): string => $s['name'], $collections->sponsors() ),
+			) );
+		}
+		if ( $visibility->is_section_visible( 'home', 'social' ) ) {
+			$out .= Blueworx_Clubhouse_Sections::social( array(
+				'heading'       => self::cget( $content, 'home', 'social', 'heading', 'Follow the club' ),
+				'lede'          => self::cget( $content, 'home', 'social', 'lede', 'Match-day photos, results and behind-the-scenes — join us on socials.' ),
+				'facebook_url'  => $branding->get_facebook_url(),
+				'instagram_url' => $branding->get_instagram_url(),
+				'linkedin_url'  => $branding->get_linkedin_url(),
+			) );
+		}
+		// Contact / Find-us closes the page: address, hours and the map link belong at
+		// the foot, nearest the footer, not mid-scroll between content sections.
 		if ( $visibility->is_section_visible( 'home', 'info' ) ) {
 			$default = array(
 				array( 'label' => 'Location', 'lines' => array( '12 Riverside Lane', 'Marlow, SL7 1AA' ), 'link_label' => '', 'link_href' => '' ),
@@ -364,22 +385,6 @@ final class Blueworx_Clubhouse_Page_Renderer {
 					);
 				},
 				$items
-			) );
-		}
-		if ( $visibility->is_section_visible( 'home', 'sponsors' ) ) {
-			$out .= Blueworx_Clubhouse_Sections::sponsors( array(
-				'eyebrow' => 'Our partners', 'heading' => 'Our sponsors & partners', 'link_label' => 'Become a sponsor',
-				'link_href' => Blueworx_Clubhouse_Links::url( 'contact' ),
-				'names'   => array_map( static fn( array $s ): string => $s['name'], $collections->sponsors() ),
-			) );
-		}
-		if ( $visibility->is_section_visible( 'home', 'social' ) ) {
-			$out .= Blueworx_Clubhouse_Sections::social( array(
-				'heading'       => self::cget( $content, 'home', 'social', 'heading', 'Follow the club' ),
-				'lede'          => self::cget( $content, 'home', 'social', 'lede', 'Match-day photos, results and behind-the-scenes — join us on socials.' ),
-				'facebook_url'  => $branding->get_facebook_url(),
-				'instagram_url' => $branding->get_instagram_url(),
-				'linkedin_url'  => $branding->get_linkedin_url(),
 			) );
 		}
 		$out .= '</main>';

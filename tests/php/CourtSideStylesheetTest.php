@@ -51,7 +51,7 @@ final class CourtSideStylesheetTest extends TestCase {
 	public function test_backbone_blocks_use_the_tinted_block_token(): void {
 		$css = $this->css();
 		$this->assertStringContainsString( '.ch-banner{background:var(--color-accent-block)', $css );
-		$this->assertStringContainsString( '.ch-ticker{display:flex;align-items:center;gap:0;background:var(--color-accent-block)', $css );
+		$this->assertStringContainsString( '.ch-ticker{display:flex;align-items:stretch;gap:0;background:var(--color-accent-block)', $css );
 		$this->assertStringContainsString( '.ch-home-hero__bg{position:absolute;inset:0;z-index:-2;background:var(--color-accent-block)}', $css );
 		$this->assertStringContainsString( 'transparent 55%),var(--color-accent-block)}', $css ); // __bg--empty
 	}

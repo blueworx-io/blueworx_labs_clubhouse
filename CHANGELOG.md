@@ -5,6 +5,11 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.28.0
+
+- **A tidier, better-flowing home page.** Contact and location details now sit at the foot of the page, nearest the footer, instead of interrupting the middle. The news ticker is bolder and easier to read, with its label filling the strip. The dark "clubhouse" band no longer shows a broken-image icon when you haven't set a photo, and its wording no longer echoes the footer. The big lime highlight in the hero has a little more breathing room so letters don't touch its edge, and the fixtures list's small print (e.g. "Rugby · 1st XV") is now larger and easier to read.
+- **The home hero's two buttons are off by default**, because the four quick-link tiles just beneath them already cover the same actions. If you want the buttons back, set a primary button label in Clubhouse → Club Content and they return.
+
 ## 0.27.0
 
 - **Cleaner, more consistent calls to action across the site.** Social links now use one style everywhere — the branded Facebook/Instagram/LinkedIn buttons — instead of a second row of plain letter icons that went nowhere. The "join" button now reads the same wherever it appears. "Become a sponsor" and "Open in Maps" now go to the right places, and links that had no destination yet (the footer legal links, the news cards) no longer look clickable when they aren't. The sponsors section now has the same small label above its heading as every other section.
