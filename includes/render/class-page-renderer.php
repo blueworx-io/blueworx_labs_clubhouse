@@ -143,7 +143,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 			'active'      => $active,
 			'login'       => 'Log in',
 			'login_href'  => Blueworx_Clubhouse_Links::url( 'login' ),
-			'join'        => self::cget( $content, 'global', 'header', 'join', 'Join the Club' ),
+			'join'        => self::cget( $content, 'global', 'header', 'join', Blueworx_Clubhouse_Cta::JOIN ),
 			'join_href'   => self::cget( $content, 'global', 'header', 'join_href', Blueworx_Clubhouse_Links::url( 'membership' ) ),
 			'logo'        => $logo_url,
 		) );
@@ -229,7 +229,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'title_lead'         => self::cget( $content, 'home', 'hero', 'title_lead', 'Every sport. Every age. ' ),
 				'title_highlight'    => self::cget( $content, 'home', 'hero', 'title_highlight', 'One community.' ),
 				'lede'               => self::cget( $content, 'home', 'hero', 'lede', "Nine sports, twenty-four teams, and a clubhouse that's always open. Come for the game — stay for the people." ),
-				'cta_primary'        => self::cget( $content, 'home', 'hero', 'cta_primary', 'Explore membership' ),
+				'cta_primary'        => self::cget( $content, 'home', 'hero', 'cta_primary', Blueworx_Clubhouse_Cta::JOIN ),
 				'cta_primary_href'   => self::cget( $content, 'home', 'hero', 'cta_primary_href', Blueworx_Clubhouse_Links::url( 'membership' ) ),
 				'cta_secondary'      => self::cget( $content, 'home', 'hero', 'cta_secondary', 'Take a tour →' ),
 				'cta_secondary_href' => self::cget( $content, 'home', 'hero', 'cta_secondary_href', Blueworx_Clubhouse_Links::url( 'about' ) ),
@@ -299,7 +299,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'eyebrow'   => self::cget( $content, 'home', 'membership', 'eyebrow', 'Membership' ),
 				'heading'   => self::cget( $content, 'home', 'membership', 'heading', 'Open to everyone, from £28/month.' ),
 				'lede'      => self::cget( $content, 'home', 'membership', 'lede', 'From first-timers to county players — every tier includes clubhouse access, discounted events and a free trial session.' ),
-				'cta_label' => self::cget( $content, 'home', 'membership', 'cta_label', 'Choose your tier →' ),
+				'cta_label' => self::cget( $content, 'home', 'membership', 'cta_label', Blueworx_Clubhouse_Cta::JOIN . ' →' ),
 				'cta_href'  => self::cget( $content, 'home', 'membership', 'cta_href', Blueworx_Clubhouse_Links::url( 'membership' ) ),
 			) );
 			$out .= Blueworx_Clubhouse_Sections::tier_grid( array(
@@ -409,7 +409,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'title_lead'         => self::cget( $content, 'about', 'hero', 'title_lead', 'Fifty-two years of ' ),
 				'title_highlight'    => self::cget( $content, 'about', 'hero', 'title_highlight', 'community sport.' ),
 				'lede'               => self::cget( $content, 'about', 'hero', 'lede', 'From one rugby pitch in 1974 to nine sports and twenty-four teams — ClubHouse has always been about more than the game.' ),
-				'cta_primary'        => self::cget( $content, 'about', 'hero', 'cta_primary', 'Join the club' ),
+				'cta_primary'        => self::cget( $content, 'about', 'hero', 'cta_primary', Blueworx_Clubhouse_Cta::JOIN ),
 				'cta_primary_href'   => self::cget( $content, 'about', 'hero', 'cta_primary_href', Blueworx_Clubhouse_Links::url( 'membership' ) ),
 				'cta_secondary'      => self::cget( $content, 'about', 'hero', 'cta_secondary', 'Meet the committee' ),
 				'cta_secondary_href' => self::cget( $content, 'about', 'hero', 'cta_secondary_href', Blueworx_Clubhouse_Links::url( 'contact' ) ),
@@ -470,7 +470,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'eyebrow'   => 'Get involved',
 				'heading'   => self::cget( $content, 'about', 'cta', 'heading', 'Want to be part of it?' ),
 				'lede'      => self::cget( $content, 'about', 'cta', 'lede', 'Play, volunteer, or just come for the atmosphere.' ),
-				'cta_label' => self::cget( $content, 'about', 'cta', 'cta_label', 'Join the club →' ),
+				'cta_label' => self::cget( $content, 'about', 'cta', 'cta_label', Blueworx_Clubhouse_Cta::JOIN . ' →' ),
 				'cta_href'  => self::cget( $content, 'about', 'cta', 'cta_href', Blueworx_Clubhouse_Links::url( 'membership' ) ),
 			) );
 		}
@@ -735,7 +735,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'forgot_href'    => '#',
 				'submit_label'   => 'Log in',
 				'join_prompt'    => 'Not a member yet?',
-				'join_label'     => 'Join the club',
+				'join_label'     => Blueworx_Clubhouse_Cta::JOIN,
 				'join_href'      => Blueworx_Clubhouse_Links::url( 'membership' ),
 			) );
 		}
@@ -775,7 +775,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 			$out .= Blueworx_Clubhouse_Sections::stat_card_grid( array(
 				'eyebrow'    => 'All sections',
 				'heading'    => 'Pick your sport.',
-				'link_label' => 'Join the club →',
+				'link_label' => Blueworx_Clubhouse_Cta::JOIN . ' →',
 				'link_href'  => Blueworx_Clubhouse_Links::url( 'membership' ),
 				'cards'      => array_map(
 					static function ( array $s ): array {
