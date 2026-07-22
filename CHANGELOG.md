@@ -5,6 +5,10 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.30.0
+
+- **Membership tiers are now managed in one place.** The tier cards on the Home page previously showed a fixed, separate set that ignored your Membership page edits and left out the Junior tier. Home now mirrors the tiers you set on the Membership page — edit them once and both pages update. On Home the cards link through to the Membership page (where the full detail and "register interest" live); the Membership page itself is unchanged.
+
 ## 0.28.0
 
 - **A tidier, better-flowing home page.** Contact and location details now sit at the foot of the page, nearest the footer, instead of interrupting the middle. The news ticker is bolder and easier to read, with its label filling the strip. The dark "clubhouse" band no longer shows a broken-image icon when you haven't set a photo, and its wording no longer echoes the footer. The big lime highlight in the hero has a little more breathing room so letters don't touch its edge, and the fixtures list's small print (e.g. "Rugby · 1st XV") is now larger and easier to read.
