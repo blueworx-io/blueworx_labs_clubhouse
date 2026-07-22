@@ -87,7 +87,8 @@ final class ContentCatalogueTest extends TestCase {
 	}
 
 	public function test_narrowed_sections_declare_only_renderer_consumable_fields(): void {
-		// about.history -> Sections::timeline( eyebrow, heading, milestones ): only heading is editable.
+		// about.history -> Sections::timeline(): heading is the only non-loop field
+		// (the milestones are an editable loop, asserted separately by the renderer tests).
 		$this->assertSame( array( 'heading' ), $this->fieldKeysByTabAndSection( 'about', 'history' ) );
 
 		// about.facilities -> Sections::image_band( eyebrow, heading, image, image_alt, cta_label, cta_href ):
