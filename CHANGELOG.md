@@ -5,6 +5,10 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.33.0
+
+- **Internal:** unified the three page-hero components into one consistent family. They now share a single "head" (the eyebrow and highlighted title) and the filtered hero's CSS name was tidied from the cryptic `ch-hero-f` to `ch-hero-filter`. No visible change — every page's hero looks and behaves exactly as before on all three looks; this only makes the heroes consistent and easier to maintain.
+
 ## 0.32.0
 
 - **The filter pills on Sports, Teams, Events and Calendar now actually filter.** Previously they were decorative — every pill reloaded the same full page. Click a sport (or an event type) and the list narrows to just those items, with the chosen pill highlighted; "All" brings everything back. It works without JavaScript (each pill is a real link) and the pills are built from your own content, so they always match the sports, team sports and event types you've actually added — nothing to configure.
