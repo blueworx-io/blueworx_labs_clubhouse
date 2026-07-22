@@ -204,4 +204,13 @@ final class FrontendTest extends TestCase {
 		$this->assertStringContainsString( '&amp;', $html );
 		$this->assertStringNotContainsString( '="x"', $html );
 	}
+
+	public function test_sanitize_filter_reduces_to_a_bare_slug(): void {
+		$this->assertSame( 'rugby', Blueworx_Clubhouse_Frontend::sanitize_filter( 'rugby' ) );
+		$this->assertSame( 'rugby', Blueworx_Clubhouse_Frontend::sanitize_filter( 'Rugby' ) );
+		$this->assertSame( 'open-day', Blueworx_Clubhouse_Frontend::sanitize_filter( 'Open day' ) );
+		$this->assertSame( 'rug-by', Blueworx_Clubhouse_Frontend::sanitize_filter( 'rug!by/' ) );
+		$this->assertSame( '', Blueworx_Clubhouse_Frontend::sanitize_filter( '' ) );
+		$this->assertSame( '', Blueworx_Clubhouse_Frontend::sanitize_filter( array( 'x' ) ) ); // non-string
+	}
 }

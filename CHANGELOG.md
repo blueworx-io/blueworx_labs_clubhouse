@@ -5,6 +5,10 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.32.0
+
+- **The filter pills on Sports, Teams, Events and Calendar now actually filter.** Previously they were decorative — every pill reloaded the same full page. Click a sport (or an event type) and the list narrows to just those items, with the chosen pill highlighted; "All" brings everything back. It works without JavaScript (each pill is a real link) and the pills are built from your own content, so they always match the sports, team sports and event types you've actually added — nothing to configure.
+
 ## 0.28.0
 
 - **A tidier, better-flowing home page.** Contact and location details now sit at the foot of the page, nearest the footer, instead of interrupting the middle. The news ticker is bolder and easier to read, with its label filling the strip. The dark "clubhouse" band no longer shows a broken-image icon when you haven't set a photo, and its wording no longer echoes the footer. The big lime highlight in the hero has a little more breathing room so letters don't touch its edge, and the fixtures list's small print (e.g. "Rugby · 1st XV") is now larger and easier to read.

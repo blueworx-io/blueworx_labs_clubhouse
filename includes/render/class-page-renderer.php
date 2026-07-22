@@ -125,6 +125,87 @@ final class Blueworx_Clubhouse_Page_Renderer {
 		return array_values( array_filter( array_map( 'trim', explode( "\n", (string) $val ) ), static fn( string $l ): bool => '' !== $l ) );
 	}
 
+	/** Lowercase slug of a label: non-alphanumeric runs collapse to '-'. */
+	private static function slugify( string $s ): string {
+		$s = strtolower( trim( $s ) );
+		return trim( (string) preg_replace( '/[^a-z0-9]+/', '-', $s ), '-' );
+	}
+
+	/**
+	 * Distinct, non-empty picked values in first-seen order — the labels a page's
+	 * filter pills are built from, so they never drift from the content.
+	 *
+	 * @param array<int,array<string,mixed>>          $rows
+	 * @param callable(array<string,mixed>):string    $pick
+	 * @return array<int,string>
+	 */
+	private static function distinct( array $rows, callable $pick ): array {
+		$out = array();
+		foreach ( $rows as $r ) {
+			$v = trim( $pick( $r ) );
+			if ( '' !== $v && ! in_array( $v, $out, true ) ) {
+				$out[] = $v;
+			}
+		}
+		return $out;
+	}
+
+	/**
+	 * Keep the rows whose picked value slugifies to $current. An empty $current
+	 * (the "All" pill) keeps everything, as does a slug no row matches.
+	 *
+	 * @param array<int,array<string,mixed>>       $rows
+	 * @param callable(array<string,mixed>):string $pick
+	 * @return array<int,array<string,mixed>>
+	 */
+	private static function filter_rows( array $rows, string $current, callable $pick ): array {
+		if ( '' === $current ) {
+			return $rows;
+		}
+		return array_values( array_filter( $rows, static fn( array $r ): bool => self::slugify( $pick( $r ) ) === $current ) );
+	}
+
+	/**
+	 * Normalise the incoming filter slug: keep it only when it matches one of the
+	 * page's own labels, otherwise fall back to "All" (''). Guards against stale or
+	 * hand-typed filter params showing an empty page.
+	 *
+	 * @param array<int,string> $labels
+	 */
+	private static function valid_filter( string $filter, array $labels ): string {
+		if ( '' === $filter ) {
+			return '';
+		}
+		foreach ( $labels as $label ) {
+			if ( self::slugify( $label ) === $filter ) {
+				return $filter;
+			}
+		}
+		return '';
+	}
+
+	/**
+	 * The hero_filter pill row: "All" plus one pill per label, each linking to the
+	 * page with its filter slug and the matching one marked active (default "All").
+	 *
+	 * @param array<int,string> $labels
+	 * @return array<int,array{label:string,href:string,active:bool}>
+	 */
+	private static function filter_pills( string $page_key, array $labels, string $current ): array {
+		$pills = array(
+			array( 'label' => 'All', 'href' => Blueworx_Clubhouse_Links::url( $page_key ), 'active' => '' === $current ),
+		);
+		foreach ( $labels as $label ) {
+			$slug    = self::slugify( $label );
+			$pills[] = array(
+				'label'  => $label,
+				'href'   => Blueworx_Clubhouse_Links::filtered_url( $page_key, $slug ),
+				'active' => $slug === $current,
+			);
+		}
+		return $pills;
+	}
+
 	private static function shell_header( string $club, string $active, Blueworx_Clubhouse_Visibility $visibility, string $logo_url = '', ?Blueworx_Clubhouse_Content_Store $content = null ): string {
 		return Blueworx_Clubhouse_Sections::header( array(
 			'club_name'   => $club,
@@ -749,10 +830,15 @@ final class Blueworx_Clubhouse_Page_Renderer {
 		Blueworx_Clubhouse_Visibility $visibility,
 		Blueworx_Clubhouse_Collections $collections,
 		string $logo_url = '',
-		?Blueworx_Clubhouse_Content_Store $content = null
+		?Blueworx_Clubhouse_Content_Store $content = null,
+		string $filter = ''
 	): string {
-		$club = $branding->get_club_name();
-		$out  = self::shell_header( $club, Blueworx_Clubhouse_Links::url( 'sports' ), $visibility, $logo_url, $content ) . '<main class="ch-main" id="ch-main" tabindex="-1">';
+		$club   = $branding->get_club_name();
+		$out    = self::shell_header( $club, Blueworx_Clubhouse_Links::url( 'sports' ), $visibility, $logo_url, $content ) . '<main class="ch-main" id="ch-main" tabindex="-1">';
+		$sports = $collections->sports();
+		$pick   = static fn( array $s ): string => (string) $s['title'];
+		$labels = self::distinct( $sports, $pick );
+		$filter = self::valid_filter( $filter, $labels );
 
 		if ( $visibility->is_section_visible( 'sports', 'hero' ) ) {
 			$out .= Blueworx_Clubhouse_Sections::hero_filter( array(
@@ -761,15 +847,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'title_highlight' => self::cget( $content, 'sports', 'hero', 'title_highlight', 'one club.' ),
 				'lede'            => self::cget( $content, 'sports', 'hero', 'lede', 'From first session to first team — find your section and get playing.' ),
 				'filter_label'    => 'Filter by sport',
-				'filters'         => array(
-					array( 'label' => 'All', 'href' => Blueworx_Clubhouse_Links::url( 'sports' ), 'active' => true ),
-					array( 'label' => 'Rugby', 'href' => Blueworx_Clubhouse_Links::url( 'sports' ), 'active' => false ),
-					array( 'label' => 'Cricket', 'href' => Blueworx_Clubhouse_Links::url( 'sports' ), 'active' => false ),
-					array( 'label' => 'Tennis', 'href' => Blueworx_Clubhouse_Links::url( 'sports' ), 'active' => false ),
-					array( 'label' => 'Football', 'href' => Blueworx_Clubhouse_Links::url( 'sports' ), 'active' => false ),
-					array( 'label' => 'Hockey', 'href' => Blueworx_Clubhouse_Links::url( 'sports' ), 'active' => false ),
-					array( 'label' => 'Netball', 'href' => Blueworx_Clubhouse_Links::url( 'sports' ), 'active' => false ),
-				),
+				'filters'         => self::filter_pills( 'sports', $labels, $filter ),
 			) );
 		}
 		if ( $visibility->is_section_visible( 'sports', 'directory' ) ) {
@@ -792,7 +870,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 							),
 						);
 					},
-					$collections->sports()
+					self::filter_rows( $sports, $filter, $pick )
 				),
 			) );
 		}
@@ -815,10 +893,15 @@ final class Blueworx_Clubhouse_Page_Renderer {
 		Blueworx_Clubhouse_Visibility $visibility,
 		Blueworx_Clubhouse_Collections $collections,
 		string $logo_url = '',
-		?Blueworx_Clubhouse_Content_Store $content = null
+		?Blueworx_Clubhouse_Content_Store $content = null,
+		string $filter = ''
 	): string {
-		$club = $branding->get_club_name();
-		$out  = self::shell_header( $club, Blueworx_Clubhouse_Links::url( 'teams' ), $visibility, $logo_url, $content ) . '<main class="ch-main" id="ch-main" tabindex="-1">';
+		$club  = $branding->get_club_name();
+		$out   = self::shell_header( $club, Blueworx_Clubhouse_Links::url( 'teams' ), $visibility, $logo_url, $content ) . '<main class="ch-main" id="ch-main" tabindex="-1">';
+		$teams  = $collections->teams();
+		$pick   = static fn( array $t ): string => (string) $t['sport'];
+		$labels = self::distinct( $teams, $pick );
+		$filter = self::valid_filter( $filter, $labels );
 
 		if ( $visibility->is_section_visible( 'teams', 'hero' ) ) {
 			$out .= Blueworx_Clubhouse_Sections::hero_filter( array(
@@ -827,13 +910,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'title_highlight' => self::cget( $content, 'teams', 'hero', 'title_highlight', 'every level.' ),
 				'lede'            => self::cget( $content, 'teams', 'hero', 'lede', 'League sides, development squads and junior pathways across all nine sports.' ),
 				'filter_label'    => 'Filter teams by sport',
-				'filters'         => array(
-					array( 'label' => 'All', 'href' => Blueworx_Clubhouse_Links::url( 'teams' ), 'active' => true ),
-					array( 'label' => 'Rugby', 'href' => Blueworx_Clubhouse_Links::url( 'teams' ), 'active' => false ),
-					array( 'label' => 'Cricket', 'href' => Blueworx_Clubhouse_Links::url( 'teams' ), 'active' => false ),
-					array( 'label' => 'Hockey', 'href' => Blueworx_Clubhouse_Links::url( 'teams' ), 'active' => false ),
-					array( 'label' => 'Netball', 'href' => Blueworx_Clubhouse_Links::url( 'teams' ), 'active' => false ),
-				),
+				'filters'         => self::filter_pills( 'teams', $labels, $filter ),
 			) );
 		}
 		if ( $visibility->is_section_visible( 'teams', 'directory' ) ) {
@@ -856,7 +933,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 							),
 						);
 					},
-					$collections->teams()
+					self::filter_rows( $teams, $filter, $pick )
 				),
 			) );
 		}
@@ -879,10 +956,18 @@ final class Blueworx_Clubhouse_Page_Renderer {
 		Blueworx_Clubhouse_Visibility $visibility,
 		Blueworx_Clubhouse_Collections $collections,
 		string $logo_url = '',
-		?Blueworx_Clubhouse_Content_Store $content = null
+		?Blueworx_Clubhouse_Content_Store $content = null,
+		string $filter = ''
 	): string {
-		$club = $branding->get_club_name();
-		$out  = self::shell_header( $club, Blueworx_Clubhouse_Links::url( 'events' ), $visibility, $logo_url, $content ) . '<main class="ch-main" id="ch-main" tabindex="-1">';
+		$club     = $branding->get_club_name();
+		$out      = self::shell_header( $club, Blueworx_Clubhouse_Links::url( 'events' ), $visibility, $logo_url, $content ) . '<main class="ch-main" id="ch-main" tabindex="-1">';
+		$pick     = static fn( array $e ): string => (string) $e['tag'];
+		// Pills derive from every event's tag (stable across filters); the events
+		// shown are narrowed to the current tag, then split into upcoming/past.
+		$all      = $collections->events();
+		$labels   = self::distinct( $all, $pick );
+		$filter   = self::valid_filter( $filter, $labels );
+		$filtered = self::filter_rows( $all, $filter, $pick );
 
 		if ( $visibility->is_section_visible( 'events', 'hero' ) ) {
 			$out .= Blueworx_Clubhouse_Sections::hero_filter( array(
@@ -891,16 +976,11 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'title_highlight' => self::cget( $content, 'events', 'hero', 'title_highlight', 'open days.' ),
 				'lede'            => self::cget( $content, 'events', 'hero', 'lede', "There's always something happening at the club — on the pitch and off it." ),
 				'filter_label'    => 'Filter events by type',
-				'filters'         => array(
-					array( 'label' => 'All', 'href' => Blueworx_Clubhouse_Links::url( 'events' ), 'active' => true ),
-					array( 'label' => 'Social', 'href' => Blueworx_Clubhouse_Links::url( 'events' ), 'active' => false ),
-					array( 'label' => 'Junior', 'href' => Blueworx_Clubhouse_Links::url( 'events' ), 'active' => false ),
-					array( 'label' => 'Tournament', 'href' => Blueworx_Clubhouse_Links::url( 'events' ), 'active' => false ),
-				),
+				'filters'         => self::filter_pills( 'events', $labels, $filter ),
 			) );
 		}
 		if ( $visibility->is_section_visible( 'events', 'upcoming' ) ) {
-			$upcoming = array_values( array_filter( $collections->events(), static fn( $e ) => 'upcoming' === $e['status'] ) );
+			$upcoming = array_values( array_filter( $filtered, static fn( $e ) => 'upcoming' === $e['status'] ) );
 			$out .= Blueworx_Clubhouse_Sections::event_grid( array(
 				'eyebrow' => 'Coming up',
 				'heading' => 'Upcoming events',
@@ -920,7 +1000,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 			) );
 		}
 		if ( $visibility->is_section_visible( 'events', 'past' ) ) {
-			$past = array_values( array_filter( $collections->events(), static fn( $e ) => 'past' === $e['status'] ) );
+			$past = array_values( array_filter( $filtered, static fn( $e ) => 'past' === $e['status'] ) );
 			$out .= Blueworx_Clubhouse_Sections::event_archive( array(
 				'heading' => 'Recently at the club',
 				'rows'    => array_map(
@@ -950,10 +1030,17 @@ final class Blueworx_Clubhouse_Page_Renderer {
 		Blueworx_Clubhouse_Visibility $visibility,
 		Blueworx_Clubhouse_Collections $collections,
 		string $logo_url = '',
-		?Blueworx_Clubhouse_Content_Store $content = null
+		?Blueworx_Clubhouse_Content_Store $content = null,
+		string $filter = ''
 	): string {
-		$club = $branding->get_club_name();
-		$out  = self::shell_header( $club, Blueworx_Clubhouse_Links::url( 'calendar' ), $visibility, $logo_url, $content ) . '<main class="ch-main" id="ch-main" tabindex="-1">';
+		$club     = $branding->get_club_name();
+		$out      = self::shell_header( $club, Blueworx_Clubhouse_Links::url( 'calendar' ), $visibility, $logo_url, $content ) . '<main class="ch-main" id="ch-main" tabindex="-1">';
+		$fixtures = $collections->fixtures();
+		// Fixture 'sport' is a compound label like "Rugby · 1st XV"; the pill filters
+		// on the sport prefix before the middot.
+		$pick     = static fn( array $f ): string => trim( explode( '·', (string) $f['sport'] )[0] );
+		$labels   = self::distinct( $fixtures, $pick );
+		$filter   = self::valid_filter( $filter, $labels );
 
 		if ( $visibility->is_section_visible( 'calendar', 'hero' ) ) {
 			$out .= Blueworx_Clubhouse_Sections::hero_filter( array(
@@ -962,19 +1049,14 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'title_highlight' => self::cget( $content, 'calendar', 'hero', 'title_highlight', 'all season.' ),
 				'lede'            => self::cget( $content, 'calendar', 'hero', 'lede', 'Match days across all nine sports, with results as they come in.' ),
 				'filter_label'    => 'Filter fixtures by sport',
-				'filters'         => array(
-					array( 'label' => 'All', 'href' => Blueworx_Clubhouse_Links::url( 'calendar' ), 'active' => true ),
-					array( 'label' => 'Rugby', 'href' => Blueworx_Clubhouse_Links::url( 'calendar' ), 'active' => false ),
-					array( 'label' => 'Cricket', 'href' => Blueworx_Clubhouse_Links::url( 'calendar' ), 'active' => false ),
-					array( 'label' => 'Hockey', 'href' => Blueworx_Clubhouse_Links::url( 'calendar' ), 'active' => false ),
-				),
+				'filters'         => self::filter_pills( 'calendar', $labels, $filter ),
 			) );
 		}
 		if ( $visibility->is_section_visible( 'calendar', 'schedule' ) ) {
 			$out .= Blueworx_Clubhouse_Sections::calendar_months( array(
 				'eyebrow' => self::cget( $content, 'calendar', 'schedule', 'eyebrow', 'The schedule' ),
 				'heading' => self::cget( $content, 'calendar', 'schedule', 'heading', 'Fixtures & results' ),
-				'months'  => Blueworx_Clubhouse_Fixture_Projection::calendar_months( $collections->fixtures() ),
+				'months'  => Blueworx_Clubhouse_Fixture_Projection::calendar_months( self::filter_rows( $fixtures, $filter, $pick ) ),
 			) );
 		}
 		if ( $visibility->is_section_visible( 'calendar', 'cta' ) ) {
