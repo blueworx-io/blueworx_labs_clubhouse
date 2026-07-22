@@ -5,6 +5,10 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.34.0
+
+- **WordPress's built-in "Pages" are now hidden.** The clubhouse plugin provides every page of your site, so the native Pages editor was redundant and only invited editing content that never appears. The "Pages" item in the admin sidebar and the "+ New → Page" shortcut are both gone. Nothing is deleted and blog Posts are untouched — this only tidies the admin so you edit your site in one place (Clubhouse → Club Content).
+
 ## 0.33.0
 
 - **Internal:** unified the three page-hero components into one consistent family. They now share a single "head" (the eyebrow and highlighted title) and the filtered hero's CSS name was tidied from the cryptic `ch-hero-f` to `ch-hero-filter`. No visible change — every page's hero looks and behaves exactly as before on all three looks; this only makes the heroes consistent and easier to maintain.
