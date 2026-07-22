@@ -150,6 +150,20 @@ final class Blueworx_Clubhouse_Sections {
 				. '<span class="ch-home-hero__tile-label">' . self::e( $t['label'] ?? '' ) . '</span>'
 				. '<span class="ch-home-hero__tile-arrow" aria-hidden="true">→</span></a>';
 		}
+		// The quick-tile row below carries the same actions, so the hero CTAs are off
+		// by default (the caller passes empty labels) — but stay configurable: set a
+		// primary label and the button pair returns, like any other element.
+		$primary   = (string) ( $data['cta_primary'] ?? '' );
+		$secondary = (string) ( $data['cta_secondary'] ?? '' );
+		$cta        = '';
+		if ( '' !== $primary ) {
+			$cta = '<div class="ch-home-hero__cta">'
+				. '<a class="ch-btn ch-btn--accent" href="' . self::e( $data['cta_primary_href'] ) . '">' . self::e( $primary ) . '</a>'
+				. ( '' !== $secondary
+					? '<a class="ch-btn ch-btn--ghost" href="' . self::e( $data['cta_secondary_href'] ) . '">' . self::e( $secondary ) . '</a>'
+					: '' )
+				. '</div>';
+		}
 		return '<section class="ch-home-hero">'
 			. $bg
 			. '<div class="ch-home-hero__scrim" aria-hidden="true"></div>'
@@ -158,10 +172,7 @@ final class Blueworx_Clubhouse_Sections {
 			. '<h1 class="ch-home-hero__title">' . self::e( $data['title_lead'] )
 			. '<span class="ch-home-hero__hl">' . self::e( $data['title_highlight'] ) . '</span></h1>'
 			. '<p class="ch-home-hero__lede">' . self::e( $data['lede'] ) . '</p>'
-			. '<div class="ch-home-hero__cta">'
-			. '<a class="ch-btn ch-btn--accent" href="' . self::e( $data['cta_primary_href'] ) . '">' . self::e( $data['cta_primary'] ) . '</a>'
-			. '<a class="ch-btn ch-btn--ghost" href="' . self::e( $data['cta_secondary_href'] ) . '">' . self::e( $data['cta_secondary'] ) . '</a>'
-			. '</div>'
+			. $cta
 			. '<div class="ch-home-hero__foot" role="list">' . $tiles . '</div>'
 			. '</div></section>';
 	}
@@ -288,8 +299,14 @@ final class Blueworx_Clubhouse_Sections {
 	 *   cta_label:string,cta_href:string} $data
 	 */
 	public static function image_band( array $data ): string {
-		return '<section class="ch-band-img">'
-			. self::media( $data['image'], $data['image_alt'], 'ch-band-img__media' )
+		// With no image the band is a solid coloured block (its own background), so
+		// render no media slot at all — the empty-media placeholder glyph reads as a
+		// broken image here rather than as "add a photo".
+		$media = '' !== $data['image']
+			? self::media( $data['image'], $data['image_alt'], 'ch-band-img__media' )
+			: '';
+		return '<section class="ch-band-img' . ( '' === $data['image'] ? ' ch-band-img--plain' : '' ) . '">'
+			. $media
 			. '<div class="ch-band-img__scrim"></div>'
 			. '<div class="ch-wrap ch-band-img__in"><div>'
 			. '<span class="ch-eyebrow">' . self::e( $data['eyebrow'] ) . '</span>'
