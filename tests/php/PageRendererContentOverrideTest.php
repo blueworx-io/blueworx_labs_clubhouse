@@ -59,6 +59,37 @@ final class PageRendererContentOverrideTest extends TestCase {
 		$this->assertStringContainsString( 'Sign up', $html );
 	}
 
+	public function test_home_tiers_mirror_the_membership_source(): void {
+		[ $b, $v, $c, $content ] = $this->ctx();
+		// A single edit to the Membership tiers must surface on Home too.
+		$content->set_items( 'membership', 'tiers', array(
+			array( 'eyebrow' => 'Custom', 'name' => 'Custom Tier', 'price' => '£99', 'period' => '/mo', 'features' => "One\nTwo", 'featured' => true ),
+		) );
+		$home = Blueworx_Clubhouse_Page_Renderer::home( $b, $v, $c, '', $content );
+		$this->assertStringContainsString( 'Custom Tier', $home );
+	}
+
+	public function test_home_tiers_include_the_full_membership_set_by_default(): void {
+		// Home used to hardcode a 3-tier subset that omitted Junior; it now mirrors
+		// the 4-tier Membership default.
+		[ $b, $v, $c ] = $this->ctx();
+		$home = Blueworx_Clubhouse_Page_Renderer::home( $b, $v, $c, '', null );
+		$this->assertStringContainsString( 'ch-tier__name">Junior', $home );
+	}
+
+	public function test_home_tier_ctas_funnel_to_the_membership_page(): void {
+		[ $b, $v, $c ] = $this->ctx();
+		$home = Blueworx_Clubhouse_Page_Renderer::home( $b, $v, $c, '', null );
+		$this->assertStringContainsString( 'ch-tier__cta" href="?page=membership"', $home );
+		$this->assertStringNotContainsString( 'ch-tier__cta" href="?page=contact"', $home );
+	}
+
+	public function test_membership_tier_ctas_still_target_contact(): void {
+		[ $b, $v, $c ] = $this->ctx();
+		$page = Blueworx_Clubhouse_Page_Renderer::membership( $b, $v, $c, '', null );
+		$this->assertStringContainsString( 'ch-tier__cta" href="?page=contact"', $page );
+	}
+
 	public function test_announcement_bar_renders_by_default(): void {
 		[ $b, $v, $c ] = $this->ctx();
 		$html = Blueworx_Clubhouse_Page_Renderer::home( $b, $v, $c, '', null );

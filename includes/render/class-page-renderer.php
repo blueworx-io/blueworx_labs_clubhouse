@@ -125,6 +125,47 @@ final class Blueworx_Clubhouse_Page_Renderer {
 		return array_values( array_filter( array_map( 'trim', explode( "\n", (string) $val ) ), static fn( string $l ): bool => '' !== $l ) );
 	}
 
+	/**
+	 * The membership tiers — the single source both the Membership page and the
+	 * Home teaser render, so an owner's edits under Content → Membership → Tiers
+	 * reach both. Returns tier_grid()-shaped rows (Home overrides the CTA to
+	 * funnel to the Membership page; Membership keeps the source's own CTA).
+	 *
+	 * @return array<int,array<string,mixed>>
+	 */
+	private static function membership_tiers( ?Blueworx_Clubhouse_Content_Store $content ): array {
+		$default = array(
+			array( 'eyebrow' => 'Under 18', 'name' => 'Junior', 'price' => '£12', 'period' => '/mo',
+				'features' => array( 'Any junior section', 'Coaching included', 'Holiday camp discounts' ),
+				'recommended' => false, 'cta_label' => 'Join', 'cta_href' => Blueworx_Clubhouse_Links::url( 'contact' ) ),
+			array( 'eyebrow' => 'Full playing', 'name' => 'Adult', 'price' => '£28', 'period' => '/mo',
+				'features' => array( 'Any section, any level', 'League affiliation', 'Clubhouse & socials' ),
+				'recommended' => false, 'cta_label' => 'Join', 'cta_href' => Blueworx_Clubhouse_Links::url( 'contact' ) ),
+			array( 'eyebrow' => 'Best value', 'name' => 'Family', 'price' => '£45', 'period' => '/mo',
+				'features' => array( 'Up to 5 members', 'Any sections', 'Priority event booking' ),
+				'recommended' => true, 'cta_label' => 'Join', 'cta_href' => Blueworx_Clubhouse_Links::url( 'contact' ) ),
+			array( 'eyebrow' => 'Off the pitch', 'name' => 'Social', 'price' => '£12', 'period' => '/mo',
+				'features' => array( 'Full clubhouse access', 'Member events', 'Support your club' ),
+				'recommended' => false, 'cta_label' => 'Join', 'cta_href' => Blueworx_Clubhouse_Links::url( 'contact' ) ),
+		);
+		$items = self::citems( $content, 'membership', 'tiers', $default );
+		return array_map(
+			static function ( array $t ): array {
+				return array(
+					'eyebrow'     => (string) ( $t['eyebrow'] ?? '' ),
+					'name'        => (string) ( $t['name'] ?? '' ),
+					'price'       => (string) ( $t['price'] ?? '' ),
+					'period'      => (string) ( $t['period'] ?? '' ),
+					'features'    => self::lines( $t['features'] ?? array() ),
+					'recommended' => (bool) ( $t['featured'] ?? ( $t['recommended'] ?? false ) ),
+					'cta_label'   => (string) ( $t['cta_label'] ?? '' ),
+					'cta_href'    => (string) ( $t['cta_href'] ?? '' ),
+				);
+			},
+			$items
+		);
+	}
+
 	private static function shell_header( string $club, string $active, Blueworx_Clubhouse_Visibility $visibility, string $logo_url = '', ?Blueworx_Clubhouse_Content_Store $content = null ): string {
 		// The announcement bar is owner-configurable (Content → Global → Header):
 		// a show/hide toggle plus editable text + link. When off — or when the text
@@ -307,17 +348,18 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'cta_label' => self::cget( $content, 'home', 'membership', 'cta_label', Blueworx_Clubhouse_Cta::JOIN . ' →' ),
 				'cta_href'  => self::cget( $content, 'home', 'membership', 'cta_href', Blueworx_Clubhouse_Links::url( 'membership' ) ),
 			) );
-			$out .= Blueworx_Clubhouse_Sections::tier_grid( array(
-				array( 'eyebrow' => 'Full playing', 'name' => 'Adult', 'price' => '£28', 'period' => '/mo',
-					'features' => array( 'Any section, any level', 'League affiliation', 'Clubhouse & socials' ),
-					'recommended' => false, 'cta_label' => 'Join', 'cta_href' => Blueworx_Clubhouse_Links::url( 'membership' ) ),
-				array( 'eyebrow' => 'Best value', 'name' => 'Family', 'price' => '£45', 'period' => '/mo',
-					'features' => array( 'Up to 5 members', 'Any sections', 'Priority event booking' ),
-					'recommended' => true, 'cta_label' => 'Join', 'cta_href' => Blueworx_Clubhouse_Links::url( 'membership' ) ),
-				array( 'eyebrow' => 'Off the pitch', 'name' => 'Social', 'price' => '£12', 'period' => '/mo',
-					'features' => array( 'Full clubhouse access', 'Member events', 'Support your club' ),
-					'recommended' => false, 'cta_label' => 'Join', 'cta_href' => Blueworx_Clubhouse_Links::url( 'membership' ) ),
-			) );
+			// The Home tier grid mirrors the single Membership tiers source, then
+			// funnels each CTA to the fuller Membership page (where conversion → contact
+			// happens). Editing the Membership tiers updates both pages.
+			$home_tiers = array_map(
+				static function ( array $t ): array {
+					$t['cta_label'] = 'Join';
+					$t['cta_href']  = Blueworx_Clubhouse_Links::url( 'membership' );
+					return $t;
+				},
+				self::membership_tiers( $content )
+			);
+			$out .= Blueworx_Clubhouse_Sections::tier_grid( $home_tiers );
 		}
 		if ( $visibility->is_section_visible( 'home', 'activity' ) ) {
 			$out .= Blueworx_Clubhouse_Sections::activity_tabs( array(
@@ -524,36 +566,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 			) );
 		}
 		if ( $visibility->is_section_visible( 'membership', 'tiers' ) ) {
-			$default = array(
-				array( 'eyebrow' => 'Under 18', 'name' => 'Junior', 'price' => '£12', 'period' => '/mo',
-					'features' => array( 'Any junior section', 'Coaching included', 'Holiday camp discounts' ),
-					'recommended' => false, 'cta_label' => 'Join', 'cta_href' => Blueworx_Clubhouse_Links::url( 'contact' ) ),
-				array( 'eyebrow' => 'Full playing', 'name' => 'Adult', 'price' => '£28', 'period' => '/mo',
-					'features' => array( 'Any section, any level', 'League affiliation', 'Clubhouse & socials' ),
-					'recommended' => false, 'cta_label' => 'Join', 'cta_href' => Blueworx_Clubhouse_Links::url( 'contact' ) ),
-				array( 'eyebrow' => 'Best value', 'name' => 'Family', 'price' => '£45', 'period' => '/mo',
-					'features' => array( 'Up to 5 members', 'Any sections', 'Priority event booking' ),
-					'recommended' => true, 'cta_label' => 'Join', 'cta_href' => Blueworx_Clubhouse_Links::url( 'contact' ) ),
-				array( 'eyebrow' => 'Off the pitch', 'name' => 'Social', 'price' => '£12', 'period' => '/mo',
-					'features' => array( 'Full clubhouse access', 'Member events', 'Support your club' ),
-					'recommended' => false, 'cta_label' => 'Join', 'cta_href' => Blueworx_Clubhouse_Links::url( 'contact' ) ),
-			);
-			$items = self::citems( $content, 'membership', 'tiers', $default );
-			$out .= Blueworx_Clubhouse_Sections::tier_grid( array_map(
-				static function ( array $t ): array {
-					return array(
-						'eyebrow'     => (string) ( $t['eyebrow'] ?? '' ),
-						'name'        => (string) ( $t['name'] ?? '' ),
-						'price'       => (string) ( $t['price'] ?? '' ),
-						'period'      => (string) ( $t['period'] ?? '' ),
-						'features'    => self::lines( $t['features'] ?? array() ),
-						'recommended' => (bool) ( $t['featured'] ?? ( $t['recommended'] ?? false ) ),
-						'cta_label'   => (string) ( $t['cta_label'] ?? '' ),
-						'cta_href'    => (string) ( $t['cta_href'] ?? '' ),
-					);
-				},
-				$items
-			) );
+			$out .= Blueworx_Clubhouse_Sections::tier_grid( self::membership_tiers( $content ) );
 		}
 		if ( $visibility->is_section_visible( 'membership', 'detail' ) ) {
 			$default = array_merge(

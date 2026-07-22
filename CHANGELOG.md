@@ -5,6 +5,10 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.30.0
+
+- **Membership tiers are now managed in one place.** The tier cards on the Home page previously showed a fixed, separate set that ignored your Membership page edits and left out the Junior tier. Home now mirrors the tiers you set on the Membership page — edit them once and both pages update. On Home the cards link through to the Membership page (where the full detail and "register interest" live); the Membership page itself is unchanged.
+
 ## 0.29.0
 
 - **The top announcement bar is now yours to edit or switch off.** In Clubhouse → Club Content → Global → Header you can change its message and link, or turn the whole bar off with a single toggle — your drafted wording is kept even while it's hidden. Until you change anything it reads exactly as before.
