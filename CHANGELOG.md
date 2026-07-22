@@ -5,6 +5,10 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.27.0
+
+- **Cleaner, more consistent calls to action across the site.** Social links now use one style everywhere — the branded Facebook/Instagram/LinkedIn buttons — instead of a second row of plain letter icons that went nowhere. The "join" button now reads the same wherever it appears. "Become a sponsor" and "Open in Maps" now go to the right places, and links that had no destination yet (the footer legal links, the news cards) no longer look clickable when they aren't. The sponsors section now has the same small label above its heading as every other section.
+
 ## 0.26.5
 
 - **Fixed: the Floodlight and Members House looks now render every page.** The calendar, teams, sports and events pages were missing their styling entirely under those two looks — filters, cards and fixture lists showed as unstyled text — because six components were only ever styled for Court Side. All three looks now share one set of building blocks, so switching look re-skins the whole site rather than part of it. Court Side is unchanged.

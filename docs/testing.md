@@ -62,16 +62,9 @@ npm run ports     # slug=blueworx-labs-clubhouse preview=8405 wordpress=8705
 with `CLUBHOUSE_PREVIEW_PORT` / `CLUBHOUSE_WP_PORT` if you need a specific port —
 or if two slugs ever happen to hash to the same offset.
 
-## Known rough edge
-
-On Windows, the foundation's `wp-test-env.mjs down` kills the PID it recorded but
-not the process tree, so a stale `php -S` can keep holding the port. If routes
-start 404ing or a page renders without the plugin, check for a leftover listener
-before debugging anything else:
-
-```bash
-netstat -ano | grep ":8705.*LISTENING"
-```
+`up`/`down` reconcile against the port and clean up any orphaned server
+automatically, so a stale listener from a previous run is not something you
+need to check for.
 
 ## Look parity
 
