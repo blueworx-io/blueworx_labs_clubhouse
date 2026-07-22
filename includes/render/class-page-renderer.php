@@ -149,11 +149,15 @@ final class Blueworx_Clubhouse_Page_Renderer {
 		) );
 	}
 
-	private static function shell_footer( string $club, Blueworx_Clubhouse_Visibility $visibility, ?Blueworx_Clubhouse_Content_Store $content = null ): string {
+	private static function shell_footer( string $club, Blueworx_Clubhouse_Visibility $visibility, Blueworx_Clubhouse_Branding $branding, ?Blueworx_Clubhouse_Content_Store $content = null ): string {
 		return Blueworx_Clubhouse_Sections::footer( array(
 			'club_name'  => $club,
 			'tagline'    => self::cget( $content, 'global', 'footer', 'tagline', 'Nine sports, one club. A home ground for every team, and everyone who follows them.' ),
-			'socials'    => array( 'Facebook', 'Instagram', 'LinkedIn', 'Community', 'Share' ),
+			'socials'    => array(
+				'Facebook'  => $branding->get_facebook_url(),
+				'Instagram' => $branding->get_instagram_url(),
+				'LinkedIn'  => $branding->get_linkedin_url(),
+			),
 			'columns'    => array(
 				array( 'title' => 'Club', 'links' => self::nav_links( array(
 					array( 'label' => 'About', 'key' => 'about' ),
@@ -384,7 +388,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 		}
 		$out .= '</main>';
 		if ( $visibility->is_section_visible( 'home', 'footer' ) ) {
-			$out .= self::shell_footer( $club, $visibility, $content );
+			$out .= self::shell_footer( $club, $visibility, $branding, $content );
 		}
 		return $out;
 	}
@@ -470,7 +474,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'cta_href'  => self::cget( $content, 'about', 'cta', 'cta_href', Blueworx_Clubhouse_Links::url( 'membership' ) ),
 			) );
 		}
-		$out .= '</main>' . self::shell_footer( $club, $visibility, $content );
+		$out .= '</main>' . self::shell_footer( $club, $visibility, $branding, $content );
 		return $out;
 	}
 
@@ -634,7 +638,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'cta_href'  => self::cget( $content, 'membership', 'cta', 'cta_href', Blueworx_Clubhouse_Links::url( 'contact' ) ),
 			) );
 		}
-		$out .= '</main>' . self::shell_footer( $club, $visibility, $content );
+		$out .= '</main>' . self::shell_footer( $club, $visibility, $branding, $content );
 		return $out;
 	}
 
@@ -676,7 +680,11 @@ final class Blueworx_Clubhouse_Page_Renderer {
 					'address' => array( '12 Riverside Lane', 'Marlow, SL7 1AA' ),
 					'email'   => 'hello@clubhouse.example',
 					'phone'   => '01628 000 000',
-					'socials' => array( 'Facebook', 'Instagram', 'LinkedIn', 'Community', 'Share' ),
+					'socials' => array(
+						'Facebook'  => $branding->get_facebook_url(),
+						'Instagram' => $branding->get_instagram_url(),
+						'LinkedIn'  => $branding->get_linkedin_url(),
+					),
 				),
 			) );
 		}
@@ -701,7 +709,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'linkedin_url'  => $branding->get_linkedin_url(),
 			) );
 		}
-		$out .= '</main>' . self::shell_footer( $club, $visibility, $content );
+		$out .= '</main>' . self::shell_footer( $club, $visibility, $branding, $content );
 		return $out;
 	}
 
@@ -731,7 +739,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'join_href'      => Blueworx_Clubhouse_Links::url( 'membership' ),
 			) );
 		}
-		$out .= '</main>' . self::shell_footer( $club, $visibility, $content );
+		$out .= '</main>' . self::shell_footer( $club, $visibility, $branding, $content );
 		return $out;
 	}
 
@@ -797,7 +805,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'cta_href'  => self::cget( $content, 'sports', 'cta', 'cta_href', Blueworx_Clubhouse_Links::url( 'contact' ) ),
 			) );
 		}
-		$out .= '</main>' . self::shell_footer( $club, $visibility, $content );
+		$out .= '</main>' . self::shell_footer( $club, $visibility, $branding, $content );
 		return $out;
 	}
 
@@ -861,7 +869,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'cta_href'  => self::cget( $content, 'teams', 'cta', 'cta_href', Blueworx_Clubhouse_Links::url( 'contact' ) ),
 			) );
 		}
-		$out .= '</main>' . self::shell_footer( $club, $visibility, $content );
+		$out .= '</main>' . self::shell_footer( $club, $visibility, $branding, $content );
 		return $out;
 	}
 
@@ -932,7 +940,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'cta_href'  => self::cget( $content, 'events', 'cta', 'cta_href', Blueworx_Clubhouse_Links::url( 'contact' ) ),
 			) );
 		}
-		$out .= '</main>' . self::shell_footer( $club, $visibility, $content );
+		$out .= '</main>' . self::shell_footer( $club, $visibility, $branding, $content );
 		return $out;
 	}
 
@@ -978,7 +986,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'cta_href'  => self::cget( $content, 'calendar', 'cta', 'cta_href', Blueworx_Clubhouse_Links::url( 'contact' ) ),
 			) );
 		}
-		$out .= '</main>' . self::shell_footer( $club, $visibility, $content );
+		$out .= '</main>' . self::shell_footer( $club, $visibility, $branding, $content );
 		return $out;
 	}
 }

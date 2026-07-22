@@ -133,15 +133,15 @@ final class SectionsTest extends TestCase {
 	public function test_footer_renders_columns_socials_and_newsletter(): void {
 		$html = Blueworx_Clubhouse_Sections::footer( array(
 			'club_name'  => 'ClubHouse', 'tagline' => 'A home ground for every team.',
-			'socials'    => array( 'Facebook', 'Instagram' ),
+			'socials'    => array( 'Facebook' => 'https://facebook.com/clubhouse', 'Instagram' => 'https://instagram.com/clubhouse' ),
 			'columns'    => array(
 				array( 'title' => 'Club', 'links' => array( array( 'label' => 'About', 'href' => '?page=about' ) ) ),
 			),
 			'newsletter' => array( 'heading' => 'Stay in the loop', 'lede' => 'Club news, monthly.', 'placeholder' => 'Your email', 'cta' => 'Subscribe' ),
-			'legal'      => array( array( 'label' => 'Privacy', 'href' => '#' ) ),
+			'legal'      => array( array( 'label' => 'Privacy', 'href' => '/privacy' ) ),
 		) );
 		$this->assertStringContainsString( 'class="ch-footer"', $html );
-		$this->assertStringContainsString( 'ch-footer__social', $html );
+		$this->assertStringContainsString( 'ch-social__link', $html );
 		$this->assertStringContainsString( 'Stay in the loop', $html );
 		$this->assertStringContainsString( 'Privacy', $html );
 		$this->assertNoHexColour( $html );
@@ -523,7 +523,7 @@ final class SectionsTest extends TestCase {
 			'info' => array(
 				'heading' => 'Find us', 'address' => array( '12 Riverside Lane', 'Marlow' ),
 				'email' => 'hello@clubhouse.example', 'phone' => '01628 000 000',
-				'socials' => array( 'Facebook', 'Instagram' ),
+				'socials' => array( 'Facebook' => 'https://facebook.com/clubhouse', 'Instagram' => 'https://instagram.com/clubhouse' ),
 			),
 		) );
 		$this->assertStringContainsString( 'class="ch-contact"', $html );
@@ -534,7 +534,9 @@ final class SectionsTest extends TestCase {
 		$this->assertStringContainsString( 'href="tel:01628000000"', $html );
 		$this->assertStringNotContainsString( 'tel:01628 000 000', $html );
 		$this->assertStringContainsString( '01628 000 000', $html );
-		$this->assertSame( 2, substr_count( $html, 'ch-contact__social' ) );
+		// Quote-anchored so the count doesn't also pick up the container's
+		// plural class "ch-social__links".
+		$this->assertSame( 2, substr_count( $html, 'ch-social__link"' ) );
 		$this->assertNoHexColour( $html );
 		$this->assertStringNotContainsString( 'style=', $html );
 	}
@@ -729,5 +731,75 @@ final class SectionsTest extends TestCase {
 		$this->assertStringNotContainsString( 'ch-brand__mark', $html, 'no "C" placeholder glyph' );
 		$this->assertStringNotContainsString( 'ch-brand__logo', $html, 'no logo image without a logo' );
 		$this->assertStringContainsString( 'ClubHouse', $html, 'the club name still labels the brand link' );
+	}
+
+	/** @return array{club_name:string,tagline:string,socials:array<string,string>,columns:array<int,array{title:string,links:array<int,array{label:string,href:string}>}>,newsletter:array{heading:string,lede:string,placeholder:string,cta:string},legal:array<int,array{label:string,href:string}>} */
+	private function footerData(): array {
+		return array(
+			'club_name'  => 'ClubHouse',
+			'tagline'    => 'A home ground for every team.',
+			'socials'    => array(
+				'Facebook'  => 'https://facebook.com/clubhouse',
+				'Instagram' => 'https://instagram.com/clubhouse',
+				'LinkedIn'  => 'https://linkedin.com/company/clubhouse',
+			),
+			'columns'    => array(
+				array( 'title' => 'Club', 'links' => array( array( 'label' => 'About', 'href' => '?page=about' ) ) ),
+			),
+			'newsletter' => array( 'heading' => 'Stay in the loop', 'lede' => 'Club news, monthly.', 'placeholder' => 'Your email', 'cta' => 'Subscribe' ),
+			'legal'      => array( array( 'label' => 'Privacy', 'href' => '/privacy' ) ),
+		);
+	}
+
+	/** @return array{eyebrow:string,heading:string,name_label:string,email_label:string,enquiry_label:string,enquiry_options:array<int,string>,message_label:string,submit_label:string,info:array{heading:string,address:array<int,string>,email:string,phone:string,socials:array<string,string>}} */
+	private function contactData(): array {
+		return array(
+			'eyebrow'         => 'Get in touch',
+			'heading'         => 'Send us a message',
+			'name_label'      => 'Full name',
+			'email_label'     => 'Email',
+			'enquiry_label'   => 'Enquiry type',
+			'enquiry_options' => array( 'General', 'Membership' ),
+			'message_label'   => 'Message',
+			'submit_label'    => 'Send message',
+			'info'            => array(
+				'heading' => 'Find us',
+				'address' => array( '12 Riverside Lane', 'Marlow' ),
+				'email'   => 'hello@clubhouse.example',
+				'phone'   => '01628 000 000',
+				'socials' => array(
+					'Facebook'  => 'https://facebook.com/clubhouse',
+					'Instagram' => 'https://instagram.com/clubhouse',
+					'LinkedIn'  => 'https://linkedin.com/company/clubhouse',
+				),
+			),
+		);
+	}
+
+	public function test_social_links_renders_a_pill_per_nonempty_url_only(): void {
+		$html = Blueworx_Clubhouse_Sections::social_links( array(
+			'Facebook'  => 'https://facebook.com/x',
+			'Instagram' => '',
+			'LinkedIn'  => 'https://linkedin.com/company/x',
+		) );
+		$this->assertSame( 2, substr_count( $html, 'ch-social__link' ), 'one pill per non-empty url' );
+		$this->assertStringContainsString( 'https://facebook.com/x', $html );
+		$this->assertStringContainsString( 'https://linkedin.com/company/x', $html );
+		$this->assertStringNotContainsString( 'Instagram', $html, 'empty url renders no pill' );
+	}
+
+	public function test_footer_uses_social_pills_not_letter_circles(): void {
+		$html = Blueworx_Clubhouse_Sections::footer( $this->footerData() );
+		$this->assertStringContainsString( 'ch-social__link', $html );
+		// Exact old singular class, quote-anchored so it doesn't false-match the
+		// still-present plural container class "ch-footer__socials".
+		$this->assertStringNotContainsString( 'class="ch-footer__social"', $html );
+		$this->assertStringNotContainsString( 'href="#"', $html );
+	}
+
+	public function test_contact_uses_social_pills_not_letter_circles(): void {
+		$html = Blueworx_Clubhouse_Sections::contact_form( $this->contactData() );
+		$this->assertStringContainsString( 'ch-social__link', $html );
+		$this->assertStringNotContainsString( 'ch-contact__social', $html );
 	}
 }
