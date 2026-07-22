@@ -44,7 +44,8 @@ final class Blueworx_Clubhouse_Page_Map {
 		Blueworx_Clubhouse_Visibility $visibility,
 		Blueworx_Clubhouse_Collections $collections,
 		string $logo_url = '',
-		?Blueworx_Clubhouse_Content_Store $content = null
+		?Blueworx_Clubhouse_Content_Store $content = null,
+		string $filter = ''
 	): string {
 		$method = 'home';
 		foreach ( self::pages() as $page ) {
@@ -53,13 +54,16 @@ final class Blueworx_Clubhouse_Page_Map {
 				break;
 			}
 		}
+		// $filter is consumed only by the filtered pages (sports/teams/events/
+		// calendar); the other page methods accept it as an ignored trailing arg.
 		return call_user_func(
 			array( Blueworx_Clubhouse_Page_Renderer::class, $method ),
 			$branding,
 			$visibility,
 			$collections,
 			$logo_url,
-			$content
+			$content,
+			$filter
 		);
 	}
 }

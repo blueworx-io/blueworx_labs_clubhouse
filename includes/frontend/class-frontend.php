@@ -18,6 +18,24 @@ final class Blueworx_Clubhouse_Frontend {
 
 	public const QUERY_VAR = 'clubhouse_page';
 
+	/**
+	 * Sanitise a raw filter param into a bare slug ([a-z0-9-]). Pure and testable;
+	 * the filtered pages match this against their derived pill slugs. An unknown
+	 * slug is harmless — the renderer falls back to "All".
+	 */
+	public static function sanitize_filter( mixed $raw ): string {
+		if ( ! is_string( $raw ) ) {
+			return '';
+		}
+		return trim( (string) preg_replace( '/[^a-z0-9]+/', '-', strtolower( $raw ) ), '-' );
+	}
+
+	private static function current_filter(): string {
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only display filter, no state change.
+		$raw = $_GET[ Blueworx_Clubhouse_Links::FILTER_PARAM ] ?? '';
+		return self::sanitize_filter( is_string( $raw ) ? wp_unslash( $raw ) : '' );
+	}
+
 	public static function resolve_slug( bool $is_front_page, mixed $query_var, ?Blueworx_Clubhouse_Visibility $visibility = null ): ?string {
 		$slug = null;
 		if ( is_string( $query_var ) && '' !== $query_var && Blueworx_Clubhouse_Page_Map::has( $query_var ) ) {
@@ -186,7 +204,7 @@ final class Blueworx_Clubhouse_Frontend {
 		Blueworx_Clubhouse_Links::set_resolver( array( self::class, 'link_url' ) );
 		$ctx      = self::context();
 		$logo_url = self::resolve_logo( $ctx->branding->get_logo() );
-		return Blueworx_Clubhouse_Page_Map::render( $slug, $ctx->branding, $ctx->visibility, $ctx->collections, $logo_url, $ctx->content );
+		return Blueworx_Clubhouse_Page_Map::render( $slug, $ctx->branding, $ctx->visibility, $ctx->collections, $logo_url, $ctx->content, self::current_filter() );
 	}
 
 	/**

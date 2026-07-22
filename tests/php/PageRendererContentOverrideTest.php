@@ -51,12 +51,121 @@ final class PageRendererContentOverrideTest extends TestCase {
 		$this->assertStringContainsString( 'Our custom story', $html );
 	}
 
+	public function test_about_history_milestones_are_editable(): void {
+		[ $b, $v, $c, $content ] = $this->ctx();
+		$content->set_items( 'about', 'history', array(
+			array( 'year' => '1999', 'title' => 'Custom milestone', 'desc' => 'Something happened.' ),
+		) );
+		$html = Blueworx_Clubhouse_Page_Renderer::about( $b, $v, $c, '', $content );
+		$this->assertStringContainsString( 'Custom milestone', $html );
+		$this->assertStringContainsString( '1999', $html );
+		$this->assertStringNotContainsString( 'One pitch, one team', $html ); // default milestone gone
+	}
+
+	public function test_about_get_involved_renders_default_cards(): void {
+		[ $b, $v, $c ] = $this->ctx();
+		$html = Blueworx_Clubhouse_Page_Renderer::about( $b, $v, $c, '', null );
+		$this->assertStringContainsString( 'Volunteer', $html );
+		$this->assertStringContainsString( 'Sponsor', $html );
+	}
+
+	public function test_about_get_involved_is_editable(): void {
+		[ $b, $v, $c, $content ] = $this->ctx();
+		$content->set_items( 'about', 'get_involved', array(
+			array( 'title' => 'Custom way to help', 'description' => 'Do a thing.' ),
+		) );
+		$html = Blueworx_Clubhouse_Page_Renderer::about( $b, $v, $c, '', $content );
+		$this->assertStringContainsString( 'Custom way to help', $html );
+	}
+
+	public function test_about_order_facilities_before_committee_getinvolved_before_cta(): void {
+		[ $b, $v, $c ] = $this->ctx();
+		$html = Blueworx_Clubhouse_Page_Renderer::about( $b, $v, $c, '', null );
+		$facilities  = strpos( $html, 'ch-band-img' );      // facilities image band
+		$committee   = strpos( $html, 'ch-people' );         // committee grid
+		$getInvolved = strpos( $html, 'Volunteer' );         // get-involved card
+		$cta         = strpos( $html, 'ch-band-wrap' );      // closing CTA band
+		$this->assertNotFalse( $facilities );
+		$this->assertNotFalse( $committee );
+		$this->assertNotFalse( $getInvolved );
+		$this->assertNotFalse( $cta );
+		$this->assertLessThan( $committee, $facilities, 'facilities comes before committee' );
+		$this->assertLessThan( $cta, $getInvolved, 'get-involved comes before the closing CTA' );
+	}
+
+	public function test_membership_tiers_render_before_why_benefits(): void {
+		[ $b, $v, $c ] = $this->ctx();
+		$html = Blueworx_Clubhouse_Page_Renderer::membership( $b, $v, $c, '', null );
+		$tiers = strpos( $html, 'ch-tiers' );
+		$why   = strpos( $html, 'More than a membership' ); // the "Why join" heading
+		$this->assertNotFalse( $tiers );
+		$this->assertNotFalse( $why );
+		$this->assertLessThan( $why, $tiers, 'tiers appear above the fold, before Why join' );
+	}
+
 	public function test_header_menu_cta_override_applies_across_pages(): void {
 		[ $b, $v, $c, $content ] = $this->ctx();
 		// Catalogue key for the header's menu CTA is 'join' (class-content-catalogue.php).
 		$content->set( 'global', 'header', 'join', 'Sign up' );
 		$html = Blueworx_Clubhouse_Page_Renderer::contact( $b, $v, $c, '', $content );
 		$this->assertStringContainsString( 'Sign up', $html );
+	}
+
+	public function test_home_tiers_mirror_the_membership_source(): void {
+		[ $b, $v, $c, $content ] = $this->ctx();
+		// A single edit to the Membership tiers must surface on Home too.
+		$content->set_items( 'membership', 'tiers', array(
+			array( 'eyebrow' => 'Custom', 'name' => 'Custom Tier', 'price' => '£99', 'period' => '/mo', 'features' => "One\nTwo", 'featured' => true ),
+		) );
+		$home = Blueworx_Clubhouse_Page_Renderer::home( $b, $v, $c, '', $content );
+		$this->assertStringContainsString( 'Custom Tier', $home );
+	}
+
+	public function test_home_tiers_include_the_full_membership_set_by_default(): void {
+		// Home used to hardcode a 3-tier subset that omitted Junior; it now mirrors
+		// the 4-tier Membership default.
+		[ $b, $v, $c ] = $this->ctx();
+		$home = Blueworx_Clubhouse_Page_Renderer::home( $b, $v, $c, '', null );
+		$this->assertStringContainsString( 'ch-tier__name">Junior', $home );
+	}
+
+	public function test_home_tier_ctas_funnel_to_the_membership_page(): void {
+		[ $b, $v, $c ] = $this->ctx();
+		$home = Blueworx_Clubhouse_Page_Renderer::home( $b, $v, $c, '', null );
+		$this->assertStringContainsString( 'ch-tier__cta" href="?page=membership"', $home );
+		$this->assertStringNotContainsString( 'ch-tier__cta" href="?page=contact"', $home );
+	}
+
+	public function test_membership_tier_ctas_still_target_contact(): void {
+		[ $b, $v, $c ] = $this->ctx();
+		$page = Blueworx_Clubhouse_Page_Renderer::membership( $b, $v, $c, '', null );
+		$this->assertStringContainsString( 'ch-tier__cta" href="?page=contact"', $page );
+	}
+
+	public function test_announcement_bar_renders_by_default(): void {
+		[ $b, $v, $c ] = $this->ctx();
+		$html = Blueworx_Clubhouse_Page_Renderer::home( $b, $v, $c, '', null );
+		$this->assertStringContainsString( 'class="ch-banner"', $html );
+		$this->assertStringContainsString( 'Summer sign-ups are open', $html );
+	}
+
+	public function test_announcement_bar_text_and_link_override_applies_across_pages(): void {
+		[ $b, $v, $c, $content ] = $this->ctx();
+		$content->set( 'global', 'header', 'banner', 'Cup final Saturday — free entry' );
+		$content->set( 'global', 'header', 'banner_href', '/events/cup-final' );
+		$html = Blueworx_Clubhouse_Page_Renderer::contact( $b, $v, $c, '', $content );
+		$this->assertStringContainsString( 'Cup final Saturday — free entry', $html );
+		$this->assertStringContainsString( '/events/cup-final', $html );
+		$this->assertStringNotContainsString( 'Summer sign-ups are open', $html );
+	}
+
+	public function test_announcement_bar_hidden_when_toggle_off(): void {
+		[ $b, $v, $c, $content ] = $this->ctx();
+		$content->set( 'global', 'header', 'banner_show', false );
+		$content->set( 'global', 'header', 'banner', 'Should not appear' );
+		$html = Blueworx_Clubhouse_Page_Renderer::home( $b, $v, $c, '', $content );
+		$this->assertStringNotContainsString( 'class="ch-banner"', $html );
+		$this->assertStringNotContainsString( 'Should not appear', $html );
 	}
 
 	public function test_sports_hero_override(): void {

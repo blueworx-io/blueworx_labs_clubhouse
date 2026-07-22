@@ -83,7 +83,11 @@ function blueworx_clubhouse_preview_document(): string {
 	if ( ! Blueworx_Clubhouse_Page_Map::has( $slug ) ) {
 		$slug = '';
 	}
-	$body      = Blueworx_Clubhouse_Page_Map::render( $slug, $branding, $visibility, new Blueworx_Clubhouse_Demo_Collections() );
+	// The filter pill slug ([a-z0-9-]); matched against the page's derived pills,
+	// an unknown value falls back to "All". Mirrors Frontend::sanitize_filter.
+	$raw_filter = $_GET[ Blueworx_Clubhouse_Links::FILTER_PARAM ] ?? '';
+	$filter     = is_string( $raw_filter ) ? trim( (string) preg_replace( '/[^a-z0-9]+/', '-', strtolower( $raw_filter ) ), '-' ) : '';
+	$body       = Blueworx_Clubhouse_Page_Map::render( $slug, $branding, $visibility, new Blueworx_Clubhouse_Demo_Collections(), '', null, $filter );
 	$palettes  = blueworx_clubhouse_preview_palettes( $registry->active() );
 	$switcher   = '<div class="ch-switcher" data-ch-palettes=\''
 		. htmlspecialchars( json_encode( $palettes ), ENT_QUOTES, 'UTF-8' ) . '\'></div>'
