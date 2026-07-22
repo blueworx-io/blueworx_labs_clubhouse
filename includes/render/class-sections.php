@@ -474,9 +474,9 @@ final class Blueworx_Clubhouse_Sections {
 			? '<a class="ch-btn ch-btn--ghost" href="' . self::e( $data['link_href'] ) . '">' . self::e( $data['link_label'] ) . '</a>'
 			: '';
 		return '<section class="ch-sec"><div class="ch-wrap">'
-			. '<div class="ch-sec__head">'
+			. '<div class="ch-sec__head"><div>'
 			. '<span class="ch-eyebrow">' . self::e( $data['eyebrow'] ) . '</span>'
-			. '<h2 class="ch-sec__title ch-sec__title--sm">' . self::e( $data['heading'] ) . '</h2>'
+			. '<h2 class="ch-sec__title ch-sec__title--sm">' . self::e( $data['heading'] ) . '</h2></div>'
 			. $cta . '</div>'
 			. '<div class="ch-sponsors" role="list">' . $tiles . '</div></div></section>';
 	}
