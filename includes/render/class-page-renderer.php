@@ -143,17 +143,21 @@ final class Blueworx_Clubhouse_Page_Renderer {
 			'active'      => $active,
 			'login'       => 'Log in',
 			'login_href'  => Blueworx_Clubhouse_Links::url( 'login' ),
-			'join'        => self::cget( $content, 'global', 'header', 'join', 'Join the Club' ),
+			'join'        => self::cget( $content, 'global', 'header', 'join', Blueworx_Clubhouse_Cta::JOIN ),
 			'join_href'   => self::cget( $content, 'global', 'header', 'join_href', Blueworx_Clubhouse_Links::url( 'membership' ) ),
 			'logo'        => $logo_url,
 		) );
 	}
 
-	private static function shell_footer( string $club, Blueworx_Clubhouse_Visibility $visibility, ?Blueworx_Clubhouse_Content_Store $content = null ): string {
+	private static function shell_footer( string $club, Blueworx_Clubhouse_Visibility $visibility, Blueworx_Clubhouse_Branding $branding, ?Blueworx_Clubhouse_Content_Store $content = null ): string {
 		return Blueworx_Clubhouse_Sections::footer( array(
 			'club_name'  => $club,
 			'tagline'    => self::cget( $content, 'global', 'footer', 'tagline', 'Nine sports, one club. A home ground for every team, and everyone who follows them.' ),
-			'socials'    => array( 'Facebook', 'Instagram', 'LinkedIn', 'Community', 'Share' ),
+			'socials'    => array(
+				'Facebook'  => $branding->get_facebook_url(),
+				'Instagram' => $branding->get_instagram_url(),
+				'LinkedIn'  => $branding->get_linkedin_url(),
+			),
 			'columns'    => array(
 				array( 'title' => 'Club', 'links' => self::nav_links( array(
 					array( 'label' => 'About', 'key' => 'about' ),
@@ -174,12 +178,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'placeholder' => 'Your email',
 				'cta'         => 'Subscribe',
 			),
-			'legal'      => array(
-				array( 'label' => 'Privacy Policy', 'href' => '#' ),
-				array( 'label' => 'Terms', 'href' => '#' ),
-				array( 'label' => 'Club Rules', 'href' => '#' ),
-				array( 'label' => 'Safeguarding', 'href' => '#' ),
-			),
+			'legal'      => array(),
 		) );
 	}
 
@@ -225,14 +224,14 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'title_lead'         => self::cget( $content, 'home', 'hero', 'title_lead', 'Every sport. Every age. ' ),
 				'title_highlight'    => self::cget( $content, 'home', 'hero', 'title_highlight', 'One community.' ),
 				'lede'               => self::cget( $content, 'home', 'hero', 'lede', "Nine sports, twenty-four teams, and a clubhouse that's always open. Come for the game — stay for the people." ),
-				'cta_primary'        => self::cget( $content, 'home', 'hero', 'cta_primary', 'Explore membership' ),
+				'cta_primary'        => self::cget( $content, 'home', 'hero', 'cta_primary', Blueworx_Clubhouse_Cta::JOIN ),
 				'cta_primary_href'   => self::cget( $content, 'home', 'hero', 'cta_primary_href', Blueworx_Clubhouse_Links::url( 'membership' ) ),
 				'cta_secondary'      => self::cget( $content, 'home', 'hero', 'cta_secondary', 'Take a tour →' ),
 				'cta_secondary_href' => self::cget( $content, 'home', 'hero', 'cta_secondary_href', Blueworx_Clubhouse_Links::url( 'about' ) ),
 				'image'              => self::media_src( (string) self::cget( $content, 'home', 'hero', 'image', '' ) ),
 				'image_alt'          => 'ClubHouse floodlit pitch on a Saturday',
 				'tiles'              => self::citems( $content, 'home', 'quick_tiles', array(
-					array( 'label' => 'Join the club', 'href' => Blueworx_Clubhouse_Links::url( 'membership' ), 'icon' => 'join' ),
+					array( 'label' => Blueworx_Clubhouse_Cta::JOIN, 'href' => Blueworx_Clubhouse_Links::url( 'membership' ), 'icon' => 'join' ),
 					array( 'label' => 'Take a tour', 'href' => Blueworx_Clubhouse_Links::url( 'about' ), 'icon' => 'tour' ),
 					array( 'label' => 'See fixtures', 'href' => Blueworx_Clubhouse_Links::url( 'calendar' ), 'icon' => 'fixtures' ),
 					array( 'label' => 'Get in touch', 'href' => Blueworx_Clubhouse_Links::url( 'contact' ), 'icon' => 'contact' ),
@@ -295,7 +294,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'eyebrow'   => self::cget( $content, 'home', 'membership', 'eyebrow', 'Membership' ),
 				'heading'   => self::cget( $content, 'home', 'membership', 'heading', 'Open to everyone, from £28/month.' ),
 				'lede'      => self::cget( $content, 'home', 'membership', 'lede', 'From first-timers to county players — every tier includes clubhouse access, discounted events and a free trial session.' ),
-				'cta_label' => self::cget( $content, 'home', 'membership', 'cta_label', 'Choose your tier →' ),
+				'cta_label' => self::cget( $content, 'home', 'membership', 'cta_label', Blueworx_Clubhouse_Cta::JOIN . ' →' ),
 				'cta_href'  => self::cget( $content, 'home', 'membership', 'cta_href', Blueworx_Clubhouse_Links::url( 'membership' ) ),
 			) );
 			$out .= Blueworx_Clubhouse_Sections::tier_grid( array(
@@ -352,7 +351,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				array( 'label' => 'Location', 'lines' => array( '12 Riverside Lane', 'Marlow, SL7 1AA' ), 'link_label' => '', 'link_href' => '' ),
 				array( 'label' => 'Opening hours', 'lines' => array( 'Mon–Sun', '7:00am – 10:00pm' ), 'link_label' => '', 'link_href' => '' ),
 				array( 'label' => 'Contact', 'lines' => array( 'hello@clubhouse.example', '01628 000 000' ), 'link_label' => '', 'link_href' => '' ),
-				array( 'label' => 'Find us', 'lines' => array(), 'link_label' => 'Open in Maps', 'link_href' => '#' ),
+				array( 'label' => 'Find us', 'lines' => array(), 'link_label' => 'Open in Maps', 'link_href' => Blueworx_Clubhouse_Sections::maps_url( array( '12 Riverside Lane', 'Marlow, SL7 1AA' ) ) ),
 			);
 			$items = self::citems( $content, 'home', 'info', $default );
 			$out .= Blueworx_Clubhouse_Sections::info_strip( array_map(
@@ -369,7 +368,8 @@ final class Blueworx_Clubhouse_Page_Renderer {
 		}
 		if ( $visibility->is_section_visible( 'home', 'sponsors' ) ) {
 			$out .= Blueworx_Clubhouse_Sections::sponsors( array(
-				'heading' => 'Our sponsors & partners', 'link_label' => 'Become a sponsor', 'link_href' => '#',
+				'eyebrow' => 'Our partners', 'heading' => 'Our sponsors & partners', 'link_label' => 'Become a sponsor',
+				'link_href' => Blueworx_Clubhouse_Links::url( 'contact' ),
 				'names'   => array_map( static fn( array $s ): string => $s['name'], $collections->sponsors() ),
 			) );
 		}
@@ -384,7 +384,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 		}
 		$out .= '</main>';
 		if ( $visibility->is_section_visible( 'home', 'footer' ) ) {
-			$out .= self::shell_footer( $club, $visibility, $content );
+			$out .= self::shell_footer( $club, $visibility, $branding, $content );
 		}
 		return $out;
 	}
@@ -405,7 +405,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'title_lead'         => self::cget( $content, 'about', 'hero', 'title_lead', 'Fifty-two years of ' ),
 				'title_highlight'    => self::cget( $content, 'about', 'hero', 'title_highlight', 'community sport.' ),
 				'lede'               => self::cget( $content, 'about', 'hero', 'lede', 'From one rugby pitch in 1974 to nine sports and twenty-four teams — ClubHouse has always been about more than the game.' ),
-				'cta_primary'        => self::cget( $content, 'about', 'hero', 'cta_primary', 'Join the club' ),
+				'cta_primary'        => self::cget( $content, 'about', 'hero', 'cta_primary', Blueworx_Clubhouse_Cta::JOIN ),
 				'cta_primary_href'   => self::cget( $content, 'about', 'hero', 'cta_primary_href', Blueworx_Clubhouse_Links::url( 'membership' ) ),
 				'cta_secondary'      => self::cget( $content, 'about', 'hero', 'cta_secondary', 'Meet the committee' ),
 				'cta_secondary_href' => self::cget( $content, 'about', 'hero', 'cta_secondary_href', Blueworx_Clubhouse_Links::url( 'contact' ) ),
@@ -466,11 +466,11 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'eyebrow'   => 'Get involved',
 				'heading'   => self::cget( $content, 'about', 'cta', 'heading', 'Want to be part of it?' ),
 				'lede'      => self::cget( $content, 'about', 'cta', 'lede', 'Play, volunteer, or just come for the atmosphere.' ),
-				'cta_label' => self::cget( $content, 'about', 'cta', 'cta_label', 'Join the club →' ),
+				'cta_label' => self::cget( $content, 'about', 'cta', 'cta_label', Blueworx_Clubhouse_Cta::JOIN . ' →' ),
 				'cta_href'  => self::cget( $content, 'about', 'cta', 'cta_href', Blueworx_Clubhouse_Links::url( 'membership' ) ),
 			) );
 		}
-		$out .= '</main>' . self::shell_footer( $club, $visibility, $content );
+		$out .= '</main>' . self::shell_footer( $club, $visibility, $branding, $content );
 		return $out;
 	}
 
@@ -634,7 +634,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'cta_href'  => self::cget( $content, 'membership', 'cta', 'cta_href', Blueworx_Clubhouse_Links::url( 'contact' ) ),
 			) );
 		}
-		$out .= '</main>' . self::shell_footer( $club, $visibility, $content );
+		$out .= '</main>' . self::shell_footer( $club, $visibility, $branding, $content );
 		return $out;
 	}
 
@@ -676,7 +676,11 @@ final class Blueworx_Clubhouse_Page_Renderer {
 					'address' => array( '12 Riverside Lane', 'Marlow, SL7 1AA' ),
 					'email'   => 'hello@clubhouse.example',
 					'phone'   => '01628 000 000',
-					'socials' => array( 'Facebook', 'Instagram', 'LinkedIn', 'Community', 'Share' ),
+					'socials' => array(
+						'Facebook'  => $branding->get_facebook_url(),
+						'Instagram' => $branding->get_instagram_url(),
+						'LinkedIn'  => $branding->get_linkedin_url(),
+					),
 				),
 			) );
 		}
@@ -701,7 +705,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'linkedin_url'  => $branding->get_linkedin_url(),
 			) );
 		}
-		$out .= '</main>' . self::shell_footer( $club, $visibility, $content );
+		$out .= '</main>' . self::shell_footer( $club, $visibility, $branding, $content );
 		return $out;
 	}
 
@@ -724,14 +728,14 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'password_label' => 'Password',
 				'remember_label' => 'Remember me',
 				'forgot_label'   => 'Forgot password?',
-				'forgot_href'    => '#',
+				'forgot_href'    => '',
 				'submit_label'   => 'Log in',
 				'join_prompt'    => 'Not a member yet?',
-				'join_label'     => 'Join the club',
+				'join_label'     => Blueworx_Clubhouse_Cta::JOIN,
 				'join_href'      => Blueworx_Clubhouse_Links::url( 'membership' ),
 			) );
 		}
-		$out .= '</main>' . self::shell_footer( $club, $visibility, $content );
+		$out .= '</main>' . self::shell_footer( $club, $visibility, $branding, $content );
 		return $out;
 	}
 
@@ -767,7 +771,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 			$out .= Blueworx_Clubhouse_Sections::stat_card_grid( array(
 				'eyebrow'    => 'All sections',
 				'heading'    => 'Pick your sport.',
-				'link_label' => 'Join the club →',
+				'link_label' => Blueworx_Clubhouse_Cta::JOIN . ' →',
 				'link_href'  => Blueworx_Clubhouse_Links::url( 'membership' ),
 				'cards'      => array_map(
 					static function ( array $s ): array {
@@ -797,7 +801,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'cta_href'  => self::cget( $content, 'sports', 'cta', 'cta_href', Blueworx_Clubhouse_Links::url( 'contact' ) ),
 			) );
 		}
-		$out .= '</main>' . self::shell_footer( $club, $visibility, $content );
+		$out .= '</main>' . self::shell_footer( $club, $visibility, $branding, $content );
 		return $out;
 	}
 
@@ -861,7 +865,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'cta_href'  => self::cget( $content, 'teams', 'cta', 'cta_href', Blueworx_Clubhouse_Links::url( 'contact' ) ),
 			) );
 		}
-		$out .= '</main>' . self::shell_footer( $club, $visibility, $content );
+		$out .= '</main>' . self::shell_footer( $club, $visibility, $branding, $content );
 		return $out;
 	}
 
@@ -932,7 +936,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'cta_href'  => self::cget( $content, 'events', 'cta', 'cta_href', Blueworx_Clubhouse_Links::url( 'contact' ) ),
 			) );
 		}
-		$out .= '</main>' . self::shell_footer( $club, $visibility, $content );
+		$out .= '</main>' . self::shell_footer( $club, $visibility, $branding, $content );
 		return $out;
 	}
 
@@ -978,7 +982,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'cta_href'  => self::cget( $content, 'calendar', 'cta', 'cta_href', Blueworx_Clubhouse_Links::url( 'contact' ) ),
 			) );
 		}
-		$out .= '</main>' . self::shell_footer( $club, $visibility, $content );
+		$out .= '</main>' . self::shell_footer( $club, $visibility, $branding, $content );
 		return $out;
 	}
 }

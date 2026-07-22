@@ -133,15 +133,15 @@ final class SectionsTest extends TestCase {
 	public function test_footer_renders_columns_socials_and_newsletter(): void {
 		$html = Blueworx_Clubhouse_Sections::footer( array(
 			'club_name'  => 'ClubHouse', 'tagline' => 'A home ground for every team.',
-			'socials'    => array( 'Facebook', 'Instagram' ),
+			'socials'    => array( 'Facebook' => 'https://facebook.com/clubhouse', 'Instagram' => 'https://instagram.com/clubhouse' ),
 			'columns'    => array(
 				array( 'title' => 'Club', 'links' => array( array( 'label' => 'About', 'href' => '?page=about' ) ) ),
 			),
 			'newsletter' => array( 'heading' => 'Stay in the loop', 'lede' => 'Club news, monthly.', 'placeholder' => 'Your email', 'cta' => 'Subscribe' ),
-			'legal'      => array( array( 'label' => 'Privacy', 'href' => '#' ) ),
+			'legal'      => array( array( 'label' => 'Privacy', 'href' => '/privacy' ) ),
 		) );
 		$this->assertStringContainsString( 'class="ch-footer"', $html );
-		$this->assertStringContainsString( 'ch-footer__social', $html );
+		$this->assertStringContainsString( 'ch-social__link', $html );
 		$this->assertStringContainsString( 'Stay in the loop', $html );
 		$this->assertStringContainsString( 'Privacy', $html );
 		$this->assertNoHexColour( $html );
@@ -176,6 +176,34 @@ final class SectionsTest extends TestCase {
 		$this->assertStringContainsString( '?page=contact', $html );
 		// Only the one known icon key emits a glyph.
 		$this->assertSame( 1, substr_count( $html, 'ch-home-hero__tile-ico' ) );
+	}
+
+	public function test_home_hero_skips_a_tile_with_no_destination(): void {
+		// Tiles are owner-edited: a saved tile can have an empty/missing href. It must
+		// be dropped, not rendered as a dead href="#" — the one admin-influenced path
+		// the page-render link-hygiene guardrail cannot reach with default content.
+		$html = Blueworx_Clubhouse_Sections::home_hero( array(
+			'eyebrow'            => 'Est. 1974',
+			'title_lead'         => 'Every sport. ',
+			'title_highlight'    => 'One community.',
+			'lede'               => 'Lede.',
+			'cta_primary'        => 'Join',
+			'cta_primary_href'   => '?page=membership',
+			'cta_secondary'      => 'Tour',
+			'cta_secondary_href' => '?page=about',
+			'image'              => '',
+			'image_alt'          => '',
+			'tiles'              => array(
+				array( 'label' => 'Real tile', 'href' => '?page=contact' ),
+				array( 'label' => 'Empty href' ),                 // missing key
+				array( 'label' => 'Blank href', 'href' => '' ),   // present but empty
+			),
+		) );
+		$this->assertStringNotContainsString( 'href="#"', $html );
+		$this->assertSame( 1, substr_count( $html, 'ch-home-hero__tile"' ), 'only the tile with a destination renders' );
+		$this->assertStringContainsString( 'Real tile', $html );
+		$this->assertStringNotContainsString( 'Empty href', $html );
+		$this->assertStringNotContainsString( 'Blank href', $html );
 	}
 
 	public function test_quick_tiles_render_each_link(): void {
@@ -384,7 +412,7 @@ final class SectionsTest extends TestCase {
 
 	public function test_sponsors_render_each_tile(): void {
 		$html = Blueworx_Clubhouse_Sections::sponsors( array(
-			'heading' => 'Our sponsors & partners', 'link_label' => 'Become a sponsor', 'link_href' => '#',
+			'eyebrow' => 'Our partners', 'heading' => 'Our sponsors & partners', 'link_label' => 'Become a sponsor', 'link_href' => '#',
 			'names'   => array( 'Sponsor 01', 'Sponsor 02', 'Sponsor 03' ),
 		) );
 		$this->assertStringContainsString( 'class="ch-sponsors"', $html );
@@ -392,6 +420,49 @@ final class SectionsTest extends TestCase {
 		$this->assertListSemantics( $html, 1, 3 );
 		$this->assertStringContainsString( 'Become a sponsor', $html );
 		$this->assertStringNotContainsString( 'style=', $html );
+	}
+
+	public function test_maps_url_encodes_the_address(): void {
+		$url = Blueworx_Clubhouse_Sections::maps_url( array( '12 Riverside Lane', 'Marlow, SL7 1AA' ) );
+		$this->assertStringStartsWith( 'https://www.google.com/maps/search/?api=1&query=', $url );
+		$this->assertStringContainsString( '12%20Riverside%20Lane', $url );
+		$this->assertStringContainsString( 'Marlow', $url );
+	}
+
+	public function test_maps_url_is_empty_for_a_blank_address(): void {
+		$this->assertSame( '', Blueworx_Clubhouse_Sections::maps_url( array( '', '' ) ) );
+	}
+
+	public function test_sponsors_has_an_eyebrow_and_a_real_cta(): void {
+		$html = Blueworx_Clubhouse_Sections::sponsors( array(
+			'eyebrow'    => 'Our partners',
+			'heading'    => 'Our sponsors & partners',
+			'link_label' => 'Become a sponsor',
+			'link_href'  => 'https://example.test/contact/',
+			'names'      => array( 'Acme' ),
+		) );
+		$this->assertStringContainsString( 'ch-eyebrow', $html );
+		$this->assertStringContainsString( 'ch-btn', $html, 'sponsor CTA is a pill, not a plain link' );
+		$this->assertStringNotContainsString( 'href="#"', $html );
+	}
+
+	public function test_news_cards_are_not_links(): void {
+		$html = Blueworx_Clubhouse_Sections::news_cards( $this->newsData() );
+		$this->assertStringNotContainsString( 'href="#"', $html );
+		$this->assertStringNotContainsString( '<a class="ch-news__card"', $html );
+	}
+
+	/** @return array{eyebrow:string,heading:string,cards:array<int,array{image:string,image_alt:string,tag:string,date:string,title:string}>} */
+	private function newsData(): array {
+		return array(
+			'eyebrow' => 'Latest news',
+			'heading' => 'From the clubhouse',
+			'cards'   => array(
+				array( 'image' => '', 'image_alt' => 'Clubhouse interior', 'tag' => 'Club news', 'date' => '2 Jul', 'title' => 'Clubhouse refurbishment complete' ),
+				array( 'image' => '', 'image_alt' => 'Junior footballers', 'tag' => 'Sections', 'date' => '28 Jun', 'title' => 'Junior Football signs 40 new players' ),
+				array( 'image' => '', 'image_alt' => 'Volunteers', 'tag' => 'Volunteering', 'date' => '24 Jun', 'title' => 'Volunteers needed for the Open Day' ),
+			),
+		);
 	}
 
 	public function test_benefit_grid_renders_each_card(): void {
@@ -523,7 +594,7 @@ final class SectionsTest extends TestCase {
 			'info' => array(
 				'heading' => 'Find us', 'address' => array( '12 Riverside Lane', 'Marlow' ),
 				'email' => 'hello@clubhouse.example', 'phone' => '01628 000 000',
-				'socials' => array( 'Facebook', 'Instagram' ),
+				'socials' => array( 'Facebook' => 'https://facebook.com/clubhouse', 'Instagram' => 'https://instagram.com/clubhouse' ),
 			),
 		) );
 		$this->assertStringContainsString( 'class="ch-contact"', $html );
@@ -534,7 +605,9 @@ final class SectionsTest extends TestCase {
 		$this->assertStringContainsString( 'href="tel:01628000000"', $html );
 		$this->assertStringNotContainsString( 'tel:01628 000 000', $html );
 		$this->assertStringContainsString( '01628 000 000', $html );
-		$this->assertSame( 2, substr_count( $html, 'ch-contact__social' ) );
+		// Quote-anchored so the count doesn't also pick up the container's
+		// plural class "ch-social__links".
+		$this->assertSame( 2, substr_count( $html, 'ch-social__link"' ) );
 		$this->assertNoHexColour( $html );
 		$this->assertStringNotContainsString( 'style=', $html );
 	}
@@ -729,5 +802,75 @@ final class SectionsTest extends TestCase {
 		$this->assertStringNotContainsString( 'ch-brand__mark', $html, 'no "C" placeholder glyph' );
 		$this->assertStringNotContainsString( 'ch-brand__logo', $html, 'no logo image without a logo' );
 		$this->assertStringContainsString( 'ClubHouse', $html, 'the club name still labels the brand link' );
+	}
+
+	/** @return array{club_name:string,tagline:string,socials:array<string,string>,columns:array<int,array{title:string,links:array<int,array{label:string,href:string}>}>,newsletter:array{heading:string,lede:string,placeholder:string,cta:string},legal:array<int,array{label:string,href:string}>} */
+	private function footerData(): array {
+		return array(
+			'club_name'  => 'ClubHouse',
+			'tagline'    => 'A home ground for every team.',
+			'socials'    => array(
+				'Facebook'  => 'https://facebook.com/clubhouse',
+				'Instagram' => 'https://instagram.com/clubhouse',
+				'LinkedIn'  => 'https://linkedin.com/company/clubhouse',
+			),
+			'columns'    => array(
+				array( 'title' => 'Club', 'links' => array( array( 'label' => 'About', 'href' => '?page=about' ) ) ),
+			),
+			'newsletter' => array( 'heading' => 'Stay in the loop', 'lede' => 'Club news, monthly.', 'placeholder' => 'Your email', 'cta' => 'Subscribe' ),
+			'legal'      => array( array( 'label' => 'Privacy', 'href' => '/privacy' ) ),
+		);
+	}
+
+	/** @return array{eyebrow:string,heading:string,name_label:string,email_label:string,enquiry_label:string,enquiry_options:array<int,string>,message_label:string,submit_label:string,info:array{heading:string,address:array<int,string>,email:string,phone:string,socials:array<string,string>}} */
+	private function contactData(): array {
+		return array(
+			'eyebrow'         => 'Get in touch',
+			'heading'         => 'Send us a message',
+			'name_label'      => 'Full name',
+			'email_label'     => 'Email',
+			'enquiry_label'   => 'Enquiry type',
+			'enquiry_options' => array( 'General', 'Membership' ),
+			'message_label'   => 'Message',
+			'submit_label'    => 'Send message',
+			'info'            => array(
+				'heading' => 'Find us',
+				'address' => array( '12 Riverside Lane', 'Marlow' ),
+				'email'   => 'hello@clubhouse.example',
+				'phone'   => '01628 000 000',
+				'socials' => array(
+					'Facebook'  => 'https://facebook.com/clubhouse',
+					'Instagram' => 'https://instagram.com/clubhouse',
+					'LinkedIn'  => 'https://linkedin.com/company/clubhouse',
+				),
+			),
+		);
+	}
+
+	public function test_social_links_renders_a_pill_per_nonempty_url_only(): void {
+		$html = Blueworx_Clubhouse_Sections::social_links( array(
+			'Facebook'  => 'https://facebook.com/x',
+			'Instagram' => '',
+			'LinkedIn'  => 'https://linkedin.com/company/x',
+		) );
+		$this->assertSame( 2, substr_count( $html, 'ch-social__link' ), 'one pill per non-empty url' );
+		$this->assertStringContainsString( 'https://facebook.com/x', $html );
+		$this->assertStringContainsString( 'https://linkedin.com/company/x', $html );
+		$this->assertStringNotContainsString( 'Instagram', $html, 'empty url renders no pill' );
+	}
+
+	public function test_footer_uses_social_pills_not_letter_circles(): void {
+		$html = Blueworx_Clubhouse_Sections::footer( $this->footerData() );
+		$this->assertStringContainsString( 'ch-social__link', $html );
+		// Exact old singular class, quote-anchored so it doesn't false-match the
+		// still-present plural container class "ch-footer__socials".
+		$this->assertStringNotContainsString( 'class="ch-footer__social"', $html );
+		$this->assertStringNotContainsString( 'href="#"', $html );
+	}
+
+	public function test_contact_uses_social_pills_not_letter_circles(): void {
+		$html = Blueworx_Clubhouse_Sections::contact_form( $this->contactData() );
+		$this->assertStringContainsString( 'ch-social__link', $html );
+		$this->assertStringNotContainsString( 'ch-contact__social', $html );
 	}
 }

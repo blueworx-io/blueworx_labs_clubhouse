@@ -56,4 +56,5 @@ require_once __DIR__ . '/collections/class-collection-meta.php';
 
 // Frontend (pure)
 require_once __DIR__ . '/frontend/class-links.php';
+require_once __DIR__ . '/frontend/class-cta.php';
 require_once __DIR__ . '/frontend/class-demo-mode.php';

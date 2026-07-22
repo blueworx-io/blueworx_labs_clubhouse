@@ -135,11 +135,17 @@ final class Blueworx_Clubhouse_Sections {
 			. '</div>';
 		$tiles = '';
 		foreach ( $data['tiles'] as $t ) {
-			// Tiles may be owner-edited content, where optional keys can be absent —
-			// an unset/unknown icon degrades to no glyph rather than a warning.
+			// Tiles may be owner-edited content, where optional keys can be absent.
+			// A tile with no destination is a link to nowhere, so skip it rather than
+			// emit a dead href="#" — the same rule the rest of the front end follows.
+			$href = (string) ( $t['href'] ?? '' );
+			if ( '' === $href ) {
+				continue;
+			}
+			// An unset/unknown icon degrades to no glyph rather than a warning.
 			$svg = self::TILE_ICONS[ $t['icon'] ?? '' ] ?? '';
 			$ico = '' !== $svg ? '<span class="ch-home-hero__tile-ico" aria-hidden="true">' . $svg . '</span>' : '';
-			$tiles .= '<a class="ch-home-hero__tile" role="listitem" href="' . self::e( $t['href'] ?? '#' ) . '">'
+			$tiles .= '<a class="ch-home-hero__tile" role="listitem" href="' . self::e( $href ) . '">'
 				. $ico
 				. '<span class="ch-home-hero__tile-label">' . self::e( $t['label'] ?? '' ) . '</span>'
 				. '<span class="ch-home-hero__tile-arrow" aria-hidden="true">→</span></a>';
@@ -382,11 +388,11 @@ final class Blueworx_Clubhouse_Sections {
 	public static function news_cards( array $data ): string {
 		$cards = '';
 		foreach ( $data['cards'] as $c ) {
-			$cards .= '<a class="ch-news__card" role="listitem" href="#">'
+			$cards .= '<article class="ch-news__card" role="listitem">'
 				. self::media( $c['image'], $c['image_alt'], 'ch-news__media' )
 				. '<div class="ch-news__meta"><span class="ch-news__tag">' . self::e( $c['tag'] ) . '</span>'
 				. '<span class="ch-news__date">' . self::e( $c['date'] ) . '</span></div>'
-				. '<h3 class="ch-news__title">' . self::e( $c['title'] ) . '</h3></a>';
+				. '<h3 class="ch-news__title">' . self::e( $c['title'] ) . '</h3></article>';
 		}
 		return '<section class="ch-sec"><div class="ch-wrap">'
 			. '<span class="ch-eyebrow">' . self::e( $data['eyebrow'] ) . '</span>'
@@ -441,7 +447,7 @@ final class Blueworx_Clubhouse_Sections {
 			foreach ( $c['lines'] as $line ) {
 				$lines .= '<span class="ch-info__line">' . self::e( $line ) . '</span>';
 			}
-			$link = '' !== $c['link_label']
+			$link = ( '' !== $c['link_label'] && '' !== $c['link_href'] )
 				? '<a class="ch-info__link" href="' . self::e( $c['link_href'] ) . '">' . self::e( $c['link_label'] ) . ' →</a>' : '';
 			$out .= '<div class="ch-info__col" role="listitem"><div class="ch-info__label">' . self::e( $c['label'] ) . '</div>'
 				. '<div class="ch-info__body">' . $lines . $link . '</div></div>';
@@ -449,30 +455,45 @@ final class Blueworx_Clubhouse_Sections {
 		return '<section class="ch-info"><div class="ch-wrap ch-info__in" role="list">' . $out . '</div></section>';
 	}
 
-	/** @param array{heading:string,link_label:string,link_href:string,names:array<int,string>} $data */
+	/**
+	 * Google Maps search URL for a club address, built from the address lines we
+	 * already render. Empty when there is no address, so the caller omits the link
+	 * rather than emitting a dead one.
+	 *
+	 * @param array<int,string> $lines address lines
+	 */
+	public static function maps_url( array $lines ): string {
+		$query = trim( implode( ', ', array_filter( array_map( 'trim', $lines ) ) ) );
+		if ( '' === $query ) {
+			return '';
+		}
+		return 'https://www.google.com/maps/search/?api=1&query=' . rawurlencode( $query );
+	}
+
+	/** @param array{eyebrow:string,heading:string,link_label:string,link_href:string,names:array<int,string>} $data */
 	public static function sponsors( array $data ): string {
 		$tiles = '';
 		foreach ( $data['names'] as $name ) {
 			$tiles .= '<div class="ch-sponsors__tile" role="listitem">' . self::e( $name ) . '</div>';
 		}
+		$cta = '' !== $data['link_href']
+			? '<a class="ch-btn ch-btn--ghost" href="' . self::e( $data['link_href'] ) . '">' . self::e( $data['link_label'] ) . '</a>'
+			: '';
 		return '<section class="ch-sec"><div class="ch-wrap">'
-			. '<div class="ch-sec__head"><h2 class="ch-sec__title ch-sec__title--sm">' . self::e( $data['heading'] ) . '</h2>'
-			. '<a class="ch-link" href="' . self::e( $data['link_href'] ) . '">' . self::e( $data['link_label'] ) . ' →</a></div>'
+			. '<div class="ch-sec__head"><div>'
+			. '<span class="ch-eyebrow">' . self::e( $data['eyebrow'] ) . '</span>'
+			. '<h2 class="ch-sec__title ch-sec__title--sm">' . self::e( $data['heading'] ) . '</h2></div>'
+			. $cta . '</div>'
 			. '<div class="ch-sponsors" role="list">' . $tiles . '</div></div></section>';
 	}
 
 	/**
-	 * @param array{club_name:string,tagline:string,socials:array<int,string>,
+	 * @param array{club_name:string,tagline:string,socials:array<string,string>,
 	 *   columns:array<int,array{title:string,links:array<int,array{label:string,href:string}>}>,
 	 *   newsletter:array{heading:string,lede:string,placeholder:string,cta:string},
 	 *   legal:array<int,array{label:string,href:string}>} $data
 	 */
 	public static function footer( array $data ): string {
-		$socials = '';
-		foreach ( $data['socials'] as $name ) {
-			$glyph    = self::e( mb_substr( $name, 0, 1 ) );
-			$socials .= '<a class="ch-footer__social" href="#" aria-label="' . self::e( $name ) . '"><span aria-hidden="true">' . $glyph . '</span></a>';
-		}
 		$cols = '';
 		foreach ( $data['columns'] as $col ) {
 			$links = '';
@@ -490,14 +511,15 @@ final class Blueworx_Clubhouse_Sections {
 		foreach ( $data['legal'] as $l ) {
 			$legal .= '<a class="ch-footer__legal-link" href="' . self::e( $l['href'] ) . '">' . self::e( $l['label'] ) . '</a>';
 		}
+		$legal_row = '' !== $legal ? '<div class="ch-footer__legal">' . $legal . '</div>' : '';
 		return '<footer class="ch-footer"><div class="ch-wrap">'
 			. '<div class="ch-footer__grid">'
 			. '<div class="ch-footer__brand-col">'
 			. '<a class="ch-brand" href="' . self::e( Blueworx_Clubhouse_Links::url( 'home' ) ) . '">' . self::e( $data['club_name'] ) . '</a>'
 			. '<p class="ch-footer__tagline">' . self::e( $data['tagline'] ) . '</p>'
-			. '<div class="ch-footer__socials">' . $socials . '</div></div>'
+			. '<div class="ch-footer__socials ch-social__links" role="list">' . self::social_links( $data['socials'] ) . '</div></div>'
 			. $cols . $nl . '</div>'
-			. '<div class="ch-footer__legal">' . $legal . '</div>'
+			. $legal_row
 			. '</div></footer>';
 	}
 
@@ -609,7 +631,7 @@ final class Blueworx_Clubhouse_Sections {
 	/**
 	 * @param array{eyebrow:string,heading:string,name_label:string,email_label:string,enquiry_label:string,
 	 *   enquiry_options:array<int,string>,message_label:string,submit_label:string,
-	 *   info:array{heading:string,address:array<int,string>,email:string,phone:string,socials:array<int,string>}} $data
+	 *   info:array{heading:string,address:array<int,string>,email:string,phone:string,socials:array<string,string>}} $data
 	 */
 	public static function contact_form( array $data ): string {
 		$opts = '';
@@ -619,11 +641,6 @@ final class Blueworx_Clubhouse_Sections {
 		$addr = '';
 		foreach ( $data['info']['address'] as $line ) {
 			$addr .= '<span class="ch-contact__line">' . self::e( $line ) . '</span>';
-		}
-		$socials = '';
-		foreach ( $data['info']['socials'] as $name ) {
-			$socials .= '<a class="ch-contact__social" href="#" aria-label="' . self::e( $name ) . '">'
-				. '<span aria-hidden="true">' . self::e( mb_substr( $name, 0, 1 ) ) . '</span></a>';
 		}
 		$form = '<form class="ch-contact__form" onsubmit="return false">'
 			. '<label class="ch-field"><span class="ch-field__label">' . self::e( $data['name_label'] ) . '</span>'
@@ -641,7 +658,7 @@ final class Blueworx_Clubhouse_Sections {
 			. '<div class="ch-contact__lines">' . $addr . '</div>'
 			. '<a class="ch-contact__link" href="mailto:' . self::e( $data['info']['email'] ) . '">' . self::e( $data['info']['email'] ) . '</a>'
 			. '<a class="ch-contact__link" href="tel:' . self::e( $tel ) . '">' . self::e( $data['info']['phone'] ) . '</a>'
-			. '<div class="ch-contact__connect">' . $socials . '</div></aside>';
+			. '<div class="ch-contact__connect ch-social__links" role="list">' . self::social_links( $data['info']['socials'] ) . '</div></aside>';
 		return '<section class="ch-sec"><div class="ch-wrap">'
 			. '<span class="ch-eyebrow">' . self::e( $data['eyebrow'] ) . '</span>'
 			. '<h2 class="ch-sec__title">' . self::e( $data['heading'] ) . '</h2>'
@@ -659,6 +676,8 @@ final class Blueworx_Clubhouse_Sections {
 	 *   submit_label:string,join_prompt:string,join_label:string,join_href:string} $data
 	 */
 	public static function auth( array $data ): string {
+		$forgot = '' !== $data['forgot_href']
+			? '<a class="ch-auth__forgot" href="' . self::e( $data['forgot_href'] ) . '">' . self::e( $data['forgot_label'] ) . '</a>' : '';
 		$form = '<form class="ch-auth__form" onsubmit="return false">'
 			. '<label class="ch-field"><span class="ch-field__label">' . self::e( $data['email_label'] ) . '</span>'
 			. '<input class="ch-field__input" type="email" name="email" autocomplete="email"></label>'
@@ -666,7 +685,7 @@ final class Blueworx_Clubhouse_Sections {
 			. '<input class="ch-field__input" type="password" name="password" autocomplete="current-password"></label>'
 			. '<div class="ch-auth__row">'
 			. '<label class="ch-auth__remember"><input type="checkbox" name="remember"><span>' . self::e( $data['remember_label'] ) . '</span></label>'
-			. '<a class="ch-auth__forgot" href="' . self::e( $data['forgot_href'] ) . '">' . self::e( $data['forgot_label'] ) . '</a></div>'
+			. $forgot . '</div>'
 			. '<button class="ch-btn ch-btn--accent ch-auth__submit" type="submit">' . self::e( $data['submit_label'] ) . '</button></form>';
 		return '<section class="ch-sec"><div class="ch-wrap ch-auth-wrap"><div class="ch-auth">'
 			. '<span class="ch-eyebrow">' . self::e( $data['eyebrow'] ) . '</span>'
@@ -731,19 +750,39 @@ final class Blueworx_Clubhouse_Sections {
 	private const LINKEDIN_ICON = '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true">'
 		. '<path d="M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.35V9h3.42v1.56h.05c.48-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28ZM5.34 7.43a2.07 2.07 0 1 1 0-4.14 2.07 2.07 0 0 1 0 4.14ZM7.12 20.45H3.55V9h3.57v11.45ZM22.22 0H1.77C.79 0 0 .77 0 1.73v20.54C0 23.22.79 24 1.77 24h20.45c.98 0 1.78-.78 1.78-1.73V1.73C24 .77 23.2 0 22.22 0Z"/></svg>';
 
-	/** Global "follow us" links — not a live/embedded feed. @param array{heading:string,lede:string,facebook_url:string,instagram_url:string,linkedin_url:string} $data */
-	public static function social( array $data ): string {
-		$links = array(
-			array( 'label' => 'Facebook', 'url' => $data['facebook_url'], 'icon' => self::FACEBOOK_ICON ),
-			array( 'label' => 'Instagram', 'url' => $data['instagram_url'], 'icon' => self::INSTAGRAM_ICON ),
-			array( 'label' => 'LinkedIn', 'url' => $data['linkedin_url'], 'icon' => self::LINKEDIN_ICON ),
+	/**
+	 * The site's one social-link treatment: a branded pill per network the club
+	 * actually has a URL for. Used by the social band, the footer, and the contact
+	 * panel, so all three stay identical and none can carry a dead link.
+	 *
+	 * @param array<string,string> $urls network name => URL (empty URL = no pill)
+	 */
+	public static function social_links( array $urls ): string {
+		$icons = array(
+			'Facebook'  => self::FACEBOOK_ICON,
+			'Instagram' => self::INSTAGRAM_ICON,
+			'LinkedIn'  => self::LINKEDIN_ICON,
 		);
 		$out = '';
-		foreach ( $links as $l ) {
-			$out .= '<a class="ch-social__link" role="listitem" href="' . self::e( $l['url'] ) . '" aria-label="Follow us on ' . self::e( $l['label'] ) . '">'
-				. '<span class="ch-social__icon" aria-hidden="true">' . $l['icon'] . '</span>'
-				. '<span class="ch-social__label">' . self::e( $l['label'] ) . '</span></a>';
+		foreach ( $urls as $name => $url ) {
+			if ( '' === $url ) {
+				continue;
+			}
+			$icon = $icons[ $name ] ?? '';
+			$out .= '<a class="ch-social__link" role="listitem" href="' . self::e( $url ) . '" aria-label="Follow us on ' . self::e( $name ) . '">'
+				. '<span class="ch-social__icon" aria-hidden="true">' . $icon . '</span>'
+				. '<span class="ch-social__label">' . self::e( $name ) . '</span></a>';
 		}
+		return $out;
+	}
+
+	/** Global "follow us" links — not a live/embedded feed. @param array{heading:string,lede:string,facebook_url:string,instagram_url:string,linkedin_url:string} $data */
+	public static function social( array $data ): string {
+		$out = self::social_links( array(
+			'Facebook'  => $data['facebook_url'],
+			'Instagram' => $data['instagram_url'],
+			'LinkedIn'  => $data['linkedin_url'],
+		) );
 		return '<section class="ch-social"><div class="ch-wrap ch-social__in">'
 			. '<div class="ch-social__text"><h2 class="ch-social__title">' . self::e( $data['heading'] ) . '</h2>'
 			. '<p class="ch-social__lede">' . self::e( $data['lede'] ) . '</p></div>'

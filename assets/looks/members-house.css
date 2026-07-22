@@ -192,8 +192,6 @@ a{color:inherit;text-decoration:none}
 .ch-footer__grid{display:grid;grid-template-columns:1.4fr 1fr 1fr 1.4fr;gap:40px}
 .ch-footer__tagline{color:var(--color-ink-soft);max-width:30ch;margin-top:12px;font-size:15px}
 .ch-footer__socials{display:flex;gap:8px;margin-top:16px}
-.ch-footer__social{width:44px;height:44px;border-radius:var(--radius-md);border:1px solid var(--color-line);display:grid;place-items:center;font-weight:700}
-.ch-footer__social:hover{background:var(--color-accent);color:var(--color-accent-ink);border-color:var(--color-accent)}
 .ch-footer__h{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--color-ink-soft);margin-bottom:14px;font-weight:700}
 .ch-footer__link{display:block;font-size:15px;color:var(--color-ink-soft);padding-block:8px}
 .ch-footer__link:hover{color:var(--color-ink)}
@@ -291,7 +289,6 @@ a{color:inherit;text-decoration:none}
 /* News — flat cards, display-token titles. */
 .ch-news{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(240px,100%),1fr));gap:28px}
 .ch-news__card{display:block;transition:transform .25s ease}
-.ch-news__card:hover{transform:translateY(-4px)}
 .ch-news__media{height:200px;border-radius:var(--radius-md);margin-bottom:16px}
 .ch-news__meta{display:flex;align-items:center;gap:10px;margin-bottom:8px;font-size:12px}
 .ch-news__tag{color:var(--color-accent-deep);font-weight:700;text-transform:uppercase;letter-spacing:.08em}
@@ -384,8 +381,6 @@ a{color:inherit;text-decoration:none}
 .ch-contact__link{display:block;color:var(--color-accent);font-size:15px;margin-bottom:6px}
 .ch-contact__link:hover{color:var(--color-bg)}
 .ch-contact__connect{display:flex;gap:8px;margin-top:14px}
-.ch-contact__social{width:44px;height:44px;border-radius:var(--radius-md);border:1px solid color-mix(in oklab,var(--color-bg) 30%,transparent);display:grid;place-items:center;font-weight:700}
-.ch-contact__social:hover{background:var(--color-accent);color:var(--color-accent-ink);border-color:var(--color-accent)}
 @media(max-width:760px){.ch-contact{grid-template-columns:1fr}}
 
 /* Hover animations for the static surfaces — subtle lift + hairline warms to accent. */
@@ -399,7 +394,7 @@ a{color:inherit;text-decoration:none}
 .ch-person:hover .ch-person__avatar{transform:scale(1.02)}
 .ch-faq__q:hover{color:var(--color-accent-deep)}
 @media(prefers-reduced-motion:reduce){
-	.ch-benefit:hover,.ch-step:hover,.ch-tier:hover,.ch-person:hover,.ch-person:hover .ch-person__avatar,.ch-card:hover,.ch-news__card:hover,.ch-tiles__tile:hover{transform:none}
+	.ch-benefit:hover,.ch-step:hover,.ch-tier:hover,.ch-person:hover,.ch-person:hover .ch-person__avatar,.ch-card:hover,.ch-tiles__tile:hover{transform:none}
 }
 
 /* Member sign-in card — narrow, centred, paper with hairline; reads as a form. */
