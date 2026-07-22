@@ -167,7 +167,7 @@ final class PageRendererTest extends TestCase {
 		$vis  = new Blueworx_Clubhouse_Visibility( new Blueworx_Clubhouse_Fake_Storage() );
 		$body = Blueworx_Clubhouse_Page_Renderer::sports( $this->branding(), $vis, $this->collections() );
 		$this->assertStringContainsString( 'class="ch-nav"', $body );
-		$this->assertStringContainsString( 'class="ch-hero-f"', $body );
+		$this->assertStringContainsString( 'class="ch-hero-filter"', $body );
 		$this->assertStringContainsString( 'class="ch-scards"', $body );
 		$this->assertStringContainsString( 'class="ch-footer"', $body );
 		$this->assertStringContainsString( 'ch-band--ink', $body ); // shared CTA band
@@ -178,7 +178,7 @@ final class PageRendererTest extends TestCase {
 	public function test_teams_composes_filter_hero_and_stat_cards(): void {
 		$vis  = new Blueworx_Clubhouse_Visibility( new Blueworx_Clubhouse_Fake_Storage() );
 		$body = Blueworx_Clubhouse_Page_Renderer::teams( $this->branding(), $vis, $this->collections() );
-		$this->assertStringContainsString( 'class="ch-hero-f"', $body );
+		$this->assertStringContainsString( 'class="ch-hero-filter"', $body );
 		$this->assertStringContainsString( 'class="ch-scards"', $body );
 		$this->assertStringContainsString( 'ch-nav__link--active" href="?page=teams"', $body );
 	}
@@ -189,13 +189,13 @@ final class PageRendererTest extends TestCase {
 		$vis->set_section_visible( 'sports', 'directory', false );
 		$body = Blueworx_Clubhouse_Page_Renderer::sports( $this->branding(), $vis, $this->collections() );
 		$this->assertStringNotContainsString( 'class="ch-scards"', $body );
-		$this->assertStringContainsString( 'class="ch-hero-f"', $body ); // hero still present
+		$this->assertStringContainsString( 'class="ch-hero-filter"', $body ); // hero still present
 	}
 
 	public function test_events_composes_upcoming_and_archive(): void {
 		$vis  = new Blueworx_Clubhouse_Visibility( new Blueworx_Clubhouse_Fake_Storage() );
 		$body = Blueworx_Clubhouse_Page_Renderer::events( $this->branding(), $vis, $this->collections() );
-		$this->assertStringContainsString( 'class="ch-hero-f"', $body );
+		$this->assertStringContainsString( 'class="ch-hero-filter"', $body );
 		$this->assertStringContainsString( 'class="ch-events"', $body );
 		$this->assertStringContainsString( 'class="ch-archive"', $body );
 		$this->assertStringContainsString( 'ch-nav__link--active" href="?page=events"', $body );
@@ -205,7 +205,7 @@ final class PageRendererTest extends TestCase {
 	public function test_calendar_composes_month_schedule(): void {
 		$vis  = new Blueworx_Clubhouse_Visibility( new Blueworx_Clubhouse_Fake_Storage() );
 		$body = Blueworx_Clubhouse_Page_Renderer::calendar( $this->branding(), $vis, $this->collections() );
-		$this->assertStringContainsString( 'class="ch-hero-f"', $body );
+		$this->assertStringContainsString( 'class="ch-hero-filter"', $body );
 		$this->assertStringContainsString( 'class="ch-cal"', $body );
 		$this->assertStringContainsString( 'ch-cal__month', $body );
 		$this->assertStringContainsString( 'ch-nav__link--active" href="?page=calendar"', $body );
@@ -217,7 +217,7 @@ final class PageRendererTest extends TestCase {
 		$vis->set_section_visible( 'calendar', 'schedule', false );
 		$body = Blueworx_Clubhouse_Page_Renderer::calendar( $this->branding(), $vis, $this->collections() );
 		$this->assertStringNotContainsString( 'ch-cal__month', $body );
-		$this->assertStringContainsString( 'class="ch-hero-f"', $body );
+		$this->assertStringContainsString( 'class="ch-hero-filter"', $body );
 	}
 
 	public function test_document_inlines_reveal_script_from_file(): void {

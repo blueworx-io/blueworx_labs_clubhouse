@@ -5,6 +5,10 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.33.0
+
+- **Internal:** unified the three page-hero components into one consistent family. They now share a single "head" (the eyebrow and highlighted title) and the filtered hero's CSS name was tidied from the cryptic `ch-hero-f` to `ch-hero-filter`. No visible change — every page's hero looks and behaves exactly as before on all three looks; this only makes the heroes consistent and easier to maintain.
+
 ## 0.28.0
 
 - **A tidier, better-flowing home page.** Contact and location details now sit at the foot of the page, nearest the footer, instead of interrupting the middle. The news ticker is bolder and easier to read, with its label filling the strip. The dark "clubhouse" band no longer shows a broken-image icon when you haven't set a photo, and its wording no longer echoes the footer. The big lime highlight in the hero has a little more breathing room so letters don't touch its edge, and the fixtures list's small print (e.g. "Rugby · 1st XV") is now larger and easier to read.

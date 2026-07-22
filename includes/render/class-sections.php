@@ -96,6 +96,22 @@ final class Blueworx_Clubhouse_Sections {
 	 *   cta_primary:string,cta_primary_href:string,cta_secondary:string,
 	 *   cta_secondary_href:string,image:string,image_alt:string,image_caption:string} $data
 	 */
+	/**
+	 * The shared head of the hero family — the eyebrow plus the highlighted title —
+	 * used by all three hero variants: hero() (standard, ch-hero), home_hero()
+	 * (full-bleed, ch-home-hero) and hero_filter() (filtered, ch-hero-filter).
+	 * $block is the variant's BEM block, so each keeps its own per-look styling;
+	 * only the structure is unified. The lede stays per-variant because hero()
+	 * nests it in a __sub row with its CTA, unlike the other two.
+	 *
+	 * @param array{eyebrow:string,title_lead:string,title_highlight:string} $data
+	 */
+	private static function hero_head( string $block, array $data ): string {
+		return '<span class="ch-eyebrow">' . self::e( $data['eyebrow'] ) . '</span>'
+			. '<h1 class="' . $block . '__title">' . self::e( $data['title_lead'] )
+			. '<span class="' . $block . '__hl">' . self::e( $data['title_highlight'] ) . '</span></h1>';
+	}
+
 	public static function hero( array $data ): string {
 		$caption = '' !== $data['image_caption']
 			? '<div class="ch-hero__pill"><i class="ch-hero__pill-dot"></i>' . self::e( $data['image_caption'] ) . '</div>'
@@ -105,9 +121,7 @@ final class Blueworx_Clubhouse_Sections {
 			? '<div class="ch-hero__media">' . self::media( $data['image'], $data['image_alt'], '' ) . $caption . '</div>'
 			: '';
 		return '<section class="ch-hero"><div class="ch-wrap">'
-			. '<span class="ch-eyebrow">' . self::e( $data['eyebrow'] ) . '</span>'
-			. '<h1 class="ch-hero__title">' . self::e( $data['title_lead'] )
-			. '<span class="ch-hero__hl">' . self::e( $data['title_highlight'] ) . '</span></h1>'
+			. self::hero_head( 'ch-hero', $data )
 			. '<div class="ch-hero__sub">'
 			. '<p class="ch-hero__lede">' . self::e( $data['lede'] ) . '</p>'
 			. '<div class="ch-hero__cta">'
@@ -168,9 +182,7 @@ final class Blueworx_Clubhouse_Sections {
 			. $bg
 			. '<div class="ch-home-hero__scrim" aria-hidden="true"></div>'
 			. '<div class="ch-wrap ch-home-hero__in">'
-			. '<span class="ch-eyebrow">' . self::e( $data['eyebrow'] ) . '</span>'
-			. '<h1 class="ch-home-hero__title">' . self::e( $data['title_lead'] )
-			. '<span class="ch-home-hero__hl">' . self::e( $data['title_highlight'] ) . '</span></h1>'
+			. self::hero_head( 'ch-home-hero', $data )
 			. '<p class="ch-home-hero__lede">' . self::e( $data['lede'] ) . '</p>'
 			. $cta
 			. '<div class="ch-home-hero__foot" role="list">' . $tiles . '</div>'
@@ -187,11 +199,9 @@ final class Blueworx_Clubhouse_Sections {
 			$on     = ! empty( $f['active'] ) ? ' ch-filter--on' : '';
 			$pills .= '<a class="ch-filter' . $on . '" href="' . self::e( $f['href'] ) . '">' . self::e( $f['label'] ) . '</a>';
 		}
-		return '<section class="ch-hero-f"><div class="ch-wrap">'
-			. '<span class="ch-eyebrow">' . self::e( $data['eyebrow'] ) . '</span>'
-			. '<h1 class="ch-hero-f__title">' . self::e( $data['title_lead'] )
-			. '<span class="ch-hero-f__hl">' . self::e( $data['title_highlight'] ) . '</span></h1>'
-			. '<p class="ch-hero-f__lede">' . self::e( $data['lede'] ) . '</p>'
+		return '<section class="ch-hero-filter"><div class="ch-wrap">'
+			. self::hero_head( 'ch-hero-filter', $data )
+			. '<p class="ch-hero-filter__lede">' . self::e( $data['lede'] ) . '</p>'
 			. '<nav class="ch-filters" aria-label="' . self::e( $data['filter_label'] ) . '">' . $pills . '</nav>'
 			. '</div></section>';
 	}

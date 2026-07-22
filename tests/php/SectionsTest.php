@@ -666,8 +666,8 @@ final class SectionsTest extends TestCase {
 				array( 'label' => 'Tennis', 'href' => '?page=sports', 'active' => false ),
 			),
 		) );
-		$this->assertStringContainsString( 'class="ch-hero-f"', $html );
-		$this->assertStringContainsString( 'class="ch-hero-f__hl"', $html );
+		$this->assertStringContainsString( 'class="ch-hero-filter"', $html );
+		$this->assertStringContainsString( 'class="ch-hero-filter__hl"', $html );
 		$this->assertStringContainsString( 'Find your section', $html );
 		// Filter bar is a nav landmark (not a list), label-driven, active pill flagged.
 		$this->assertStringContainsString( '<nav class="ch-filters" aria-label="Filter by sport">', $html );
@@ -677,6 +677,28 @@ final class SectionsTest extends TestCase {
 		$this->assertStringContainsString( 'Rugby', $html );
 		$this->assertNoHexColour( $html );
 		$this->assertStringNotContainsString( 'style=', $html );
+	}
+
+	/**
+	 * The three hero variants are one family: each emits the shared head — a
+	 * ch-eyebrow plus a highlighted <block>__title — via Sections::hero_head(),
+	 * keeping only its own block prefix so per-look styling is untouched.
+	 */
+	public function test_all_hero_variants_share_the_eyebrow_and_title_head(): void {
+		$base = array(
+			'eyebrow' => 'Eyebrow here', 'title_lead' => 'Lead ', 'title_highlight' => 'highlight.',
+			'lede' => 'A lede.', 'cta_primary' => 'A', 'cta_primary_href' => '#a',
+			'cta_secondary' => 'B', 'cta_secondary_href' => '#b',
+			'image' => '', 'image_alt' => '', 'image_caption' => '',
+		);
+		$standard = Blueworx_Clubhouse_Sections::hero( $base );
+		$home     = Blueworx_Clubhouse_Sections::home_hero( array_merge( $base, array( 'tiles' => array() ) ) );
+		$filtered = Blueworx_Clubhouse_Sections::hero_filter( array_merge( $base, array( 'filter_label' => 'Filter', 'filters' => array() ) ) );
+
+		foreach ( array( 'ch-hero' => $standard, 'ch-home-hero' => $home, 'ch-hero-filter' => $filtered ) as $block => $html ) {
+			$this->assertStringContainsString( '<span class="ch-eyebrow">Eyebrow here</span>', $html, "{$block} shares the eyebrow" );
+			$this->assertStringContainsString( '<h1 class="' . $block . '__title">Lead <span class="' . $block . '__hl">highlight.</span></h1>', $html, "{$block} shares the title head" );
+		}
 	}
 
 	public function test_event_grid_renders_upcoming_cards_with_optional_cta(): void {
