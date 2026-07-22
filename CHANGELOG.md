@@ -5,6 +5,10 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.32.0
+
+- **The filter pills on Sports, Teams, Events and Calendar now actually filter.** Previously they were decorative — every pill reloaded the same full page. Click a sport (or an event type) and the list narrows to just those items, with the chosen pill highlighted; "All" brings everything back. It works without JavaScript (each pill is a real link) and the pills are built from your own content, so they always match the sports, team sports and event types you've actually added — nothing to configure.
+
 ## 0.31.0
 
 - **A clearer About page.** The club's facilities now sit higher up, right after its values, and a new **"Get involved"** section highlights ways to help beyond playing — volunteering, coaching and sponsorship — separate from the join-the-club call to action that closes the page. The history timeline is now fully editable in Clubhouse → Club Content → About, so you can add, remove or reword your own milestones.
