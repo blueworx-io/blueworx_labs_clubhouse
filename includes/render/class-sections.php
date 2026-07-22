@@ -135,11 +135,17 @@ final class Blueworx_Clubhouse_Sections {
 			. '</div>';
 		$tiles = '';
 		foreach ( $data['tiles'] as $t ) {
-			// Tiles may be owner-edited content, where optional keys can be absent —
-			// an unset/unknown icon degrades to no glyph rather than a warning.
+			// Tiles may be owner-edited content, where optional keys can be absent.
+			// A tile with no destination is a link to nowhere, so skip it rather than
+			// emit a dead href="#" — the same rule the rest of the front end follows.
+			$href = (string) ( $t['href'] ?? '' );
+			if ( '' === $href ) {
+				continue;
+			}
+			// An unset/unknown icon degrades to no glyph rather than a warning.
 			$svg = self::TILE_ICONS[ $t['icon'] ?? '' ] ?? '';
 			$ico = '' !== $svg ? '<span class="ch-home-hero__tile-ico" aria-hidden="true">' . $svg . '</span>' : '';
-			$tiles .= '<a class="ch-home-hero__tile" role="listitem" href="' . self::e( $t['href'] ?? '#' ) . '">'
+			$tiles .= '<a class="ch-home-hero__tile" role="listitem" href="' . self::e( $href ) . '">'
 				. $ico
 				. '<span class="ch-home-hero__tile-label">' . self::e( $t['label'] ?? '' ) . '</span>'
 				. '<span class="ch-home-hero__tile-arrow" aria-hidden="true">→</span></a>';

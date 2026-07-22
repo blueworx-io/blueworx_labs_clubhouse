@@ -178,6 +178,34 @@ final class SectionsTest extends TestCase {
 		$this->assertSame( 1, substr_count( $html, 'ch-home-hero__tile-ico' ) );
 	}
 
+	public function test_home_hero_skips_a_tile_with_no_destination(): void {
+		// Tiles are owner-edited: a saved tile can have an empty/missing href. It must
+		// be dropped, not rendered as a dead href="#" — the one admin-influenced path
+		// the page-render link-hygiene guardrail cannot reach with default content.
+		$html = Blueworx_Clubhouse_Sections::home_hero( array(
+			'eyebrow'            => 'Est. 1974',
+			'title_lead'         => 'Every sport. ',
+			'title_highlight'    => 'One community.',
+			'lede'               => 'Lede.',
+			'cta_primary'        => 'Join',
+			'cta_primary_href'   => '?page=membership',
+			'cta_secondary'      => 'Tour',
+			'cta_secondary_href' => '?page=about',
+			'image'              => '',
+			'image_alt'          => '',
+			'tiles'              => array(
+				array( 'label' => 'Real tile', 'href' => '?page=contact' ),
+				array( 'label' => 'Empty href' ),                 // missing key
+				array( 'label' => 'Blank href', 'href' => '' ),   // present but empty
+			),
+		) );
+		$this->assertStringNotContainsString( 'href="#"', $html );
+		$this->assertSame( 1, substr_count( $html, 'ch-home-hero__tile"' ), 'only the tile with a destination renders' );
+		$this->assertStringContainsString( 'Real tile', $html );
+		$this->assertStringNotContainsString( 'Empty href', $html );
+		$this->assertStringNotContainsString( 'Blank href', $html );
+	}
+
 	public function test_quick_tiles_render_each_link(): void {
 		$html = Blueworx_Clubhouse_Sections::quick_tiles( array(
 			array( 'label' => 'Membership', 'href' => '?page=membership' ),
