@@ -9,6 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **The filter pills on Sports, Teams, Events and Calendar now actually filter.** Previously they were decorative — every pill reloaded the same full page. Click a sport (or an event type) and the list narrows to just those items, with the chosen pill highlighted; "All" brings everything back. It works without JavaScript (each pill is a real link) and the pills are built from your own content, so they always match the sports, team sports and event types you've actually added — nothing to configure.
 
+## 0.31.0
+
+- **A clearer About page.** The club's facilities now sit higher up, right after its values, and a new **"Get involved"** section highlights ways to help beyond playing — volunteering, coaching and sponsorship — separate from the join-the-club call to action that closes the page. The history timeline is now fully editable in Clubhouse → Club Content → About, so you can add, remove or reword your own milestones.
+- **Membership pricing is now front and centre.** The tier cards move above the "Why join" benefits, so visitors see the options and prices immediately after the page intro rather than after scrolling.
+
+## 0.30.0
+
+- **Membership tiers are now managed in one place.** The tier cards on the Home page previously showed a fixed, separate set that ignored your Membership page edits and left out the Junior tier. Home now mirrors the tiers you set on the Membership page — edit them once and both pages update. On Home the cards link through to the Membership page (where the full detail and "register interest" live); the Membership page itself is unchanged.
+
+## 0.29.0
+
+- **The top announcement bar is now yours to edit or switch off.** In Clubhouse → Club Content → Global → Header you can change its message and link, or turn the whole bar off with a single toggle — your drafted wording is kept even while it's hidden. Until you change anything it reads exactly as before.
+
 ## 0.28.0
 
 - **A tidier, better-flowing home page.** Contact and location details now sit at the foot of the page, nearest the footer, instead of interrupting the middle. The news ticker is bolder and easier to read, with its label filling the strip. The dark "clubhouse" band no longer shows a broken-image icon when you haven't set a photo, and its wording no longer echoes the footer. The big lime highlight in the hero has a little more breathing room so letters don't touch its edge, and the fixtures list's small print (e.g. "Rugby · 1st XV") is now larger and easier to read.

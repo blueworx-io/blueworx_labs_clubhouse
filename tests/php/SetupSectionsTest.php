@@ -35,8 +35,8 @@ final class SetupSectionsTest extends TestCase {
 		}
 	}
 
-	public function test_total_section_count_is_45(): void {
+	public function test_total_section_count_is_46(): void {
 		$total = array_sum( array_map( static fn( $p ) => count( $p['sections'] ), $this->inventory() ) );
-		$this->assertSame( 45, $total );
+		$this->assertSame( 46, $total );
 	}
 }
