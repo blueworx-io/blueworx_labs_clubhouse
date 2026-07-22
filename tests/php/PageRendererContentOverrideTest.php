@@ -142,6 +142,32 @@ final class PageRendererContentOverrideTest extends TestCase {
 		$this->assertStringContainsString( 'ch-tier__cta" href="?page=contact"', $page );
 	}
 
+	public function test_announcement_bar_renders_by_default(): void {
+		[ $b, $v, $c ] = $this->ctx();
+		$html = Blueworx_Clubhouse_Page_Renderer::home( $b, $v, $c, '', null );
+		$this->assertStringContainsString( 'class="ch-banner"', $html );
+		$this->assertStringContainsString( 'Summer sign-ups are open', $html );
+	}
+
+	public function test_announcement_bar_text_and_link_override_applies_across_pages(): void {
+		[ $b, $v, $c, $content ] = $this->ctx();
+		$content->set( 'global', 'header', 'banner', 'Cup final Saturday — free entry' );
+		$content->set( 'global', 'header', 'banner_href', '/events/cup-final' );
+		$html = Blueworx_Clubhouse_Page_Renderer::contact( $b, $v, $c, '', $content );
+		$this->assertStringContainsString( 'Cup final Saturday — free entry', $html );
+		$this->assertStringContainsString( '/events/cup-final', $html );
+		$this->assertStringNotContainsString( 'Summer sign-ups are open', $html );
+	}
+
+	public function test_announcement_bar_hidden_when_toggle_off(): void {
+		[ $b, $v, $c, $content ] = $this->ctx();
+		$content->set( 'global', 'header', 'banner_show', false );
+		$content->set( 'global', 'header', 'banner', 'Should not appear' );
+		$html = Blueworx_Clubhouse_Page_Renderer::home( $b, $v, $c, '', $content );
+		$this->assertStringNotContainsString( 'class="ch-banner"', $html );
+		$this->assertStringNotContainsString( 'Should not appear', $html );
+	}
+
 	public function test_sports_hero_override(): void {
 		[ $b, $v, $c, $content ] = $this->ctx();
 		$content->set( 'sports', 'hero', 'title_highlight', 'one custom club.' );

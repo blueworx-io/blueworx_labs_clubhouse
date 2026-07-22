@@ -100,7 +100,13 @@ final class Blueworx_Clubhouse_Content_Catalogue {
 			array( 'tab' => 'global', 'label' => 'Global', 'sections' => array(
 				array( 'key' => 'header', 'label' => 'Header', 'type' => 'fields', 'store_page' => 'global',
 					'note' => 'Logo and club name come from Site setup → Branding.',
-					'fields' => array( self::f_text( 'join', 'Menu CTA label', 'e.g. Join the Club' ), self::f_url( 'join_href', 'Menu CTA link' ) ) ),
+					'fields' => array(
+						self::f_text( 'join', 'Menu CTA label', 'e.g. Join the Club' ),
+						self::f_url( 'join_href', 'Menu CTA link' ),
+						self::f_toggle( 'banner_show', 'Show announcement bar' ),
+						self::f_text( 'banner', 'Announcement text' ),
+						self::f_url( 'banner_href', 'Announcement link' ),
+					) ),
 				array( 'key' => 'hero', 'label' => 'Hero', 'type' => 'fields', 'store_page' => 'home', 'fields' => self::hero_fields() ),
 				array( 'key' => 'quick_tiles', 'label' => 'Quick tiles', 'type' => 'loop', 'store_page' => 'home',
 					'note' => 'These render as the icon cards at the foot of the Home hero.',

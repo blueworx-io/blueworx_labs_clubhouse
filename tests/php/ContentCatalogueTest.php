@@ -86,6 +86,21 @@ final class ContentCatalogueTest extends TestCase {
 		$this->fail( "No section '{$key}' on tab '{$tab}'" );
 	}
 
+	public function test_global_header_exposes_announcement_bar_fields(): void {
+		$fields = array();
+		foreach ( Blueworx_Clubhouse_Content_Catalogue::pages() as $page ) {
+			if ( 'global' !== $page['tab'] ) { continue; }
+			foreach ( $page['sections'] as $s ) {
+				if ( 'header' === $s['key'] ) { $fields = $s['fields']; }
+			}
+		}
+		$byKey = array();
+		foreach ( $fields as $f ) { $byKey[ $f['key'] ] = $f['type']; }
+		$this->assertSame( 'toggle', $byKey['banner_show'] ?? null );
+		$this->assertSame( 'text', $byKey['banner'] ?? null );
+		$this->assertSame( 'url', $byKey['banner_href'] ?? null );
+	}
+
 	public function test_narrowed_sections_declare_only_renderer_consumable_fields(): void {
 		// about.history -> Sections::timeline(): heading is the only non-loop field
 		// (the milestones are an editable loop, asserted separately by the renderer tests).
