@@ -30,4 +30,22 @@ final class Blueworx_Clubhouse_Links {
 		}
 		return '?page=' . $key;
 	}
+
+	/** The query param the filtered pages (sports/teams/events/calendar) read. */
+	public const FILTER_PARAM = 'clubhouse_filter';
+
+	/**
+	 * A page URL carrying a filter slug — the href for a filter pill. An empty
+	 * slug returns the bare page URL (the "All" pill). Appends with the correct
+	 * separator so it works on both the preview's '?page=' form and a real
+	 * permalink.
+	 */
+	public static function filtered_url( string $key, string $filter ): string {
+		$url = self::url( $key );
+		if ( '' === $filter ) {
+			return $url;
+		}
+		$sep = ( false !== strpos( $url, '?' ) ) ? '&' : '?';
+		return $url . $sep . self::FILTER_PARAM . '=' . rawurlencode( $filter );
+	}
 }
