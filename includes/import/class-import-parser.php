@@ -141,10 +141,10 @@ final class Blueworx_Clubhouse_Import_Parser {
 	 * @param array<string,mixed>                                                  $supplied
 	 */
 	private static function parse_section( string $page, string $section_key, array $entry, array $supplied, Blueworx_Clubhouse_Import_Plan $plan ): void {
-		$def          = $entry['def'];
-		$field_defs   = is_array( $def['fields'] ?? null ) ? $def['fields'] : array();
-		$loop_fields  = is_array( $def['loop']['fields'] ?? null ) ? $def['loop']['fields'] : array();
-		$by_key       = array();
+		$def         = $entry['def'];
+		$field_defs  = is_array( $def['fields'] ?? null ) ? $def['fields'] : array();
+		$loop_fields = is_array( $def['loop']['fields'] ?? null ) ? $def['loop']['fields'] : array();
+		$by_key      = array();
 		foreach ( $field_defs as $field_def ) {
 			$by_key[ (string) $field_def['key'] ] = $field_def;
 		}
@@ -196,10 +196,25 @@ final class Blueworx_Clubhouse_Import_Parser {
 			return;
 		}
 
-		// Sanitise first: an image reference is a non-scalar, so the shared
-		// sanitiser already reduces it to the '' sentinel. The images are then
-		// queued separately and the applier writes the attachment IDs back in.
-		$plan->add_items( $page, $section_key, Blueworx_Clubhouse_Content_Sanitiser::items( $loop_fields, $raw_items ) );
+		// Sanitise first, then force every image-typed field back to the ''
+		// sentinel: Content_Sanitiser::field() runs absint() on any scalar for an
+		// 'image' field, which is correct for a real form post (the value is
+		// genuinely an attachment ID) but not here, where the raw value is a URL
+		// or reference object. A loop item's image is never legitimately
+		// non-empty at parse time — the applier fills in the attachment ID after
+		// sideloading — so the field is always cleared, whether or not its URL
+		// was valid, and the image is queued separately below.
+		$items = Blueworx_Clubhouse_Content_Sanitiser::items( $loop_fields, $raw_items );
+		foreach ( $loop_fields as $field_def ) {
+			if ( 'image' !== $field_def['type'] ) {
+				continue;
+			}
+			$field_key = (string) $field_def['key'];
+			foreach ( array_keys( $items ) as $index ) {
+				$items[ $index ][ $field_key ] = '';
+			}
+		}
+		$plan->add_items( $page, $section_key, $items );
 
 		foreach ( $loop_fields as $field_def ) {
 			if ( 'image' !== $field_def['type'] ) {

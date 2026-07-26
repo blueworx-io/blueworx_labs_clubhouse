@@ -131,4 +131,22 @@ final class ImportParserContentTest extends TestCase {
 		) ) ) ) );
 		$this->assertSame( '', $out['plan']->items()['home']['quick_tiles'][0]['icon'] );
 	}
+
+	public function test_a_non_url_scalar_loop_image_is_warned_and_leaves_the_sentinel(): void {
+		$out = $this->parse( array( 'home' => array( 'news' => array( 'items' => array(
+			array( 'title' => 'First', 'image' => '12345' ),
+		) ) ) ) );
+		$this->assertSame( '', $out['plan']->items()['home']['news'][0]['image'] );
+		$this->assertSame( array(), $out['plan']->images() );
+		$this->assertNotSame( array(), $out['plan']->warnings() );
+	}
+
+	public function test_a_boolean_loop_image_is_warned_and_leaves_the_sentinel(): void {
+		$out = $this->parse( array( 'home' => array( 'news' => array( 'items' => array(
+			array( 'title' => 'First', 'image' => true ),
+		) ) ) ) );
+		$this->assertSame( '', $out['plan']->items()['home']['news'][0]['image'] );
+		$this->assertSame( array(), $out['plan']->images() );
+		$this->assertNotSame( array(), $out['plan']->warnings() );
+	}
 }
