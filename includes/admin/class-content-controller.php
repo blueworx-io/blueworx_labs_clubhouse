@@ -152,6 +152,8 @@ final class Blueworx_Clubhouse_Content_Controller {
 			$vis->set_section_visible( $vis_page, $section_key, ! $hidden );
 		}
 
+		self::clear_filled_images( $storage, $content_store );
+
 		return array( array( 'type' => 'success', 'text' => 'Your changes have been saved.' ) );
 	}
 
@@ -171,6 +173,8 @@ final class Blueworx_Clubhouse_Content_Controller {
 		$active_look   = $registry->active();
 		$plugin_url    = defined( 'BLUEWORX_LABS_CLUBHOUSE_URL' ) ? BLUEWORX_LABS_CLUBHOUSE_URL : '';
 		$theming       = self::look_theming( $registry, $branding, $plugin_url );
+
+		$notices = array_merge( self::images_needed_notice( $storage ), $notices );
 
 		$catalogue = array();
 		foreach ( Blueworx_Clubhouse_Content_Catalogue::pages() as $page ) {
@@ -218,6 +222,79 @@ final class Blueworx_Clubhouse_Content_Controller {
 			'look_tokens'   => $theming['tokens'],
 			'font_face_css' => $theming['faces'],
 		);
+	}
+
+	/**
+	 * Turn any image slots an import could not fill into a notice that links
+	 * straight to the sections that need them. Read from the same storage key
+	 * the importer writes, so the list survives until the owner actually
+	 * supplies the pictures.
+	 *
+	 * @return array<int,array{type:string,text:string,links:array<int,array{label:string,tab:string,sec:string}>}>
+	 */
+	private static function images_needed_notice( Blueworx_Clubhouse_Storage $storage ): array {
+		$needed = $storage->get( Blueworx_Clubhouse_Import_Controller::IMAGES_NEEDED_KEY, array() );
+		if ( ! is_array( $needed ) || array() === $needed ) {
+			return array();
+		}
+		$index = Blueworx_Clubhouse_Content_Catalogue::index();
+		$links = array();
+		foreach ( $needed as $entry ) {
+			if ( ! is_array( $entry ) ) {
+				continue;
+			}
+			$address = (string) ( $entry['page'] ?? '' ) . '/' . (string) ( $entry['section'] ?? '' );
+			if ( ! isset( $index[ $address ] ) ) {
+				continue;
+			}
+			$links[] = array(
+				'label' => (string) ( $entry['label'] ?? $address ),
+				'tab'   => $index[ $address ]['tab'],
+				'sec'   => $index[ $address ]['section_key'],
+			);
+		}
+		if ( array() === $links ) {
+			return array();
+		}
+		$count = count( $links );
+		return array( array(
+			'type'  => 'warning',
+			'text'  => sprintf(
+				'%d %s from your import could not be fetched. Add %s here whenever you have the files:',
+				$count,
+				1 === $count ? 'picture' : 'pictures',
+				1 === $count ? 'it' : 'them'
+			),
+			'links' => $links,
+		) );
+	}
+
+	/**
+	 * Drop any outstanding image slot the owner has now filled. Keyed on the
+	 * stored value rather than on which tab was saved, so it stays correct
+	 * whether the picture arrived through this screen or another.
+	 */
+	private static function clear_filled_images( Blueworx_Clubhouse_Storage $storage, Blueworx_Clubhouse_Content_Store $content_store ): void {
+		$needed = $storage->get( Blueworx_Clubhouse_Import_Controller::IMAGES_NEEDED_KEY, array() );
+		if ( ! is_array( $needed ) || array() === $needed ) {
+			return;
+		}
+		$left = array();
+		foreach ( $needed as $entry ) {
+			if ( ! is_array( $entry ) ) {
+				continue;
+			}
+			$value = $content_store->get(
+				(string) ( $entry['page'] ?? '' ),
+				(string) ( $entry['section'] ?? '' ),
+				(string) ( $entry['field'] ?? '' ),
+				''
+			);
+			if ( '' === $value || 0 === $value ) {
+				$left[] = $entry;
+			}
+		}
+		$storage->set( Blueworx_Clubhouse_Import_Controller::IMAGES_NEEDED_KEY, array_values( $left ) );
 	}
 
 	/** The Content_Catalogue page entry for a tab slug, or null if unknown. */

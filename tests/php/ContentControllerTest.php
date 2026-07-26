@@ -397,4 +397,36 @@ final class ContentControllerTest extends TestCase {
 		$this->assertCount( 2, $items );
 		$this->assertSame( 'Q1', $items[0]['question'] );
 	}
+
+	public function test_outstanding_import_images_become_a_notice(): void {
+		$s = $this->storage();
+		$s->set( Blueworx_Clubhouse_Import_Controller::IMAGES_NEEDED_KEY, array(
+			array( 'label' => 'Global · Hero — Background image', 'page' => 'home', 'section' => 'hero', 'field' => 'image' ),
+		) );
+		$model = Blueworx_Clubhouse_Content_Controller::build_model( $s, array(), '', '' );
+		$this->assertSame( 'warning', $model['notices'][0]['type'] );
+		$this->assertStringContainsString( '1 picture', $model['notices'][0]['text'] );
+		$this->assertSame( 'global', $model['notices'][0]['links'][0]['tab'] );
+		$this->assertSame( 'hero', $model['notices'][0]['links'][0]['sec'] );
+	}
+
+	public function test_no_outstanding_images_means_no_notice(): void {
+		$model = Blueworx_Clubhouse_Content_Controller::build_model( $this->storage(), array(), '', '' );
+		$this->assertSame( array(), $model['notices'] );
+	}
+
+	public function test_saving_an_image_clears_its_outstanding_entry(): void {
+		$s = $this->storage();
+		$s->set( Blueworx_Clubhouse_Import_Controller::IMAGES_NEEDED_KEY, array(
+			array( 'label' => 'Global · Hero — Background image', 'page' => 'home', 'section' => 'hero', 'field' => 'image' ),
+			array( 'label' => 'About · Facilities — Image', 'page' => 'about', 'section' => 'facilities', 'field' => 'image' ),
+		) );
+		Blueworx_Clubhouse_Content_Controller::handle_save( array(
+			'clubhouse_content_tab' => 'global',
+			'field' => array( 'home' => array( 'hero' => array( 'image' => '42' ) ) ),
+		), $s );
+		$left = $s->get( Blueworx_Clubhouse_Import_Controller::IMAGES_NEEDED_KEY, array() );
+		$this->assertCount( 1, $left );
+		$this->assertSame( 'about', $left[0]['page'] );
+	}
 }
