@@ -65,3 +65,4 @@ require_once __DIR__ . '/import/class-import-plan.php';
 require_once __DIR__ . '/import/class-import-parser.php';
 require_once __DIR__ . '/import/class-import-prompt.php';
 require_once __DIR__ . '/import/class-import-preview.php';
+require_once __DIR__ . '/import/class-import-screen.php';
