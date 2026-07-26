@@ -5,6 +5,10 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.35.0
+
+- **AI-assisted content import.** Club Content → Import offers a downloadable prompt generated from the plugin's own content catalogue; paste it into any AI chat, answer its questions, and upload the JSON file it produces to populate page content and all six collections. Uploads are previewed before anything is written, partial files merge, and images are fetched from public URLs into the Media Library.
+
 ## 0.34.0
 
 - **WordPress's built-in "Pages" are now hidden.** The clubhouse plugin provides every page of your site, so the native Pages editor was redundant and only invited editing content that never appears. The "Pages" item in the admin sidebar and the "+ New → Page" shortcut are both gone. Nothing is deleted and blog Posts are untouched — this only tidies the admin so you edit your site in one place (Clubhouse → Club Content).
