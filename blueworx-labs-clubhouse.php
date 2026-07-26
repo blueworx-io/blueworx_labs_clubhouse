@@ -35,6 +35,8 @@ require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/admin/class-content-control
 require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/admin/class-demo-controller.php';
 require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/admin/class-owner-role.php';
 require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/admin/class-native-pages.php';
+require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/import/class-import-applier.php';
+require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/import/class-import-controller.php';
 
 require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/collections/class-collection-mappers.php';
 require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/collections/class-media.php';
@@ -57,6 +59,7 @@ function blueworx_labs_clubhouse_init() {
 	Blueworx_Clubhouse_Collection_Meta_Boxes::register();
 	Blueworx_Clubhouse_Owner_Role::register();
 	Blueworx_Clubhouse_Native_Pages::register();
+	Blueworx_Clubhouse_Import_Controller::register();
 	add_action( 'admin_menu', array( Blueworx_Clubhouse_Collection_Types::class, 'register_content_menu' ) );
 }
 add_action( 'plugins_loaded', 'blueworx_labs_clubhouse_init' );
