@@ -56,6 +56,9 @@ final class Blueworx_Clubhouse_Import_Parser {
 		if ( null !== $content ) {
 			self::parse_content( $content, $plan );
 		}
+		if ( null !== $collections ) {
+			self::parse_collections( $collections, $plan );
+		}
 
 		return array( 'plan' => $plan, 'error' => '' );
 	}
@@ -239,6 +242,86 @@ final class Blueworx_Clubhouse_Import_Parser {
 					self::image_label( $entry, (string) $field_def['label'] ),
 					(int) $index
 				);
+			}
+		}
+	}
+
+	/**
+	 * Read the file's `collections` object. Collection_Meta is the allow-list:
+	 * a type it does not declare, or a meta key that type does not declare, is
+	 * dropped with a warning. Media-typed meta is kept as an image reference for
+	 * the applier to sideload, never as a raw value — an attachment ID is the
+	 * only thing that may reach post meta.
+	 *
+	 * @param array<string,mixed> $collections
+	 */
+	private static function parse_collections( array $collections, Blueworx_Clubhouse_Import_Plan $plan ): void {
+		$known = Blueworx_Clubhouse_Collection_Meta::types();
+
+		foreach ( $collections as $type => $raw_items ) {
+			$type = (string) $type;
+			if ( ! in_array( $type, $known, true ) ) {
+				$plan->warn( sprintf( 'Ignored unknown collection "%s".', $type ) );
+				continue;
+			}
+			if ( ! is_array( $raw_items ) || ! array_is_list( $raw_items ) ) {
+				$plan->warn( sprintf( 'Ignored "%s": expected a list of items.', $type ) );
+				continue;
+			}
+			if ( array() === $raw_items ) {
+				// An empty list is almost certainly an oversight, and applying it
+				// would delete this type's demo posts and leave the section blank.
+				$plan->warn( sprintf( 'Ignored "%s": the list is empty.', $type ) );
+				continue;
+			}
+
+			$field_defs = array();
+			foreach ( Blueworx_Clubhouse_Collection_Meta::fields( $type ) as $field_def ) {
+				$field_defs[ (string) $field_def['key'] ] = $field_def;
+			}
+
+			$items = array();
+			foreach ( $raw_items as $index => $raw_item ) {
+				$index = (int) $index;
+				if ( ! is_array( $raw_item ) ) {
+					$plan->warn( sprintf( 'Ignored %s item %d: expected a group of fields.', $type, $index ) );
+					continue;
+				}
+				$title = is_scalar( $raw_item['title'] ?? null ) ? trim( (string) $raw_item['title'] ) : '';
+				if ( '' === $title ) {
+					$plan->warn( sprintf( 'Ignored %s item %d: every item needs a title.', $type, $index ) );
+					continue;
+				}
+
+				$meta   = array();
+				$images = array();
+				foreach ( $raw_item as $key => $raw_value ) {
+					$key = (string) $key;
+					if ( 'title' === $key ) {
+						continue;
+					}
+					if ( ! isset( $field_defs[ $key ] ) ) {
+						$plan->warn( sprintf( 'Ignored unknown field "%s/%s".', $type, $key ) );
+						continue;
+					}
+					if ( 'media' === $field_defs[ $key ]['type'] ) {
+						$ref = self::image_ref( $raw_value );
+						if ( null === $ref ) {
+							$plan->warn( sprintf( 'Ignored the image for %s item %d: expected an image URL.', $type, $index ) );
+							continue;
+						}
+						$images[ $key ] = $ref;
+						continue;
+					}
+					$value        = is_scalar( $raw_value ) ? (string) $raw_value : '';
+					$meta[ $key ] = Blueworx_Clubhouse_Collection_Meta::sanitise( $type, $key, $value );
+				}
+
+				$items[] = array( 'title' => $title, 'meta' => $meta, 'images' => $images );
+			}
+
+			if ( array() !== $items ) {
+				$plan->add_collection( $type, $items );
 			}
 		}
 	}
