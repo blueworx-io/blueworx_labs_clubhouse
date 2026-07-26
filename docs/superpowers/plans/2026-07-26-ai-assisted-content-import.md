@@ -3325,3 +3325,468 @@ git commit -m "feat: reconcile collections on import, replacing demo content"
 ```
 
 ---
+
+### Task 12: `Import_Controller`
+
+The WordPress surface: the submenu page, the prompt download, the upload → preview →
+apply flow, and the transient that carries the approved plan between the two requests.
+
+**Files:**
+- Create: `includes/import/class-import-controller.php`
+- Modify: `blueworx-labs-clubhouse.php` (require + wire)
+- Modify: `tests/php/bootstrap.php` (require)
+- Test: `tests/php/ImportControllerTest.php`
+
+**Interfaces:**
+- Consumes: `Import_Parser::parse()`, `Import_Preview::summary()`, `Import_Applier::apply()`
+  and `::demo_counts()`, `Import_Prompt::markdown()`, `Import_Screen::render()`,
+  `Owner_Capabilities::SETUP_CAP`, `Content_Controller::PAGE_SLUG`.
+- Produces:
+  - `Blueworx_Clubhouse_Import_Controller::PAGE_SLUG` — `'clubhouse-import'`
+  - `::NONCE` — `'clubhouse_import'`
+  - `::DOWNLOAD_ACTION` — `'clubhouse_import_prompt'`
+  - `::MAX_BYTES` — `1048576`
+  - `::IMAGES_NEEDED_KEY` — `'import_images_needed'` (the `Storage` key Task 13 reads)
+  - `::register(): void`
+  - `::add_menu(): void`
+  - `::handle_request( array $post, array $file, Blueworx_Clubhouse_Storage $storage ): array` — pure-ish core, returns the screen model minus its nonce/URL keys; unit-tested directly
+  - `::render_page(): void`
+  - `::download_prompt(): void`
+
+- [ ] **Step 1: Write the failing test**
+
+Create `tests/php/ImportControllerTest.php`:
+
+```php
+<?php
+// tests/php/ImportControllerTest.php
+declare(strict_types=1);
+use PHPUnit\Framework\TestCase;
+
+final class ImportControllerTest extends TestCase {
+
+	private Blueworx_Clubhouse_Storage $storage;
+
+	protected function setUp(): void {
+		wp_stub_reset();
+		$this->storage = new Blueworx_Clubhouse_Fake_Storage();
+	}
+
+	/** Write a temp file holding $json and return the $_FILES-shaped array. */
+	private function upload( string $json ): array {
+		$path = tempnam( sys_get_temp_dir(), 'chimport' );
+		file_put_contents( $path, $json );
+		return array( 'tmp_name' => $path, 'error' => 0, 'size' => strlen( $json ), 'name' => 'clubhouse-import.json' );
+	}
+
+	private function valid_json(): string {
+		return '{"clubhouse_import":1,"content":{"home":{"hero":{"eyebrow":"Est. 1974"}}}}';
+	}
+
+	public function test_it_registers_a_submenu_under_club_content(): void {
+		Blueworx_Clubhouse_Import_Controller::add_menu();
+		$call = wp_stub_calls( 'add_submenu_page' )[0]['args'];
+		$this->assertSame( Blueworx_Clubhouse_Content_Controller::PAGE_SLUG, $call[0] );
+		$this->assertSame( Blueworx_Clubhouse_Owner_Capabilities::SETUP_CAP, $call[3] );
+		$this->assertSame( Blueworx_Clubhouse_Import_Controller::PAGE_SLUG, $call[4] );
+	}
+
+	public function test_no_upload_shows_the_start_state(): void {
+		$model = Blueworx_Clubhouse_Import_Controller::handle_request( array(), array(), $this->storage );
+		$this->assertSame( 'start', $model['state'] );
+		$this->assertSame( '', $model['error'] );
+	}
+
+	public function test_a_valid_upload_shows_a_preview_and_writes_nothing(): void {
+		$model = Blueworx_Clubhouse_Import_Controller::handle_request(
+			array( 'clubhouse_import_upload' => '1' ),
+			$this->upload( $this->valid_json() ),
+			$this->storage
+		);
+		$this->assertSame( 'preview', $model['state'] );
+		$this->assertSame( 'Global · Hero', $model['rows'][0]['label'] );
+
+		$store = new Blueworx_Clubhouse_Content_Store( $this->storage );
+		$this->assertNull( $store->get( 'home', 'hero', 'eyebrow' ) );
+	}
+
+	public function test_a_valid_upload_stores_the_plan_in_a_user_scoped_transient(): void {
+		Blueworx_Clubhouse_Import_Controller::handle_request(
+			array( 'clubhouse_import_upload' => '1' ),
+			$this->upload( $this->valid_json() ),
+			$this->storage
+		);
+		$this->assertNotFalse( get_transient( 'clubhouse_import_plan_7' ) );
+	}
+
+	public function test_malformed_json_is_a_hard_error(): void {
+		$model = Blueworx_Clubhouse_Import_Controller::handle_request(
+			array( 'clubhouse_import_upload' => '1' ),
+			$this->upload( '{not json' ),
+			$this->storage
+		);
+		$this->assertSame( 'start', $model['state'] );
+		$this->assertStringContainsString( 'could not be read', $model['error'] );
+	}
+
+	public function test_an_oversized_file_is_refused_without_being_read(): void {
+		$file          = $this->upload( $this->valid_json() );
+		$file['size']  = Blueworx_Clubhouse_Import_Controller::MAX_BYTES + 1;
+		$model         = Blueworx_Clubhouse_Import_Controller::handle_request(
+			array( 'clubhouse_import_upload' => '1' ),
+			$file,
+			$this->storage
+		);
+		$this->assertStringContainsString( 'too large', $model['error'] );
+	}
+
+	public function test_a_failed_upload_is_reported(): void {
+		$model = Blueworx_Clubhouse_Import_Controller::handle_request(
+			array( 'clubhouse_import_upload' => '1' ),
+			array( 'tmp_name' => '', 'error' => 4, 'size' => 0, 'name' => '' ),
+			$this->storage
+		);
+		$this->assertStringContainsString( 'Choose a file', $model['error'] );
+	}
+
+	public function test_apply_writes_the_stored_plan_and_clears_the_transient(): void {
+		Blueworx_Clubhouse_Import_Controller::handle_request(
+			array( 'clubhouse_import_upload' => '1' ),
+			$this->upload( $this->valid_json() ),
+			$this->storage
+		);
+		$model = Blueworx_Clubhouse_Import_Controller::handle_request(
+			array( 'clubhouse_import_apply' => '1' ),
+			array(),
+			$this->storage
+		);
+
+		$this->assertSame( 'result', $model['state'] );
+		$store = new Blueworx_Clubhouse_Content_Store( $this->storage );
+		$this->assertSame( 'Est. 1974', $store->get( 'home', 'hero', 'eyebrow' ) );
+		$this->assertFalse( get_transient( 'clubhouse_import_plan_7' ) );
+	}
+
+	public function test_apply_without_a_stored_plan_is_refused(): void {
+		$model = Blueworx_Clubhouse_Import_Controller::handle_request(
+			array( 'clubhouse_import_apply' => '1' ),
+			array(),
+			$this->storage
+		);
+		$this->assertSame( 'start', $model['state'] );
+		$this->assertStringContainsString( 'expired', $model['error'] );
+	}
+
+	public function test_cancel_clears_the_transient_and_returns_to_the_start(): void {
+		Blueworx_Clubhouse_Import_Controller::handle_request(
+			array( 'clubhouse_import_upload' => '1' ),
+			$this->upload( $this->valid_json() ),
+			$this->storage
+		);
+		$model = Blueworx_Clubhouse_Import_Controller::handle_request(
+			array( 'clubhouse_import_cancel' => '1' ),
+			array(),
+			$this->storage
+		);
+		$this->assertSame( 'start', $model['state'] );
+		$this->assertFalse( get_transient( 'clubhouse_import_plan_7' ) );
+	}
+
+	public function test_apply_records_images_still_needed_in_storage(): void {
+		wp_stub_fail_sideload( 'https://e.test/gone.jpg' );
+		$json = '{"clubhouse_import":1,"content":{"home":{"hero":{"image":"https://e.test/gone.jpg"}}}}';
+		Blueworx_Clubhouse_Import_Controller::handle_request(
+			array( 'clubhouse_import_upload' => '1' ),
+			$this->upload( $json ),
+			$this->storage
+		);
+		Blueworx_Clubhouse_Import_Controller::handle_request(
+			array( 'clubhouse_import_apply' => '1' ),
+			array(),
+			$this->storage
+		);
+		$needed = $this->storage->get( Blueworx_Clubhouse_Import_Controller::IMAGES_NEEDED_KEY, array() );
+		$this->assertSame( 'Global · Hero — Background image', $needed[0]['label'] );
+	}
+
+	public function test_a_preview_names_the_demo_entries_a_collection_would_replace(): void {
+		wp_stub_add_post( 'clubhouse_sport', 30, 'Rugby', array( Blueworx_Clubhouse_Collection_Seeder::DEMO_META => '1' ) );
+		$json  = '{"clubhouse_import":1,"collections":{"clubhouse_sport":[{"title":"Squash"}]}}';
+		$model = Blueworx_Clubhouse_Import_Controller::handle_request(
+			array( 'clubhouse_import_upload' => '1' ),
+			$this->upload( $json ),
+			$this->storage
+		);
+		$this->assertSame( '1 entry, replacing 1 demo entry', $model['rows'][0]['detail'] );
+	}
+}
+```
+
+- [ ] **Step 2: Run test to verify it fails**
+
+Run: `composer test -- --filter ImportControllerTest`
+Expected: FAIL — `Class "Blueworx_Clubhouse_Import_Controller" not found`.
+
+- [ ] **Step 3: Implement**
+
+Create `includes/import/class-import-controller.php`:
+
+```php
+<?php
+// includes/import/class-import-controller.php
+declare(strict_types=1);
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
+/**
+ * WordPress surface for the AI content import: the Club Content → Import
+ * submenu, the prompt download, and the upload → preview → apply flow.
+ *
+ * handle_request() takes the request arrays and a Storage rather than reading
+ * superglobals, so the whole flow is unit-testable without WordPress, mirroring
+ * Setup_Controller and Content_Controller. The capability and nonce checks live
+ * in the thin WP entry points either side of it.
+ *
+ * @package BlueworxLabsClubhouse
+ */
+final class Blueworx_Clubhouse_Import_Controller {
+
+	public const CAPABILITY        = Blueworx_Clubhouse_Owner_Capabilities::SETUP_CAP;
+	public const PAGE_SLUG         = 'clubhouse-import';
+	public const NONCE             = 'clubhouse_import';
+	public const DOWNLOAD_ACTION   = 'clubhouse_import_prompt';
+	public const IMAGES_NEEDED_KEY = 'import_images_needed';
+
+	/** Import files are text; a megabyte is a very large club's worth of copy. */
+	public const MAX_BYTES = 1048576;
+
+	/** How long an approved-but-unapplied plan survives. */
+	private const PLAN_TTL = 3600;
+
+	public static function register(): void {
+		add_action( 'admin_menu', array( self::class, 'add_menu' ) );
+		add_action( 'admin_post_' . self::DOWNLOAD_ACTION, array( self::class, 'download_prompt' ) );
+	}
+
+	public static function add_menu(): void {
+		add_submenu_page(
+			Blueworx_Clubhouse_Content_Controller::PAGE_SLUG,
+			'Import',
+			'Import',
+			self::CAPABILITY,
+			self::PAGE_SLUG,
+			array( self::class, 'render_page' )
+		);
+	}
+
+	/** The transient holding this user's approved plan. Per-user so one admin cannot apply another's. */
+	private static function plan_key(): string {
+		return 'clubhouse_import_plan_' . get_current_user_id();
+	}
+
+	public static function render_page(): void {
+		if ( ! current_user_can( self::CAPABILITY ) ) {
+			return;
+		}
+		$posted = array();
+		if ( isset( $_POST['clubhouse_import_upload'] ) || isset( $_POST['clubhouse_import_apply'] ) || isset( $_POST['clubhouse_import_cancel'] ) ) {
+			check_admin_referer( self::NONCE );
+			$posted = wp_unslash( $_POST );
+		}
+		$file = isset( $_FILES['clubhouse_import_file'] ) ? $_FILES['clubhouse_import_file'] : array(); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput -- read via handle_request, which validates before use.
+
+		$storage = new Blueworx_Clubhouse_Options_Storage();
+		$model   = self::handle_request( $posted, is_array( $file ) ? $file : array(), $storage );
+
+		$model['download_url'] = wp_nonce_url( admin_url( 'admin-post.php?action=' . self::DOWNLOAD_ACTION ), self::NONCE );
+		$model['action_url']   = admin_url( 'admin.php?page=' . self::PAGE_SLUG );
+		$model['nonce_field']  = wp_nonce_field( self::NONCE, '_wpnonce', true, false );
+		$model['max_upload']   = size_format( self::MAX_BYTES );
+
+		echo Blueworx_Clubhouse_Import_Screen::render( $model ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in Import_Screen.
+	}
+
+	public static function download_prompt(): void {
+		if ( ! current_user_can( self::CAPABILITY ) ) {
+			wp_die( 'You do not have permission to do that.', '', array( 'response' => 403 ) );
+		}
+		check_admin_referer( self::NONCE );
+
+		$version = defined( 'BLUEWORX_LABS_CLUBHOUSE_VERSION' ) ? BLUEWORX_LABS_CLUBHOUSE_VERSION : 'dev';
+		$body    = Blueworx_Clubhouse_Import_Prompt::markdown( (string) $version );
+
+		header( 'Content-Type: text/markdown; charset=utf-8' );
+		header( 'Content-Disposition: attachment; filename="' . Blueworx_Clubhouse_Import_Prompt::FILENAME . '"' );
+		header( 'Content-Length: ' . strlen( $body ) );
+		echo $body; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- plain-text download, not HTML.
+		exit;
+	}
+
+	/**
+	 * The whole flow, minus WordPress. Returns the Import_Screen model without
+	 * the four presentation keys (download_url, action_url, nonce_field,
+	 * max_upload) that only the WP entry point can supply.
+	 *
+	 * @param array<string,mixed> $post
+	 * @param array<string,mixed> $file $_FILES entry for the upload field
+	 * @return array<string,mixed>
+	 */
+	public static function handle_request( array $post, array $file, Blueworx_Clubhouse_Storage $storage ): array {
+		if ( isset( $post['clubhouse_import_cancel'] ) ) {
+			delete_transient( self::plan_key() );
+			return self::model( 'start' );
+		}
+		if ( isset( $post['clubhouse_import_apply'] ) ) {
+			return self::apply( $storage );
+		}
+		if ( isset( $post['clubhouse_import_upload'] ) ) {
+			return self::preview( $file );
+		}
+		return self::model( 'start' );
+	}
+
+	/** @param array<string,mixed> $file */
+	private static function preview( array $file ): array {
+		$error = self::upload_error( $file );
+		if ( '' !== $error ) {
+			return self::model( 'start', array( 'error' => $error ) );
+		}
+
+		$raw = file_get_contents( (string) $file['tmp_name'] );
+		if ( ! is_string( $raw ) ) {
+			return self::model( 'start', array( 'error' => 'That file could not be read.' ) );
+		}
+
+		// Depth 32 is far beyond anything this format needs; it caps a
+		// pathological nesting attack before the parser ever sees the data.
+		$decoded = json_decode( $raw, true, 32 );
+		if ( JSON_ERROR_NONE !== json_last_error() ) {
+			return self::model( 'start', array( 'error' => 'That file could not be read as JSON. Ask the chat to produce the file again.' ) );
+		}
+
+		$parsed = Blueworx_Clubhouse_Import_Parser::parse( $decoded );
+		if ( null === $parsed['plan'] ) {
+			return self::model( 'start', array( 'error' => $parsed['error'] ) );
+		}
+
+		$plan    = $parsed['plan'];
+		$summary = Blueworx_Clubhouse_Import_Preview::summary(
+			$plan,
+			Blueworx_Clubhouse_Import_Applier::demo_counts( array_keys( $plan->collections() ) )
+		);
+
+		set_transient( self::plan_key(), $plan->to_array(), self::PLAN_TTL );
+
+		return self::model( 'preview', array(
+			'rows'     => $summary['rows'],
+			'warnings' => $summary['warnings'],
+		) );
+	}
+
+	private static function apply( Blueworx_Clubhouse_Storage $storage ): array {
+		$stored = get_transient( self::plan_key() );
+		if ( ! is_array( $stored ) ) {
+			return self::model( 'start', array( 'error' => 'That import has expired. Upload the file again.' ) );
+		}
+		delete_transient( self::plan_key() );
+
+		$result = Blueworx_Clubhouse_Import_Applier::apply(
+			Blueworx_Clubhouse_Import_Plan::from_array( $stored ),
+			$storage
+		);
+
+		$storage->set( self::IMAGES_NEEDED_KEY, $result['images_needed'] );
+
+		return self::model( 'result', array(
+			'rows'          => $result['rows'],
+			'warnings'      => $result['warnings'],
+			'images_needed' => $result['images_needed'],
+		) );
+	}
+
+	/**
+	 * Refuse a file before reading a byte of it. The size check uses the
+	 * reported size deliberately — a file bigger than the cap is rejected
+	 * rather than loaded into memory to be measured.
+	 *
+	 * @param array<string,mixed> $file
+	 */
+	private static function upload_error( array $file ): string {
+		$err = (int) ( $file['error'] ?? UPLOAD_ERR_NO_FILE );
+		if ( UPLOAD_ERR_NO_FILE === $err || '' === (string) ( $file['tmp_name'] ?? '' ) ) {
+			return 'Choose a file to upload first.';
+		}
+		if ( UPLOAD_ERR_OK !== $err ) {
+			return 'That file did not upload correctly. Try again.';
+		}
+		if ( (int) ( $file['size'] ?? 0 ) > self::MAX_BYTES ) {
+			return 'That file is too large to be a ClubHouse import.';
+		}
+		return '';
+	}
+
+	/**
+	 * @param array<string,mixed> $overrides
+	 * @return array<string,mixed>
+	 */
+	private static function model( string $state, array $overrides = array() ): array {
+		return array_merge( array(
+			'state'         => $state,
+			'error'         => '',
+			'rows'          => array(),
+			'warnings'      => array(),
+			'images_needed' => array(),
+		), $overrides );
+	}
+}
+```
+
+- [ ] **Step 4: Wire it up**
+
+In `blueworx-labs-clubhouse.php`, add the require alongside the other glue classes:
+
+```php
+require_once __DIR__ . '/includes/import/class-import-applier.php';
+require_once __DIR__ . '/includes/import/class-import-controller.php';
+```
+
+and inside `blueworx_labs_clubhouse_init()`, alongside the existing controller wiring:
+
+```php
+	Blueworx_Clubhouse_Import_Controller::register();
+```
+
+In `tests/php/bootstrap.php`, alongside the other glue requires:
+
+```php
+require_once dirname( __DIR__, 2 ) . '/includes/import/class-import-controller.php';
+```
+
+- [ ] **Step 5: Run test to verify it passes**
+
+Run: `composer test -- --filter ImportControllerTest`
+Expected: PASS, all 12 cases.
+
+The transient key in the tests is `clubhouse_import_plan_7` because the
+`get_current_user_id()` stub returns `7`.
+
+- [ ] **Step 6: Run the full suite and lint**
+
+Run: `composer test && composer lint`
+Expected: PASS.
+
+Wiring the controller from `blueworx_labs_clubhouse_init()` is not optional
+housekeeping — this plugin has shipped a whole admin screen that never mounted
+because its `register()` was never called. Confirm the require and the call are both
+present before committing.
+
+- [ ] **Step 7: Commit**
+
+```bash
+git add includes/import/class-import-controller.php blueworx-labs-clubhouse.php tests/php/bootstrap.php tests/php/ImportControllerTest.php
+git commit -m "feat: add the Club Content import screen and flow"
+```
+
+---
