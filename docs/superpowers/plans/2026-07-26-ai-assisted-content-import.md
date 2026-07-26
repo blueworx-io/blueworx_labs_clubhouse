@@ -3002,3 +3002,326 @@ git commit -m "feat: apply page content and sideload images from an import plan"
 ```
 
 ---
+
+### Task 11: `Import_Applier` — collections
+
+Reconcile a collection type against what is already there: delete the demo posts,
+update real posts that match by title, create the rest. Only types the file actually
+supplies are touched.
+
+**Files:**
+- Modify: `includes/import/class-import-applier.php`
+- Test: `tests/php/ImportApplierCollectionsTest.php`
+
+**Interfaces:**
+- Consumes: `Collection_Seeder::DEMO_META`, `Demo_Content::titles()`,
+  `Collection_Meta::fields()`, `Import_Parser::image_ref()` results carried on the plan.
+- Produces:
+  - `Blueworx_Clubhouse_Import_Applier::demo_counts( array $types ): array<string,int>` — public, used by the controller to build the preview
+  - collection rows appended to the existing `apply()` result
+
+- [ ] **Step 1: Write the failing test**
+
+Create `tests/php/ImportApplierCollectionsTest.php`:
+
+```php
+<?php
+// tests/php/ImportApplierCollectionsTest.php
+declare(strict_types=1);
+use PHPUnit\Framework\TestCase;
+
+final class ImportApplierCollectionsTest extends TestCase {
+
+	private Blueworx_Clubhouse_Storage $storage;
+
+	protected function setUp(): void {
+		wp_stub_reset();
+		$this->storage = new Blueworx_Clubhouse_Fake_Storage();
+	}
+
+	/** @param array<int,array<string,mixed>> $items */
+	private function plan_with( string $type, array $items ): Blueworx_Clubhouse_Import_Plan {
+		$plan = new Blueworx_Clubhouse_Import_Plan();
+		$plan->add_collection( $type, $items );
+		return $plan;
+	}
+
+	private function item( string $title, array $meta = array(), array $images = array() ): array {
+		return array( 'title' => $title, 'meta' => $meta, 'images' => $images );
+	}
+
+	public function test_a_new_item_is_created_with_its_meta(): void {
+		$plan = $this->plan_with( 'clubhouse_sport', array( $this->item( 'Squash', array( 'subtitle' => 'Two courts' ) ) ) );
+		Blueworx_Clubhouse_Import_Applier::apply( $plan, $this->storage );
+
+		$insert = wp_stub_calls( 'wp_insert_post' )[0]['args'][0];
+		$this->assertSame( 'clubhouse_sport', $insert['post_type'] );
+		$this->assertSame( 'Squash', $insert['post_title'] );
+		$this->assertSame( 'publish', $insert['post_status'] );
+
+		$meta = wp_stub_calls( 'update_post_meta' );
+		$this->assertSame( 'subtitle', $meta[0]['args'][1] );
+		$this->assertSame( 'Two courts', $meta[0]['args'][2] );
+	}
+
+	public function test_a_marked_demo_post_is_deleted(): void {
+		wp_stub_add_post( 'clubhouse_sport', 11, 'Rugby', array( Blueworx_Clubhouse_Collection_Seeder::DEMO_META => '1' ) );
+		$plan = $this->plan_with( 'clubhouse_sport', array( $this->item( 'Squash' ) ) );
+		Blueworx_Clubhouse_Import_Applier::apply( $plan, $this->storage );
+
+		$deletes = wp_stub_calls( 'wp_delete_post' );
+		$this->assertSame( 11, $deletes[0]['args'][0] );
+		$this->assertTrue( $deletes[0]['args'][1], 'demo posts should be force-deleted, not trashed' );
+	}
+
+	public function test_an_unmarked_post_whose_title_matches_demo_content_is_also_deleted(): void {
+		// Installs seeded before the marker existed have no _clubhouse_demo meta.
+		wp_stub_add_post( 'clubhouse_sport', 12, 'Rugby' );
+		$plan = $this->plan_with( 'clubhouse_sport', array( $this->item( 'Squash' ) ) );
+		Blueworx_Clubhouse_Import_Applier::apply( $plan, $this->storage );
+		$this->assertSame( 12, wp_stub_calls( 'wp_delete_post' )[0]['args'][0] );
+	}
+
+	public function test_a_real_post_is_kept(): void {
+		wp_stub_add_post( 'clubhouse_sport', 13, 'Korfball' );
+		$plan = $this->plan_with( 'clubhouse_sport', array( $this->item( 'Squash' ) ) );
+		Blueworx_Clubhouse_Import_Applier::apply( $plan, $this->storage );
+		$this->assertSame( array(), wp_stub_calls( 'wp_delete_post' ) );
+	}
+
+	public function test_a_real_post_with_the_same_title_is_updated_not_duplicated(): void {
+		wp_stub_add_post( 'clubhouse_sport', 14, 'Squash' );
+		$plan = $this->plan_with( 'clubhouse_sport', array( $this->item( 'Squash', array( 'subtitle' => 'Now three courts' ) ) ) );
+		Blueworx_Clubhouse_Import_Applier::apply( $plan, $this->storage );
+
+		$this->assertSame( array(), wp_stub_calls( 'wp_insert_post' ) );
+		$meta = wp_stub_calls( 'update_post_meta' );
+		$this->assertSame( 14, $meta[0]['args'][0] );
+		$this->assertSame( 'Now three courts', $meta[0]['args'][2] );
+	}
+
+	public function test_a_type_the_file_does_not_mention_is_left_alone(): void {
+		wp_stub_add_post( 'clubhouse_team', 20, '1st XV', array( Blueworx_Clubhouse_Collection_Seeder::DEMO_META => '1' ) );
+		$plan = $this->plan_with( 'clubhouse_sport', array( $this->item( 'Squash' ) ) );
+		Blueworx_Clubhouse_Import_Applier::apply( $plan, $this->storage );
+		$this->assertSame( array(), wp_stub_calls( 'wp_delete_post' ) );
+	}
+
+	public function test_a_collection_image_is_sideloaded_and_stored_as_an_id(): void {
+		$plan = $this->plan_with( 'clubhouse_sport', array(
+			$this->item( 'Squash', array(), array( 'image' => array( 'url' => 'https://e.test/s.jpg', 'alt' => 'Court' ) ) ),
+		) );
+		Blueworx_Clubhouse_Import_Applier::apply( $plan, $this->storage );
+
+		$this->assertSame( 'https://e.test/s.jpg', wp_stub_calls( 'media_sideload_image' )[0]['args'][0] );
+		$image_meta = array_values( array_filter( wp_stub_calls( 'update_post_meta' ), static fn( $c ) => 'image' === $c['args'][1] ) );
+		$this->assertSame( 500, $image_meta[0]['args'][2] );
+	}
+
+	public function test_a_failed_collection_image_warns_but_still_creates_the_item(): void {
+		wp_stub_fail_sideload( 'https://e.test/gone.jpg' );
+		$plan = $this->plan_with( 'clubhouse_sport', array(
+			$this->item( 'Squash', array(), array( 'image' => array( 'url' => 'https://e.test/gone.jpg', 'alt' => '' ) ) ),
+		) );
+		$out = Blueworx_Clubhouse_Import_Applier::apply( $plan, $this->storage );
+
+		$this->assertSame( 'Squash', wp_stub_calls( 'wp_insert_post' )[0]['args'][0]['post_title'] );
+		$this->assertStringContainsString( 'https://e.test/gone.jpg', $out['warnings'][0] );
+	}
+
+	public function test_the_result_reports_creates_updates_and_deletes(): void {
+		wp_stub_add_post( 'clubhouse_sport', 15, 'Rugby', array( Blueworx_Clubhouse_Collection_Seeder::DEMO_META => '1' ) );
+		wp_stub_add_post( 'clubhouse_sport', 16, 'Korfball' );
+		$plan = $this->plan_with( 'clubhouse_sport', array(
+			$this->item( 'Korfball' ),
+			$this->item( 'Squash' ),
+		) );
+		$out = Blueworx_Clubhouse_Import_Applier::apply( $plan, $this->storage );
+
+		$row = $out['rows'][0];
+		$this->assertSame( 'Sports', $row['label'] );
+		$this->assertSame( '1 created, 1 updated, 1 demo entry removed', $row['detail'] );
+	}
+
+	public function test_demo_counts_reports_per_type_totals(): void {
+		wp_stub_add_post( 'clubhouse_sport', 17, 'Rugby', array( Blueworx_Clubhouse_Collection_Seeder::DEMO_META => '1' ) );
+		wp_stub_add_post( 'clubhouse_sport', 18, 'Tennis' ); // unmarked, but a demo title
+		wp_stub_add_post( 'clubhouse_sport', 19, 'Korfball' ); // real
+		$counts = Blueworx_Clubhouse_Import_Applier::demo_counts( array( 'clubhouse_sport', 'clubhouse_team' ) );
+		$this->assertSame( 2, $counts['clubhouse_sport'] );
+		$this->assertSame( 0, $counts['clubhouse_team'] );
+	}
+}
+```
+
+- [ ] **Step 2: Run test to verify it fails**
+
+Run: `composer test -- --filter ImportApplierCollectionsTest`
+Expected: FAIL — no collection handling, and `demo_counts()` is undefined.
+
+- [ ] **Step 3: Call the collection pass from `apply()`**
+
+In `Blueworx_Clubhouse_Import_Applier::apply()`, between the content rows and the
+image loop, add:
+
+```php
+		foreach ( $plan->collections() as $type => $items ) {
+			$result     = self::apply_collection( (string) $type, $items );
+			$rows       = array_merge( $rows, $result['rows'] );
+			$warnings   = array_merge( $warnings, $result['warnings'] );
+		}
+```
+
+- [ ] **Step 4: Implement the collection pass**
+
+Add to `Blueworx_Clubhouse_Import_Applier`:
+
+```php
+	/**
+	 * Count the demo posts of each type, so the preview can tell an owner what
+	 * an import would replace before they approve it.
+	 *
+	 * @param array<int,string> $types
+	 * @return array<string,int>
+	 */
+	public static function demo_counts( array $types ): array {
+		$counts = array();
+		foreach ( $types as $type ) {
+			$counts[ $type ] = count( self::partition( $type )['demo'] );
+		}
+		return $counts;
+	}
+
+	/**
+	 * Split a type's existing posts into demo and real. A post is demo if the
+	 * seeder stamped it, or — on installs seeded before that marker existed —
+	 * if its title is one Demo_Content seeds. Anything else is the owner's and
+	 * is never deleted.
+	 *
+	 * @return array{demo:array<int,object>,real:array<int,object>}
+	 */
+	private static function partition( string $type ): array {
+		$demo_titles = Blueworx_Clubhouse_Demo_Content::titles( $type );
+		$demo        = array();
+		$real        = array();
+		$posts       = get_posts( array(
+			'post_type'   => $type,
+			'post_status' => 'any',
+			'numberposts' => -1,
+		) );
+		foreach ( $posts as $post ) {
+			$id       = (int) ( $post->ID ?? 0 );
+			$marked   = '1' === (string) get_post_meta( $id, Blueworx_Clubhouse_Collection_Seeder::DEMO_META, true );
+			$titled   = in_array( (string) ( $post->post_title ?? '' ), $demo_titles, true );
+			if ( $marked || $titled ) {
+				$demo[] = $post;
+				continue;
+			}
+			$real[] = $post;
+		}
+		return array( 'demo' => $demo, 'real' => $real );
+	}
+
+	/**
+	 * Replace demo, keep real: delete this type's demo posts, update any real
+	 * post whose title matches an incoming item, create the rest. Real posts the
+	 * file does not mention are left alone — an import is not a purge.
+	 *
+	 * @param array<int,array{title:string,meta:array<string,string>,images:array<string,array{url:string,alt:string}>}> $items
+	 * @return array{rows:array<int,array{label:string,detail:string}>,warnings:array<int,string>}
+	 */
+	private static function apply_collection( string $type, array $items ): array {
+		$split    = self::partition( $type );
+		$warnings = array();
+
+		foreach ( $split['demo'] as $post ) {
+			wp_delete_post( (int) $post->ID, true );
+		}
+
+		$by_title = array();
+		foreach ( $split['real'] as $post ) {
+			$by_title[ (string) ( $post->post_title ?? '' ) ] = (int) ( $post->ID ?? 0 );
+		}
+
+		$created = 0;
+		$updated = 0;
+		$order   = 0;
+		foreach ( $items as $item ) {
+			$title = (string) $item['title'];
+			if ( isset( $by_title[ $title ] ) ) {
+				$id = $by_title[ $title ];
+				wp_update_post( array( 'ID' => $id, 'menu_order' => $order ) );
+				++$updated;
+			} else {
+				$id = (int) wp_insert_post( array(
+					'post_type'   => $type,
+					'post_status' => 'publish',
+					'post_title'  => $title,
+					'menu_order'  => $order,
+				) );
+				++$created;
+			}
+			++$order;
+
+			if ( $id < 1 ) {
+				$warnings[] = sprintf( 'Could not save the %s entry "%s".', Blueworx_Clubhouse_Collection_Meta::label( $type ), $title );
+				continue;
+			}
+
+			foreach ( $item['meta'] as $key => $value ) {
+				update_post_meta( $id, (string) $key, (string) $value );
+			}
+			foreach ( $item['images'] as $key => $ref ) {
+				$attachment = self::sideload( (string) $ref['url'], (string) $ref['alt'] );
+				if ( 0 === $attachment ) {
+					$warnings[] = sprintf( 'Could not fetch the image at %s for "%s".', $ref['url'], $title );
+					continue;
+				}
+				update_post_meta( $id, (string) $key, $attachment );
+			}
+		}
+
+		$detail = array();
+		if ( $created > 0 ) {
+			$detail[] = $created . ' created';
+		}
+		if ( $updated > 0 ) {
+			$detail[] = $updated . ' updated';
+		}
+		$removed = count( $split['demo'] );
+		if ( $removed > 0 ) {
+			$detail[] = $removed . ' demo ' . ( 1 === $removed ? 'entry' : 'entries' ) . ' removed';
+		}
+
+		return array(
+			'rows'     => array( array(
+				'label'  => Blueworx_Clubhouse_Collection_Meta::label( $type ),
+				'detail' => implode( ', ', $detail ),
+			) ),
+			'warnings' => $warnings,
+		);
+	}
+```
+
+- [ ] **Step 5: Run test to verify it passes**
+
+Run: `composer test -- --filter ImportApplierCollectionsTest`
+Expected: PASS, all 10 cases.
+
+`test_a_collection_image_is_sideloaded_and_stored_as_an_id` filters the
+`update_post_meta` calls rather than indexing them, because meta order depends on the
+item's key order — do not "simplify" it back to `[0]`.
+
+- [ ] **Step 6: Run the full suite and lint**
+
+Run: `composer test && composer lint`
+Expected: PASS, including `ImportApplierContentTest`.
+
+- [ ] **Step 7: Commit**
+
+```bash
+git add includes/import/class-import-applier.php tests/php/ImportApplierCollectionsTest.php
+git commit -m "feat: reconcile collections on import, replacing demo content"
+```
+
+---
