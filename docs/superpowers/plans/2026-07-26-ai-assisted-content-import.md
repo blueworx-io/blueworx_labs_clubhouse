@@ -1925,3 +1925,647 @@ git commit -m "feat: generate the AI import prompt from the catalogues"
 ```
 
 ---
+
+### Task 8: `Import_Preview`
+
+Turn a plan into the rows the owner reads before pressing Apply. Pure — the demo-post
+counts it needs are passed in by the controller, which is the only part allowed to
+query WordPress.
+
+**Files:**
+- Create: `includes/import/class-import-preview.php`
+- Modify: `includes/bootstrap.php`
+- Test: `tests/php/ImportPreviewTest.php`
+
+**Interfaces:**
+- Consumes: `Import_Plan`, `Content_Catalogue::index()`, `Collection_Meta::types()`/`::label()`.
+- Produces: `Blueworx_Clubhouse_Import_Preview::summary( Blueworx_Clubhouse_Import_Plan $plan, array $demo_counts ): array{rows:array<int,array{label:string,detail:string}>,warnings:array<int,string>,is_empty:bool}`
+  where `$demo_counts` is `array<string,int>` — collection type → number of existing demo posts.
+
+- [ ] **Step 1: Write the failing test**
+
+Create `tests/php/ImportPreviewTest.php`:
+
+```php
+<?php
+// tests/php/ImportPreviewTest.php
+declare(strict_types=1);
+use PHPUnit\Framework\TestCase;
+
+final class ImportPreviewTest extends TestCase {
+
+	private function plan(): Blueworx_Clubhouse_Import_Plan {
+		return new Blueworx_Clubhouse_Import_Plan();
+	}
+
+	public function test_an_empty_plan_reports_itself_empty(): void {
+		$out = Blueworx_Clubhouse_Import_Preview::summary( $this->plan(), array() );
+		$this->assertTrue( $out['is_empty'] );
+		$this->assertSame( array(), $out['rows'] );
+	}
+
+	public function test_a_section_row_is_named_for_a_human_and_counts_its_fields(): void {
+		$plan = $this->plan();
+		$plan->add_field( 'home', 'hero', 'eyebrow', 'Est. 1974' );
+		$plan->add_field( 'home', 'hero', 'lede', 'A club for all' );
+		$out = Blueworx_Clubhouse_Import_Preview::summary( $plan, array() );
+		$this->assertSame( 'Global · Hero', $out['rows'][0]['label'] );
+		$this->assertSame( '2 fields', $out['rows'][0]['detail'] );
+	}
+
+	public function test_a_single_field_is_not_pluralised(): void {
+		$plan = $this->plan();
+		$plan->add_field( 'global', 'header', 'join', 'Join us' );
+		$out = Blueworx_Clubhouse_Import_Preview::summary( $plan, array() );
+		$this->assertSame( '1 field', $out['rows'][0]['detail'] );
+	}
+
+	public function test_fields_and_entries_for_one_section_share_a_row(): void {
+		$plan = $this->plan();
+		$plan->add_field( 'home', 'news', 'heading', 'Latest' );
+		$plan->add_items( 'home', 'news', array( array( 'title' => 'A' ), array( 'title' => 'B' ) ) );
+		$out = Blueworx_Clubhouse_Import_Preview::summary( $plan, array() );
+		$this->assertCount( 1, $out['rows'] );
+		$this->assertSame( '1 field, 2 entries', $out['rows'][0]['detail'] );
+	}
+
+	public function test_an_entries_only_section_still_gets_a_row(): void {
+		$plan = $this->plan();
+		$plan->add_items( 'membership', 'faq', array( array( 'question' => 'Q' ) ) );
+		$out = Blueworx_Clubhouse_Import_Preview::summary( $plan, array() );
+		$this->assertSame( 'Membership · FAQ', $out['rows'][0]['label'] );
+		$this->assertSame( '1 entry', $out['rows'][0]['detail'] );
+	}
+
+	public function test_rows_follow_catalogue_order_not_file_order(): void {
+		$plan = $this->plan();
+		$plan->add_field( 'contact', 'form', 'heading', 'Say hello' );
+		$plan->add_field( 'home', 'hero', 'eyebrow', 'Est. 1974' );
+		$out = Blueworx_Clubhouse_Import_Preview::summary( $plan, array() );
+		// Home's hero is declared on the Global tab, before Contact.
+		$this->assertSame( 'Global · Hero', $out['rows'][0]['label'] );
+		$this->assertSame( 'Contact · Contact form', $out['rows'][1]['label'] );
+	}
+
+	public function test_a_collection_row_reports_the_demo_posts_it_replaces(): void {
+		$plan = $this->plan();
+		$plan->add_collection( 'clubhouse_sport', array(
+			array( 'title' => 'Tennis', 'meta' => array(), 'images' => array() ),
+			array( 'title' => 'Rugby', 'meta' => array(), 'images' => array() ),
+		) );
+		$out = Blueworx_Clubhouse_Import_Preview::summary( $plan, array( 'clubhouse_sport' => 6 ) );
+		$this->assertSame( 'Sports', $out['rows'][0]['label'] );
+		$this->assertSame( '2 entries, replacing 6 demo entries', $out['rows'][0]['detail'] );
+	}
+
+	public function test_a_collection_row_omits_the_demo_clause_when_there_are_none(): void {
+		$plan = $this->plan();
+		$plan->add_collection( 'clubhouse_sport', array( array( 'title' => 'Tennis', 'meta' => array(), 'images' => array() ) ) );
+		$out = Blueworx_Clubhouse_Import_Preview::summary( $plan, array( 'clubhouse_sport' => 0 ) );
+		$this->assertSame( '1 entry', $out['rows'][0]['detail'] );
+	}
+
+	public function test_images_get_their_own_final_row(): void {
+		$plan = $this->plan();
+		$plan->add_field( 'home', 'hero', 'eyebrow', 'Est. 1974' );
+		$plan->add_image( 'home', 'hero', 'image', 'https://e.test/a.jpg', '', 'Global · Hero — Background image' );
+		$out = Blueworx_Clubhouse_Import_Preview::summary( $plan, array() );
+		$last = end( $out['rows'] );
+		$this->assertSame( 'Images', $last['label'] );
+		$this->assertSame( '1 image to fetch', $last['detail'] );
+	}
+
+	public function test_collection_images_are_counted_too(): void {
+		$plan = $this->plan();
+		$plan->add_collection( 'clubhouse_sport', array(
+			array( 'title' => 'Tennis', 'meta' => array(), 'images' => array( 'image' => array( 'url' => 'https://e.test/t.jpg', 'alt' => '' ) ) ),
+		) );
+		$out = Blueworx_Clubhouse_Import_Preview::summary( $plan, array() );
+		$last = end( $out['rows'] );
+		$this->assertSame( '1 image to fetch', $last['detail'] );
+	}
+
+	public function test_warnings_are_passed_through(): void {
+		$plan = $this->plan();
+		$plan->warn( 'Ignored unknown section "home/nope".' );
+		$out = Blueworx_Clubhouse_Import_Preview::summary( $plan, array() );
+		$this->assertSame( array( 'Ignored unknown section "home/nope".' ), $out['warnings'] );
+	}
+
+	public function test_an_unknown_address_falls_back_to_its_raw_key(): void {
+		// Defensive: a plan rehydrated from an older transient could name a
+		// section the catalogue no longer has. It must still be nameable.
+		$plan = Blueworx_Clubhouse_Import_Plan::from_array( array(
+			'fields' => array( 'ghost' => array( 'gone' => array( 'x' => 'y' ) ) ),
+		) );
+		$out = Blueworx_Clubhouse_Import_Preview::summary( $plan, array() );
+		$this->assertSame( 'ghost/gone', $out['rows'][0]['label'] );
+	}
+}
+```
+
+- [ ] **Step 2: Run test to verify it fails**
+
+Run: `composer test -- --filter ImportPreviewTest`
+Expected: FAIL — `Class "Blueworx_Clubhouse_Import_Preview" not found`.
+
+- [ ] **Step 3: Implement**
+
+Create `includes/import/class-import-preview.php`:
+
+```php
+<?php
+// includes/import/class-import-preview.php
+declare(strict_types=1);
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
+/**
+ * Turns an Import_Plan into the rows an owner reads before applying it: what
+ * will change, in catalogue order, named the way the admin screens name things.
+ * Pure — the demo-post counts come from the controller, which is the only layer
+ * allowed to ask WordPress anything.
+ *
+ * @package BlueworxLabsClubhouse
+ */
+final class Blueworx_Clubhouse_Import_Preview {
+
+	/**
+	 * @param array<string,int> $demo_counts collection type => existing demo posts
+	 * @return array{rows:array<int,array{label:string,detail:string}>,warnings:array<int,string>,is_empty:bool}
+	 */
+	public static function summary( Blueworx_Clubhouse_Import_Plan $plan, array $demo_counts ): array {
+		$rows = array_merge(
+			self::content_rows( $plan ),
+			self::collection_rows( $plan, $demo_counts ),
+			self::image_rows( $plan )
+		);
+
+		return array(
+			'rows'     => $rows,
+			'warnings' => $plan->warnings(),
+			'is_empty' => $plan->is_empty(),
+		);
+	}
+
+	/** @return array<int,array{label:string,detail:string}> */
+	private static function content_rows( Blueworx_Clubhouse_Import_Plan $plan ): array {
+		$fields = $plan->fields();
+		$items  = $plan->items();
+
+		// Catalogue order, so the preview reads in the same order as the editor
+		// and the site, rather than in whatever order the file happened to use.
+		$addresses = array_keys( Blueworx_Clubhouse_Content_Catalogue::index() );
+		foreach ( array_keys( $fields ) as $page ) {
+			foreach ( array_keys( $fields[ $page ] ) as $section ) {
+				$addresses[] = $page . '/' . $section;
+			}
+		}
+		foreach ( array_keys( $items ) as $page ) {
+			foreach ( array_keys( $items[ $page ] ) as $section ) {
+				$addresses[] = $page . '/' . $section;
+			}
+		}
+		$addresses = array_values( array_unique( $addresses ) );
+
+		$index = Blueworx_Clubhouse_Content_Catalogue::index();
+		$rows  = array();
+		foreach ( $addresses as $address ) {
+			$parts   = explode( '/', $address, 2 );
+			$page    = $parts[0];
+			$section = $parts[1] ?? '';
+
+			$field_count = isset( $fields[ $page ][ $section ] ) ? count( $fields[ $page ][ $section ] ) : 0;
+			$item_count  = isset( $items[ $page ][ $section ] ) ? count( $items[ $page ][ $section ] ) : 0;
+			if ( 0 === $field_count && 0 === $item_count ) {
+				continue;
+			}
+
+			$detail = array();
+			if ( $field_count > 0 ) {
+				$detail[] = self::plural( $field_count, 'field', 'fields' );
+			}
+			if ( $item_count > 0 ) {
+				$detail[] = self::plural( $item_count, 'entry', 'entries' );
+			}
+
+			$label = isset( $index[ $address ] )
+				? $index[ $address ]['tab_label'] . ' · ' . $index[ $address ]['section_label']
+				: $address;
+
+			$rows[] = array( 'label' => $label, 'detail' => implode( ', ', $detail ) );
+		}
+		return $rows;
+	}
+
+	/**
+	 * @param array<string,int> $demo_counts
+	 * @return array<int,array{label:string,detail:string}>
+	 */
+	private static function collection_rows( Blueworx_Clubhouse_Import_Plan $plan, array $demo_counts ): array {
+		$collections = $plan->collections();
+		$rows        = array();
+		foreach ( Blueworx_Clubhouse_Collection_Meta::types() as $type ) {
+			if ( ! isset( $collections[ $type ] ) ) {
+				continue;
+			}
+			$detail = self::plural( count( $collections[ $type ] ), 'entry', 'entries' );
+			$demo   = (int) ( $demo_counts[ $type ] ?? 0 );
+			if ( $demo > 0 ) {
+				$detail .= ', replacing ' . self::plural( $demo, 'demo entry', 'demo entries' );
+			}
+			$rows[] = array( 'label' => Blueworx_Clubhouse_Collection_Meta::label( $type ), 'detail' => $detail );
+		}
+		return $rows;
+	}
+
+	/** @return array<int,array{label:string,detail:string}> */
+	private static function image_rows( Blueworx_Clubhouse_Import_Plan $plan ): array {
+		$count = count( $plan->images() );
+		foreach ( $plan->collections() as $items ) {
+			foreach ( $items as $item ) {
+				$count += count( $item['images'] ?? array() );
+			}
+		}
+		if ( 0 === $count ) {
+			return array();
+		}
+		return array( array(
+			'label'  => 'Images',
+			'detail' => self::plural( $count, 'image', 'images' ) . ' to fetch',
+		) );
+	}
+
+	private static function plural( int $n, string $one, string $many ): string {
+		return $n . ' ' . ( 1 === $n ? $one : $many );
+	}
+}
+```
+
+- [ ] **Step 4: Require it from the runtime loader**
+
+In `includes/bootstrap.php`, under the `// Import (pure)` block:
+
+```php
+require_once __DIR__ . '/import/class-import-preview.php';
+```
+
+- [ ] **Step 5: Run test to verify it passes**
+
+Run: `composer test -- --filter ImportPreviewTest`
+Expected: PASS, all 12 cases.
+
+If `test_rows_follow_catalogue_order_not_file_order` fails, the address list is being
+built from the plan first rather than seeded from
+`Content_Catalogue::index()` — the seeding is what supplies the order, and the
+`array_unique` afterwards is what keeps unknown addresses at the end.
+
+- [ ] **Step 6: Lint and commit**
+
+```bash
+composer lint
+git add includes/import/class-import-preview.php includes/bootstrap.php tests/php/ImportPreviewTest.php
+git commit -m "feat: summarise an import plan for review"
+```
+
+---
+
+### Task 9: `Import_Screen`
+
+The pure HTML for the Import page in its three states. Same conventions as
+`Content_Screen`: every value escaped here, no WordPress calls, no request reads.
+
+**Files:**
+- Create: `includes/import/class-import-screen.php`
+- Modify: `includes/bootstrap.php`
+- Test: `tests/php/ImportScreenTest.php`
+
+**Interfaces:**
+- Produces: `Blueworx_Clubhouse_Import_Screen::render( array $model ): string`
+
+Model keys, all required unless noted:
+
+| Key | Type | Meaning |
+|---|---|---|
+| `state` | `'start'\|'preview'\|'result'` | which panel to draw |
+| `download_url` | string | the prompt download link (already nonced by the controller) |
+| `action_url` | string | form target |
+| `nonce_field` | string | raw `wp_nonce_field()` HTML — emitted unescaped, it is server-generated markup |
+| `error` | string | hard validation error; drawn in every state when non-empty |
+| `rows` | list of `{label,detail}` | preview or result rows |
+| `warnings` | list of string | dropped-item warnings |
+| `images_needed` | list of `{label}` | result state only |
+| `max_upload` | string | human file-size cap, e.g. `1 MB` |
+
+- [ ] **Step 1: Write the failing test**
+
+Create `tests/php/ImportScreenTest.php`:
+
+```php
+<?php
+// tests/php/ImportScreenTest.php
+declare(strict_types=1);
+use PHPUnit\Framework\TestCase;
+
+final class ImportScreenTest extends TestCase {
+
+	/** @param array<string,mixed> $overrides */
+	private function model( array $overrides = array() ): array {
+		return array_merge( array(
+			'state'         => 'start',
+			'download_url'  => 'https://club.test/wp-admin/admin-post.php?action=clubhouse_import_prompt',
+			'action_url'    => 'https://club.test/wp-admin/admin.php?page=clubhouse-import',
+			'nonce_field'   => '<input type="hidden" name="_wpnonce" value="abc">',
+			'error'         => '',
+			'rows'          => array(),
+			'warnings'      => array(),
+			'images_needed' => array(),
+			'max_upload'    => '1 MB',
+		), $overrides );
+	}
+
+	public function test_start_state_offers_the_prompt_and_an_upload(): void {
+		$html = Blueworx_Clubhouse_Import_Screen::render( $this->model() );
+		$this->assertStringContainsString( 'admin-post.php?action=clubhouse_import_prompt', $html );
+		$this->assertStringContainsString( 'type="file"', $html );
+		$this->assertStringContainsString( 'name="clubhouse_import_file"', $html );
+		$this->assertStringContainsString( 'enctype="multipart/form-data"', $html );
+		$this->assertStringContainsString( '1 MB', $html );
+	}
+
+	public function test_start_state_has_no_apply_button(): void {
+		$html = Blueworx_Clubhouse_Import_Screen::render( $this->model() );
+		$this->assertStringNotContainsString( 'clubhouse_import_apply', $html );
+	}
+
+	public function test_the_nonce_field_is_emitted_as_markup(): void {
+		$html = Blueworx_Clubhouse_Import_Screen::render( $this->model() );
+		$this->assertStringContainsString( '<input type="hidden" name="_wpnonce" value="abc">', $html );
+	}
+
+	public function test_an_error_is_shown_and_escaped(): void {
+		$html = Blueworx_Clubhouse_Import_Screen::render( $this->model( array(
+			'error' => 'This file is not a ClubHouse import file. <script>',
+		) ) );
+		$this->assertStringContainsString( 'This file is not a ClubHouse import file.', $html );
+		$this->assertStringNotContainsString( '<script>', $html );
+	}
+
+	public function test_preview_state_lists_rows_and_offers_apply(): void {
+		$html = Blueworx_Clubhouse_Import_Screen::render( $this->model( array(
+			'state' => 'preview',
+			'rows'  => array( array( 'label' => 'Global · Hero', 'detail' => '5 fields' ) ),
+		) ) );
+		$this->assertStringContainsString( 'Global · Hero', $html );
+		$this->assertStringContainsString( '5 fields', $html );
+		$this->assertStringContainsString( 'clubhouse_import_apply', $html );
+		$this->assertStringContainsString( 'clubhouse_import_cancel', $html );
+	}
+
+	public function test_preview_rows_are_escaped(): void {
+		$html = Blueworx_Clubhouse_Import_Screen::render( $this->model( array(
+			'state' => 'preview',
+			'rows'  => array( array( 'label' => '<img src=x onerror=1>', 'detail' => '1 field' ) ),
+		) ) );
+		$this->assertStringNotContainsString( '<img src=x', $html );
+		$this->assertStringContainsString( '&lt;img src=x', $html );
+	}
+
+	public function test_warnings_are_listed_and_escaped(): void {
+		$html = Blueworx_Clubhouse_Import_Screen::render( $this->model( array(
+			'state'    => 'preview',
+			'rows'     => array( array( 'label' => 'Global · Hero', 'detail' => '1 field' ) ),
+			'warnings' => array( 'Ignored unknown section "home/<b>".' ),
+		) ) );
+		$this->assertStringContainsString( 'Ignored unknown section', $html );
+		$this->assertStringNotContainsString( '<b>', $html );
+	}
+
+	public function test_a_preview_with_no_rows_says_so_and_hides_apply(): void {
+		$html = Blueworx_Clubhouse_Import_Screen::render( $this->model( array( 'state' => 'preview' ) ) );
+		$this->assertStringContainsString( 'nothing to import', $html );
+		$this->assertStringNotContainsString( 'clubhouse_import_apply', $html );
+	}
+
+	public function test_result_state_lists_what_changed_and_the_images_still_needed(): void {
+		$html = Blueworx_Clubhouse_Import_Screen::render( $this->model( array(
+			'state'         => 'result',
+			'rows'          => array( array( 'label' => 'Sports', 'detail' => '4 entries created' ) ),
+			'images_needed' => array( array( 'label' => 'Global · Hero — Background image' ) ),
+		) ) );
+		$this->assertStringContainsString( '4 entries created', $html );
+		$this->assertStringContainsString( 'Global · Hero — Background image', $html );
+		$this->assertStringNotContainsString( 'clubhouse_import_apply', $html );
+	}
+
+	public function test_a_javascript_download_url_is_refused(): void {
+		$html = Blueworx_Clubhouse_Import_Screen::render( $this->model( array(
+			'download_url' => 'javascript:alert(1)',
+		) ) );
+		$this->assertStringNotContainsString( 'javascript:', $html );
+	}
+}
+```
+
+- [ ] **Step 2: Run test to verify it fails**
+
+Run: `composer test -- --filter ImportScreenTest`
+Expected: FAIL — `Class "Blueworx_Clubhouse_Import_Screen" not found`.
+
+- [ ] **Step 3: Implement**
+
+Create `includes/import/class-import-screen.php`:
+
+```php
+<?php
+// includes/import/class-import-screen.php
+declare(strict_types=1);
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
+/**
+ * Pure HTML for the Club Content → Import screen, in three states: offer the
+ * prompt and an upload; review a parsed plan; report what an apply did. Makes
+ * no WordPress calls and reads no request data — the controller hands it a
+ * finished model. Every value is escaped here; the only raw markup emitted is
+ * the controller's own wp_nonce_field() output.
+ *
+ * @package BlueworxLabsClubhouse
+ */
+final class Blueworx_Clubhouse_Import_Screen {
+
+	private static function esc( string $v ): string {
+		return htmlspecialchars( $v, ENT_QUOTES, 'UTF-8' );
+	}
+
+	/** Escape a URL for an href, refusing any scheme that is not http(s). */
+	private static function esc_url( string $v ): string {
+		if ( preg_match( '/^\s*([a-zA-Z][a-zA-Z0-9+.\-]*):/', $v, $m ) ) {
+			if ( ! in_array( strtolower( $m[1] ), array( 'http', 'https' ), true ) ) {
+				return '';
+			}
+		}
+		return self::esc( $v );
+	}
+
+	/** @param array<string,mixed> $model */
+	public static function render( array $model ): string {
+		$state = (string) ( $model['state'] ?? 'start' );
+		$error = (string) ( $model['error'] ?? '' );
+
+		$out  = '<div class="wrap clubhouse-wrap">';
+		$out .= '<div class="clubhouse-import">';
+		$out .= '<div class="clubhouse-head"><div class="clubhouse-head__titles">'
+			. '<p class="clubhouse-eyebrow">Clubhouse · Import</p>'
+			. '<h1 class="clubhouse-title">Import your content</h1></div></div>';
+
+		if ( '' !== $error ) {
+			$out .= '<div class="notice notice-error"><p>' . self::esc( $error ) . '</p></div>';
+		}
+
+		switch ( $state ) {
+			case 'preview':
+				$out .= self::preview_panel( $model );
+				break;
+			case 'result':
+				$out .= self::result_panel( $model );
+				break;
+			default:
+				$out .= self::start_panel( $model );
+		}
+
+		$out .= '</div></div>';
+		return $out;
+	}
+
+	/** @param array<string,mixed> $model */
+	private static function start_panel( array $model ): string {
+		$out  = '<div class="clubhouse-import__step">';
+		$out .= '<h2>1. Download the prompt</h2>';
+		$out .= '<p>It describes every part of your site. Download it, then paste it into an '
+			. 'AI chat — it will interview you and write your content for you.</p>';
+		$out .= '<p><a class="button button-primary" href="' . self::esc_url( (string) $model['download_url'] ) . '">'
+			. 'Download the prompt</a></p>';
+		$out .= '</div>';
+
+		$out .= '<div class="clubhouse-import__step">';
+		$out .= '<h2>2. Upload the file it gives you</h2>';
+		$out .= '<p>The chat will produce a file called <code>clubhouse-import.json</code>. '
+			. 'You will see exactly what it changes before anything is saved. '
+			. 'You can upload as many times as you like — each upload only changes what that file contains.</p>';
+		$out .= '<form method="post" enctype="multipart/form-data" action="' . self::esc_url( (string) $model['action_url'] ) . '">';
+		$out .= (string) $model['nonce_field'];
+		$out .= '<p><input type="file" name="clubhouse_import_file" accept=".json,application/json"></p>';
+		$out .= '<p class="description">Maximum file size: ' . self::esc( (string) $model['max_upload'] ) . '.</p>';
+		$out .= '<p><button type="submit" class="button button-primary" name="clubhouse_import_upload" value="1">Review this file</button></p>';
+		$out .= '</form></div>';
+		return $out;
+	}
+
+	/** @param array<string,mixed> $model */
+	private static function preview_panel( array $model ): string {
+		$rows = is_array( $model['rows'] ?? null ) ? $model['rows'] : array();
+
+		$out  = '<div class="clubhouse-import__step">';
+		$out .= '<h2>Review this import</h2>';
+
+		if ( array() === $rows ) {
+			$out .= '<p>There is nothing to import in that file.</p>';
+			$out .= '<p><a class="button" href="' . self::esc_url( (string) $model['action_url'] ) . '">Start again</a></p>';
+			$out .= '</div>';
+			$out .= self::warnings( $model );
+			return $out;
+		}
+
+		$out .= '<p>Nothing has been saved yet. This is what applying the file would change:</p>';
+		$out .= self::rows_table( $rows );
+		$out .= '<form method="post" action="' . self::esc_url( (string) $model['action_url'] ) . '">';
+		$out .= (string) $model['nonce_field'];
+		$out .= '<p><button type="submit" class="button button-primary" name="clubhouse_import_apply" value="1">Apply this import</button> ';
+		$out .= '<button type="submit" class="button" name="clubhouse_import_cancel" value="1">Cancel</button></p>';
+		$out .= '</form></div>';
+		$out .= self::warnings( $model );
+		return $out;
+	}
+
+	/** @param array<string,mixed> $model */
+	private static function result_panel( array $model ): string {
+		$rows   = is_array( $model['rows'] ?? null ) ? $model['rows'] : array();
+		$needed = is_array( $model['images_needed'] ?? null ) ? $model['images_needed'] : array();
+
+		$out  = '<div class="clubhouse-import__step">';
+		$out .= '<h2>Import complete</h2>';
+		$out .= array() === $rows ? '<p>Nothing was changed.</p>' : self::rows_table( $rows );
+		$out .= '<p><a class="button button-primary" href="' . self::esc_url( (string) $model['action_url'] ) . '">Import another file</a></p>';
+		$out .= '</div>';
+
+		if ( array() !== $needed ) {
+			$out .= '<div class="clubhouse-import__step">';
+			$out .= '<h2>Images still needed</h2>';
+			$out .= '<p>These picture slots are still empty. Add them under Club Content whenever you have the images.</p><ul>';
+			foreach ( $needed as $item ) {
+				$out .= '<li>' . self::esc( (string) ( $item['label'] ?? '' ) ) . '</li>';
+			}
+			$out .= '</ul></div>';
+		}
+
+		$out .= self::warnings( $model );
+		return $out;
+	}
+
+	/** @param array<int,array{label:string,detail:string}> $rows */
+	private static function rows_table( array $rows ): string {
+		$out = '<table class="widefat striped clubhouse-import__rows"><tbody>';
+		foreach ( $rows as $row ) {
+			$out .= '<tr><th scope="row">' . self::esc( (string) ( $row['label'] ?? '' ) ) . '</th>'
+				. '<td>' . self::esc( (string) ( $row['detail'] ?? '' ) ) . '</td></tr>';
+		}
+		return $out . '</tbody></table>';
+	}
+
+	/** @param array<string,mixed> $model */
+	private static function warnings( array $model ): string {
+		$warnings = is_array( $model['warnings'] ?? null ) ? $model['warnings'] : array();
+		if ( array() === $warnings ) {
+			return '';
+		}
+		$out = '<div class="clubhouse-import__step"><h2>Ignored</h2>'
+			. '<p>These parts of the file did not match anything in your site, so they were skipped.</p><ul>';
+		foreach ( $warnings as $warning ) {
+			$out .= '<li>' . self::esc( (string) $warning ) . '</li>';
+		}
+		return $out . '</ul></div>';
+	}
+}
+```
+
+- [ ] **Step 4: Require it from the runtime loader**
+
+In `includes/bootstrap.php`, under the `// Import (pure)` block:
+
+```php
+require_once __DIR__ . '/import/class-import-screen.php';
+```
+
+- [ ] **Step 5: Run test to verify it passes**
+
+Run: `composer test -- --filter ImportScreenTest`
+Expected: PASS, all 10 cases.
+
+Note `test_start_state_has_no_apply_button` and the result-state equivalent: they
+assert the string `clubhouse_import_apply` is entirely absent, so do not name a CSS
+class or a comment after it.
+
+- [ ] **Step 6: Lint and commit**
+
+```bash
+composer lint
+git add includes/import/class-import-screen.php includes/bootstrap.php tests/php/ImportScreenTest.php
+git commit -m "feat: render the import screen"
+```
+
+---
