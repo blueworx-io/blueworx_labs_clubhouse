@@ -2569,3 +2569,436 @@ git commit -m "feat: render the import screen"
 ```
 
 ---
+
+### Task 10: Stub harness + `Import_Applier` for page content and images
+
+The first glue task. Extend the WP stub harness with everything the applier and
+controller need, then write the half of the applier that writes page content and
+sideloads images. Collections follow in Task 11.
+
+**Files:**
+- Modify: `tests/php/wp-stubs.php`
+- Create: `includes/import/class-import-applier.php`
+- Modify: `tests/php/bootstrap.php` (require the glue class)
+- Test: `tests/php/ImportApplierContentTest.php`
+
+**Interfaces:**
+- Consumes: `Import_Plan`, `Blueworx_Clubhouse_Storage`, `Blueworx_Clubhouse_Content_Store`.
+- Produces: `Blueworx_Clubhouse_Import_Applier::apply( Blueworx_Clubhouse_Import_Plan $plan, Blueworx_Clubhouse_Storage $storage ): array{rows:array<int,array{label:string,detail:string}>,images_needed:array<int,array{label:string,page:string,section:string,field:string}>,warnings:array<int,string>}`
+
+- [ ] **Step 1: Extend the stub harness**
+
+In `tests/php/wp-stubs.php`, add the new globals to **both** the initial assignment
+block at the top and the `wp_stub_reset()` body:
+
+```php
+$GLOBALS['wp_stub_transients']    = array();
+$GLOBALS['wp_stub_sideload_next'] = 500;
+$GLOBALS['wp_stub_sideload_fail'] = array();
+```
+
+Then add the helper and the stubs at the end of the file:
+
+```php
+/** Make the next sideload of this URL fail, as a dead link would. */
+function wp_stub_fail_sideload( string $url ): void {
+	$GLOBALS['wp_stub_sideload_fail'][ $url ] = true;
+}
+
+if ( ! class_exists( 'WP_Error' ) ) {
+	class WP_Error {
+		public function __construct( public string $code = '', public string $message = '' ) {}
+	}
+}
+if ( ! function_exists( 'is_wp_error' ) ) {
+	function is_wp_error( $thing ): bool { return $thing instanceof WP_Error; }
+}
+if ( ! function_exists( 'media_sideload_image' ) ) {
+	function media_sideload_image( string $url, int $post_id = 0, ?string $desc = null, string $return = 'html' ) {
+		wp_stub_record( 'media_sideload_image', array( $url, $post_id, $desc, $return ) );
+		if ( isset( $GLOBALS['wp_stub_sideload_fail'][ $url ] ) ) {
+			return new WP_Error( 'http_404', 'Not found' );
+		}
+		return $GLOBALS['wp_stub_sideload_next']++;
+	}
+}
+if ( ! function_exists( 'wp_update_post' ) ) {
+	function wp_update_post( array $post = array() ) {
+		wp_stub_record( 'wp_update_post', array( $post ) );
+		return (int) ( $post['ID'] ?? 0 );
+	}
+}
+if ( ! function_exists( 'wp_delete_post' ) ) {
+	function wp_delete_post( int $id, bool $force = false ) {
+		wp_stub_record( 'wp_delete_post', array( $id, $force ) );
+		return true;
+	}
+}
+if ( ! function_exists( 'set_transient' ) ) {
+	function set_transient( string $key, $value, int $ttl = 0 ): bool {
+		$GLOBALS['wp_stub_transients'][ $key ] = $value;
+		wp_stub_record( 'set_transient', array( $key, $value, $ttl ) );
+		return true;
+	}
+}
+if ( ! function_exists( 'get_transient' ) ) {
+	function get_transient( string $key ) {
+		return $GLOBALS['wp_stub_transients'][ $key ] ?? false;
+	}
+}
+if ( ! function_exists( 'delete_transient' ) ) {
+	function delete_transient( string $key ): bool {
+		unset( $GLOBALS['wp_stub_transients'][ $key ] );
+		wp_stub_record( 'delete_transient', array( $key ) );
+		return true;
+	}
+}
+if ( ! function_exists( 'get_current_user_id' ) ) {
+	function get_current_user_id(): int { return 7; }
+}
+if ( ! function_exists( 'add_submenu_page' ) ) {
+	function add_submenu_page( ...$a ) { wp_stub_record( 'add_submenu_page', $a ); return 'clubhouse_page_stub'; }
+}
+if ( ! function_exists( 'wp_safe_redirect' ) ) {
+	function wp_safe_redirect( string $url, int $status = 302 ): bool {
+		wp_stub_record( 'wp_safe_redirect', array( $url, $status ) );
+		return true;
+	}
+}
+if ( ! function_exists( 'size_format' ) ) {
+	function size_format( $bytes, int $decimals = 0 ) { return (string) $bytes . ' bytes'; }
+}
+```
+
+Also add a helper so collection tests can stand up existing posts:
+
+```php
+/** Register a fake existing post of a type, with optional meta. */
+function wp_stub_add_post( string $type, int $id, string $title, array $meta = array() ): void {
+	$GLOBALS['wp_stub_posts'][ $type ][] = (object) array( 'ID' => $id, 'post_title' => $title );
+	foreach ( $meta as $key => $value ) {
+		$GLOBALS['wp_stub_postmeta'][ $id ][ $key ] = $value;
+	}
+}
+```
+
+- [ ] **Step 2: Write the failing test**
+
+Create `tests/php/ImportApplierContentTest.php`:
+
+```php
+<?php
+// tests/php/ImportApplierContentTest.php
+declare(strict_types=1);
+use PHPUnit\Framework\TestCase;
+
+final class ImportApplierContentTest extends TestCase {
+
+	private Blueworx_Clubhouse_Storage $storage;
+
+	protected function setUp(): void {
+		wp_stub_reset();
+		$this->storage = new Blueworx_Clubhouse_Fake_Storage();
+	}
+
+	private function store(): Blueworx_Clubhouse_Content_Store {
+		return new Blueworx_Clubhouse_Content_Store( $this->storage );
+	}
+
+	public function test_fields_are_written_to_the_content_store(): void {
+		$plan = new Blueworx_Clubhouse_Import_Plan();
+		$plan->add_field( 'home', 'hero', 'eyebrow', 'Est. 1974' );
+		Blueworx_Clubhouse_Import_Applier::apply( $plan, $this->storage );
+		$this->assertSame( 'Est. 1974', $this->store()->get( 'home', 'hero', 'eyebrow' ) );
+	}
+
+	public function test_items_are_written_to_the_content_store(): void {
+		$plan = new Blueworx_Clubhouse_Import_Plan();
+		$plan->add_items( 'membership', 'faq', array( array( 'question' => 'Q', 'answer' => 'A' ) ) );
+		Blueworx_Clubhouse_Import_Applier::apply( $plan, $this->storage );
+		$this->assertSame( 'Q', $this->store()->get_items( 'membership', 'faq' )[0]['question'] );
+	}
+
+	public function test_absent_sections_are_left_untouched(): void {
+		$this->store()->set( 'about', 'hero', 'eyebrow', 'Do not clobber me' );
+		$plan = new Blueworx_Clubhouse_Import_Plan();
+		$plan->add_field( 'home', 'hero', 'eyebrow', 'Est. 1974' );
+		Blueworx_Clubhouse_Import_Applier::apply( $plan, $this->storage );
+		$this->assertSame( 'Do not clobber me', $this->store()->get( 'about', 'hero', 'eyebrow' ) );
+	}
+
+	public function test_a_section_image_is_sideloaded_and_its_id_stored(): void {
+		$plan = new Blueworx_Clubhouse_Import_Plan();
+		$plan->add_image( 'home', 'hero', 'image', 'https://e.test/a.jpg', 'Pavilion', 'Global · Hero — Background image' );
+		Blueworx_Clubhouse_Import_Applier::apply( $plan, $this->storage );
+
+		$call = wp_stub_calls( 'media_sideload_image' )[0];
+		$this->assertSame( 'https://e.test/a.jpg', $call['args'][0] );
+		$this->assertSame( 'Pavilion', $call['args'][2] );
+		$this->assertSame( 'id', $call['args'][3] );
+		$this->assertSame( 500, $this->store()->get( 'home', 'hero', 'image' ) );
+	}
+
+	public function test_a_loop_item_image_is_written_into_its_item(): void {
+		$plan = new Blueworx_Clubhouse_Import_Plan();
+		$plan->add_items( 'home', 'news', array(
+			array( 'title' => 'First', 'image' => '' ),
+			array( 'title' => 'Second', 'image' => '' ),
+		) );
+		$plan->add_image( 'home', 'news', 'image', 'https://e.test/n.jpg', '', 'Global · News — Image', 1 );
+		Blueworx_Clubhouse_Import_Applier::apply( $plan, $this->storage );
+
+		$items = $this->store()->get_items( 'home', 'news' );
+		$this->assertSame( '', $items[0]['image'] );
+		$this->assertSame( 500, $items[1]['image'] );
+	}
+
+	public function test_a_failed_image_warns_and_lands_on_the_still_needed_list(): void {
+		wp_stub_fail_sideload( 'https://e.test/gone.jpg' );
+		$plan = new Blueworx_Clubhouse_Import_Plan();
+		$plan->add_image( 'home', 'hero', 'image', 'https://e.test/gone.jpg', '', 'Global · Hero — Background image' );
+		$out = Blueworx_Clubhouse_Import_Applier::apply( $plan, $this->storage );
+
+		$this->assertSame( '', $this->store()->get( 'home', 'hero', 'image', '' ) );
+		$this->assertSame( 'Global · Hero — Background image', $out['images_needed'][0]['label'] );
+		$this->assertStringContainsString( 'https://e.test/gone.jpg', $out['warnings'][0] );
+	}
+
+	public function test_a_failed_image_does_not_stop_the_rest_of_the_import(): void {
+		wp_stub_fail_sideload( 'https://e.test/gone.jpg' );
+		$plan = new Blueworx_Clubhouse_Import_Plan();
+		$plan->add_image( 'home', 'hero', 'image', 'https://e.test/gone.jpg', '', 'Global · Hero — Background image' );
+		$plan->add_field( 'home', 'hero', 'eyebrow', 'Est. 1974' );
+		Blueworx_Clubhouse_Import_Applier::apply( $plan, $this->storage );
+		$this->assertSame( 'Est. 1974', $this->store()->get( 'home', 'hero', 'eyebrow' ) );
+	}
+
+	public function test_an_image_for_an_item_index_that_does_not_exist_is_skipped_safely(): void {
+		$plan = new Blueworx_Clubhouse_Import_Plan();
+		$plan->add_items( 'home', 'news', array( array( 'title' => 'Only one', 'image' => '' ) ) );
+		$plan->add_image( 'home', 'news', 'image', 'https://e.test/n.jpg', '', 'Global · News — Image', 9 );
+		$out = Blueworx_Clubhouse_Import_Applier::apply( $plan, $this->storage );
+		$this->assertCount( 1, $this->store()->get_items( 'home', 'news' ) );
+		$this->assertNotSame( array(), $out['warnings'] );
+	}
+
+	public function test_the_result_reports_what_it_changed(): void {
+		$plan = new Blueworx_Clubhouse_Import_Plan();
+		$plan->add_field( 'home', 'hero', 'eyebrow', 'Est. 1974' );
+		$plan->add_field( 'home', 'hero', 'lede', 'All welcome' );
+		$out = Blueworx_Clubhouse_Import_Applier::apply( $plan, $this->storage );
+		$this->assertSame( 'Global · Hero', $out['rows'][0]['label'] );
+		$this->assertSame( '2 fields saved', $out['rows'][0]['detail'] );
+	}
+
+	public function test_a_successful_image_is_reported(): void {
+		$plan = new Blueworx_Clubhouse_Import_Plan();
+		$plan->add_image( 'home', 'hero', 'image', 'https://e.test/a.jpg', '', 'Global · Hero — Background image' );
+		$out = Blueworx_Clubhouse_Import_Applier::apply( $plan, $this->storage );
+		$last = end( $out['rows'] );
+		$this->assertSame( 'Images', $last['label'] );
+		$this->assertSame( '1 fetched', $last['detail'] );
+	}
+}
+```
+
+- [ ] **Step 3: Run test to verify it fails**
+
+Run: `composer test -- --filter ImportApplierContentTest`
+Expected: FAIL — `Class "Blueworx_Clubhouse_Import_Applier" not found`.
+
+- [ ] **Step 4: Implement the content and image half**
+
+Create `includes/import/class-import-applier.php`:
+
+```php
+<?php
+// includes/import/class-import-applier.php
+declare(strict_types=1);
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
+/**
+ * Executes an Import_Plan against WordPress. This is the only part of the
+ * import path that writes anything, and the only part that touches the media
+ * library or the posts table — the plan reaching it has already been validated
+ * and sanitised, so nothing here re-decides what is allowed.
+ *
+ * Every failure is collected rather than thrown: a dead image URL must not cost
+ * the owner the rest of an import they have just approved.
+ *
+ * @package BlueworxLabsClubhouse
+ */
+final class Blueworx_Clubhouse_Import_Applier {
+
+	/**
+	 * @return array{rows:array<int,array{label:string,detail:string}>,images_needed:array<int,array{label:string,page:string,section:string,field:string}>,warnings:array<int,string>}
+	 */
+	public static function apply( Blueworx_Clubhouse_Import_Plan $plan, Blueworx_Clubhouse_Storage $storage ): array {
+		$store    = new Blueworx_Clubhouse_Content_Store( $storage );
+		$rows     = array();
+		$needed   = array();
+		$warnings = array();
+
+		// Items first: a loop-item image has to have an item to be written into.
+		foreach ( $plan->items() as $page => $sections ) {
+			foreach ( $sections as $section => $items ) {
+				$store->set_items( (string) $page, (string) $section, $items );
+			}
+		}
+		foreach ( $plan->fields() as $page => $sections ) {
+			foreach ( $sections as $section => $fields ) {
+				foreach ( $fields as $field => $value ) {
+					$store->set( (string) $page, (string) $section, (string) $field, $value );
+				}
+			}
+		}
+
+		$rows = self::content_rows( $plan );
+
+		$fetched = 0;
+		foreach ( $plan->images() as $image ) {
+			$id = self::sideload( $image['url'], $image['alt'] );
+			if ( 0 === $id ) {
+				$warnings[] = sprintf( 'Could not fetch the image at %s — %s is still empty.', $image['url'], $image['label'] );
+				$needed[]   = self::needed_entry( $image );
+				continue;
+			}
+			if ( ! self::place_image( $store, $image, $id ) ) {
+				$warnings[] = sprintf( 'Fetched the image for %s but could not place it.', $image['label'] );
+				$needed[]   = self::needed_entry( $image );
+				continue;
+			}
+			++$fetched;
+		}
+
+		if ( $fetched > 0 ) {
+			$rows[] = array( 'label' => 'Images', 'detail' => $fetched . ' fetched' );
+		}
+
+		return array( 'rows' => $rows, 'images_needed' => $needed, 'warnings' => $warnings );
+	}
+
+	/**
+	 * Fetch a remote image into the media library. media_sideload_image() runs
+	 * through download_url()/wp_safe_remote_get(), which already refuses
+	 * internal and private hosts — this is deliberately WordPress's vetted
+	 * fetch path rather than a bespoke one.
+	 *
+	 * @return int attachment ID, or 0 on any failure
+	 */
+	private static function sideload( string $url, string $alt ): int {
+		if ( ! function_exists( 'media_sideload_image' ) ) {
+			require_once ABSPATH . 'wp-admin/includes/media.php';
+			require_once ABSPATH . 'wp-admin/includes/file.php';
+			require_once ABSPATH . 'wp-admin/includes/image.php';
+		}
+		$id = media_sideload_image( $url, 0, '' === $alt ? null : $alt, 'id' );
+		if ( is_wp_error( $id ) || ! is_int( $id ) || $id < 1 ) {
+			return 0;
+		}
+		return $id;
+	}
+
+	/**
+	 * Write a fetched attachment ID where the plan said it belongs. Returns
+	 * false when the target item no longer exists, which can only happen if the
+	 * plan was hand-edited between preview and apply.
+	 *
+	 * @param array{page:string,section:string,field:string,url:string,alt:string,label:string,index:int} $image
+	 */
+	private static function place_image( Blueworx_Clubhouse_Content_Store $store, array $image, int $id ): bool {
+		if ( $image['index'] < 0 ) {
+			$store->set( $image['page'], $image['section'], $image['field'], $id );
+			return true;
+		}
+		$items = $store->get_items( $image['page'], $image['section'] );
+		if ( ! array_key_exists( $image['index'], $items ) ) {
+			return false;
+		}
+		$items[ $image['index'] ][ $image['field'] ] = $id;
+		$store->set_items( $image['page'], $image['section'], $items );
+		return true;
+	}
+
+	/**
+	 * @param array{page:string,section:string,field:string,url:string,alt:string,label:string,index:int} $image
+	 * @return array{label:string,page:string,section:string,field:string}
+	 */
+	private static function needed_entry( array $image ): array {
+		return array(
+			'label'   => $image['label'],
+			'page'    => $image['page'],
+			'section' => $image['section'],
+			'field'   => $image['field'],
+		);
+	}
+
+	/** @return array<int,array{label:string,detail:string}> */
+	private static function content_rows( Blueworx_Clubhouse_Import_Plan $plan ): array {
+		$index = Blueworx_Clubhouse_Content_Catalogue::index();
+		$rows  = array();
+		foreach ( $plan->fields() as $page => $sections ) {
+			foreach ( $sections as $section => $fields ) {
+				$address = $page . '/' . $section;
+				$label   = isset( $index[ $address ] )
+					? $index[ $address ]['tab_label'] . ' · ' . $index[ $address ]['section_label']
+					: (string) $address;
+				$count   = count( $fields );
+				$rows[]  = array(
+					'label'  => $label,
+					'detail' => $count . ' ' . ( 1 === $count ? 'field' : 'fields' ) . ' saved',
+				);
+			}
+		}
+		foreach ( $plan->items() as $page => $sections ) {
+			foreach ( $sections as $section => $items ) {
+				$address = $page . '/' . $section;
+				$label   = isset( $index[ $address ] )
+					? $index[ $address ]['tab_label'] . ' · ' . $index[ $address ]['section_label']
+					: (string) $address;
+				$count   = count( $items );
+				$rows[]  = array(
+					'label'  => $label,
+					'detail' => $count . ' ' . ( 1 === $count ? 'entry' : 'entries' ) . ' saved',
+				);
+			}
+		}
+		return $rows;
+	}
+}
+```
+
+- [ ] **Step 5: Require the glue class in the test bootstrap**
+
+In `tests/php/bootstrap.php`, alongside the other explicit glue requires:
+
+```php
+require_once dirname( __DIR__, 2 ) . '/includes/import/class-import-applier.php';
+```
+
+- [ ] **Step 6: Run test to verify it passes**
+
+Run: `composer test -- --filter ImportApplierContentTest`
+Expected: PASS, all 10 cases.
+
+`test_a_section_image_is_sideloaded_and_its_id_stored` expects `500` because the stub
+hands out IDs from `wp_stub_sideload_next`, reset to 500 in `wp_stub_reset()`. If it
+returns a different number, the reset is not putting the counter back.
+
+- [ ] **Step 7: Run the full suite and lint**
+
+Run: `composer test && composer lint`
+Expected: PASS. If an unrelated test now fails, it will be one that counts
+`wp_stub_calls()` entries — the new stubs record calls too.
+
+- [ ] **Step 8: Commit**
+
+```bash
+git add tests/php/wp-stubs.php tests/php/bootstrap.php includes/import/class-import-applier.php tests/php/ImportApplierContentTest.php
+git commit -m "feat: apply page content and sideload images from an import plan"
+```
+
+---
