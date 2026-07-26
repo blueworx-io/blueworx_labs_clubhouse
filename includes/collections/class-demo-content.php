@@ -98,4 +98,31 @@ final class Blueworx_Clubhouse_Demo_Content {
 			array( 'name' => 'The club office', 'committee_role' => '', 'directory_role' => 'General', 'email' => 'hello@clubhouse.example' ),
 		);
 	}
+
+	/**
+	 * The post titles this class seeds for a collection type, composed exactly as
+	 * Collection_Seeder composes them. The import path uses these to recognise
+	 * unmarked demo posts on installs seeded before the _clubhouse_demo marker
+	 * existed.
+	 *
+	 * @return array<int,string>
+	 */
+	public static function titles( string $type ): array {
+		switch ( $type ) {
+			case 'clubhouse_sport':
+				return array_map( static fn( $i ) => (string) $i['title'], self::sports() );
+			case 'clubhouse_team':
+				return array_map( static fn( $i ) => (string) $i['title'], self::teams() );
+			case 'clubhouse_event':
+				return array_map( static fn( $i ) => (string) $i['title'], self::events() );
+			case 'clubhouse_sponsor':
+				return array_map( static fn( $i ) => (string) $i['name'], self::sponsors() );
+			case 'clubhouse_person':
+				return array_map( static fn( $i ) => (string) $i['name'], self::people() );
+			case 'clubhouse_fixture':
+				return array_map( static fn( $i ) => $i['home'] . ' vs ' . $i['away'], self::fixtures() );
+			default:
+				return array();
+		}
+	}
 }

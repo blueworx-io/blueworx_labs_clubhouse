@@ -21,4 +21,12 @@ final class CollectionSeederTest extends TestCase {
 		);
 		$this->assertCount( 0, $sportInserts ); // sports skipped because already populated
 	}
+
+	public function test_seeded_posts_carry_the_demo_marker(): void {
+		wp_stub_reset();
+		Blueworx_Clubhouse_Collection_Seeder::seed();
+		$metas = wp_stub_calls( 'add_post_meta' );
+		$marked = array_filter( $metas, static fn( $c ) => Blueworx_Clubhouse_Collection_Seeder::DEMO_META === $c['args'][1] );
+		$this->assertNotEmpty( $marked, 'every seeded post should be stamped as demo content' );
+	}
 }

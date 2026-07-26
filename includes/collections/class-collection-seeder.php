@@ -14,6 +14,9 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 final class Blueworx_Clubhouse_Collection_Seeder {
 
+	/** Meta key stamped on every seeded post so the importer can tell demo from real. */
+	public const DEMO_META = '_clubhouse_demo';
+
 	public static function seed(): void {
 		self::seed_type( 'clubhouse_sport', Blueworx_Clubhouse_Demo_Content::sports(), 'title', array( 'label', 'subtitle', 'description', 'stat1_value', 'stat1_label', 'stat2_value', 'stat2_label', 'image' ) );
 		self::seed_type( 'clubhouse_team', Blueworx_Clubhouse_Demo_Content::teams(), 'title', array( 'sport', 'description', 'match_day', 'league', 'image' ) );
@@ -39,6 +42,7 @@ final class Blueworx_Clubhouse_Collection_Seeder {
 			foreach ( $meta_keys as $key ) {
 				add_post_meta( (int) $id, $key, isset( $item[ $key ] ) ? (string) $item[ $key ] : '' );
 			}
+			add_post_meta( (int) $id, self::DEMO_META, '1' );
 		}
 	}
 
@@ -62,6 +66,7 @@ final class Blueworx_Clubhouse_Collection_Seeder {
 			foreach ( $meta as $key => $value ) {
 				add_post_meta( (int) $id, $key, (string) $value );
 			}
+			add_post_meta( (int) $id, self::DEMO_META, '1' );
 		}
 	}
 
