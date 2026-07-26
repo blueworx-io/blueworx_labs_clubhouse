@@ -151,8 +151,11 @@ final class Blueworx_Clubhouse_Import_Applier {
 		$split    = self::partition( $type );
 		$warnings = array();
 
+		$removed = 0;
 		foreach ( $split['demo'] as $post ) {
-			wp_delete_post( (int) $post->ID, true );
+			if ( wp_delete_post( (int) $post->ID, true ) ) {
+				++$removed;
+			}
 		}
 
 		$by_title = array();
@@ -164,11 +167,10 @@ final class Blueworx_Clubhouse_Import_Applier {
 		$updated = 0;
 		$order   = 0;
 		foreach ( $items as $item ) {
-			$title = (string) $item['title'];
-			if ( isset( $by_title[ $title ] ) ) {
-				$id = $by_title[ $title ];
-				wp_update_post( array( 'ID' => $id, 'menu_order' => $order ) );
-				++$updated;
+			$title    = (string) $item['title'];
+			$updating = isset( $by_title[ $title ] );
+			if ( $updating ) {
+				$id = (int) wp_update_post( array( 'ID' => $by_title[ $title ], 'menu_order' => $order ) );
 			} else {
 				$id = (int) wp_insert_post( array(
 					'post_type'   => $type,
@@ -176,13 +178,18 @@ final class Blueworx_Clubhouse_Import_Applier {
 					'post_title'  => $title,
 					'menu_order'  => $order,
 				) );
-				++$created;
 			}
 			++$order;
 
 			if ( $id < 1 ) {
 				$warnings[] = sprintf( 'Could not save the %s entry "%s".', Blueworx_Clubhouse_Collection_Meta::label( $type ), $title );
 				continue;
+			}
+
+			if ( $updating ) {
+				++$updated;
+			} else {
+				++$created;
 			}
 
 			foreach ( $item['meta'] as $key => $value ) {
@@ -205,7 +212,6 @@ final class Blueworx_Clubhouse_Import_Applier {
 		if ( $updated > 0 ) {
 			$detail[] = $updated . ' updated';
 		}
-		$removed = count( $split['demo'] );
 		if ( $removed > 0 ) {
 			$detail[] = $removed . ' demo ' . ( 1 === $removed ? 'entry' : 'entries' ) . ' removed';
 		}

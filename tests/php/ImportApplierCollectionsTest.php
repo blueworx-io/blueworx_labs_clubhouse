@@ -116,6 +116,36 @@ final class ImportApplierCollectionsTest extends TestCase {
 		$this->assertSame( '1 created, 1 updated, 1 demo entry removed', $row['detail'] );
 	}
 
+	public function test_a_failed_insert_warns_and_is_not_counted_as_created(): void {
+		wp_stub_fail_insert( 'Squash' );
+		$plan = $this->plan_with( 'clubhouse_sport', array( $this->item( 'Squash' ) ) );
+		$out  = Blueworx_Clubhouse_Import_Applier::apply( $plan, $this->storage );
+
+		$this->assertStringContainsString( 'Squash', $out['warnings'][0] );
+		$this->assertSame( '', $out['rows'][0]['detail'] );
+	}
+
+	public function test_a_failed_update_warns_and_is_not_counted_as_updated(): void {
+		wp_stub_add_post( 'clubhouse_sport', 21, 'Squash' );
+		wp_stub_fail_update( 21 );
+		$plan = $this->plan_with( 'clubhouse_sport', array( $this->item( 'Squash', array( 'subtitle' => 'Two courts' ) ) ) );
+		$out  = Blueworx_Clubhouse_Import_Applier::apply( $plan, $this->storage );
+
+		$this->assertStringContainsString( 'Squash', $out['warnings'][0] );
+		$this->assertSame( '', $out['rows'][0]['detail'] );
+		$this->assertSame( array(), wp_stub_calls( 'update_post_meta' ) );
+	}
+
+	public function test_a_failed_delete_is_not_counted_as_removed(): void {
+		wp_stub_add_post( 'clubhouse_sport', 22, 'Rugby', array( Blueworx_Clubhouse_Collection_Seeder::DEMO_META => '1' ) );
+		wp_stub_fail_delete( 22 );
+		$plan = $this->plan_with( 'clubhouse_sport', array( $this->item( 'Squash' ) ) );
+		$out  = Blueworx_Clubhouse_Import_Applier::apply( $plan, $this->storage );
+
+		$this->assertSame( 22, wp_stub_calls( 'wp_delete_post' )[0]['args'][0], 'the delete must still be attempted' );
+		$this->assertSame( '1 created', $out['rows'][0]['detail'] );
+	}
+
 	public function test_demo_counts_reports_per_type_totals(): void {
 		wp_stub_add_post( 'clubhouse_sport', 17, 'Rugby', array( Blueworx_Clubhouse_Collection_Seeder::DEMO_META => '1' ) );
 		wp_stub_add_post( 'clubhouse_sport', 18, 'Tennis' ); // unmarked, but a demo title
