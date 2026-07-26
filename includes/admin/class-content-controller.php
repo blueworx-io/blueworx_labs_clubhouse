@@ -246,42 +246,12 @@ final class Blueworx_Clubhouse_Content_Controller {
 
 	/**
 	 * Sanitise a single field's posted value by its catalogue type.
+	 * Delegates to the shared pure sanitiser (also used by the AI import path).
 	 *
 	 * @param array<string,mixed> $field_def
 	 */
 	private static function sanitise_field( array $field_def, mixed $raw, bool $present ): mixed {
-		// A posted value that isn't scalar (e.g. field[key][]=x submitted as an
-		// array, or a nested array under an image/select field) must never reach
-		// string coercion below — PHP would emit "Array to string conversion" and
-		// store the literal "Array". Treat it as though the field were absent.
-		if ( $present && ! is_scalar( $raw ) ) {
-			$present = false;
-		}
-		switch ( $field_def['type'] ) {
-			case 'text':
-				return $present ? sanitize_text_field( (string) $raw ) : '';
-			case 'textarea':
-				return $present ? sanitize_textarea_field( (string) $raw ) : '';
-			case 'url':
-				return $present ? esc_url_raw( (string) $raw ) : '';
-			case 'image':
-				// '' — not 0 — is the "unset" sentinel every other type uses, and the
-				// one Page_Renderer::cget() falls back on. An image field's hidden
-				// input always posts, so absint('') === 0 would otherwise land on every
-				// untouched image on the first Save and read back as a real override
-				// (rendering src="0" and dropping the empty-state fallback).
-				// Attachment IDs start at 1, so nothing legitimate is lost.
-				$id = $present ? absint( $raw ) : 0;
-				return $id > 0 ? $id : '';
-			case 'toggle':
-				return $present;
-			case 'select':
-				$value   = $present ? (string) $raw : '';
-				$options = $field_def['options'] ?? array();
-				return array_key_exists( $value, $options ) ? $value : '';
-			default:
-				return '';
-		}
+		return Blueworx_Clubhouse_Content_Sanitiser::field( $field_def, $raw, $present );
 	}
 
 	/**
@@ -292,18 +262,7 @@ final class Blueworx_Clubhouse_Content_Controller {
 	 * @return array<int,array<string,mixed>>
 	 */
 	private static function sanitise_items( array $loop_fields, array $raw_items ): array {
-		$items = array();
-		foreach ( $raw_items as $raw_item ) {
-			$raw_item = self::as_array( $raw_item );
-			$item     = array();
-			foreach ( $loop_fields as $field_def ) {
-				$fkey            = (string) $field_def['key'];
-				$present         = array_key_exists( $fkey, $raw_item );
-				$item[ $fkey ]   = self::sanitise_field( $field_def, $present ? $raw_item[ $fkey ] : null, $present );
-			}
-			$items[] = $item;
-		}
-		return $items;
+		return Blueworx_Clubhouse_Content_Sanitiser::items( $loop_fields, $raw_items );
 	}
 
 	/**
