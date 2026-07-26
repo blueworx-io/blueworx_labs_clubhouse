@@ -1221,3 +1221,707 @@ git commit -m "feat: parse import file envelope and page content into a plan"
 ```
 
 ---
+
+### Task 6: `Import_Parser` — collections
+
+Extend the parser to read the `collections` object. `Collection_Meta` is the
+allow-list; `Collection_Meta::sanitise()` does every value. Media-typed meta arrives
+as an image reference, exactly as page-content images do.
+
+**Files:**
+- Modify: `includes/import/class-import-parser.php`
+- Test: `tests/php/ImportParserCollectionsTest.php`
+
+**Interfaces:**
+- Consumes: `Blueworx_Clubhouse_Collection_Meta::types()`, `::fields()`, `::sanitise()`,
+  and `Blueworx_Clubhouse_Import_Parser::image_ref()` from Task 5.
+- Produces: plan entries via `Import_Plan::add_collection( string $type, array $items )`
+  where each item is `array{title:string,meta:array<string,string>,images:array<string,array{url:string,alt:string}>}`.
+
+- [ ] **Step 1: Write the failing test**
+
+Create `tests/php/ImportParserCollectionsTest.php`:
+
+```php
+<?php
+// tests/php/ImportParserCollectionsTest.php
+declare(strict_types=1);
+use PHPUnit\Framework\TestCase;
+
+final class ImportParserCollectionsTest extends TestCase {
+
+	/** @param array<string,mixed> $collections */
+	private function parse( array $collections ): array {
+		return Blueworx_Clubhouse_Import_Parser::parse( array(
+			'clubhouse_import' => 1,
+			'collections'      => $collections,
+		) );
+	}
+
+	public function test_a_collection_item_becomes_a_title_and_meta_pair(): void {
+		$out = $this->parse( array( 'clubhouse_sport' => array(
+			array( 'title' => 'Tennis', 'subtitle' => 'Six courts' ),
+		) ) );
+		$item = $out['plan']->collections()['clubhouse_sport'][0];
+		$this->assertSame( 'Tennis', $item['title'] );
+		$this->assertSame( 'Six courts', $item['meta']['subtitle'] );
+	}
+
+	public function test_an_unknown_collection_type_is_warned_and_dropped(): void {
+		$out = $this->parse( array( 'clubhouse_nope' => array( array( 'title' => 'X' ) ) ) );
+		$this->assertTrue( $out['plan']->is_empty() );
+		$this->assertSame( array( 'Ignored unknown collection "clubhouse_nope".' ), $out['plan']->warnings() );
+	}
+
+	public function test_a_collection_that_is_not_a_list_is_warned(): void {
+		$out = $this->parse( array( 'clubhouse_sport' => array( 'title' => 'Tennis' ) ) );
+		$this->assertSame( array( 'Ignored "clubhouse_sport": expected a list of items.' ), $out['plan']->warnings() );
+	}
+
+	public function test_an_item_without_a_title_is_warned_and_dropped(): void {
+		$out = $this->parse( array( 'clubhouse_sport' => array(
+			array( 'subtitle' => 'No name' ),
+			array( 'title' => 'Tennis' ),
+		) ) );
+		$this->assertCount( 1, $out['plan']->collections()['clubhouse_sport'] );
+		$this->assertSame( array( 'Ignored clubhouse_sport item 1: every item needs a title.' ), $out['plan']->warnings() );
+	}
+
+	public function test_an_empty_collection_list_is_not_planned(): void {
+		// An empty list must not reach the plan: applying it would delete the demo
+		// posts of that type and leave the section blank, which no owner asked for.
+		$out = $this->parse( array( 'clubhouse_sport' => array() ) );
+		$this->assertTrue( $out['plan']->is_empty() );
+		$this->assertSame( array( 'Ignored "clubhouse_sport": the list is empty.' ), $out['plan']->warnings() );
+	}
+
+	public function test_unknown_meta_keys_are_warned_and_dropped(): void {
+		$out = $this->parse( array( 'clubhouse_sport' => array(
+			array( 'title' => 'Tennis', 'evil' => 'x' ),
+		) ) );
+		$this->assertArrayNotHasKey( 'evil', $out['plan']->collections()['clubhouse_sport'][0]['meta'] );
+		$this->assertSame( array( 'Ignored unknown field "clubhouse_sport/evil".' ), $out['plan']->warnings() );
+	}
+
+	public function test_values_are_sanitised_by_collection_meta(): void {
+		$out = $this->parse( array( 'clubhouse_fixture' => array(
+			array( 'title' => 'A vs B', 'match_date' => 'not-a-date', 'kickoff_time' => '14:00' ),
+		) ) );
+		$meta = $out['plan']->collections()['clubhouse_fixture'][0]['meta'];
+		$this->assertSame( '', $meta['match_date'] ); // strict format check rejects it
+		$this->assertSame( '14:00', $meta['kickoff_time'] );
+	}
+
+	public function test_a_select_value_outside_its_options_falls_back_to_the_default(): void {
+		$out = $this->parse( array( 'clubhouse_event' => array(
+			array( 'title' => 'Gala', 'status' => 'sideways' ),
+		) ) );
+		$this->assertSame( 'upcoming', $out['plan']->collections()['clubhouse_event'][0]['meta']['status'] );
+	}
+
+	public function test_a_media_field_is_kept_as_an_image_reference(): void {
+		$out = $this->parse( array( 'clubhouse_sport' => array(
+			array( 'title' => 'Tennis', 'image' => array( 'url' => 'https://e.test/t.jpg', 'alt' => 'Court' ) ),
+		) ) );
+		$item = $out['plan']->collections()['clubhouse_sport'][0];
+		$this->assertSame( 'https://e.test/t.jpg', $item['images']['image']['url'] );
+		$this->assertSame( 'Court', $item['images']['image']['alt'] );
+		$this->assertArrayNotHasKey( 'image', $item['meta'] );
+	}
+
+	public function test_a_bad_media_url_is_warned_and_the_item_still_imports(): void {
+		$out = $this->parse( array( 'clubhouse_sport' => array(
+			array( 'title' => 'Tennis', 'image' => 'ftp://e.test/t.jpg' ),
+		) ) );
+		$item = $out['plan']->collections()['clubhouse_sport'][0];
+		$this->assertSame( 'Tennis', $item['title'] );
+		$this->assertSame( array(), $item['images'] );
+		$this->assertSame( array( 'Ignored the image for clubhouse_sport item 0: expected an image URL.' ), $out['plan']->warnings() );
+	}
+
+	public function test_content_and_collections_can_arrive_in_one_file(): void {
+		$out = Blueworx_Clubhouse_Import_Parser::parse( array(
+			'clubhouse_import' => 1,
+			'content'          => array( 'home' => array( 'hero' => array( 'eyebrow' => 'Est. 1974' ) ) ),
+			'collections'      => array( 'clubhouse_sport' => array( array( 'title' => 'Tennis' ) ) ),
+		) );
+		$this->assertSame( 'Est. 1974', $out['plan']->fields()['home']['hero']['eyebrow'] );
+		$this->assertCount( 1, $out['plan']->collections()['clubhouse_sport'] );
+	}
+}
+```
+
+- [ ] **Step 2: Run test to verify it fails**
+
+Run: `composer test -- --filter ImportParserCollectionsTest`
+Expected: FAIL — every collection assertion fails because `parse()` currently ignores
+the `collections` key (`Undefined array key "clubhouse_sport"`).
+
+- [ ] **Step 3: Call the new branch from `parse()`**
+
+In `Blueworx_Clubhouse_Import_Parser::parse()`, after the existing content branch:
+
+```php
+		if ( null !== $collections ) {
+			self::parse_collections( $collections, $plan );
+		}
+```
+
+- [ ] **Step 4: Implement `parse_collections()`**
+
+Add to `Blueworx_Clubhouse_Import_Parser`, after `parse_section()`:
+
+```php
+	/**
+	 * Read the file's `collections` object. Collection_Meta is the allow-list:
+	 * a type it does not declare, or a meta key that type does not declare, is
+	 * dropped with a warning. Media-typed meta is kept as an image reference for
+	 * the applier to sideload, never as a raw value — an attachment ID is the
+	 * only thing that may reach post meta.
+	 *
+	 * @param array<string,mixed> $collections
+	 */
+	private static function parse_collections( array $collections, Blueworx_Clubhouse_Import_Plan $plan ): void {
+		$known = Blueworx_Clubhouse_Collection_Meta::types();
+
+		foreach ( $collections as $type => $raw_items ) {
+			$type = (string) $type;
+			if ( ! in_array( $type, $known, true ) ) {
+				$plan->warn( sprintf( 'Ignored unknown collection "%s".', $type ) );
+				continue;
+			}
+			if ( ! is_array( $raw_items ) || ! array_is_list( $raw_items ) ) {
+				$plan->warn( sprintf( 'Ignored "%s": expected a list of items.', $type ) );
+				continue;
+			}
+			if ( array() === $raw_items ) {
+				// An empty list is almost certainly an oversight, and applying it
+				// would delete this type's demo posts and leave the section blank.
+				$plan->warn( sprintf( 'Ignored "%s": the list is empty.', $type ) );
+				continue;
+			}
+
+			$field_defs = array();
+			foreach ( Blueworx_Clubhouse_Collection_Meta::fields( $type ) as $field_def ) {
+				$field_defs[ (string) $field_def['key'] ] = $field_def;
+			}
+
+			$items = array();
+			foreach ( $raw_items as $index => $raw_item ) {
+				$index = (int) $index;
+				if ( ! is_array( $raw_item ) ) {
+					$plan->warn( sprintf( 'Ignored %s item %d: expected a group of fields.', $type, $index ) );
+					continue;
+				}
+				$title = is_scalar( $raw_item['title'] ?? null ) ? trim( (string) $raw_item['title'] ) : '';
+				if ( '' === $title ) {
+					$plan->warn( sprintf( 'Ignored %s item %d: every item needs a title.', $type, $index ) );
+					continue;
+				}
+
+				$meta   = array();
+				$images = array();
+				foreach ( $raw_item as $key => $raw_value ) {
+					$key = (string) $key;
+					if ( 'title' === $key ) {
+						continue;
+					}
+					if ( ! isset( $field_defs[ $key ] ) ) {
+						$plan->warn( sprintf( 'Ignored unknown field "%s/%s".', $type, $key ) );
+						continue;
+					}
+					if ( 'media' === $field_defs[ $key ]['type'] ) {
+						$ref = self::image_ref( $raw_value );
+						if ( null === $ref ) {
+							$plan->warn( sprintf( 'Ignored the image for %s item %d: expected an image URL.', $type, $index ) );
+							continue;
+						}
+						$images[ $key ] = $ref;
+						continue;
+					}
+					$value        = is_scalar( $raw_value ) ? (string) $raw_value : '';
+					$meta[ $key ] = Blueworx_Clubhouse_Collection_Meta::sanitise( $type, $key, $value );
+				}
+
+				$items[] = array( 'title' => $title, 'meta' => $meta, 'images' => $images );
+			}
+
+			if ( array() !== $items ) {
+				$plan->add_collection( $type, $items );
+			}
+		}
+	}
+```
+
+Note on `sanitise()` and defaults: `Collection_Meta::sanitise()` returns a select
+field's declared default when the supplied value is not an option, which is why
+`test_a_select_value_outside_its_options_falls_back_to_the_default` expects
+`upcoming` rather than `''`. Do not "fix" that by pre-checking the option list here —
+`Collection_Meta` is the single source of truth for what a field accepts.
+
+- [ ] **Step 5: Run test to verify it passes**
+
+Run: `composer test -- --filter ImportParserCollectionsTest`
+Expected: PASS, all 11 cases.
+
+- [ ] **Step 6: Run the full suite and lint**
+
+Run: `composer test && composer lint`
+Expected: PASS — in particular `ImportParserContentTest` must still be green; the
+collections branch must not have disturbed the content branch.
+
+- [ ] **Step 7: Commit**
+
+```bash
+git add includes/import/class-import-parser.php tests/php/ImportParserCollectionsTest.php
+git commit -m "feat: parse collections from the import file"
+```
+
+---
+
+### Task 7: `Import_Prompt` — the generated Markdown
+
+The downloadable prompt, rendered from `Content_Catalogue` and `Collection_Meta` so it
+can never fall behind the plugin. A lockstep test proves coverage in both directions.
+
+**Files:**
+- Create: `includes/import/class-import-prompt.php`
+- Modify: `includes/collections/class-collection-meta.php` (add `label()`)
+- Modify: `includes/bootstrap.php`
+- Test: `tests/php/ImportPromptTest.php`, `tests/php/CollectionMetaTest.php`
+
+**Interfaces:**
+- Consumes: `Content_Catalogue::pages()`, `Collection_Meta::types()`/`::fields()`.
+- Produces:
+  - `Blueworx_Clubhouse_Collection_Meta::label( string $type ): string` — human plural, e.g. `Sports`
+  - `Blueworx_Clubhouse_Import_Prompt::markdown( string $version ): string`
+  - `Blueworx_Clubhouse_Import_Prompt::FILENAME` — `'clubhouse-import-prompt.md'`
+
+- [ ] **Step 1: Write the failing tests**
+
+Append to `tests/php/CollectionMetaTest.php`:
+
+```php
+	public function test_every_type_has_a_human_label(): void {
+		foreach ( Blueworx_Clubhouse_Collection_Meta::types() as $type ) {
+			$this->assertNotSame( '', Blueworx_Clubhouse_Collection_Meta::label( $type ), $type . ' needs a label' );
+		}
+		$this->assertSame( 'Sports', Blueworx_Clubhouse_Collection_Meta::label( 'clubhouse_sport' ) );
+		$this->assertSame( 'People', Blueworx_Clubhouse_Collection_Meta::label( 'clubhouse_person' ) );
+	}
+
+	public function test_label_for_an_unknown_type_is_the_type(): void {
+		$this->assertSame( 'nope', Blueworx_Clubhouse_Collection_Meta::label( 'nope' ) );
+	}
+```
+
+Create `tests/php/ImportPromptTest.php`:
+
+```php
+<?php
+// tests/php/ImportPromptTest.php
+declare(strict_types=1);
+use PHPUnit\Framework\TestCase;
+
+final class ImportPromptTest extends TestCase {
+
+	private function md(): string {
+		return Blueworx_Clubhouse_Import_Prompt::markdown( '9.9.9' );
+	}
+
+	public function test_it_states_the_format_version_and_plugin_version(): void {
+		$md = $this->md();
+		$this->assertStringContainsString( '"clubhouse_import": 1', $md );
+		$this->assertStringContainsString( '"generated_for": "9.9.9"', $md );
+	}
+
+	public function test_it_names_the_output_file(): void {
+		$this->assertStringContainsString( 'clubhouse-import.json', $this->md() );
+	}
+
+	public function test_it_tells_the_assistant_not_to_invent_facts(): void {
+		$this->assertStringContainsString( 'Never invent', $this->md() );
+	}
+
+	public function test_it_tells_the_assistant_to_omit_what_was_not_discussed(): void {
+		$this->assertStringContainsString( 'Leave out anything you did not discuss', $this->md() );
+	}
+
+	/**
+	 * The lockstep guarantee: every field the plugin can store is described in
+	 * the prompt. If this fails after a catalogue change, the prompt generator
+	 * has stopped covering the catalogue — fix the generator, never the test.
+	 */
+	public function test_every_catalogue_field_key_appears(): void {
+		$md = $this->md();
+		foreach ( Blueworx_Clubhouse_Content_Catalogue::pages() as $page ) {
+			foreach ( $page['sections'] as $section ) {
+				$address = (string) $section['store_page'] . '.' . (string) $section['key'];
+				$this->assertStringContainsString( $address, $md, 'missing section ' . $address );
+				foreach ( ( $section['fields'] ?? array() ) as $field ) {
+					$this->assertStringContainsString( '`' . $field['key'] . '`', $md, 'missing field ' . $field['key'] );
+				}
+				foreach ( ( $section['loop']['fields'] ?? array() ) as $field ) {
+					$this->assertStringContainsString( '`' . $field['key'] . '`', $md, 'missing loop field ' . $field['key'] );
+				}
+			}
+		}
+	}
+
+	public function test_every_collection_type_and_meta_key_appears(): void {
+		$md = $this->md();
+		foreach ( Blueworx_Clubhouse_Collection_Meta::types() as $type ) {
+			$this->assertStringContainsString( $type, $md, 'missing collection ' . $type );
+			foreach ( Blueworx_Clubhouse_Collection_Meta::fields( $type ) as $field ) {
+				$this->assertStringContainsString( '`' . $field['key'] . '`', $md, 'missing meta ' . $field['key'] );
+			}
+		}
+	}
+
+	public function test_loop_sections_are_described_as_repeatable(): void {
+		$md = $this->md();
+		// Membership tiers is a loop whose item is called "Tier".
+		$this->assertMatchesRegularExpression( '/repeatable list of .{0,20}Tier/i', $md );
+	}
+
+	public function test_image_fields_ask_for_a_public_url(): void {
+		$this->assertStringContainsString( 'public image URL', $this->md() );
+	}
+
+	public function test_select_options_are_listed(): void {
+		// The event status field offers upcoming or past.
+		$this->assertMatchesRegularExpression( '/one of:.{0,40}upcoming/', $this->md() );
+	}
+
+	public function test_sections_backed_by_a_collection_say_so(): void {
+		// Home's sponsors section is a linkout to the sponsors collection.
+		$this->assertStringContainsString( 'managed as a collection', $this->md() );
+	}
+}
+```
+
+- [ ] **Step 2: Run tests to verify they fail**
+
+Run: `composer test -- --filter "ImportPromptTest|CollectionMetaTest"`
+Expected: FAIL — undefined method `label()`, class `Blueworx_Clubhouse_Import_Prompt` not found.
+
+- [ ] **Step 3: Add `Collection_Meta::label()`**
+
+In `includes/collections/class-collection-meta.php`, add the map beside `COLUMNS`:
+
+```php
+	/**
+	 * Human plural names for the six collections, used wherever a collection is
+	 * named for an owner: the generated import prompt and the import preview.
+	 *
+	 * @var array<string,string>
+	 */
+	private const LABELS = array(
+		'clubhouse_fixture' => 'Fixtures',
+		'clubhouse_person'  => 'People',
+		'clubhouse_sponsor' => 'Sponsors',
+		'clubhouse_sport'   => 'Sports',
+		'clubhouse_team'    => 'Teams',
+		'clubhouse_event'   => 'Events',
+	);
+```
+
+and the accessor, after `columns()`:
+
+```php
+	/** Human plural name for a collection type; the raw type if it is unknown. */
+	public static function label( string $type ): string {
+		return self::LABELS[ $type ] ?? $type;
+	}
+```
+
+- [ ] **Step 4: Implement `Import_Prompt`**
+
+Create `includes/import/class-import-prompt.php`:
+
+```php
+<?php
+// includes/import/class-import-prompt.php
+declare(strict_types=1);
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
+/**
+ * Renders the Markdown prompt a club owner downloads and pastes into an AI
+ * chat. Every field description is generated from Content_Catalogue and
+ * Collection_Meta, so adding a section to ClubHouse updates the prompt on the
+ * next download — there is no hand-maintained copy to drift. A lockstep test
+ * asserts the coverage.
+ *
+ * @package BlueworxLabsClubhouse
+ */
+final class Blueworx_Clubhouse_Import_Prompt {
+
+	/** Filename offered to the browser on download. */
+	public const FILENAME = 'clubhouse-import-prompt.md';
+
+	public static function markdown( string $version ): string {
+		$out  = self::preamble();
+		$out .= self::content_inventory();
+		$out .= self::collection_inventory();
+		$out .= self::output_contract( $version );
+		return $out;
+	}
+
+	private static function preamble(): string {
+		return <<<'MD'
+# ClubHouse website content interview
+
+You are helping a sports club write the content for their ClubHouse website.
+The club owner is not a copywriter and does not know the website's structure —
+you do, because it is described below. Interview them, draft the copy, and at
+the end produce a single JSON file they can upload back into their site.
+
+## How to run the interview
+
+1. Start by asking what the club is: its name, sports, where it plays, and
+   roughly how old it is. Use that to inform every later draft.
+2. Then work through the sections below **in the order they appear**, a few at
+   a time. Do not dump the whole list at them.
+3. For each section, explain in one sentence what it is for, then ask what they
+   want it to say. Offer a draft they can accept or correct — do not make them
+   write from scratch.
+4. Keep each field to the length its description implies. Short text is a few
+   words, not a paragraph. A paragraph is two or three sentences.
+5. **Never invent facts.** Prices, dates, member counts, league names, results,
+   people's names and email addresses must all come from the club. If they do
+   not know one, leave the field out rather than guessing.
+6. After each page, tell them what is left and ask whether to carry on now or
+   generate the file so far. Both are fine — the file can be uploaded as many
+   times as they like, and each upload only changes what it contains.
+7. When they ask for the file, produce it exactly as described at the end.
+
+## Images
+
+Some fields are images. ClubHouse cannot receive an image through this chat, so
+for each one ask for a **public image URL** — a link to the picture on their old
+website, or a public link from Drive, Dropbox, or similar. If they do not have
+one, leave the field out; the site will show a placeholder and they can upload
+the picture in the admin later. Never invent an image URL.
+
+
+MD;
+	}
+
+	private static function content_inventory(): string {
+		$out = "## The pages\n\n";
+		foreach ( Blueworx_Clubhouse_Content_Catalogue::pages() as $page ) {
+			$out .= '### ' . $page['label'] . "\n\n";
+			foreach ( $page['sections'] as $section ) {
+				$address = (string) $section['store_page'] . '.' . (string) $section['key'];
+				$out    .= '#### ' . $section['label'] . ' — `content.' . $address . "`\n\n";
+
+				$note = self::section_note( $section );
+				if ( '' !== $note ) {
+					$out .= $note . "\n\n";
+				}
+
+				$fields = is_array( $section['fields'] ?? null ) ? $section['fields'] : array();
+				foreach ( $fields as $field ) {
+					$out .= self::field_line( $field );
+				}
+				if ( array() !== $fields ) {
+					$out .= "\n";
+				}
+
+				$loop = is_array( $section['loop'] ?? null ) ? $section['loop'] : array();
+				if ( array() !== $loop ) {
+					$out .= 'Then a repeatable list of **' . $loop['name'] . '** entries, under `items`. Each entry has:' . "\n";
+					foreach ( $loop['fields'] as $field ) {
+						$out .= self::field_line( $field );
+					}
+					$out .= "\n";
+				}
+			}
+		}
+		return $out;
+	}
+
+	/** The catalogue's own explanatory note for a section, if it has one. */
+	private static function section_note( array $section ): string {
+		$parts = array();
+		if ( ! empty( $section['note'] ) ) {
+			$parts[] = (string) $section['note'];
+		}
+		if ( ! empty( $section['link']['text'] ) ) {
+			$parts[] = (string) $section['link']['text'];
+		}
+		if ( ! empty( $section['auto']['text'] ) ) {
+			$parts[] = (string) $section['auto']['text'];
+		}
+		return '' === implode( '', $parts ) ? '' : '_' . implode( ' ', $parts ) . '_';
+	}
+
+	private static function field_line( array $field ): string {
+		$line = '- `' . $field['key'] . '` — ' . $field['label'] . ' (' . self::type_hint( $field ) . ')';
+		if ( ! empty( $field['placeholder'] ) ) {
+			$line .= ' e.g. ' . $field['placeholder'];
+		}
+		return $line . "\n";
+	}
+
+	/** A plain-English description of what a field accepts. */
+	private static function type_hint( array $field ): string {
+		switch ( $field['type'] ) {
+			case 'textarea':
+				return 'a short paragraph';
+			case 'url':
+			case 'href':
+				return 'a link';
+			case 'image':
+			case 'media':
+				return 'a public image URL';
+			case 'toggle':
+				return 'true or false';
+			case 'date':
+				return 'a date, YYYY-MM-DD';
+			case 'time':
+				return 'a 24-hour time, HH:MM';
+			case 'email':
+				return 'an email address';
+			case 'select':
+				return 'one of: ' . self::option_list( $field );
+			case 'text':
+			default:
+				return 'short text';
+		}
+	}
+
+	/**
+	 * Select options come in two shapes: the content catalogue keys them
+	 * value => label, while Collection_Meta lists bare values. Handle both, and
+	 * name the empty value rather than printing nothing.
+	 */
+	private static function option_list( array $field ): string {
+		$options = is_array( $field['options'] ?? null ) ? $field['options'] : array();
+		$values  = array_is_list( $options ) ? $options : array_keys( $options );
+		$shown   = array();
+		foreach ( $values as $value ) {
+			$shown[] = '' === (string) $value ? '(leave out)' : (string) $value;
+		}
+		return implode( ', ', $shown );
+	}
+
+	private static function collection_inventory(): string {
+		$out  = "## The collections\n\n";
+		$out .= "These are lists the site builds pages from. Ask for as many entries as the club\n";
+		$out .= "actually has — do not pad them out. Every entry needs a `title`.\n\n";
+
+		foreach ( Blueworx_Clubhouse_Collection_Meta::types() as $type ) {
+			$out .= '### ' . Blueworx_Clubhouse_Collection_Meta::label( $type ) . ' — `collections.' . $type . "`\n\n";
+			$out .= '- `title` — the name shown on the site (short text)' . "\n";
+			foreach ( Blueworx_Clubhouse_Collection_Meta::fields( $type ) as $field ) {
+				$out .= self::field_line( $field );
+			}
+			$out .= "\n";
+		}
+		return $out;
+	}
+
+	private static function output_contract( string $version ): string {
+		$example = <<<'JSON'
+```json
+{
+  "clubhouse_import": 1,
+  "generated_for": "VERSION",
+  "content": {
+    "home": {
+      "hero": {
+        "eyebrow": "Est. 1974 · Marlow",
+        "title_lead": "One club, ",
+        "title_highlight": "every sport",
+        "image": { "url": "https://example.org/pavilion.jpg", "alt": "The pavilion" }
+      },
+      "stats": {
+        "items": [
+          { "value": "450", "label": "Members", "featured": true },
+          { "value": "6", "label": "Sports", "featured": false }
+        ]
+      }
+    },
+    "global": { "header": { "join": "Join the club" } }
+  },
+  "collections": {
+    "clubhouse_sport": [
+      { "title": "Tennis", "subtitle": "Four courts, all year",
+        "image": { "url": "https://example.org/tennis.jpg" } }
+    ]
+  }
+}
+```
+JSON;
+		$example = str_replace( 'VERSION', $version, $example );
+
+		return <<<MD
+## The file you produce
+
+When the club asks for the file, output **one JSON code block and nothing else
+inside it**, and tell them to save it as `clubhouse-import.json` and upload it
+at Club Content → Import in their ClubHouse admin.
+
+Rules for the file:
+
+- `"clubhouse_import": 1` and `"generated_for": "{$version}"` must both be present.
+- Use the exact `content.<page>.<section>` addresses and the exact field keys
+  listed above. A key that is not listed will be ignored on upload.
+- **Leave out anything you did not discuss.** Uploading only changes what the
+  file contains; absent sections keep whatever is already on the site. A blank
+  string is not the same as leaving a field out — a blank string clears it.
+- Repeatable sections take their entries as a list under `items`.
+- Images are `{{ "url": "https://…", "alt": "…" }}`. The `alt` is optional.
+- Collections are lists of entries, each with a `title`.
+
+{$example}
+
+MD;
+	}
+}
+```
+
+- [ ] **Step 5: Require it from the runtime loader**
+
+In `includes/bootstrap.php`, under the `// Import (pure)` block:
+
+```php
+require_once __DIR__ . '/import/class-import-prompt.php';
+```
+
+- [ ] **Step 6: Run the tests**
+
+Run: `composer test -- --filter "ImportPromptTest|CollectionMetaTest"`
+Expected: PASS.
+
+Two things to watch:
+- The `output_contract()` heredoc is **interpolating** (`<<<MD`, unquoted), so its
+  literal braces are doubled (`{{ "url": … }}`) to survive. The `preamble()` and the
+  JSON example use **nowdoc** (`<<<'MD'`, `<<<'JSON'`) and must not be.
+- If `test_every_catalogue_field_key_appears` fails on a key like `image`, check the
+  loop-field branch is emitting `field_line()` for loop fields too, not just the
+  section's own fields.
+
+- [ ] **Step 7: Read the output once, as a human**
+
+Run:
+```bash
+php -r "define('ABSPATH',__DIR__.'/'); require 'includes/bootstrap.php'; echo Blueworx_Clubhouse_Import_Prompt::markdown('0.35.0');" > /tmp/prompt-check.md
+```
+Read it. It is the product here, not just a string — if a section reads as
+nonsense to you it will read as nonsense to the AI running the interview. Fix the
+generator, not the catalogue.
+
+- [ ] **Step 8: Lint and commit**
+
+```bash
+composer lint
+git add includes/import/class-import-prompt.php includes/collections/class-collection-meta.php includes/bootstrap.php tests/php/ImportPromptTest.php tests/php/CollectionMetaTest.php
+git commit -m "feat: generate the AI import prompt from the catalogues"
+```
+
+---
