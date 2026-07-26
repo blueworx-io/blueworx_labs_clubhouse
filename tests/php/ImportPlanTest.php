@@ -62,7 +62,7 @@ final class ImportPlanTest extends TestCase {
 		$plan = new Blueworx_Clubhouse_Import_Plan();
 		$plan->add_field( 'home', 'hero', 'eyebrow', 'Est. 1974' );
 		$plan->add_items( 'home', 'stats', array( array( 'value' => '450', 'label' => 'Members', 'featured' => true ) ) );
-		$plan->add_image( 'home', 'hero', 'image', 'https://e.test/a.jpg', '', 'Global · Hero — Background image' );
+		$plan->add_image( 'home', 'hero', 'image', 'https://e.test/a.jpg', '', 'Global · Hero — Background image', 3 );
 		$plan->add_collection( 'clubhouse_sport', array( array( 'title' => 'Tennis', 'meta' => array(), 'images' => array() ) ) );
 		$plan->warn( 'unknown field "x"' );
 
