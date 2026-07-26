@@ -88,4 +88,16 @@ final class CollectionMetaTest extends TestCase {
 		$this->assertSame( array( 'match_date', 'matchup', 'result' ), array_keys( Blueworx_Clubhouse_Collection_Meta::columns( 'clubhouse_fixture' ) ) );
 		$this->assertNotEmpty( Blueworx_Clubhouse_Collection_Meta::columns( 'clubhouse_person' ) );
 	}
+
+	public function test_every_type_has_a_human_label(): void {
+		foreach ( Blueworx_Clubhouse_Collection_Meta::types() as $type ) {
+			$this->assertNotSame( '', Blueworx_Clubhouse_Collection_Meta::label( $type ), $type . ' needs a label' );
+		}
+		$this->assertSame( 'Sports', Blueworx_Clubhouse_Collection_Meta::label( 'clubhouse_sport' ) );
+		$this->assertSame( 'People', Blueworx_Clubhouse_Collection_Meta::label( 'clubhouse_person' ) );
+	}
+
+	public function test_label_for_an_unknown_type_is_the_type(): void {
+		$this->assertSame( 'nope', Blueworx_Clubhouse_Collection_Meta::label( 'nope' ) );
+	}
 }
