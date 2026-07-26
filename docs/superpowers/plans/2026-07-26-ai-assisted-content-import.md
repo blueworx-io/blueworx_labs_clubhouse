@@ -283,7 +283,9 @@ the Content screen) need it, and deriving it keeps them correct as the catalogue
 - Test: `tests/php/ContentCatalogueTest.php`
 
 **Interfaces:**
-- Produces: `Blueworx_Clubhouse_Content_Catalogue::index(): array<string,array{tab:string,tab_label:string,section_key:string,section_label:string}>`, keyed `"{store_page}/{section_key}"`.
+- Produces:
+  - `Blueworx_Clubhouse_Content_Catalogue::index(): array<string,array{tab:string,tab_label:string,section_key:string,section_label:string}>`, keyed `"{store_page}/{section_key}"`.
+  - `Blueworx_Clubhouse_Content_Catalogue::address_label( string $address ): string` — the human name for an address, e.g. `Global · Hero`; the raw address when unknown. Every later task that names a stored section for a human calls this, so the composition lives in exactly one place.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -312,6 +314,15 @@ Append to `tests/php/ContentCatalogueTest.php`:
 			$expected += count( $page['sections'] );
 		}
 		$this->assertCount( $expected, Blueworx_Clubhouse_Content_Catalogue::index() );
+	}
+
+	public function test_address_label_names_a_section_for_a_human(): void {
+		$this->assertSame( 'Global · Hero', Blueworx_Clubhouse_Content_Catalogue::address_label( 'home/hero' ) );
+		$this->assertSame( 'Membership · FAQ', Blueworx_Clubhouse_Content_Catalogue::address_label( 'membership/faq' ) );
+	}
+
+	public function test_address_label_falls_back_to_the_raw_address(): void {
+		$this->assertSame( 'ghost/gone', Blueworx_Clubhouse_Content_Catalogue::address_label( 'ghost/gone' ) );
 	}
 ```
 
@@ -347,6 +358,20 @@ Add to `Blueworx_Clubhouse_Content_Catalogue`, after `pages()`:
 			}
 		}
 		return $index;
+	}
+
+	/**
+	 * The human name for a stored content address ("Global · Hero"), or the
+	 * raw address when the catalogue no longer has it. The single place this
+	 * string is composed — the import preview, the applier's result rows and
+	 * the images-needed notice all name sections through here.
+	 */
+	public static function address_label( string $address ): string {
+		$entry = self::index()[ $address ] ?? null;
+		if ( null === $entry ) {
+			return $address;
+		}
+		return $entry['tab_label'] . ' · ' . $entry['section_label'];
 	}
 ```
 
@@ -2131,8 +2156,7 @@ final class Blueworx_Clubhouse_Import_Preview {
 		}
 		$addresses = array_values( array_unique( $addresses ) );
 
-		$index = Blueworx_Clubhouse_Content_Catalogue::index();
-		$rows  = array();
+		$rows = array();
 		foreach ( $addresses as $address ) {
 			$parts   = explode( '/', $address, 2 );
 			$page    = $parts[0];
@@ -2152,11 +2176,10 @@ final class Blueworx_Clubhouse_Import_Preview {
 				$detail[] = self::plural( $item_count, 'entry', 'entries' );
 			}
 
-			$label = isset( $index[ $address ] )
-				? $index[ $address ]['tab_label'] . ' · ' . $index[ $address ]['section_label']
-				: $address;
-
-			$rows[] = array( 'label' => $label, 'detail' => implode( ', ', $detail ) );
+			$rows[] = array(
+				'label'  => Blueworx_Clubhouse_Content_Catalogue::address_label( $address ),
+				'detail' => implode( ', ', $detail ),
+			);
 		}
 		return $rows;
 	}
@@ -2939,30 +2962,21 @@ final class Blueworx_Clubhouse_Import_Applier {
 
 	/** @return array<int,array{label:string,detail:string}> */
 	private static function content_rows( Blueworx_Clubhouse_Import_Plan $plan ): array {
-		$index = Blueworx_Clubhouse_Content_Catalogue::index();
-		$rows  = array();
+		$rows = array();
 		foreach ( $plan->fields() as $page => $sections ) {
 			foreach ( $sections as $section => $fields ) {
-				$address = $page . '/' . $section;
-				$label   = isset( $index[ $address ] )
-					? $index[ $address ]['tab_label'] . ' · ' . $index[ $address ]['section_label']
-					: (string) $address;
-				$count   = count( $fields );
-				$rows[]  = array(
-					'label'  => $label,
+				$count  = count( $fields );
+				$rows[] = array(
+					'label'  => Blueworx_Clubhouse_Content_Catalogue::address_label( $page . '/' . $section ),
 					'detail' => $count . ' ' . ( 1 === $count ? 'field' : 'fields' ) . ' saved',
 				);
 			}
 		}
 		foreach ( $plan->items() as $page => $sections ) {
 			foreach ( $sections as $section => $items ) {
-				$address = $page . '/' . $section;
-				$label   = isset( $index[ $address ] )
-					? $index[ $address ]['tab_label'] . ' · ' . $index[ $address ]['section_label']
-					: (string) $address;
-				$count   = count( $items );
-				$rows[]  = array(
-					'label'  => $label,
+				$count  = count( $items );
+				$rows[] = array(
+					'label'  => Blueworx_Clubhouse_Content_Catalogue::address_label( $page . '/' . $section ),
 					'detail' => $count . ' ' . ( 1 === $count ? 'entry' : 'entries' ) . ' saved',
 				);
 			}
