@@ -45,6 +45,7 @@ final class ImportScreenTest extends TestCase {
 		) ) );
 		$this->assertStringContainsString( 'This file is not a ClubHouse import file.', $html );
 		$this->assertStringNotContainsString( '<script>', $html );
+		$this->assertStringContainsString( '&lt;script&gt;', $html );
 	}
 
 	public function test_preview_state_lists_rows_and_offers_apply(): void {
@@ -99,5 +100,28 @@ final class ImportScreenTest extends TestCase {
 			'download_url' => 'javascript:alert(1)',
 		) ) );
 		$this->assertStringNotContainsString( 'javascript:', $html );
+	}
+
+	public function test_a_tab_obfuscated_javascript_download_url_is_refused(): void {
+		$html = Blueworx_Clubhouse_Import_Screen::render( $this->model( array(
+			'download_url' => "java\tscript:alert(1)",
+		) ) );
+		$this->assertStringNotContainsString( "java\tscript:alert(1)", $html );
+		$this->assertStringNotContainsString( 'script:', $html );
+	}
+
+	public function test_a_newline_obfuscated_javascript_download_url_is_refused(): void {
+		$html = Blueworx_Clubhouse_Import_Screen::render( $this->model( array(
+			'download_url' => "java\nscript:alert(1)",
+		) ) );
+		$this->assertStringNotContainsString( "java\nscript:alert(1)", $html );
+		$this->assertStringNotContainsString( 'script:', $html );
+	}
+
+	public function test_an_ordinary_https_download_url_still_renders(): void {
+		$html = Blueworx_Clubhouse_Import_Screen::render( $this->model( array(
+			'download_url' => 'https://club.test/wp-admin/admin-post.php?action=clubhouse_import_prompt',
+		) ) );
+		$this->assertStringContainsString( 'https://club.test/wp-admin/admin-post.php?action=clubhouse_import_prompt', $html );
 	}
 }

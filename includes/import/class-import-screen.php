@@ -23,7 +23,9 @@ final class Blueworx_Clubhouse_Import_Screen {
 
 	/** Escape a URL for an href, refusing any scheme that is not http(s). */
 	private static function esc_url( string $v ): string {
-		if ( preg_match( '/^\s*([a-zA-Z][a-zA-Z0-9+.\-]*):/', $v, $m ) ) {
+		// Collapse whitespace/control chars so an obfuscated scheme (e.g. "java\tscript:") can't slip past the check.
+		$probe = (string) preg_replace( '/[\s\x00-\x1F]+/', '', $v );
+		if ( preg_match( '/^([a-zA-Z][a-zA-Z0-9+.\-]*):/', $probe, $m ) ) {
 			if ( ! in_array( strtolower( $m[1] ), array( 'http', 'https' ), true ) ) {
 				return '';
 			}
