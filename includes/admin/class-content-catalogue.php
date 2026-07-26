@@ -94,6 +94,47 @@ final class Blueworx_Clubhouse_Content_Catalogue {
 		);
 	}
 
+	/**
+	 * Flat lookup from a stored content address to its labels and owning tab.
+	 * Keyed "{store_page}/{section_key}" — the same address Content_Store uses —
+	 * so callers holding only stored data (the import preview, the images-needed
+	 * notice) can name a section for a human and link to its panel.
+	 *
+	 * @return array<string,array{tab:string,tab_label:string,section_key:string,section_label:string}>
+	 */
+	public static function index(): array {
+		$index = array();
+		foreach ( self::pages() as $page ) {
+			foreach ( $page['sections'] as $section ) {
+				$key           = (string) $section['store_page'] . '/' . (string) $section['key'];
+				$index[ $key ] = array(
+					'tab'           => (string) $page['tab'],
+					'tab_label'     => (string) $page['label'],
+					'section_key'   => (string) $section['key'],
+					'section_label' => (string) $section['label'],
+				);
+			}
+		}
+		return $index;
+	}
+
+	/**
+	 * The human name for a stored content address ("Global · Hero"), or the
+	 * raw address when the catalogue no longer has it. The single place this
+	 * string is composed — the import preview, the applier's result rows and
+	 * the images-needed notice all name sections through here.
+	 *
+	 * @param string $address The address in format "store_page/section_key".
+	 * @return string
+	 */
+	public static function address_label( string $address ): string {
+		$entry = self::index()[ $address ] ?? null;
+		if ( null === $entry ) {
+			return $address;
+		}
+		return $entry['tab_label'] . ' · ' . $entry['section_label'];
+	}
+
 	/** @return array<int,array<string,mixed>> */
 	public static function pages(): array {
 		return array(
