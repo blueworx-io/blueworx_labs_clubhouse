@@ -44,6 +44,12 @@ final class Blueworx_Clubhouse_Import_Applier {
 
 		$rows = self::content_rows( $plan );
 
+		foreach ( $plan->collections() as $type => $items ) {
+			$result   = self::apply_collection( (string) $type, $items );
+			$rows     = array_merge( $rows, $result['rows'] );
+			$warnings = array_merge( $warnings, $result['warnings'] );
+		}
+
 		$fetched = 0;
 		foreach ( $plan->images() as $image ) {
 			$id = self::sideload( $image['url'], $image['alt'] );
@@ -86,6 +92,131 @@ final class Blueworx_Clubhouse_Import_Applier {
 			return 0;
 		}
 		return $id;
+	}
+
+	/**
+	 * Count the demo posts of each type, so the preview can tell an owner what
+	 * an import would replace before they approve it.
+	 *
+	 * @param array<int,string> $types
+	 * @return array<string,int>
+	 */
+	public static function demo_counts( array $types ): array {
+		$counts = array();
+		foreach ( $types as $type ) {
+			$counts[ $type ] = count( self::partition( $type )['demo'] );
+		}
+		return $counts;
+	}
+
+	/**
+	 * Split a type's existing posts into demo and real. A post is demo if the
+	 * seeder stamped it, or — on installs seeded before that marker existed —
+	 * if its title is one Demo_Content seeds. Anything else is the owner's and
+	 * is never deleted.
+	 *
+	 * @return array{demo:array<int,object>,real:array<int,object>}
+	 */
+	private static function partition( string $type ): array {
+		$demo_titles = Blueworx_Clubhouse_Demo_Content::titles( $type );
+		$demo        = array();
+		$real        = array();
+		$posts       = get_posts( array(
+			'post_type'   => $type,
+			'post_status' => 'any',
+			'numberposts' => -1,
+		) );
+		foreach ( $posts as $post ) {
+			$id     = (int) ( $post->ID ?? 0 );
+			$marked = '1' === (string) get_post_meta( $id, Blueworx_Clubhouse_Collection_Seeder::DEMO_META, true );
+			$titled = in_array( (string) ( $post->post_title ?? '' ), $demo_titles, true );
+			if ( $marked || $titled ) {
+				$demo[] = $post;
+				continue;
+			}
+			$real[] = $post;
+		}
+		return array( 'demo' => $demo, 'real' => $real );
+	}
+
+	/**
+	 * Replace demo, keep real: delete this type's demo posts, update any real
+	 * post whose title matches an incoming item, create the rest. Real posts the
+	 * file does not mention are left alone — an import is not a purge.
+	 *
+	 * @param array<int,array{title:string,meta:array<string,string>,images:array<string,array{url:string,alt:string}>}> $items
+	 * @return array{rows:array<int,array{label:string,detail:string}>,warnings:array<int,string>}
+	 */
+	private static function apply_collection( string $type, array $items ): array {
+		$split    = self::partition( $type );
+		$warnings = array();
+
+		foreach ( $split['demo'] as $post ) {
+			wp_delete_post( (int) $post->ID, true );
+		}
+
+		$by_title = array();
+		foreach ( $split['real'] as $post ) {
+			$by_title[ (string) ( $post->post_title ?? '' ) ] = (int) ( $post->ID ?? 0 );
+		}
+
+		$created = 0;
+		$updated = 0;
+		$order   = 0;
+		foreach ( $items as $item ) {
+			$title = (string) $item['title'];
+			if ( isset( $by_title[ $title ] ) ) {
+				$id = $by_title[ $title ];
+				wp_update_post( array( 'ID' => $id, 'menu_order' => $order ) );
+				++$updated;
+			} else {
+				$id = (int) wp_insert_post( array(
+					'post_type'   => $type,
+					'post_status' => 'publish',
+					'post_title'  => $title,
+					'menu_order'  => $order,
+				) );
+				++$created;
+			}
+			++$order;
+
+			if ( $id < 1 ) {
+				$warnings[] = sprintf( 'Could not save the %s entry "%s".', Blueworx_Clubhouse_Collection_Meta::label( $type ), $title );
+				continue;
+			}
+
+			foreach ( $item['meta'] as $key => $value ) {
+				update_post_meta( $id, (string) $key, (string) $value );
+			}
+			foreach ( $item['images'] as $key => $ref ) {
+				$attachment = self::sideload( (string) $ref['url'], (string) $ref['alt'] );
+				if ( 0 === $attachment ) {
+					$warnings[] = sprintf( 'Could not fetch the image at %s for "%s".', $ref['url'], $title );
+					continue;
+				}
+				update_post_meta( $id, (string) $key, $attachment );
+			}
+		}
+
+		$detail = array();
+		if ( $created > 0 ) {
+			$detail[] = $created . ' created';
+		}
+		if ( $updated > 0 ) {
+			$detail[] = $updated . ' updated';
+		}
+		$removed = count( $split['demo'] );
+		if ( $removed > 0 ) {
+			$detail[] = $removed . ' demo ' . ( 1 === $removed ? 'entry' : 'entries' ) . ' removed';
+		}
+
+		return array(
+			'rows'     => array( array(
+				'label'  => Blueworx_Clubhouse_Collection_Meta::label( $type ),
+				'detail' => implode( ', ', $detail ),
+			) ),
+			'warnings' => $warnings,
+		);
 	}
 
 	/**

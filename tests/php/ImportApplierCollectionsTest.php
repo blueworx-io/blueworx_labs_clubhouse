@@ -1,0 +1,127 @@
+<?php
+// tests/php/ImportApplierCollectionsTest.php
+declare(strict_types=1);
+use PHPUnit\Framework\TestCase;
+
+final class ImportApplierCollectionsTest extends TestCase {
+
+	private Blueworx_Clubhouse_Storage $storage;
+
+	protected function setUp(): void {
+		wp_stub_reset();
+		$this->storage = new Blueworx_Clubhouse_Fake_Storage();
+	}
+
+	/** @param array<int,array<string,mixed>> $items */
+	private function plan_with( string $type, array $items ): Blueworx_Clubhouse_Import_Plan {
+		$plan = new Blueworx_Clubhouse_Import_Plan();
+		$plan->add_collection( $type, $items );
+		return $plan;
+	}
+
+	private function item( string $title, array $meta = array(), array $images = array() ): array {
+		return array( 'title' => $title, 'meta' => $meta, 'images' => $images );
+	}
+
+	public function test_a_new_item_is_created_with_its_meta(): void {
+		$plan = $this->plan_with( 'clubhouse_sport', array( $this->item( 'Squash', array( 'subtitle' => 'Two courts' ) ) ) );
+		Blueworx_Clubhouse_Import_Applier::apply( $plan, $this->storage );
+
+		$insert = wp_stub_calls( 'wp_insert_post' )[0]['args'][0];
+		$this->assertSame( 'clubhouse_sport', $insert['post_type'] );
+		$this->assertSame( 'Squash', $insert['post_title'] );
+		$this->assertSame( 'publish', $insert['post_status'] );
+
+		$meta = wp_stub_calls( 'update_post_meta' );
+		$this->assertSame( 'subtitle', $meta[0]['args'][1] );
+		$this->assertSame( 'Two courts', $meta[0]['args'][2] );
+	}
+
+	public function test_a_marked_demo_post_is_deleted(): void {
+		wp_stub_add_post( 'clubhouse_sport', 11, 'Rugby', array( Blueworx_Clubhouse_Collection_Seeder::DEMO_META => '1' ) );
+		$plan = $this->plan_with( 'clubhouse_sport', array( $this->item( 'Squash' ) ) );
+		Blueworx_Clubhouse_Import_Applier::apply( $plan, $this->storage );
+
+		$deletes = wp_stub_calls( 'wp_delete_post' );
+		$this->assertSame( 11, $deletes[0]['args'][0] );
+		$this->assertTrue( $deletes[0]['args'][1], 'demo posts should be force-deleted, not trashed' );
+	}
+
+	public function test_an_unmarked_post_whose_title_matches_demo_content_is_also_deleted(): void {
+		// Installs seeded before the marker existed have no _clubhouse_demo meta.
+		wp_stub_add_post( 'clubhouse_sport', 12, 'Rugby' );
+		$plan = $this->plan_with( 'clubhouse_sport', array( $this->item( 'Squash' ) ) );
+		Blueworx_Clubhouse_Import_Applier::apply( $plan, $this->storage );
+		$this->assertSame( 12, wp_stub_calls( 'wp_delete_post' )[0]['args'][0] );
+	}
+
+	public function test_a_real_post_is_kept(): void {
+		wp_stub_add_post( 'clubhouse_sport', 13, 'Korfball' );
+		$plan = $this->plan_with( 'clubhouse_sport', array( $this->item( 'Squash' ) ) );
+		Blueworx_Clubhouse_Import_Applier::apply( $plan, $this->storage );
+		$this->assertSame( array(), wp_stub_calls( 'wp_delete_post' ) );
+	}
+
+	public function test_a_real_post_with_the_same_title_is_updated_not_duplicated(): void {
+		wp_stub_add_post( 'clubhouse_sport', 14, 'Squash' );
+		$plan = $this->plan_with( 'clubhouse_sport', array( $this->item( 'Squash', array( 'subtitle' => 'Now three courts' ) ) ) );
+		Blueworx_Clubhouse_Import_Applier::apply( $plan, $this->storage );
+
+		$this->assertSame( array(), wp_stub_calls( 'wp_insert_post' ) );
+		$meta = wp_stub_calls( 'update_post_meta' );
+		$this->assertSame( 14, $meta[0]['args'][0] );
+		$this->assertSame( 'Now three courts', $meta[0]['args'][2] );
+	}
+
+	public function test_a_type_the_file_does_not_mention_is_left_alone(): void {
+		wp_stub_add_post( 'clubhouse_team', 20, '1st XV', array( Blueworx_Clubhouse_Collection_Seeder::DEMO_META => '1' ) );
+		$plan = $this->plan_with( 'clubhouse_sport', array( $this->item( 'Squash' ) ) );
+		Blueworx_Clubhouse_Import_Applier::apply( $plan, $this->storage );
+		$this->assertSame( array(), wp_stub_calls( 'wp_delete_post' ) );
+	}
+
+	public function test_a_collection_image_is_sideloaded_and_stored_as_an_id(): void {
+		$plan = $this->plan_with( 'clubhouse_sport', array(
+			$this->item( 'Squash', array(), array( 'image' => array( 'url' => 'https://e.test/s.jpg', 'alt' => 'Court' ) ) ),
+		) );
+		Blueworx_Clubhouse_Import_Applier::apply( $plan, $this->storage );
+
+		$this->assertSame( 'https://e.test/s.jpg', wp_stub_calls( 'media_sideload_image' )[0]['args'][0] );
+		$image_meta = array_values( array_filter( wp_stub_calls( 'update_post_meta' ), static fn( $c ) => 'image' === $c['args'][1] ) );
+		$this->assertSame( 500, $image_meta[0]['args'][2] );
+	}
+
+	public function test_a_failed_collection_image_warns_but_still_creates_the_item(): void {
+		wp_stub_fail_sideload( 'https://e.test/gone.jpg' );
+		$plan = $this->plan_with( 'clubhouse_sport', array(
+			$this->item( 'Squash', array(), array( 'image' => array( 'url' => 'https://e.test/gone.jpg', 'alt' => '' ) ) ),
+		) );
+		$out = Blueworx_Clubhouse_Import_Applier::apply( $plan, $this->storage );
+
+		$this->assertSame( 'Squash', wp_stub_calls( 'wp_insert_post' )[0]['args'][0]['post_title'] );
+		$this->assertStringContainsString( 'https://e.test/gone.jpg', $out['warnings'][0] );
+	}
+
+	public function test_the_result_reports_creates_updates_and_deletes(): void {
+		wp_stub_add_post( 'clubhouse_sport', 15, 'Rugby', array( Blueworx_Clubhouse_Collection_Seeder::DEMO_META => '1' ) );
+		wp_stub_add_post( 'clubhouse_sport', 16, 'Korfball' );
+		$plan = $this->plan_with( 'clubhouse_sport', array(
+			$this->item( 'Korfball' ),
+			$this->item( 'Squash' ),
+		) );
+		$out = Blueworx_Clubhouse_Import_Applier::apply( $plan, $this->storage );
+
+		$row = $out['rows'][0];
+		$this->assertSame( 'Sports', $row['label'] );
+		$this->assertSame( '1 created, 1 updated, 1 demo entry removed', $row['detail'] );
+	}
+
+	public function test_demo_counts_reports_per_type_totals(): void {
+		wp_stub_add_post( 'clubhouse_sport', 17, 'Rugby', array( Blueworx_Clubhouse_Collection_Seeder::DEMO_META => '1' ) );
+		wp_stub_add_post( 'clubhouse_sport', 18, 'Tennis' ); // unmarked, but a demo title
+		wp_stub_add_post( 'clubhouse_sport', 19, 'Korfball' ); // real
+		$counts = Blueworx_Clubhouse_Import_Applier::demo_counts( array( 'clubhouse_sport', 'clubhouse_team' ) );
+		$this->assertSame( 2, $counts['clubhouse_sport'] );
+		$this->assertSame( 0, $counts['clubhouse_team'] );
+	}
+}
