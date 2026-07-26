@@ -77,4 +77,16 @@ final class ImportPromptTest extends TestCase {
 		// Home's sponsors section is a linkout to the sponsors collection.
 		$this->assertStringContainsString( 'managed as a collection', $this->md() );
 	}
+
+	/**
+	 * Pins the image-object shape in the "Rules for the file" prose. An
+	 * interpolating heredoc's braces are already literal, so doubling them
+	 * (`{{ … }}`) does not collapse to single braces — it renders literally
+	 * doubled, contradicting the correctly single-braced JSON example below it.
+	 */
+	public function test_the_rules_prose_describes_a_single_braced_image_object(): void {
+		$md = $this->md();
+		$this->assertStringContainsString( '{ "url":', $md );
+		$this->assertStringNotContainsString( '{{', $md );
+	}
 }

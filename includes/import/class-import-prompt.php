@@ -235,7 +235,7 @@ Rules for the file:
   file contains; absent sections keep whatever is already on the site. A blank
   string is not the same as leaving a field out — a blank string clears it.
 - Repeatable sections take their entries as a list under `items`.
-- Images are `{{ "url": "https://…", "alt": "…" }}`. The `alt` is optional.
+- Images are `{ "url": "https://…", "alt": "…" }`. The `alt` is optional.
 - Collections are lists of entries, each with a `title`.
 
 {$example}
