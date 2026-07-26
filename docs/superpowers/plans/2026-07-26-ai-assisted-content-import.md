@@ -29,6 +29,7 @@
 | `includes/admin/class-content-catalogue.php` | Gains `index()`: `"store_page/section" => {tab, tab_label, section_label}` (modify) |
 | `includes/collections/class-demo-content.php` | Gains `titles( string $type )` (modify) |
 | `includes/collections/class-collection-seeder.php` | Stamps `_clubhouse_demo` on seeded posts (modify) |
+| `includes/collections/class-collection-meta.php` | Gains `label( string $type )` — human plural per collection (modify) |
 | `includes/import/class-import-plan.php` | Pure DTO: writes, collections, images, warnings; `to_array`/`from_array` (new) |
 | `includes/import/class-import-parser.php` | Pure: decoded JSON → plan, validated against the catalogues (new) |
 | `includes/import/class-import-prompt.php` | Pure: catalogue → downloadable Markdown prompt (new) |
@@ -3790,3 +3791,349 @@ git commit -m "feat: add the Club Content import screen and flow"
 ```
 
 ---
+
+### Task 13: "Images still needed" on the Content screen
+
+Close the loop: after an import, the sections whose pictures could not be fetched are
+listed on the Content editor, each linking straight to its panel. Setting an image
+clears its entry.
+
+**Files:**
+- Modify: `includes/admin/class-content-screen.php` (notices gain optional links)
+- Modify: `includes/admin/class-content-controller.php` (build the notice, clear entries on save)
+- Test: `tests/php/ContentScreenTest.php`, `tests/php/ContentControllerTest.php`
+
+**Interfaces:**
+- Consumes: `Import_Controller::IMAGES_NEEDED_KEY`, entries shaped
+  `{label:string,page:string,section:string,field:string}`.
+- Produces: notices may now carry `links` — a list of `{label:string,tab:string,sec:string}`.
+
+- [ ] **Step 1: Write the failing tests**
+
+Append to `tests/php/ContentScreenTest.php`:
+
+```php
+	public function test_a_notice_can_carry_links_to_sections(): void {
+		$model = $this->model(); // the existing helper in this file
+		$model['notices'] = array( array(
+			'type'  => 'warning',
+			'text'  => 'Two pictures are still missing.',
+			'links' => array(
+				array( 'label' => 'Global · Hero', 'tab' => 'global', 'sec' => 'hero' ),
+			),
+		) );
+		$html = Blueworx_Clubhouse_Content_Screen::render( $model );
+		$this->assertStringContainsString( 'Two pictures are still missing.', $html );
+		$this->assertStringContainsString( 'Global · Hero', $html );
+		$this->assertStringContainsString( 'clubhouse-sec-global-hero', $html );
+	}
+
+	public function test_notice_links_are_escaped(): void {
+		$model = $this->model();
+		$model['notices'] = array( array(
+			'type'  => 'warning',
+			'text'  => 'Missing.',
+			'links' => array( array( 'label' => '<img src=x>', 'tab' => 'global', 'sec' => 'hero' ) ),
+		) );
+		$html = Blueworx_Clubhouse_Content_Screen::render( $model );
+		$this->assertStringNotContainsString( '<img src=x>', $html );
+	}
+
+	public function test_a_notice_without_links_is_unchanged(): void {
+		$model = $this->model();
+		$model['notices'] = array( array( 'type' => 'success', 'text' => 'Your changes have been saved.' ) );
+		$html = Blueworx_Clubhouse_Content_Screen::render( $model );
+		$this->assertStringContainsString( 'Your changes have been saved.', $html );
+	}
+```
+
+If `ContentScreenTest` has no `model()` helper, add one that returns the minimum model
+`Content_Screen::render()` needs — copy the shape from the existing tests in that file
+rather than inventing keys.
+
+Append to `tests/php/ContentControllerTest.php`:
+
+```php
+	public function test_outstanding_import_images_become_a_notice(): void {
+		$s = $this->storage();
+		$s->set( Blueworx_Clubhouse_Import_Controller::IMAGES_NEEDED_KEY, array(
+			array( 'label' => 'Global · Hero — Background image', 'page' => 'home', 'section' => 'hero', 'field' => 'image' ),
+		) );
+		$model = Blueworx_Clubhouse_Content_Controller::build_model( $s, array(), '', '' );
+		$this->assertSame( 'warning', $model['notices'][0]['type'] );
+		$this->assertStringContainsString( '1 picture', $model['notices'][0]['text'] );
+		$this->assertSame( 'global', $model['notices'][0]['links'][0]['tab'] );
+		$this->assertSame( 'hero', $model['notices'][0]['links'][0]['sec'] );
+	}
+
+	public function test_no_outstanding_images_means_no_notice(): void {
+		$model = Blueworx_Clubhouse_Content_Controller::build_model( $this->storage(), array(), '', '' );
+		$this->assertSame( array(), $model['notices'] );
+	}
+
+	public function test_saving_an_image_clears_its_outstanding_entry(): void {
+		$s = $this->storage();
+		$s->set( Blueworx_Clubhouse_Import_Controller::IMAGES_NEEDED_KEY, array(
+			array( 'label' => 'Global · Hero — Background image', 'page' => 'home', 'section' => 'hero', 'field' => 'image' ),
+			array( 'label' => 'About · Facilities — Image', 'page' => 'about', 'section' => 'facilities', 'field' => 'image' ),
+		) );
+		Blueworx_Clubhouse_Content_Controller::handle_save( array(
+			'clubhouse_content_tab' => 'global',
+			'field' => array( 'home' => array( 'hero' => array( 'image' => '42' ) ) ),
+		), $s );
+		$left = $s->get( Blueworx_Clubhouse_Import_Controller::IMAGES_NEEDED_KEY, array() );
+		$this->assertCount( 1, $left );
+		$this->assertSame( 'about', $left[0]['page'] );
+	}
+```
+
+- [ ] **Step 2: Run tests to verify they fail**
+
+Run: `composer test -- --filter "ContentScreenTest|ContentControllerTest"`
+Expected: FAIL — the new cases only; the existing ones must still pass.
+
+- [ ] **Step 3: Let notices carry links**
+
+In `includes/admin/class-content-screen.php`, change the `notices()` signature and
+body to take the action URL and render an optional link list:
+
+```php
+	/** @param array<int,array{type:string,text:string,links?:array<int,array{label:string,tab:string,sec:string}>}> $notices */
+	private static function notices( array $notices, string $action_url ): string {
+		$out = '';
+		foreach ( $notices as $n ) {
+			$type = in_array( $n['type'], array( 'error', 'warning', 'success' ), true ) ? $n['type'] : 'info';
+			$out .= '<div class="notice notice-' . self::esc( $type ) . '"><p>' . self::esc( $n['text'] ) . '</p>';
+			$links = is_array( $n['links'] ?? null ) ? $n['links'] : array();
+			if ( array() !== $links ) {
+				$out .= '<ul class="clubhouse-notice__links">';
+				foreach ( $links as $link ) {
+					$href = self::sec_href( $action_url, (string) $link['tab'], (string) $link['sec'] );
+					$out .= '<li><a href="' . self::esc_url( $href ) . '">' . self::esc( (string) $link['label'] ) . '</a></li>';
+				}
+				$out .= '</ul>';
+			}
+			$out .= '</div>';
+		}
+		return $out;
+	}
+```
+
+and update its single call site in `render()`:
+
+```php
+		$out .= self::notices( $model['notices'], (string) $model['action_url'] );
+```
+
+- [ ] **Step 4: Build the notice in the controller**
+
+In `includes/admin/class-content-controller.php`, add the helper:
+
+```php
+	/**
+	 * Turn any image slots an import could not fill into a notice that links
+	 * straight to the sections that need them. Read from the same storage key
+	 * the importer writes, so the list survives until the owner actually
+	 * supplies the pictures.
+	 *
+	 * @return array<int,array{type:string,text:string,links:array<int,array{label:string,tab:string,sec:string}>}>
+	 */
+	private static function images_needed_notice( Blueworx_Clubhouse_Storage $storage ): array {
+		$needed = $storage->get( Blueworx_Clubhouse_Import_Controller::IMAGES_NEEDED_KEY, array() );
+		if ( ! is_array( $needed ) || array() === $needed ) {
+			return array();
+		}
+		$index = Blueworx_Clubhouse_Content_Catalogue::index();
+		$links = array();
+		foreach ( $needed as $entry ) {
+			if ( ! is_array( $entry ) ) {
+				continue;
+			}
+			$address = (string) ( $entry['page'] ?? '' ) . '/' . (string) ( $entry['section'] ?? '' );
+			if ( ! isset( $index[ $address ] ) ) {
+				continue;
+			}
+			$links[] = array(
+				'label' => (string) ( $entry['label'] ?? $address ),
+				'tab'   => $index[ $address ]['tab'],
+				'sec'   => $index[ $address ]['section_key'],
+			);
+		}
+		if ( array() === $links ) {
+			return array();
+		}
+		$count = count( $links );
+		return array( array(
+			'type'  => 'warning',
+			'text'  => sprintf(
+				'%d %s from your import could not be fetched. Add %s here whenever you have the files:',
+				$count,
+				1 === $count ? 'picture' : 'pictures',
+				1 === $count ? 'it' : 'them'
+			),
+			'links' => $links,
+		) );
+	}
+```
+
+and prepend it in `build_model()`, where `$notices` is first used:
+
+```php
+		$notices = array_merge( self::images_needed_notice( $storage ), $notices );
+```
+
+- [ ] **Step 5: Clear entries as the owner fills them**
+
+At the end of `handle_save()`, immediately before the `return`:
+
+```php
+		self::clear_filled_images( $storage, $content_store );
+```
+
+and add:
+
+```php
+	/**
+	 * Drop any outstanding image slot the owner has now filled. Keyed on the
+	 * stored value rather than on which tab was saved, so it stays correct
+	 * whether the picture arrived through this screen or another.
+	 */
+	private static function clear_filled_images( Blueworx_Clubhouse_Storage $storage, Blueworx_Clubhouse_Content_Store $content_store ): void {
+		$needed = $storage->get( Blueworx_Clubhouse_Import_Controller::IMAGES_NEEDED_KEY, array() );
+		if ( ! is_array( $needed ) || array() === $needed ) {
+			return;
+		}
+		$left = array();
+		foreach ( $needed as $entry ) {
+			if ( ! is_array( $entry ) ) {
+				continue;
+			}
+			$value = $content_store->get(
+				(string) ( $entry['page'] ?? '' ),
+				(string) ( $entry['section'] ?? '' ),
+				(string) ( $entry['field'] ?? '' ),
+				''
+			);
+			if ( '' === $value || 0 === $value ) {
+				$left[] = $entry;
+			}
+		}
+		$storage->set( Blueworx_Clubhouse_Import_Controller::IMAGES_NEEDED_KEY, array_values( $left ) );
+	}
+```
+
+- [ ] **Step 6: Run the tests**
+
+Run: `composer test -- --filter "ContentScreenTest|ContentControllerTest"`
+Expected: PASS.
+
+- [ ] **Step 7: Run the full suite and lint**
+
+Run: `composer test && composer lint`
+Expected: PASS, everything green.
+
+- [ ] **Step 8: Commit**
+
+```bash
+git add includes/admin/class-content-screen.php includes/admin/class-content-controller.php tests/php/ContentScreenTest.php tests/php/ContentControllerTest.php
+git commit -m "feat: surface import images still needed on the Content screen"
+```
+
+---
+
+### Task 14: Version, changelog, and deployment zip
+
+**Files:**
+- Modify: `blueworx-labs-clubhouse.php` (header `Version:` and the version constant)
+- Modify: `package.json`
+- Modify: `CHANGELOG.md`
+
+- [ ] **Step 1: Bump the version**
+
+This is a feature, so it is a minor bump. Read the current version first:
+
+```bash
+grep -m1 "Version:" blueworx-labs-clubhouse.php
+```
+
+Set the plugin header `Version:`, the `BLUEWORX_LABS_CLUBHOUSE_VERSION` constant, and
+`package.json`'s `version` to the same new minor value. All three must match — CI
+checks the bump, and this repo has had them drift before.
+
+- [ ] **Step 2: Add the changelog entry**
+
+Prepend a new section to `CHANGELOG.md`, above the current top entry, following the
+existing format in that file:
+
+```markdown
+### Added
+- AI-assisted content import. Club Content → Import offers a downloadable prompt
+  generated from the plugin's own content catalogue; paste it into any AI chat, answer
+  its questions, and upload the JSON file it produces to populate page content and all
+  six collections. Uploads are previewed before anything is written, partial files
+  merge, and images are fetched from public URLs into the Media Library.
+```
+
+- [ ] **Step 3: Verify before building**
+
+```bash
+composer test && composer lint
+```
+Expected: all green. Do not build a zip from a red tree.
+
+- [ ] **Step 4: Build the deployment zip**
+
+```bash
+npm run build:zip
+```
+
+This runs `bin/build-zip.sh`, which uses bsdtar and self-checks forward slashes and
+nesting. Do not hand-roll the archive and never use PowerShell `Compress-Archive` —
+it writes backslash entries that WordPress cannot install.
+
+- [ ] **Step 5: Verify the archive**
+
+```bash
+unzip -l ../blueworx-labs-clubhouse.zip | head -20
+```
+Every entry must read `blueworx-labs-clubhouse/…` with forward slashes, nested one
+level only, and the seven new `includes/import/` and `includes/content/` files must be
+present.
+
+- [ ] **Step 6: Commit**
+
+```bash
+git add blueworx-labs-clubhouse.php package.json CHANGELOG.md
+git commit -m "chore: bump version and changelog for AI content import"
+```
+
+- [ ] **Step 7: Open the pull request**
+
+```bash
+gh pr create --base main --head ai-assisted-content-import \
+  --title "AI-assisted content import" \
+  --body "See docs/superpowers/specs/2026-07-26-ai-assisted-content-import-design.md"
+```
+
+Wait for the required `guardrails / guardrails` check to pass before merging.
+
+---
+
+## Manual WP smoke — owed after merge
+
+None of this can run in the DB-free preview server, and the plugin has a history of
+admin screens that passed every unit test and never mounted. On a real install:
+
+- [ ] Download the prompt as an owner. It opens as Markdown and names every current
+      section and collection.
+- [ ] Paste it into an AI chat, answer a few sections, upload the file it produces.
+      The preview lists exactly what was supplied and nothing else. Nothing is saved yet.
+- [ ] Apply. The front end shows the imported copy on the right pages.
+- [ ] Upload a second, partial file covering About only. Home is untouched.
+- [ ] Upload a file with three sports on a freshly-seeded install: the demo sports are
+      gone, the three real ones are present, and teams and fixtures are untouched.
+- [ ] Include one image URL that 404s. A warning appears, the rest of the import still
+      applies, and the field is listed under "Images still needed" on Club Content —
+      with a link that jumps to the right panel.
+- [ ] Set that image in the editor and save. The entry disappears from the list.
+- [ ] Log in as a subscriber: the Import page and the prompt download are both refused.
