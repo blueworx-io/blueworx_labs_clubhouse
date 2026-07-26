@@ -102,6 +102,23 @@ final class ImportApplierContentTest extends TestCase {
 		$this->assertSame( '2 fields saved', $out['rows'][0]['detail'] );
 	}
 
+	/**
+	 * A failed loop-item image must keep its 'index' in the still-needed
+	 * entry — Content_Controller::clear_filled_images() needs it to tell a
+	 * loop-item slot (items[index][field]) apart from a section-level one.
+	 */
+	public function test_a_failed_loop_item_image_records_its_index(): void {
+		wp_stub_fail_sideload( 'https://e.test/gone.jpg' );
+		$plan = new Blueworx_Clubhouse_Import_Plan();
+		$plan->add_items( 'home', 'news', array(
+			array( 'title' => 'First', 'image' => '' ),
+			array( 'title' => 'Second', 'image' => '' ),
+		) );
+		$plan->add_image( 'home', 'news', 'image', 'https://e.test/gone.jpg', '', 'Global · News — Image', 1 );
+		$out = Blueworx_Clubhouse_Import_Applier::apply( $plan, $this->storage );
+		$this->assertSame( 1, $out['images_needed'][0]['index'] );
+	}
+
 	public function test_a_successful_image_is_reported(): void {
 		$plan = new Blueworx_Clubhouse_Import_Plan();
 		$plan->add_image( 'home', 'hero', 'image', 'https://e.test/a.jpg', '', 'Global · Hero — Background image' );

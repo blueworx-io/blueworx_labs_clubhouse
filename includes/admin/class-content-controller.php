@@ -273,6 +273,14 @@ final class Blueworx_Clubhouse_Content_Controller {
 	 * Drop any outstanding image slot the owner has now filled. Keyed on the
 	 * stored value rather than on which tab was saved, so it stays correct
 	 * whether the picture arrived through this screen or another.
+	 *
+	 * Branches on 'index' exactly as Import_Applier::place_image() does: a
+	 * section-level image (index < 0) lives at a plain content field, while a
+	 * loop-item image (index >= 0) lives at items[index][field] — reading the
+	 * section field for a loop-item entry would always see '' and the entry
+	 * would never clear. An entry stored before 'index' existed (or a
+	 * hand-edited option) has no such key; default it to -1 so it keeps
+	 * behaving as a section-level entry rather than being lost.
 	 */
 	private static function clear_filled_images( Blueworx_Clubhouse_Storage $storage, Blueworx_Clubhouse_Content_Store $content_store ): void {
 		$needed = $storage->get( Blueworx_Clubhouse_Import_Controller::IMAGES_NEEDED_KEY, array() );
@@ -284,12 +292,18 @@ final class Blueworx_Clubhouse_Content_Controller {
 			if ( ! is_array( $entry ) ) {
 				continue;
 			}
-			$value = $content_store->get(
-				(string) ( $entry['page'] ?? '' ),
-				(string) ( $entry['section'] ?? '' ),
-				(string) ( $entry['field'] ?? '' ),
-				''
-			);
+			$page    = (string) ( $entry['page'] ?? '' );
+			$section = (string) ( $entry['section'] ?? '' );
+			$field   = (string) ( $entry['field'] ?? '' );
+			$index   = isset( $entry['index'] ) ? (int) $entry['index'] : -1;
+
+			if ( $index < 0 ) {
+				$value = $content_store->get( $page, $section, $field, '' );
+			} else {
+				$items = $content_store->get_items( $page, $section );
+				$value = array_key_exists( $index, $items ) ? ( $items[ $index ][ $field ] ?? '' ) : '';
+			}
+
 			if ( '' === $value || 0 === $value ) {
 				$left[] = $entry;
 			}

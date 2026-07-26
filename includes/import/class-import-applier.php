@@ -20,7 +20,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 final class Blueworx_Clubhouse_Import_Applier {
 
 	/**
-	 * @return array{rows:array<int,array{label:string,detail:string}>,images_needed:array<int,array{label:string,page:string,section:string,field:string}>,warnings:array<int,string>}
+	 * @return array{rows:array<int,array{label:string,detail:string}>,images_needed:array<int,array{label:string,page:string,section:string,field:string,index:int}>,warnings:array<int,string>}
 	 */
 	public static function apply( Blueworx_Clubhouse_Import_Plan $plan, Blueworx_Clubhouse_Storage $storage ): array {
 		$store    = new Blueworx_Clubhouse_Content_Store( $storage );
@@ -247,8 +247,15 @@ final class Blueworx_Clubhouse_Import_Applier {
 	}
 
 	/**
+	 * Keep 'index' alongside the label/page/section/field: a loop-item image
+	 * (index >= 0) lives at items[index][field], not at the section field
+	 * place_image() uses for a section-level image (index < 0) — the same
+	 * distinction place_image() itself branches on just above. Dropping it
+	 * here would leave a stuck "still needed" entry for a loop-item image
+	 * with no way to ever tell it has since been filled.
+	 *
 	 * @param array{page:string,section:string,field:string,url:string,alt:string,label:string,index:int} $image
-	 * @return array{label:string,page:string,section:string,field:string}
+	 * @return array{label:string,page:string,section:string,field:string,index:int}
 	 */
 	private static function needed_entry( array $image ): array {
 		return array(
@@ -256,6 +263,7 @@ final class Blueworx_Clubhouse_Import_Applier {
 			'page'    => $image['page'],
 			'section' => $image['section'],
 			'field'   => $image['field'],
+			'index'   => $image['index'],
 		);
 	}
 
