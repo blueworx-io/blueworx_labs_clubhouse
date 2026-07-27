@@ -411,17 +411,53 @@ final class SectionsTest extends TestCase {
 		$this->assertStringNotContainsString( 'style=', $html );
 	}
 
-	public function test_info_strip_renders_columns_and_optional_link(): void {
-		$html = Blueworx_Clubhouse_Sections::info_strip( array(
-			array( 'label' => 'Location', 'lines' => array( '12 Riverside Lane', 'Marlow' ), 'link_label' => '', 'link_href' => '' ),
-			array( 'label' => 'Find us', 'lines' => array(), 'link_label' => 'Open in Maps', 'link_href' => '#' ),
-		) );
-		$this->assertStringContainsString( 'class="ch-info"', $html );
-		$this->assertSame( 2, substr_count( $html, 'ch-info__col' ) );
-		$this->assertListSemantics( $html, 1, 2 );
+	/** @return array{heading:string,lede:string,facebook_url:string,instagram_url:string,linkedin_url:string,columns:array<int,array{label:string,lines:array<int,string>,link_label:string,link_href:string}>} */
+	private function closingData( array $over = array() ): array {
+		return array_merge( array(
+			'heading'       => 'Follow the club',
+			'lede'          => 'Match-day photos, results and behind-the-scenes.',
+			'facebook_url'  => 'https://facebook.com/clubhouse',
+			'instagram_url' => 'https://instagram.com/clubhouse',
+			'linkedin_url'  => 'https://linkedin.com/company/clubhouse',
+			'columns'       => array(
+				array( 'label' => 'Location', 'lines' => array( '12 Riverside Lane', 'Marlow' ), 'link_label' => '', 'link_href' => '' ),
+				array( 'label' => 'Find us', 'lines' => array(), 'link_label' => 'Open in Maps', 'link_href' => '#' ),
+			),
+		), $over );
+	}
+
+	public function test_closing_band_renders_find_us_columns_and_optional_link(): void {
+		$html = Blueworx_Clubhouse_Sections::closing_band( $this->closingData() );
+		$this->assertStringContainsString( 'class="ch-social"', $html );
+		$this->assertSame( 2, substr_count( $html, 'ch-social__col"' ) );
 		$this->assertStringContainsString( '12 Riverside Lane', $html );
 		$this->assertStringContainsString( 'Open in Maps', $html );
 		$this->assertStringNotContainsString( 'style=', $html );
+	}
+
+	/** One section, not two: the find-us details sit inside the social band. */
+	public function test_closing_band_is_a_single_section(): void {
+		$html = Blueworx_Clubhouse_Sections::closing_band( $this->closingData() );
+		$this->assertSame( 1, substr_count( $html, '<section' ) );
+		$this->assertStringNotContainsString( 'ch-info', $html );
+	}
+
+	public function test_closing_band_drops_the_half_that_is_switched_off(): void {
+		$social_only = Blueworx_Clubhouse_Sections::closing_band( $this->closingData( array( 'columns' => array() ) ) );
+		$this->assertStringContainsString( 'Follow the club', $social_only );
+		$this->assertStringNotContainsString( 'ch-social__cols', $social_only );
+
+		$cols_only = Blueworx_Clubhouse_Sections::closing_band( $this->closingData( array(
+			'heading' => '', 'lede' => '', 'facebook_url' => '', 'instagram_url' => '', 'linkedin_url' => '',
+		) ) );
+		$this->assertStringNotContainsString( 'ch-social__in', $cols_only );
+		// No social half above them, so no divider rule to draw under it.
+		$this->assertStringContainsString( 'ch-social__cols--only', $cols_only );
+		$this->assertStringContainsString( '12 Riverside Lane', $cols_only );
+
+		$this->assertSame( '', Blueworx_Clubhouse_Sections::closing_band( $this->closingData( array(
+			'heading' => '', 'lede' => '', 'facebook_url' => '', 'instagram_url' => '', 'linkedin_url' => '', 'columns' => array(),
+		) ) ) );
 	}
 
 	public function test_sponsors_render_each_tile(): void {
@@ -776,13 +812,7 @@ final class SectionsTest extends TestCase {
 	}
 
 	public function test_social_renders_links_with_labels_and_list_semantics(): void {
-		$html = Blueworx_Clubhouse_Sections::social( array(
-			'heading'       => 'Follow the club',
-			'lede'          => 'Match-day photos, results and behind-the-scenes.',
-			'facebook_url'  => 'https://facebook.com/clubhouse',
-			'instagram_url' => 'https://instagram.com/clubhouse',
-			'linkedin_url'  => 'https://linkedin.com/company/clubhouse',
-		) );
+		$html = Blueworx_Clubhouse_Sections::closing_band( $this->closingData( array( 'columns' => array() ) ) );
 		$this->assertStringContainsString( 'class="ch-social"', $html );
 		$this->assertStringContainsString( 'href="https://facebook.com/clubhouse"', $html );
 		$this->assertStringContainsString( 'href="https://instagram.com/clubhouse"', $html );
@@ -801,13 +831,13 @@ final class SectionsTest extends TestCase {
 	}
 
 	public function test_social_escapes_heading_lede_and_urls(): void {
-		$html = Blueworx_Clubhouse_Sections::social( array(
-			'heading'        => 'Follow "us" & friends',
-			'lede'           => 'Join us <here> & now',
-			'facebook_url'   => 'https://facebook.com/club?ref=a&b="x"',
-			'instagram_url'  => 'https://instagram.com/club?ref=a&b="x"',
-			'linkedin_url'   => 'https://linkedin.com/x?a=b&c="d"',
-		) );
+		$html = Blueworx_Clubhouse_Sections::closing_band( $this->closingData( array(
+			'heading'       => 'Follow "us" & friends',
+			'lede'          => 'Join us <here> & now',
+			'facebook_url'  => 'https://facebook.com/club?ref=a&b="x"',
+			'instagram_url' => 'https://instagram.com/club?ref=a&b="x"',
+			'linkedin_url'  => 'https://linkedin.com/x?a=b&c="d"',
+		) ) );
 		$this->assertStringNotContainsString( '<here>', $html );
 		$this->assertStringContainsString( '&lt;here&gt;', $html );
 		$this->assertStringContainsString( 'Follow &quot;us&quot; &amp; friends', $html );
@@ -893,6 +923,21 @@ final class SectionsTest extends TestCase {
 		$this->assertStringContainsString( 'https://facebook.com/x', $html );
 		$this->assertStringContainsString( 'https://linkedin.com/company/x', $html );
 		$this->assertStringNotContainsString( 'Instagram', $html, 'empty url renders no pill' );
+	}
+
+	/** Icon-only variant: no visible network name, but the name still reaches AT. */
+	public function test_social_links_can_render_icon_only_buttons(): void {
+		$html = Blueworx_Clubhouse_Sections::social_links( array( 'Facebook' => 'https://facebook.com/x' ), true );
+		$this->assertStringContainsString( 'ch-social__link--icon', $html );
+		$this->assertStringContainsString( 'aria-label="Follow us on Facebook"', $html );
+		$this->assertStringNotContainsString( '>Facebook<', $html );
+	}
+
+	public function test_footer_socials_are_icon_only(): void {
+		$html = Blueworx_Clubhouse_Sections::footer( $this->footerData() );
+		$this->assertSame( 3, substr_count( $html, 'ch-social__link--icon' ) );
+		$this->assertStringNotContainsString( 'ch-social__label', $html );
+		$this->assertStringContainsString( 'aria-label="Follow us on Instagram"', $html );
 	}
 
 	public function test_footer_uses_social_pills_not_letter_circles(): void {

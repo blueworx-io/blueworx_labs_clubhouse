@@ -5,6 +5,11 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.38.0
+
+- **The page now ends on one band instead of two.** "Follow the club" and the find-us details (location, opening hours, contact, map link) were two stacked sections — a light band above a dark strip — which read as two endings and dropped a slab of dark between your content and the footer. They are now a single light section, in the same style as the section above it, sitting flush against the footer. Both halves keep their own section switch: turn either off and the band simply carries the other.
+- **Footer social links are icons only.** Facebook, Instagram and LinkedIn now show as round icon buttons rather than name pills, so the footer's first column stays tight. Each button still announces its network name to screen readers and keeps a full-size touch target. The social links elsewhere on the site are unchanged.
+
 ## 0.36.2
 
 - **Full-width bands no longer have rounded corners.** The dark clubhouse band, the news ticker and the contact strip run edge to edge, but on the Members House and Floodlight looks they were still drawn with rounded corners — so a sliver of page background cut into each corner and the band read as broken rather than styled. They are now square-cornered, matching Court Side, which was already correct. Panels that sit inside the page margins, like the membership band, keep their rounded corners as before.

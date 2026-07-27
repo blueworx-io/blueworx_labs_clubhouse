@@ -27,7 +27,7 @@ final class Blueworx_Clubhouse_Setup_Sections {
 			'membership'  => 'Membership tiers',
 			'activity'    => 'Activity tabs',
 			'news'        => 'News',
-			'info'        => 'Info strip',
+			'info'        => 'Find us details',
 			'sponsors'    => 'Sponsors',
 			'social'      => 'Social',
 			'footer'      => 'Footer',
