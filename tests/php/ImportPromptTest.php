@@ -58,6 +58,28 @@ final class ImportPromptTest extends TestCase {
 		}
 	}
 
+	/**
+	 * A section with neither `fields` nor `loop` (a plain auto/linkout, e.g.
+	 * content.events.past) has nothing for the assistant to ask about. It must
+	 * say so explicitly, one such note per fields-less section — otherwise the
+	 * assistant may still address it and produce "Ignored unknown field" noise.
+	 */
+	public function test_fields_less_sections_state_they_take_no_content(): void {
+		$md       = $this->md();
+		$expected = 0;
+		foreach ( Blueworx_Clubhouse_Content_Catalogue::pages() as $page ) {
+			foreach ( $page['sections'] as $section ) {
+				$fields = is_array( $section['fields'] ?? null ) ? $section['fields'] : array();
+				$loop   = is_array( $section['loop'] ?? null ) ? $section['loop'] : array();
+				if ( array() === $fields && array() === $loop ) {
+					++$expected;
+				}
+			}
+		}
+		$this->assertGreaterThan( 0, $expected, 'expected at least one fields-less section in the catalogue' );
+		$this->assertSame( $expected, substr_count( $md, 'This section takes no content from you' ) );
+	}
+
 	public function test_loop_sections_are_described_as_repeatable(): void {
 		$md = $this->md();
 		// Membership tiers is a loop whose item is called "Tier".

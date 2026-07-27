@@ -149,6 +149,57 @@ final class ImportControllerTest extends TestCase {
 		$this->assertSame( 'Global · Hero — Background image', $needed[0]['label'] );
 	}
 
+	public function test_a_second_unrelated_import_does_not_erase_the_first_images_still_needed_list(): void {
+		// The prompt actively encourages importing a page at a time, so a second,
+		// unrelated import with no images of its own must not reset the to-do
+		// list a prior import built — the owner's pending pictures must not
+		// vanish without a single image having been supplied.
+		wp_stub_fail_sideload( 'https://e.test/gone.jpg' );
+		$first = '{"clubhouse_import":1,"content":{"home":{"hero":{"image":"https://e.test/gone.jpg"}}}}';
+		Blueworx_Clubhouse_Import_Controller::handle_request(
+			array( 'clubhouse_import_upload' => '1' ), $this->upload( $first ), $this->storage
+		);
+		Blueworx_Clubhouse_Import_Controller::handle_request(
+			array( 'clubhouse_import_apply' => '1' ), array(), $this->storage
+		);
+
+		$second = '{"clubhouse_import":1,"content":{"about":{"hero":{"eyebrow":"Est. 1974"}}}}';
+		Blueworx_Clubhouse_Import_Controller::handle_request(
+			array( 'clubhouse_import_upload' => '1' ), $this->upload( $second ), $this->storage
+		);
+		Blueworx_Clubhouse_Import_Controller::handle_request(
+			array( 'clubhouse_import_apply' => '1' ), array(), $this->storage
+		);
+
+		$needed = $this->storage->get( Blueworx_Clubhouse_Import_Controller::IMAGES_NEEDED_KEY, array() );
+		$this->assertCount( 1, $needed );
+		$this->assertSame( 'Global · Hero — Background image', $needed[0]['label'] );
+	}
+
+	public function test_the_same_still_needed_entry_is_not_duplicated_across_imports(): void {
+		wp_stub_fail_sideload( 'https://e.test/gone.jpg' );
+		$json = '{"clubhouse_import":1,"content":{"home":{"hero":{"image":"https://e.test/gone.jpg"}}}}';
+		foreach ( array( 1, 2 ) as $i ) {
+			Blueworx_Clubhouse_Import_Controller::handle_request(
+				array( 'clubhouse_import_upload' => '1' ), $this->upload( $json ), $this->storage
+			);
+			Blueworx_Clubhouse_Import_Controller::handle_request(
+				array( 'clubhouse_import_apply' => '1' ), array(), $this->storage
+			);
+		}
+		$needed = $this->storage->get( Blueworx_Clubhouse_Import_Controller::IMAGES_NEEDED_KEY, array() );
+		$this->assertCount( 1, $needed );
+	}
+
+	public function test_enqueue_only_loads_on_its_own_page(): void {
+		Blueworx_Clubhouse_Import_Controller::enqueue( 'club-content_page_' . Blueworx_Clubhouse_Import_Controller::PAGE_SLUG );
+		$this->assertNotEmpty( wp_stub_calls( 'wp_enqueue_style' ) );
+
+		wp_stub_reset();
+		Blueworx_Clubhouse_Import_Controller::enqueue( 'some-other-page' );
+		$this->assertEmpty( wp_stub_calls( 'wp_enqueue_style' ) );
+	}
+
 	public function test_a_preview_names_the_demo_entries_a_collection_would_replace(): void {
 		wp_stub_add_post( 'clubhouse_sport', 30, 'Rugby', array( Blueworx_Clubhouse_Collection_Seeder::DEMO_META => '1' ) );
 		$json  = '{"clubhouse_import":1,"collections":{"clubhouse_sport":[{"title":"Squash"}]}}';

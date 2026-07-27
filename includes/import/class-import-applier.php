@@ -24,7 +24,6 @@ final class Blueworx_Clubhouse_Import_Applier {
 	 */
 	public static function apply( Blueworx_Clubhouse_Import_Plan $plan, Blueworx_Clubhouse_Storage $storage ): array {
 		$store    = new Blueworx_Clubhouse_Content_Store( $storage );
-		$rows     = array();
 		$needed   = array();
 		$warnings = array();
 
@@ -111,25 +110,39 @@ final class Blueworx_Clubhouse_Import_Applier {
 
 	/**
 	 * Split a type's existing posts into demo and real. A post is demo if the
-	 * seeder stamped it, or — on installs seeded before that marker existed —
-	 * if its title is one Demo_Content seeds. Anything else is the owner's and
-	 * is never deleted.
+	 * seeder stamped it. The title fallback is only trusted for installs
+	 * seeded before the marker existed — Collection_Seeder only ever seeds a
+	 * type when it is empty, so for any given type its demo posts are either
+	 * all marked or all unmarked; the moment one marked post is found, the
+	 * type is known to be post-marker and title-matching is dropped entirely.
+	 * Skipping that guard would delete a club's own "Tennis" or "Rugby" post
+	 * the instant it shared a title with the seeded demo data.
 	 *
 	 * @return array{demo:array<int,object>,real:array<int,object>}
 	 */
 	private static function partition( string $type ): array {
 		$demo_titles = Blueworx_Clubhouse_Demo_Content::titles( $type );
-		$demo        = array();
-		$real        = array();
 		$posts       = get_posts( array(
 			'post_type'   => $type,
 			'post_status' => 'any',
 			'numberposts' => -1,
 		) );
+
+		$marks      = array();
+		$any_marked = false;
+		foreach ( $posts as $post ) {
+			$id           = (int) ( $post->ID ?? 0 );
+			$marked       = '1' === (string) get_post_meta( $id, Blueworx_Clubhouse_Collection_Seeder::DEMO_META, true );
+			$marks[ $id ] = $marked;
+			$any_marked   = $any_marked || $marked;
+		}
+
+		$demo = array();
+		$real = array();
 		foreach ( $posts as $post ) {
 			$id     = (int) ( $post->ID ?? 0 );
-			$marked = '1' === (string) get_post_meta( $id, Blueworx_Clubhouse_Collection_Seeder::DEMO_META, true );
-			$titled = in_array( (string) ( $post->post_title ?? '' ), $demo_titles, true );
+			$marked = $marks[ $id ] ?? false;
+			$titled = ! $any_marked && in_array( (string) ( $post->post_title ?? '' ), $demo_titles, true );
 			if ( $marked || $titled ) {
 				$demo[] = $post;
 				continue;
@@ -190,6 +203,10 @@ final class Blueworx_Clubhouse_Import_Applier {
 				++$updated;
 			} else {
 				++$created;
+				// So a second item in this same file sharing this title updates
+				// it rather than creating a duplicate that $by_title never learns
+				// about and the owner can never reach again by name.
+				$by_title[ $title ] = $id;
 			}
 
 			foreach ( $item['meta'] as $key => $value ) {
@@ -233,15 +250,20 @@ final class Blueworx_Clubhouse_Import_Applier {
 	 * @param array{page:string,section:string,field:string,url:string,alt:string,label:string,index:int} $image
 	 */
 	private static function place_image( Blueworx_Clubhouse_Content_Store $store, array $image, int $id ): bool {
-		if ( $image['index'] < 0 ) {
+		// A plan stored before 'index' existed (a transient can outlive an
+		// upgrade by up to an hour) has no such key; default it to -1 so it
+		// keeps behaving as a section-level image rather than warning three
+		// times and silently dropping the fetch.
+		$index = $image['index'] ?? -1;
+		if ( $index < 0 ) {
 			$store->set( $image['page'], $image['section'], $image['field'], $id );
 			return true;
 		}
 		$items = $store->get_items( $image['page'], $image['section'] );
-		if ( ! array_key_exists( $image['index'], $items ) ) {
+		if ( ! array_key_exists( $index, $items ) ) {
 			return false;
 		}
-		$items[ $image['index'] ][ $image['field'] ] = $id;
+		$items[ $index ][ $image['field'] ] = $id;
 		$store->set_items( $image['page'], $image['section'], $items );
 		return true;
 	}
@@ -263,7 +285,7 @@ final class Blueworx_Clubhouse_Import_Applier {
 			'page'    => $image['page'],
 			'section' => $image['section'],
 			'field'   => $image['field'],
-			'index'   => $image['index'],
+			'index'   => $image['index'] ?? -1,
 		);
 	}
 

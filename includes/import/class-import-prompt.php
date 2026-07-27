@@ -82,6 +82,18 @@ MD;
 				}
 
 				$fields = is_array( $section['fields'] ?? null ) ? $section['fields'] : array();
+				$loop   = is_array( $section['loop'] ?? null ) ? $section['loop'] : array();
+
+				if ( array() === $fields && array() === $loop ) {
+					// A purely descriptive section (an auto/linkout with nothing of
+					// its own to ask for) must say so explicitly. Otherwise the note
+					// alone still reads as an invitation, and the assistant may ask
+					// the club about it anyway and produce fields that only trigger
+					// "Ignored unknown field" noise on upload.
+					$out .= "This section takes no content from you — do not ask about it or include it in the file.\n\n";
+					continue;
+				}
+
 				foreach ( $fields as $field ) {
 					$out .= self::field_line( $field );
 				}
@@ -89,7 +101,6 @@ MD;
 					$out .= "\n";
 				}
 
-				$loop = is_array( $section['loop'] ?? null ) ? $section['loop'] : array();
 				if ( array() !== $loop ) {
 					$out .= 'Then a repeatable list of **' . $loop['name'] . '** entries, under `items`. Each entry has:' . "\n";
 					foreach ( $loop['fields'] as $field ) {

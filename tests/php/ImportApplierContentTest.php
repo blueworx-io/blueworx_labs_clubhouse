@@ -119,6 +119,37 @@ final class ImportApplierContentTest extends TestCase {
 		$this->assertSame( 1, $out['images_needed'][0]['index'] );
 	}
 
+	/**
+	 * A plan can sit in the transient across a plugin upgrade (up to an hour):
+	 * one stored before 'index' existed has images with no such key at all.
+	 * place_image() must default it to -1 (section-level) rather than emit
+	 * undefined-array-key warnings and silently drop the image.
+	 */
+	public function test_an_image_missing_its_index_key_is_treated_as_section_level(): void {
+		$plan = Blueworx_Clubhouse_Import_Plan::from_array( array(
+			'images' => array( array(
+				'page' => 'home', 'section' => 'hero', 'field' => 'image',
+				'url' => 'https://e.test/a.jpg', 'alt' => '', 'label' => 'Global · Hero — Background image',
+			) ),
+		) );
+		$out = Blueworx_Clubhouse_Import_Applier::apply( $plan, $this->storage );
+		$this->assertSame( 500, $this->store()->get( 'home', 'hero', 'image' ) );
+		$this->assertSame( array(), $out['images_needed'] );
+	}
+
+	/** Same defensive default, on the failure path that records a still-needed entry. */
+	public function test_a_failed_image_missing_its_index_key_is_recorded_as_section_level(): void {
+		wp_stub_fail_sideload( 'https://e.test/gone.jpg' );
+		$plan = Blueworx_Clubhouse_Import_Plan::from_array( array(
+			'images' => array( array(
+				'page' => 'home', 'section' => 'hero', 'field' => 'image',
+				'url' => 'https://e.test/gone.jpg', 'alt' => '', 'label' => 'Global · Hero — Background image',
+			) ),
+		) );
+		$out = Blueworx_Clubhouse_Import_Applier::apply( $plan, $this->storage );
+		$this->assertSame( -1, $out['images_needed'][0]['index'] );
+	}
+
 	public function test_a_successful_image_is_reported(): void {
 		$plan = new Blueworx_Clubhouse_Import_Plan();
 		$plan->add_image( 'home', 'hero', 'image', 'https://e.test/a.jpg', '', 'Global · Hero — Background image' );

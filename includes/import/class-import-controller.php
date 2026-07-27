@@ -34,6 +34,7 @@ final class Blueworx_Clubhouse_Import_Controller {
 	public static function register(): void {
 		add_action( 'admin_menu', array( self::class, 'add_menu' ) );
 		add_action( 'admin_post_' . self::DOWNLOAD_ACTION, array( self::class, 'download_prompt' ) );
+		add_action( 'admin_enqueue_scripts', array( self::class, 'enqueue' ) );
 	}
 
 	public static function add_menu(): void {
@@ -45,6 +46,18 @@ final class Blueworx_Clubhouse_Import_Controller {
 			self::PAGE_SLUG,
 			array( self::class, 'render_page' )
 		);
+	}
+
+	/**
+	 * As a submenu of Club Content, WordPress names this page's hook after its
+	 * parent's slug ('club-content'), not 'toplevel_page_…' — Content_Controller's
+	 * own hook only matches its own, unrelated top-level page.
+	 */
+	public static function enqueue( string $hook ): void {
+		if ( 'club-content_page_' . self::PAGE_SLUG !== $hook ) {
+			return;
+		}
+		wp_enqueue_style( 'clubhouse-admin-content', BLUEWORX_LABS_CLUBHOUSE_URL . 'assets/css/admin-content.css', array(), BLUEWORX_LABS_CLUBHOUSE_VERSION );
 	}
 
 	/** The transient holding this user's approved plan. Per-user so one admin cannot apply another's. */
@@ -163,13 +176,48 @@ final class Blueworx_Clubhouse_Import_Controller {
 			$storage
 		);
 
-		$storage->set( self::IMAGES_NEEDED_KEY, $result['images_needed'] );
+		$existing = $storage->get( self::IMAGES_NEEDED_KEY, array() );
+		$merged   = self::merge_images_needed( is_array( $existing ) ? $existing : array(), $result['images_needed'] );
+		$storage->set( self::IMAGES_NEEDED_KEY, $merged );
 
 		return self::model( 'result', array(
 			'rows'          => $result['rows'],
 			'warnings'      => $result['warnings'],
-			'images_needed' => $result['images_needed'],
+			'images_needed' => $merged,
 		) );
+	}
+
+	/**
+	 * Merge, never replace: the prompt actively encourages importing a tab at a
+	 * time, so a later, unrelated import must not wipe an earlier one's
+	 * still-outstanding image list. De-duplicated on page|section|field|index —
+	 * the same identity Content_Controller::clear_filled_images() keys on when it
+	 * later drops an entry the owner has since filled in.
+	 *
+	 * @param array<int,array{label:string,page:string,section:string,field:string,index:int}> $existing
+	 * @param array<int,array{label:string,page:string,section:string,field:string,index:int}> $new
+	 * @return array<int,array{label:string,page:string,section:string,field:string,index:int}>
+	 */
+	private static function merge_images_needed( array $existing, array $new ): array {
+		$merged = array();
+		$seen   = array();
+		foreach ( array_merge( $existing, $new ) as $entry ) {
+			if ( ! is_array( $entry ) ) {
+				continue;
+			}
+			$key = implode( '|', array(
+				(string) ( $entry['page'] ?? '' ),
+				(string) ( $entry['section'] ?? '' ),
+				(string) ( $entry['field'] ?? '' ),
+				(string) ( $entry['index'] ?? -1 ),
+			) );
+			if ( isset( $seen[ $key ] ) ) {
+				continue;
+			}
+			$seen[ $key ] = true;
+			$merged[]     = $entry;
+		}
+		return $merged;
 	}
 
 	/**

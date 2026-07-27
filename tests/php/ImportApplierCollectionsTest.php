@@ -48,11 +48,27 @@ final class ImportApplierCollectionsTest extends TestCase {
 	}
 
 	public function test_an_unmarked_post_whose_title_matches_demo_content_is_also_deleted(): void {
-		// Installs seeded before the marker existed have no _clubhouse_demo meta.
+		// Installs seeded before the marker existed have no _clubhouse_demo meta
+		// on any post of this type — the precondition the title fallback requires.
 		wp_stub_add_post( 'clubhouse_sport', 12, 'Rugby' );
 		$plan = $this->plan_with( 'clubhouse_sport', array( $this->item( 'Squash' ) ) );
 		Blueworx_Clubhouse_Import_Applier::apply( $plan, $this->storage );
 		$this->assertSame( 12, wp_stub_calls( 'wp_delete_post' )[0]['args'][0] );
+	}
+
+	public function test_a_marked_demo_post_present_stops_the_title_fallback(): void {
+		// Once the type has even one marked post, it is known to be post-marker,
+		// so title-matching must not run — otherwise a club's own real post that
+		// happens to share a seeded demo title (e.g. their own "Tennis" section)
+		// would be deleted right alongside the actual demo entry.
+		wp_stub_add_post( 'clubhouse_sport', 40, 'Rugby', array( Blueworx_Clubhouse_Collection_Seeder::DEMO_META => '1' ) );
+		wp_stub_add_post( 'clubhouse_sport', 41, 'Tennis' ); // unmarked, owner's own, shares a demo title
+		$plan = $this->plan_with( 'clubhouse_sport', array( $this->item( 'Squash' ) ) );
+		Blueworx_Clubhouse_Import_Applier::apply( $plan, $this->storage );
+
+		$deletes = wp_stub_calls( 'wp_delete_post' );
+		$this->assertCount( 1, $deletes );
+		$this->assertSame( 40, $deletes[0]['args'][0] );
 	}
 
 	public function test_a_real_post_is_kept(): void {
@@ -60,6 +76,22 @@ final class ImportApplierCollectionsTest extends TestCase {
 		$plan = $this->plan_with( 'clubhouse_sport', array( $this->item( 'Squash' ) ) );
 		Blueworx_Clubhouse_Import_Applier::apply( $plan, $this->storage );
 		$this->assertSame( array(), wp_stub_calls( 'wp_delete_post' ) );
+	}
+
+	public function test_two_new_items_sharing_a_title_update_the_second_instead_of_duplicating(): void {
+		// $by_title must learn about a freshly-inserted post immediately, or a
+		// second item with the same title creates a duplicate that can never be
+		// reached again by name.
+		$plan = $this->plan_with( 'clubhouse_sport', array(
+			$this->item( 'Squash', array( 'subtitle' => 'First' ) ),
+			$this->item( 'Squash', array( 'subtitle' => 'Second' ) ),
+		) );
+		Blueworx_Clubhouse_Import_Applier::apply( $plan, $this->storage );
+
+		$this->assertCount( 1, wp_stub_calls( 'wp_insert_post' ) );
+		$this->assertCount( 1, wp_stub_calls( 'wp_update_post' ) );
+		$meta = wp_stub_calls( 'update_post_meta' );
+		$this->assertSame( 'Second', end( $meta )['args'][2] );
 	}
 
 	public function test_a_real_post_with_the_same_title_is_updated_not_duplicated(): void {
@@ -147,11 +179,24 @@ final class ImportApplierCollectionsTest extends TestCase {
 	}
 
 	public function test_demo_counts_reports_per_type_totals(): void {
+		// A marked post is present, so this type is known post-marker: the
+		// unmarked "Tennis" post is the owner's own and must not be counted,
+		// even though it happens to share a seeded demo title.
 		wp_stub_add_post( 'clubhouse_sport', 17, 'Rugby', array( Blueworx_Clubhouse_Collection_Seeder::DEMO_META => '1' ) );
-		wp_stub_add_post( 'clubhouse_sport', 18, 'Tennis' ); // unmarked, but a demo title
+		wp_stub_add_post( 'clubhouse_sport', 18, 'Tennis' ); // unmarked, real, coincidentally a demo title
 		wp_stub_add_post( 'clubhouse_sport', 19, 'Korfball' ); // real
 		$counts = Blueworx_Clubhouse_Import_Applier::demo_counts( array( 'clubhouse_sport', 'clubhouse_team' ) );
-		$this->assertSame( 2, $counts['clubhouse_sport'] );
+		$this->assertSame( 1, $counts['clubhouse_sport'] );
 		$this->assertSame( 0, $counts['clubhouse_team'] );
+	}
+
+	public function test_demo_counts_falls_back_to_titles_when_nothing_is_marked(): void {
+		// No post of this type carries the marker, so it is a pre-marker install
+		// and the title fallback is the only signal available.
+		wp_stub_add_post( 'clubhouse_sport', 43, 'Rugby' );
+		wp_stub_add_post( 'clubhouse_sport', 44, 'Tennis' );
+		wp_stub_add_post( 'clubhouse_sport', 45, 'Korfball' ); // not a demo title
+		$counts = Blueworx_Clubhouse_Import_Applier::demo_counts( array( 'clubhouse_sport' ) );
+		$this->assertSame( 2, $counts['clubhouse_sport'] );
 	}
 }

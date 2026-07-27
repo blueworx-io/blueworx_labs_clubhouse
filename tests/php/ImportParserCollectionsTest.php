@@ -72,6 +72,21 @@ final class ImportParserCollectionsTest extends TestCase {
 			array( 'title' => 'Gala', 'status' => 'sideways' ),
 		) ) );
 		$this->assertSame( 'upcoming', $out['plan']->collections()['clubhouse_event'][0]['meta']['status'] );
+		// Every other drop warns; a corrected select must not be the silent
+		// exception. Collection_Meta::sanitise() is the source of truth for what
+		// counts as a correction — detected here by comparing its output to what
+		// was supplied, not by re-checking the option list ourselves.
+		$this->assertSame(
+			array( 'Ignored "clubhouse_event/status": "sideways" is not a valid option; using the default.' ),
+			$out['plan']->warnings()
+		);
+	}
+
+	public function test_a_select_value_matching_the_default_is_not_warned(): void {
+		$out = $this->parse( array( 'clubhouse_event' => array(
+			array( 'title' => 'Gala', 'status' => 'upcoming' ),
+		) ) );
+		$this->assertSame( array(), $out['plan']->warnings() );
 	}
 
 	public function test_a_media_field_is_kept_as_an_image_reference(): void {

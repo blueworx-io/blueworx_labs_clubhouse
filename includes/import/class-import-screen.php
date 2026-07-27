@@ -42,7 +42,7 @@ final class Blueworx_Clubhouse_Import_Screen {
 		$out .= '<div class="clubhouse-import">';
 		$out .= '<div class="clubhouse-head"><div class="clubhouse-head__titles">'
 			. '<p class="clubhouse-eyebrow">Clubhouse · Import</p>'
-			. '<h1 class="clubhouse-title">Import your content</h1></div></div>';
+			. '<h1 class="clubhouse-head__h1">Import your content</h1></div></div>';
 
 		if ( '' !== $error ) {
 			$out .= '<div class="notice notice-error"><p>' . self::esc( $error ) . '</p></div>';

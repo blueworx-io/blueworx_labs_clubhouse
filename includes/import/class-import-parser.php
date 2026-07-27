@@ -92,6 +92,18 @@ final class Blueworx_Clubhouse_Import_Parser {
 	}
 
 	/**
+	 * Read a toggle value on its own terms rather than by presence:
+	 * `true`/`"true"`/`1`/`"1"` is on; `false`, `"false"`, `0`, `"0"`, `""`,
+	 * `null`, an absent key, or anything else non-scalar is off. Unlike
+	 * Content_Sanitiser::field()'s form-post semantics (where merely being
+	 * present means checked), a JSON file's toggle key can carry `false`
+	 * explicitly and must be read as such.
+	 */
+	private static function toggle_value( mixed $raw ): bool {
+		return true === $raw || 1 === $raw || '1' === $raw || 'true' === $raw;
+	}
+
+	/**
 	 * Catalogue sections keyed by their stored address, carrying the definition
 	 * and the labels needed to name an image slot for a human.
 	 *
@@ -178,6 +190,14 @@ final class Blueworx_Clubhouse_Import_Parser {
 				);
 				continue;
 			}
+			if ( 'toggle' === $field_def['type'] ) {
+				// Content_Sanitiser::field()'s presence-means-true rule is correct
+				// for a form POST (an unticked checkbox never posts) and wrong here,
+				// where the key is present and can carry `false` — a JSON file must
+				// be read for what it says, not just whether the key showed up.
+				$plan->add_field( $page, $section_key, $field_key, self::toggle_value( $raw ) );
+				continue;
+			}
 			$plan->add_field(
 				$page,
 				$section_key,
@@ -198,6 +218,13 @@ final class Blueworx_Clubhouse_Import_Parser {
 			$plan->warn( sprintf( 'Ignored "%s/%s/items": expected a list of items.', $page, $section_key ) );
 			return;
 		}
+		if ( array() === $raw_items ) {
+			// An empty list is almost certainly an oversight, and planning it would
+			// clear the section invisibly: the preview skips zero-count sections, so
+			// no row would show the deletion an apply would actually perform.
+			$plan->warn( sprintf( 'Ignored "%s/%s/items": the list is empty.', $page, $section_key ) );
+			return;
+		}
 
 		// Sanitise first, then force every image-typed field back to the ''
 		// sentinel: Content_Sanitiser::field() runs absint() on any scalar for an
@@ -215,6 +242,22 @@ final class Blueworx_Clubhouse_Import_Parser {
 			$field_key = (string) $field_def['key'];
 			foreach ( array_keys( $items ) as $index ) {
 				$items[ $index ][ $field_key ] = '';
+			}
+		}
+		// Same presence-vs-value correction as the section-level toggle above,
+		// applied per item: Content_Sanitiser::items() has already set every
+		// toggle to "was the key present", which is wrong for a JSON file. $items
+		// and $raw_items share the same 0-based order (both came from the same
+		// list), so the raw value for item N is read back by the same index.
+		foreach ( $loop_fields as $field_def ) {
+			if ( 'toggle' !== $field_def['type'] ) {
+				continue;
+			}
+			$field_key = (string) $field_def['key'];
+			foreach ( array_keys( $items ) as $index ) {
+				$raw_item  = $raw_items[ $index ] ?? null;
+				$raw_value = ( is_array( $raw_item ) && array_key_exists( $field_key, $raw_item ) ) ? $raw_item[ $field_key ] : null;
+				$items[ $index ][ $field_key ] = self::toggle_value( $raw_value );
 			}
 		}
 		$plan->add_items( $page, $section_key, $items );
@@ -314,7 +357,15 @@ final class Blueworx_Clubhouse_Import_Parser {
 						continue;
 					}
 					$value        = is_scalar( $raw_value ) ? (string) $raw_value : '';
-					$meta[ $key ] = Blueworx_Clubhouse_Collection_Meta::sanitise( $type, $key, $value );
+					$sanitised    = Blueworx_Clubhouse_Collection_Meta::sanitise( $type, $key, $value );
+					$meta[ $key ] = $sanitised;
+					// Collection_Meta::sanitise() is the single source of truth for
+					// what a select field accepts; rather than re-implementing the
+					// option check here, a select value is known to have been
+					// out-of-range precisely when sanitising it changed it.
+					if ( 'select' === $field_defs[ $key ]['type'] && $sanitised !== $value ) {
+						$plan->warn( sprintf( 'Ignored "%s/%s": "%s" is not a valid option; using the default.', $type, $key, $value ) );
+					}
 				}
 
 				$items[] = array( 'title' => $title, 'meta' => $meta, 'images' => $images );

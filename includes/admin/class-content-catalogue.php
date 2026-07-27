@@ -250,7 +250,7 @@ final class Blueworx_Clubhouse_Content_Catalogue {
 				array( 'key' => 'upcoming', 'label' => 'Upcoming events', 'type' => 'linkout', 'store_page' => 'events',
 					'link' => array( 'kind' => 'cpt', 'cpt' => 'clubhouse_event', 'label' => 'Manage events', 'text' => 'Upcoming events are managed in one place — the Events collection.' ) ),
 				array( 'key' => 'past', 'label' => 'Past events', 'type' => 'auto', 'store_page' => 'events',
-					'auto' => array( 'text' => 'Derived from events marked past. → Manage events', 'cpt' => 'clubhouse_event' ) ),
+					'auto' => array( 'text' => 'Derived from events marked past.', 'cpt' => 'clubhouse_event' ) ),
 				array( 'key' => 'cta', 'label' => 'Call to action', 'type' => 'fields', 'store_page' => 'events', 'fields' => self::cta_fields() ),
 			) ),
 			array( 'tab' => 'calendar', 'label' => 'Calendar', 'sections' => array(

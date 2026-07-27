@@ -18,9 +18,14 @@ final class Blueworx_Clubhouse_Import_Preview {
 
 	/**
 	 * @param array<string,int> $demo_counts collection type => existing demo posts
-	 * @return array{rows:array<int,array{label:string,detail:string}>,warnings:array<int,string>,is_empty:bool}
+	 * @return array{rows:array<int,array{label:string,detail:string}>,warnings:array<int,string>}
 	 */
 	public static function summary( Blueworx_Clubhouse_Import_Plan $plan, array $demo_counts ): array {
+		// Whether the plan is empty is not a separate fact this contract needs to
+		// carry: it is exactly "rows is empty", and Import_Screen already derives
+		// its "nothing to import" message from an empty rows array. Plan::is_empty()
+		// itself stays — it is the pre-preview guard the parser and its tests use —
+		// this only removes the unused duplicate of it from the summary.
 		$rows = array_merge(
 			self::content_rows( $plan ),
 			self::collection_rows( $plan, $demo_counts ),
@@ -30,7 +35,6 @@ final class Blueworx_Clubhouse_Import_Preview {
 		return array(
 			'rows'     => $rows,
 			'warnings' => $plan->warnings(),
-			'is_empty' => $plan->is_empty(),
 		);
 	}
 

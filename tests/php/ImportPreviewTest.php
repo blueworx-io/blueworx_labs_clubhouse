@@ -9,9 +9,11 @@ final class ImportPreviewTest extends TestCase {
 		return new Blueworx_Clubhouse_Import_Plan();
 	}
 
-	public function test_an_empty_plan_reports_itself_empty(): void {
+	public function test_an_empty_plan_reports_no_rows(): void {
+		// is_empty() is not part of this contract: Import_Screen already treats an
+		// empty rows array as "nothing to import", so that is the fact this test
+		// pins — see Blueworx_Clubhouse_Import_Plan::is_empty() for the plan-level check.
 		$out = Blueworx_Clubhouse_Import_Preview::summary( $this->plan(), array() );
-		$this->assertTrue( $out['is_empty'] );
 		$this->assertSame( array(), $out['rows'] );
 	}
 

@@ -91,6 +91,53 @@ final class ImportParserContentTest extends TestCase {
 		$this->assertSame( array( 'Ignored "membership/faq/items": expected a list of items.' ), $out['plan']->warnings() );
 	}
 
+	public function test_an_empty_items_list_is_not_planned(): void {
+		// An empty list must not silently clear the section: Import_Preview skips
+		// zero-count sections, so applying this would delete existing entries with
+		// nothing in the preview to show it was going to happen.
+		$out = $this->parse( array( 'membership' => array( 'faq' => array( 'items' => array() ) ) ) );
+		$this->assertTrue( $out['plan']->is_empty() );
+		$this->assertSame( array( 'Ignored "membership/faq/items": the list is empty.' ), $out['plan']->warnings() );
+	}
+
+	public function test_a_section_level_toggle_explicit_false_is_read_as_false(): void {
+		// Presence-means-true (correct for a form POST) is wrong for a JSON file,
+		// where the key is present and genuinely carries `false`.
+		$out = $this->parse( array( 'global' => array( 'header' => array( 'banner_show' => false ) ) ) );
+		$this->assertFalse( $out['plan']->fields()['global']['header']['banner_show'] );
+	}
+
+	public function test_a_section_level_toggle_explicit_true_is_read_as_true(): void {
+		$out = $this->parse( array( 'global' => array( 'header' => array( 'banner_show' => true ) ) ) );
+		$this->assertTrue( $out['plan']->fields()['global']['header']['banner_show'] );
+	}
+
+	public function test_a_section_level_toggle_absent_is_left_out_of_the_plan(): void {
+		$out = $this->parse( array( 'global' => array( 'header' => array( 'join' => 'Join us' ) ) ) );
+		$this->assertArrayNotHasKey( 'banner_show', $out['plan']->fields()['global']['header'] );
+	}
+
+	public function test_a_loop_item_toggle_explicit_false_is_read_as_false(): void {
+		$out = $this->parse( array( 'home' => array( 'stats' => array( 'items' => array(
+			array( 'value' => '450', 'label' => 'Members', 'featured' => false ),
+		) ) ) ) );
+		$this->assertFalse( $out['plan']->items()['home']['stats'][0]['featured'] );
+	}
+
+	public function test_a_loop_item_toggle_explicit_true_is_read_as_true(): void {
+		$out = $this->parse( array( 'home' => array( 'stats' => array( 'items' => array(
+			array( 'value' => '450', 'label' => 'Members', 'featured' => true ),
+		) ) ) ) );
+		$this->assertTrue( $out['plan']->items()['home']['stats'][0]['featured'] );
+	}
+
+	public function test_a_loop_item_toggle_absent_is_read_as_false(): void {
+		$out = $this->parse( array( 'home' => array( 'stats' => array( 'items' => array(
+			array( 'value' => '450', 'label' => 'Members' ),
+		) ) ) ) );
+		$this->assertFalse( $out['plan']->items()['home']['stats'][0]['featured'] );
+	}
+
 	public function test_an_image_object_is_queued_not_stored(): void {
 		$out = $this->parse( array( 'home' => array( 'hero' => array(
 			'image' => array( 'url' => 'https://e.test/a.jpg', 'alt' => 'Pavilion' ),

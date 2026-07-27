@@ -20,6 +20,12 @@ final class ImportScreenTest extends TestCase {
 		), $overrides );
 	}
 
+	/** The title must share Content/Setup's class, or admin-content.css's rule for it never matches. */
+	public function test_the_page_title_uses_the_shared_heading_class(): void {
+		$html = Blueworx_Clubhouse_Import_Screen::render( $this->model() );
+		$this->assertStringContainsString( '<h1 class="clubhouse-head__h1">Import your content</h1>', $html );
+	}
+
 	public function test_start_state_offers_the_prompt_and_an_upload(): void {
 		$html = Blueworx_Clubhouse_Import_Screen::render( $this->model() );
 		$this->assertStringContainsString( 'admin-post.php?action=clubhouse_import_prompt', $html );
