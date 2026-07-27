@@ -14,6 +14,12 @@ $GLOBALS['wp_stub_roles']       = array( 'administrator' => array( 'display' => 
 $GLOBALS['wp_stub_current_user'] = (object) array( 'roles' => array() );
 $GLOBALS['wp_stub_is_front_page'] = false;
 $GLOBALS['wp_stub_query_vars']    = array();
+$GLOBALS['wp_stub_transients']    = array();
+$GLOBALS['wp_stub_sideload_next'] = 500;
+$GLOBALS['wp_stub_sideload_fail'] = array();
+$GLOBALS['wp_stub_insert_fail']   = array();
+$GLOBALS['wp_stub_update_fail']   = array();
+$GLOBALS['wp_stub_delete_fail']   = array();
 
 function wp_stub_reset(): void {
 	$GLOBALS['wp_stub_calls']       = array();
@@ -24,6 +30,12 @@ function wp_stub_reset(): void {
 	$GLOBALS['wp_stub_current_user'] = (object) array( 'roles' => array() );
 	$GLOBALS['wp_stub_is_front_page'] = false;
 	$GLOBALS['wp_stub_query_vars']    = array();
+	$GLOBALS['wp_stub_transients']    = array();
+	$GLOBALS['wp_stub_sideload_next'] = 500;
+	$GLOBALS['wp_stub_sideload_fail'] = array();
+	$GLOBALS['wp_stub_insert_fail']   = array();
+	$GLOBALS['wp_stub_update_fail']   = array();
+	$GLOBALS['wp_stub_delete_fail']   = array();
 	unset( $GLOBALS['menu'], $GLOBALS['wp_meta_boxes'] );
 }
 
@@ -110,7 +122,15 @@ if ( ! function_exists( 'register_post_meta' ) ) {
 	function register_post_meta( ...$a ) { wp_stub_record( 'register_post_meta', $a ); return true; }
 }
 if ( ! function_exists( 'wp_insert_post' ) ) {
-	function wp_insert_post( ...$a ) { wp_stub_record( 'wp_insert_post', $a ); return count( $GLOBALS['wp_stub_calls'] ); }
+	function wp_insert_post( ...$a ) {
+		wp_stub_record( 'wp_insert_post', $a );
+		$post  = $a[0] ?? array();
+		$title = is_array( $post ) ? (string) ( $post['post_title'] ?? '' ) : '';
+		if ( isset( $GLOBALS['wp_stub_insert_fail'][ $title ] ) ) {
+			return 0;
+		}
+		return count( $GLOBALS['wp_stub_calls'] );
+	}
 }
 if ( ! function_exists( 'add_post_meta' ) ) {
 	function add_post_meta( ...$a ) { wp_stub_record( 'add_post_meta', $a ); return true; }
@@ -260,4 +280,103 @@ if ( ! function_exists( 'is_front_page' ) ) {
 }
 if ( ! function_exists( 'get_query_var' ) ) {
 	function get_query_var( string $var, $default = '' ) { return $GLOBALS['wp_stub_query_vars'][ $var ] ?? $default; }
+}
+
+/** Make the next sideload of this URL fail, as a dead link would. */
+function wp_stub_fail_sideload( string $url ): void {
+	$GLOBALS['wp_stub_sideload_fail'][ $url ] = true;
+}
+
+/** Make the next wp_insert_post() for this post title fail, as a DB error would. */
+function wp_stub_fail_insert( string $title ): void {
+	$GLOBALS['wp_stub_insert_fail'][ $title ] = true;
+}
+
+/** Make wp_update_post() for this post ID fail, as a DB error would. */
+function wp_stub_fail_update( int $id ): void {
+	$GLOBALS['wp_stub_update_fail'][ $id ] = true;
+}
+
+/** Make wp_delete_post() for this post ID fail, as a DB error would. */
+function wp_stub_fail_delete( int $id ): void {
+	$GLOBALS['wp_stub_delete_fail'][ $id ] = true;
+}
+
+if ( ! class_exists( 'WP_Error' ) ) {
+	class WP_Error {
+		public function __construct( public string $code = '', public string $message = '' ) {}
+	}
+}
+if ( ! function_exists( 'is_wp_error' ) ) {
+	function is_wp_error( $thing ): bool { return $thing instanceof WP_Error; }
+}
+if ( ! function_exists( 'media_sideload_image' ) ) {
+	function media_sideload_image( string $url, int $post_id = 0, ?string $desc = null, string $return = 'html' ) {
+		wp_stub_record( 'media_sideload_image', array( $url, $post_id, $desc, $return ) );
+		if ( isset( $GLOBALS['wp_stub_sideload_fail'][ $url ] ) ) {
+			return new WP_Error( 'http_404', 'Not found' );
+		}
+		return $GLOBALS['wp_stub_sideload_next']++;
+	}
+}
+if ( ! function_exists( 'wp_update_post' ) ) {
+	function wp_update_post( array $post = array() ) {
+		wp_stub_record( 'wp_update_post', array( $post ) );
+		$id = (int) ( $post['ID'] ?? 0 );
+		if ( isset( $GLOBALS['wp_stub_update_fail'][ $id ] ) ) {
+			return 0;
+		}
+		return $id;
+	}
+}
+if ( ! function_exists( 'wp_delete_post' ) ) {
+	function wp_delete_post( int $id, bool $force = false ) {
+		wp_stub_record( 'wp_delete_post', array( $id, $force ) );
+		if ( isset( $GLOBALS['wp_stub_delete_fail'][ $id ] ) ) {
+			return false;
+		}
+		return true;
+	}
+}
+if ( ! function_exists( 'set_transient' ) ) {
+	function set_transient( string $key, $value, int $ttl = 0 ): bool {
+		$GLOBALS['wp_stub_transients'][ $key ] = $value;
+		wp_stub_record( 'set_transient', array( $key, $value, $ttl ) );
+		return true;
+	}
+}
+if ( ! function_exists( 'get_transient' ) ) {
+	function get_transient( string $key ) {
+		return $GLOBALS['wp_stub_transients'][ $key ] ?? false;
+	}
+}
+if ( ! function_exists( 'delete_transient' ) ) {
+	function delete_transient( string $key ): bool {
+		unset( $GLOBALS['wp_stub_transients'][ $key ] );
+		wp_stub_record( 'delete_transient', array( $key ) );
+		return true;
+	}
+}
+if ( ! function_exists( 'get_current_user_id' ) ) {
+	function get_current_user_id(): int { return 7; }
+}
+if ( ! function_exists( 'add_submenu_page' ) ) {
+	function add_submenu_page( ...$a ) { wp_stub_record( 'add_submenu_page', $a ); return 'clubhouse_page_stub'; }
+}
+if ( ! function_exists( 'wp_safe_redirect' ) ) {
+	function wp_safe_redirect( string $url, int $status = 302 ): bool {
+		wp_stub_record( 'wp_safe_redirect', array( $url, $status ) );
+		return true;
+	}
+}
+if ( ! function_exists( 'size_format' ) ) {
+	function size_format( $bytes, int $decimals = 0 ) { return (string) $bytes . ' bytes'; }
+}
+
+/** Register a fake existing post of a type, with optional meta. */
+function wp_stub_add_post( string $type, int $id, string $title, array $meta = array() ): void {
+	$GLOBALS['wp_stub_posts'][ $type ][] = (object) array( 'ID' => $id, 'post_title' => $title );
+	foreach ( $meta as $key => $value ) {
+		$GLOBALS['wp_stub_postmeta'][ $id ][ $key ] = $value;
+	}
 }

@@ -80,6 +80,21 @@ final class Blueworx_Clubhouse_Collection_Meta {
 		'clubhouse_sponsor' => array( 'url' => 'URL' ),
 	);
 
+	/**
+	 * Human plural names for the six collections, used wherever a collection is
+	 * named for an owner: the generated import prompt and the import preview.
+	 *
+	 * @var array<string,string>
+	 */
+	private const LABELS = array(
+		'clubhouse_fixture' => 'Fixtures',
+		'clubhouse_person'  => 'People',
+		'clubhouse_sponsor' => 'Sponsors',
+		'clubhouse_sport'   => 'Sports',
+		'clubhouse_team'    => 'Teams',
+		'clubhouse_event'   => 'Events',
+	);
+
 	/** @return array<int,string> */
 	public static function types(): array {
 		return array_keys( self::FIELDS );
@@ -104,6 +119,11 @@ final class Blueworx_Clubhouse_Collection_Meta {
 	/** @return array<string,string> */
 	public static function columns( string $type ): array {
 		return self::COLUMNS[ $type ] ?? array();
+	}
+
+	/** Human plural name for a collection type; the raw type if it is unknown. */
+	public static function label( string $type ): string {
+		return self::LABELS[ $type ] ?? $type;
 	}
 
 	public static function sanitise( string $type, string $key, string $raw ): string {

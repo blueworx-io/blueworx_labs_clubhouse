@@ -397,4 +397,74 @@ final class ContentControllerTest extends TestCase {
 		$this->assertCount( 2, $items );
 		$this->assertSame( 'Q1', $items[0]['question'] );
 	}
+
+	public function test_outstanding_import_images_become_a_notice(): void {
+		$s = $this->storage();
+		$s->set( Blueworx_Clubhouse_Import_Controller::IMAGES_NEEDED_KEY, array(
+			array( 'label' => 'Global · Hero — Background image', 'page' => 'home', 'section' => 'hero', 'field' => 'image' ),
+		) );
+		$model = Blueworx_Clubhouse_Content_Controller::build_model( $s, array(), '', '' );
+		$this->assertSame( 'warning', $model['notices'][0]['type'] );
+		$this->assertStringContainsString( '1 picture', $model['notices'][0]['text'] );
+		$this->assertSame( 'global', $model['notices'][0]['links'][0]['tab'] );
+		$this->assertSame( 'hero', $model['notices'][0]['links'][0]['sec'] );
+	}
+
+	public function test_no_outstanding_images_means_no_notice(): void {
+		$model = Blueworx_Clubhouse_Content_Controller::build_model( $this->storage(), array(), '', '' );
+		$this->assertSame( array(), $model['notices'] );
+	}
+
+	public function test_saving_an_image_clears_its_outstanding_entry(): void {
+		$s = $this->storage();
+		$s->set( Blueworx_Clubhouse_Import_Controller::IMAGES_NEEDED_KEY, array(
+			array( 'label' => 'Global · Hero — Background image', 'page' => 'home', 'section' => 'hero', 'field' => 'image' ),
+			array( 'label' => 'About · Facilities — Image', 'page' => 'about', 'section' => 'facilities', 'field' => 'image' ),
+		) );
+		Blueworx_Clubhouse_Content_Controller::handle_save( array(
+			'clubhouse_content_tab' => 'global',
+			'field' => array( 'home' => array( 'hero' => array( 'image' => '42' ) ) ),
+		), $s );
+		$left = $s->get( Blueworx_Clubhouse_Import_Controller::IMAGES_NEEDED_KEY, array() );
+		$this->assertCount( 1, $left );
+		$this->assertSame( 'about', $left[0]['page'] );
+	}
+
+	/**
+	 * A loop-item image slot (index >= 0) lives at items[index][field], not at
+	 * the section field clear_filled_images() reads for a section-level entry
+	 * (index < 0) — this must clear the filled item's entry while leaving a
+	 * different item's outstanding entry, in the same section, untouched.
+	 */
+	public function test_saving_a_loop_item_image_clears_only_that_items_entry(): void {
+		$s = $this->storage();
+		$s->set( Blueworx_Clubhouse_Import_Controller::IMAGES_NEEDED_KEY, array(
+			array( 'label' => 'Global · News — Image', 'page' => 'home', 'section' => 'news', 'field' => 'image', 'index' => 0 ),
+			array( 'label' => 'Global · News — Image', 'page' => 'home', 'section' => 'news', 'field' => 'image', 'index' => 1 ),
+		) );
+		Blueworx_Clubhouse_Content_Controller::handle_save( array(
+			'clubhouse_content_tab' => 'global',
+			'item' => array( 'home' => array( 'news' => array(
+				array( 'title' => 'First', 'image' => '' ),
+				array( 'title' => 'Second', 'image' => '42' ),
+			) ) ),
+		), $s );
+		$left = $s->get( Blueworx_Clubhouse_Import_Controller::IMAGES_NEEDED_KEY, array() );
+		$this->assertCount( 1, $left );
+		$this->assertSame( 0, $left[0]['index'] );
+	}
+
+	/** An entry stored before 'index' existed (or a hand-edited option) has no such key; it must still clear like a section-level entry rather than being lost. */
+	public function test_an_entry_with_no_index_key_is_treated_as_section_level(): void {
+		$s = $this->storage();
+		$s->set( Blueworx_Clubhouse_Import_Controller::IMAGES_NEEDED_KEY, array(
+			array( 'label' => 'Global · Hero — Background image', 'page' => 'home', 'section' => 'hero', 'field' => 'image' ),
+		) );
+		Blueworx_Clubhouse_Content_Controller::handle_save( array(
+			'clubhouse_content_tab' => 'global',
+			'field' => array( 'home' => array( 'hero' => array( 'image' => '42' ) ) ),
+		), $s );
+		$left = $s->get( Blueworx_Clubhouse_Import_Controller::IMAGES_NEEDED_KEY, array() );
+		$this->assertSame( array(), $left );
+	}
 }

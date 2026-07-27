@@ -18,6 +18,7 @@ require_once __DIR__ . '/core/class-registry.php';
 
 // Content
 require_once __DIR__ . '/content/class-content-store.php';
+require_once __DIR__ . '/content/class-content-sanitiser.php';
 require_once __DIR__ . '/content/class-visibility.php';
 
 // Theme
@@ -58,3 +59,10 @@ require_once __DIR__ . '/collections/class-collection-meta.php';
 require_once __DIR__ . '/frontend/class-links.php';
 require_once __DIR__ . '/frontend/class-cta.php';
 require_once __DIR__ . '/frontend/class-demo-mode.php';
+
+// Import (pure)
+require_once __DIR__ . '/import/class-import-plan.php';
+require_once __DIR__ . '/import/class-import-parser.php';
+require_once __DIR__ . '/import/class-import-prompt.php';
+require_once __DIR__ . '/import/class-import-preview.php';
+require_once __DIR__ . '/import/class-import-screen.php';

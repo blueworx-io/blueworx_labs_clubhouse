@@ -131,4 +131,37 @@ final class ContentCatalogueTest extends TestCase {
 			);
 		}
 	}
+
+	public function test_index_keys_by_store_page_and_section(): void {
+		$index = Blueworx_Clubhouse_Content_Catalogue::index();
+		$this->assertArrayHasKey( 'home/hero', $index );
+		$this->assertSame( 'global', $index['home/hero']['tab'] );
+		$this->assertSame( 'Global', $index['home/hero']['tab_label'] );
+		$this->assertSame( 'Hero', $index['home/hero']['section_label'] );
+	}
+
+	public function test_index_uses_store_page_not_tab_for_global_sections(): void {
+		$index = Blueworx_Clubhouse_Content_Catalogue::index();
+		// The Global tab's Header stores under the 'global' store_page.
+		$this->assertArrayHasKey( 'global/header', $index );
+		$this->assertSame( 'global', $index['global/header']['tab'] );
+		$this->assertSame( 'Header', $index['global/header']['section_label'] );
+	}
+
+	public function test_index_covers_every_catalogue_section(): void {
+		$expected = 0;
+		foreach ( Blueworx_Clubhouse_Content_Catalogue::pages() as $page ) {
+			$expected += count( $page['sections'] );
+		}
+		$this->assertCount( $expected, Blueworx_Clubhouse_Content_Catalogue::index() );
+	}
+
+	public function test_address_label_names_a_section_for_a_human(): void {
+		$this->assertSame( 'Global · Hero', Blueworx_Clubhouse_Content_Catalogue::address_label( 'home/hero' ) );
+		$this->assertSame( 'Membership · FAQ', Blueworx_Clubhouse_Content_Catalogue::address_label( 'membership/faq' ) );
+	}
+
+	public function test_address_label_falls_back_to_the_raw_address(): void {
+		$this->assertSame( 'ghost/gone', Blueworx_Clubhouse_Content_Catalogue::address_label( 'ghost/gone' ) );
+	}
 }

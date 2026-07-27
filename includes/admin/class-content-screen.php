@@ -86,7 +86,7 @@ final class Blueworx_Clubhouse_Content_Screen {
 			. '.clubhouse-content{' . self::css_tokens( $active_tokens ) . '}</style>';
 		$out .= '<div class="clubhouse-content">';
 		$out .= self::header();
-		$out .= self::notices( $model['notices'] );
+		$out .= self::notices( $model['notices'], $action_url );
 		$out .= self::page_tabs( $catalogue, $action_url );
 
 		foreach ( $catalogue as $index => $page ) {
@@ -105,12 +105,22 @@ final class Blueworx_Clubhouse_Content_Screen {
 			. '</header>';
 	}
 
-	/** @param array<int,array{type:string,text:string}> $notices */
-	private static function notices( array $notices ): string {
+	/** @param array<int,array{type:string,text:string,links?:array<int,array{label:string,tab:string,sec:string}>}> $notices */
+	private static function notices( array $notices, string $action_url ): string {
 		$out = '';
 		foreach ( $notices as $n ) {
 			$type = in_array( $n['type'], array( 'error', 'warning', 'success' ), true ) ? $n['type'] : 'info';
-			$out .= '<div class="notice notice-' . self::esc( $type ) . '"><p>' . self::esc( $n['text'] ) . '</p></div>';
+			$out .= '<div class="notice notice-' . self::esc( $type ) . '"><p>' . self::esc( $n['text'] ) . '</p>';
+			$links = is_array( $n['links'] ?? null ) ? $n['links'] : array();
+			if ( array() !== $links ) {
+				$out .= '<ul class="clubhouse-notice__links">';
+				foreach ( $links as $link ) {
+					$href = self::sec_href( $action_url, (string) $link['tab'], (string) $link['sec'] );
+					$out .= '<li><a href="' . self::esc_url( $href ) . '">' . self::esc( (string) $link['label'] ) . '</a></li>';
+				}
+				$out .= '</ul>';
+			}
+			$out .= '</div>';
 		}
 		return $out;
 	}

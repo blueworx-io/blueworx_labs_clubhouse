@@ -262,4 +262,37 @@ final class ContentScreenTest extends TestCase {
 		$after = Blueworx_Clubhouse_Page_Map::render( '', $branding, $vis, $coll, '', new Blueworx_Clubhouse_Content_Store( $storage ) );
 		$this->assertSame( $before, $after, 'a Save with no edits must not change the rendered page' );
 	}
+
+	public function test_a_notice_can_carry_links_to_sections(): void {
+		$model = $this->model(); // the existing helper in this file
+		$model['notices'] = array( array(
+			'type'  => 'warning',
+			'text'  => 'Two pictures are still missing.',
+			'links' => array(
+				array( 'label' => 'Global · Hero', 'tab' => 'global', 'sec' => 'hero' ),
+			),
+		) );
+		$html = Blueworx_Clubhouse_Content_Screen::render( $model );
+		$this->assertStringContainsString( 'Two pictures are still missing.', $html );
+		$this->assertStringContainsString( 'Global · Hero', $html );
+		$this->assertStringContainsString( 'clubhouse-sec-global-hero', $html );
+	}
+
+	public function test_notice_links_are_escaped(): void {
+		$model = $this->model();
+		$model['notices'] = array( array(
+			'type'  => 'warning',
+			'text'  => 'Missing.',
+			'links' => array( array( 'label' => '<img src=x>', 'tab' => 'global', 'sec' => 'hero' ) ),
+		) );
+		$html = Blueworx_Clubhouse_Content_Screen::render( $model );
+		$this->assertStringNotContainsString( '<img src=x>', $html );
+	}
+
+	public function test_a_notice_without_links_is_unchanged(): void {
+		$model = $this->model();
+		$model['notices'] = array( array( 'type' => 'success', 'text' => 'Your changes have been saved.' ) );
+		$html = Blueworx_Clubhouse_Content_Screen::render( $model );
+		$this->assertStringContainsString( 'Your changes have been saved.', $html );
+	}
 }

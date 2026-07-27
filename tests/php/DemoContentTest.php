@@ -40,4 +40,20 @@ final class DemoContentTest extends TestCase {
 		$this->assertNotEmpty( array_filter( $events, static fn( $e ) => 'upcoming' === $e['status'] ) );
 		$this->assertNotEmpty( array_filter( $events, static fn( $e ) => 'past' === $e['status'] ) );
 	}
+
+	public function test_titles_for_each_type_match_the_seeded_titles(): void {
+		$this->assertSame( 6, count( Blueworx_Clubhouse_Demo_Content::titles( 'clubhouse_sport' ) ) );
+		$this->assertContains( 'Rugby', Blueworx_Clubhouse_Demo_Content::titles( 'clubhouse_sport' ) );
+		$this->assertContains( 'Sponsor 01', Blueworx_Clubhouse_Demo_Content::titles( 'clubhouse_sponsor' ) );
+		$this->assertContains( 'Priya Nair', Blueworx_Clubhouse_Demo_Content::titles( 'clubhouse_person' ) );
+	}
+
+	public function test_fixture_titles_are_composed_home_vs_away(): void {
+		$titles = Blueworx_Clubhouse_Demo_Content::titles( 'clubhouse_fixture' );
+		$this->assertContains( 'ClubHouse vs Riverside RFC', $titles );
+	}
+
+	public function test_titles_for_unknown_type_is_empty(): void {
+		$this->assertSame( array(), Blueworx_Clubhouse_Demo_Content::titles( 'nope' ) );
+	}
 }

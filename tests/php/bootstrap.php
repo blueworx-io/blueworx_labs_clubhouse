@@ -41,6 +41,8 @@ require_once dirname( __DIR__, 2 ) . '/includes/admin/class-content-controller.p
 require_once dirname( __DIR__, 2 ) . '/includes/admin/class-demo-controller.php';
 require_once dirname( __DIR__, 2 ) . '/includes/admin/class-owner-role.php';
 require_once dirname( __DIR__, 2 ) . '/includes/admin/class-native-pages.php';
+require_once dirname( __DIR__, 2 ) . '/includes/import/class-import-applier.php';
+require_once dirname( __DIR__, 2 ) . '/includes/import/class-import-controller.php';
 
 require_once dirname( __DIR__, 2 ) . '/includes/collections/class-collection-mappers.php';
 require_once dirname( __DIR__, 2 ) . '/includes/collections/class-media.php';

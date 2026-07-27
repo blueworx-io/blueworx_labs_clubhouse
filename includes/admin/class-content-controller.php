@@ -152,6 +152,8 @@ final class Blueworx_Clubhouse_Content_Controller {
 			$vis->set_section_visible( $vis_page, $section_key, ! $hidden );
 		}
 
+		self::clear_filled_images( $storage, $content_store );
+
 		return array( array( 'type' => 'success', 'text' => 'Your changes have been saved.' ) );
 	}
 
@@ -171,6 +173,8 @@ final class Blueworx_Clubhouse_Content_Controller {
 		$active_look   = $registry->active();
 		$plugin_url    = defined( 'BLUEWORX_LABS_CLUBHOUSE_URL' ) ? BLUEWORX_LABS_CLUBHOUSE_URL : '';
 		$theming       = self::look_theming( $registry, $branding, $plugin_url );
+
+		$notices = array_merge( self::images_needed_notice( $storage ), $notices );
 
 		$catalogue = array();
 		foreach ( Blueworx_Clubhouse_Content_Catalogue::pages() as $page ) {
@@ -220,6 +224,93 @@ final class Blueworx_Clubhouse_Content_Controller {
 		);
 	}
 
+	/**
+	 * Turn any image slots an import could not fill into a notice that links
+	 * straight to the sections that need them. Read from the same storage key
+	 * the importer writes, so the list survives until the owner actually
+	 * supplies the pictures.
+	 *
+	 * @return array<int,array{type:string,text:string,links:array<int,array{label:string,tab:string,sec:string}>}>
+	 */
+	private static function images_needed_notice( Blueworx_Clubhouse_Storage $storage ): array {
+		$needed = $storage->get( Blueworx_Clubhouse_Import_Controller::IMAGES_NEEDED_KEY, array() );
+		if ( ! is_array( $needed ) || array() === $needed ) {
+			return array();
+		}
+		$index = Blueworx_Clubhouse_Content_Catalogue::index();
+		$links = array();
+		foreach ( $needed as $entry ) {
+			if ( ! is_array( $entry ) ) {
+				continue;
+			}
+			$address = (string) ( $entry['page'] ?? '' ) . '/' . (string) ( $entry['section'] ?? '' );
+			if ( ! isset( $index[ $address ] ) ) {
+				continue;
+			}
+			$links[] = array(
+				'label' => (string) ( $entry['label'] ?? $address ),
+				'tab'   => $index[ $address ]['tab'],
+				'sec'   => $index[ $address ]['section_key'],
+			);
+		}
+		if ( array() === $links ) {
+			return array();
+		}
+		$count = count( $links );
+		return array( array(
+			'type'  => 'warning',
+			'text'  => sprintf(
+				'%d %s from your import could not be fetched. Add %s here whenever you have the files:',
+				$count,
+				1 === $count ? 'picture' : 'pictures',
+				1 === $count ? 'it' : 'them'
+			),
+			'links' => $links,
+		) );
+	}
+
+	/**
+	 * Drop any outstanding image slot the owner has now filled. Keyed on the
+	 * stored value rather than on which tab was saved, so it stays correct
+	 * whether the picture arrived through this screen or another.
+	 *
+	 * Branches on 'index' exactly as Import_Applier::place_image() does: a
+	 * section-level image (index < 0) lives at a plain content field, while a
+	 * loop-item image (index >= 0) lives at items[index][field] — reading the
+	 * section field for a loop-item entry would always see '' and the entry
+	 * would never clear. An entry stored before 'index' existed (or a
+	 * hand-edited option) has no such key; default it to -1 so it keeps
+	 * behaving as a section-level entry rather than being lost.
+	 */
+	private static function clear_filled_images( Blueworx_Clubhouse_Storage $storage, Blueworx_Clubhouse_Content_Store $content_store ): void {
+		$needed = $storage->get( Blueworx_Clubhouse_Import_Controller::IMAGES_NEEDED_KEY, array() );
+		if ( ! is_array( $needed ) || array() === $needed ) {
+			return;
+		}
+		$left = array();
+		foreach ( $needed as $entry ) {
+			if ( ! is_array( $entry ) ) {
+				continue;
+			}
+			$page    = (string) ( $entry['page'] ?? '' );
+			$section = (string) ( $entry['section'] ?? '' );
+			$field   = (string) ( $entry['field'] ?? '' );
+			$index   = isset( $entry['index'] ) ? (int) $entry['index'] : -1;
+
+			if ( $index < 0 ) {
+				$value = $content_store->get( $page, $section, $field, '' );
+			} else {
+				$items = $content_store->get_items( $page, $section );
+				$value = array_key_exists( $index, $items ) ? ( $items[ $index ][ $field ] ?? '' ) : '';
+			}
+
+			if ( '' === $value || 0 === $value ) {
+				$left[] = $entry;
+			}
+		}
+		$storage->set( Blueworx_Clubhouse_Import_Controller::IMAGES_NEEDED_KEY, array_values( $left ) );
+	}
+
 	/** The Content_Catalogue page entry for a tab slug, or null if unknown. */
 	private static function find_page( string $tab_slug ): ?array {
 		foreach ( Blueworx_Clubhouse_Content_Catalogue::pages() as $page ) {
@@ -246,42 +337,12 @@ final class Blueworx_Clubhouse_Content_Controller {
 
 	/**
 	 * Sanitise a single field's posted value by its catalogue type.
+	 * Delegates to the shared pure sanitiser (also used by the AI import path).
 	 *
 	 * @param array<string,mixed> $field_def
 	 */
 	private static function sanitise_field( array $field_def, mixed $raw, bool $present ): mixed {
-		// A posted value that isn't scalar (e.g. field[key][]=x submitted as an
-		// array, or a nested array under an image/select field) must never reach
-		// string coercion below — PHP would emit "Array to string conversion" and
-		// store the literal "Array". Treat it as though the field were absent.
-		if ( $present && ! is_scalar( $raw ) ) {
-			$present = false;
-		}
-		switch ( $field_def['type'] ) {
-			case 'text':
-				return $present ? sanitize_text_field( (string) $raw ) : '';
-			case 'textarea':
-				return $present ? sanitize_textarea_field( (string) $raw ) : '';
-			case 'url':
-				return $present ? esc_url_raw( (string) $raw ) : '';
-			case 'image':
-				// '' — not 0 — is the "unset" sentinel every other type uses, and the
-				// one Page_Renderer::cget() falls back on. An image field's hidden
-				// input always posts, so absint('') === 0 would otherwise land on every
-				// untouched image on the first Save and read back as a real override
-				// (rendering src="0" and dropping the empty-state fallback).
-				// Attachment IDs start at 1, so nothing legitimate is lost.
-				$id = $present ? absint( $raw ) : 0;
-				return $id > 0 ? $id : '';
-			case 'toggle':
-				return $present;
-			case 'select':
-				$value   = $present ? (string) $raw : '';
-				$options = $field_def['options'] ?? array();
-				return array_key_exists( $value, $options ) ? $value : '';
-			default:
-				return '';
-		}
+		return Blueworx_Clubhouse_Content_Sanitiser::field( $field_def, $raw, $present );
 	}
 
 	/**
@@ -292,18 +353,7 @@ final class Blueworx_Clubhouse_Content_Controller {
 	 * @return array<int,array<string,mixed>>
 	 */
 	private static function sanitise_items( array $loop_fields, array $raw_items ): array {
-		$items = array();
-		foreach ( $raw_items as $raw_item ) {
-			$raw_item = self::as_array( $raw_item );
-			$item     = array();
-			foreach ( $loop_fields as $field_def ) {
-				$fkey            = (string) $field_def['key'];
-				$present         = array_key_exists( $fkey, $raw_item );
-				$item[ $fkey ]   = self::sanitise_field( $field_def, $present ? $raw_item[ $fkey ] : null, $present );
-			}
-			$items[] = $item;
-		}
-		return $items;
+		return Blueworx_Clubhouse_Content_Sanitiser::items( $loop_fields, $raw_items );
 	}
 
 	/**
