@@ -60,6 +60,24 @@ final class Blueworx_Clubhouse_Import_Controller {
 		wp_enqueue_style( 'clubhouse-admin-content', BLUEWORX_LABS_CLUBHOUSE_URL . 'assets/css/admin-content.css', array(), BLUEWORX_LABS_CLUBHOUSE_VERSION );
 	}
 
+	/**
+	 * The nonced prompt-download URL, unescaped.
+	 *
+	 * Deliberately not wp_nonce_url(), which returns its URL already esc_html'd:
+	 * Import_Screen escapes every model URL itself, so a pre-escaped one comes out
+	 * double-escaped ('&amp;amp;'), and the browser then sends the nonce as the
+	 * parameter 'amp;_wpnonce'. check_admin_referer() sees no nonce at all and the
+	 * download 403s with "The link you followed has expired." Every other URL in the
+	 * model is raw for the same reason.
+	 */
+	public static function prompt_url(): string {
+		return add_query_arg(
+			'_wpnonce',
+			wp_create_nonce( self::NONCE ),
+			admin_url( 'admin-post.php?action=' . self::DOWNLOAD_ACTION )
+		);
+	}
+
 	/** The transient holding this user's approved plan. Per-user so one admin cannot apply another's. */
 	private static function plan_key(): string {
 		return 'clubhouse_import_plan_' . get_current_user_id();
@@ -79,7 +97,7 @@ final class Blueworx_Clubhouse_Import_Controller {
 		$storage = new Blueworx_Clubhouse_Options_Storage();
 		$model   = self::handle_request( $posted, is_array( $file ) ? $file : array(), $storage );
 
-		$model['download_url'] = wp_nonce_url( admin_url( 'admin-post.php?action=' . self::DOWNLOAD_ACTION ), self::NONCE );
+		$model['download_url'] = self::prompt_url();
 		$model['action_url']   = admin_url( 'admin.php?page=' . self::PAGE_SLUG );
 		$model['nonce_field']  = wp_nonce_field( self::NONCE, '_wpnonce', true, false );
 		$model['max_upload']   = size_format( self::MAX_BYTES );

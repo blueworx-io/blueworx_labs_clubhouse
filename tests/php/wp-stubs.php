@@ -201,7 +201,17 @@ if ( ! function_exists( 'wp_get_attachment_image_url' ) ) {
 	function wp_get_attachment_image_url( $id, $size = 'thumbnail' ) { return $id ? 'https://club.test/wp-content/uploads/att-' . (int) $id . '.png' : false; }
 }
 if ( ! function_exists( 'wp_nonce_url' ) ) {
-	function wp_nonce_url( $url, $action = -1, $name = '_wpnonce' ) { return (string) $url . ( str_contains( (string) $url, '?' ) ? '&' : '?' ) . $name . '=stubnonce'; }
+	// Real wp_nonce_url() returns an esc_html'd URL — its '&' separators come back as
+	// '&#038;'. The stub must do the same, or a caller that escapes the result a second
+	// time looks correct here and ships a double-escaped href.
+	function wp_nonce_url( $url, $action = -1, $name = '_wpnonce' ) { return esc_html( (string) $url . ( str_contains( (string) $url, '?' ) ? '&' : '?' ) . $name . '=stubnonce' ); }
+}
+if ( ! function_exists( 'wp_create_nonce' ) ) {
+	function wp_create_nonce( $action = -1 ) { return 'stubnonce'; }
+}
+if ( ! function_exists( 'add_query_arg' ) ) {
+	// Unlike wp_nonce_url(), the real add_query_arg() does not escape — it returns a raw '&'.
+	function add_query_arg( $key, $value, $url ) { return (string) $url . ( str_contains( (string) $url, '?' ) ? '&' : '?' ) . rawurlencode( (string) $key ) . '=' . rawurlencode( (string) $value ); }
 }
 if ( ! function_exists( 'wp_nonce_field' ) ) {
 	function wp_nonce_field( ...$a ) { wp_stub_record( 'wp_nonce_field', $a ); $name = $a[1] ?? '_wpnonce'; return '<input type="hidden" name="' . $name . '" value="stub-nonce">'; }

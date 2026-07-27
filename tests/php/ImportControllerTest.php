@@ -23,6 +23,41 @@ final class ImportControllerTest extends TestCase {
 		return '{"clubhouse_import":1,"content":{"home":{"hero":{"eyebrow":"Est. 1974"}}}}';
 	}
 
+	/**
+	 * Regression: the prompt URL reached Import_Screen already esc_html'd (from
+	 * wp_nonce_url), the screen escaped it again, and the href shipped '&amp;amp;'.
+	 * The browser then sent the nonce as 'amp;_wpnonce', so check_admin_referer()
+	 * saw none and the download 403'd with "The link you followed has expired."
+	 */
+	public function test_the_prompt_url_is_unescaped_so_the_screen_escapes_it_exactly_once(): void {
+		$url = Blueworx_Clubhouse_Import_Controller::prompt_url();
+		$this->assertStringContainsString( '&_wpnonce=', $url );
+		$this->assertStringNotContainsString( '&#038;', $url );
+		$this->assertStringNotContainsString( '&amp;', $url );
+	}
+
+	/** The rendered href must survive one HTML-decode into a URL whose nonce is its own parameter. */
+	public function test_the_rendered_prompt_href_carries_a_usable_nonce(): void {
+		$html = Blueworx_Clubhouse_Import_Screen::render(
+			array(
+				'state'         => 'start',
+				'download_url'  => Blueworx_Clubhouse_Import_Controller::prompt_url(),
+				'action_url'    => 'https://club.test/wp-admin/admin.php?page=clubhouse-import',
+				'nonce_field'   => '',
+				'error'         => '',
+				'rows'          => array(),
+				'warnings'      => array(),
+				'images_needed' => array(),
+				'max_upload'    => '1 MB',
+			)
+		);
+		$this->assertSame( 1, preg_match( '/href="([^"]*clubhouse_import_prompt[^"]*)"/', $html, $m ) );
+		$href = html_entity_decode( $m[1], ENT_QUOTES, 'UTF-8' );
+		parse_str( (string) parse_url( $href, PHP_URL_QUERY ), $query );
+		$this->assertSame( Blueworx_Clubhouse_Import_Controller::DOWNLOAD_ACTION, $query['action'] ?? null );
+		$this->assertArrayHasKey( '_wpnonce', $query );
+	}
+
 	public function test_it_registers_a_submenu_under_club_content(): void {
 		Blueworx_Clubhouse_Import_Controller::add_menu();
 		$call = wp_stub_calls( 'add_submenu_page' )[0]['args'];
