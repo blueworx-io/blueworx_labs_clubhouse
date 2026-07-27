@@ -466,21 +466,6 @@ final class Blueworx_Clubhouse_Sections {
 			. '<div class="ch-archive" role="list">' . $rows . '</div></div></section>';
 	}
 
-	/** @param array<int,array{label:string,lines:array<int,string>,link_label:string,link_href:string}> $cols */
-	public static function info_strip( array $cols ): string {
-		$out = '';
-		foreach ( $cols as $c ) {
-			$lines = '';
-			foreach ( $c['lines'] as $line ) {
-				$lines .= '<span class="ch-info__line">' . self::e( $line ) . '</span>';
-			}
-			$link = ( '' !== $c['link_label'] && '' !== $c['link_href'] )
-				? '<a class="ch-info__link" href="' . self::e( $c['link_href'] ) . '">' . self::e( $c['link_label'] ) . ' →</a>' : '';
-			$out .= '<div class="ch-info__col" role="listitem"><div class="ch-info__label">' . self::e( $c['label'] ) . '</div>'
-				. '<div class="ch-info__body">' . $lines . $link . '</div></div>';
-		}
-		return '<section class="ch-info"><div class="ch-wrap ch-info__in" role="list">' . $out . '</div></section>';
-	}
 
 	/**
 	 * Google Maps search URL for a club address, built from the address lines we
@@ -544,7 +529,7 @@ final class Blueworx_Clubhouse_Sections {
 			. '<div class="ch-footer__brand-col">'
 			. '<a class="ch-brand" href="' . self::e( Blueworx_Clubhouse_Links::url( 'home' ) ) . '">' . self::e( $data['club_name'] ) . '</a>'
 			. '<p class="ch-footer__tagline">' . self::e( $data['tagline'] ) . '</p>'
-			. '<div class="ch-footer__socials ch-social__links" role="list">' . self::social_links( $data['socials'] ) . '</div></div>'
+			. '<div class="ch-footer__socials ch-social__links" role="list">' . self::social_links( $data['socials'], true ) . '</div></div>'
 			. $cols . $nl . '</div>'
 			. $legal_row
 			. '</div></footer>';
@@ -782,9 +767,12 @@ final class Blueworx_Clubhouse_Sections {
 	 * actually has a URL for. Used by the social band, the footer, and the contact
 	 * panel, so all three stay identical and none can carry a dead link.
 	 *
-	 * @param array<string,string> $urls network name => URL (empty URL = no pill)
+	 * @param array<string,string> $urls      network name => URL (empty URL = no pill)
+	 * @param bool                 $icon_only drop the visible network name, leaving a
+	 *                                        round icon button. The link keeps its
+	 *                                        aria-label, so the name is still announced.
 	 */
-	public static function social_links( array $urls ): string {
+	public static function social_links( array $urls, bool $icon_only = false ): string {
 		$icons = array(
 			'Facebook'  => self::FACEBOOK_ICON,
 			'Instagram' => self::INSTAGRAM_ICON,
@@ -795,25 +783,58 @@ final class Blueworx_Clubhouse_Sections {
 			if ( '' === $url ) {
 				continue;
 			}
-			$icon = $icons[ $name ] ?? '';
-			$out .= '<a class="ch-social__link" role="listitem" href="' . self::e( $url ) . '" aria-label="Follow us on ' . self::e( $name ) . '">'
+			$icon  = $icons[ $name ] ?? '';
+			$class = $icon_only ? 'ch-social__link ch-social__link--icon' : 'ch-social__link';
+			$label = $icon_only ? '' : '<span class="ch-social__label">' . self::e( $name ) . '</span>';
+			$out .= '<a class="' . $class . '" role="listitem" href="' . self::e( $url ) . '" aria-label="Follow us on ' . self::e( $name ) . '">'
 				. '<span class="ch-social__icon" aria-hidden="true">' . $icon . '</span>'
-				. '<span class="ch-social__label">' . self::e( $name ) . '</span></a>';
+				. $label . '</a>';
 		}
 		return $out;
 	}
 
-	/** Global "follow us" links — not a live/embedded feed. @param array{heading:string,lede:string,facebook_url:string,instagram_url:string,linkedin_url:string} $data */
-	public static function social( array $data ): string {
-		$out = self::social_links( array(
-			'Facebook'  => $data['facebook_url'],
-			'Instagram' => $data['instagram_url'],
-			'LinkedIn'  => $data['linkedin_url'],
-		) );
-		return '<section class="ch-social"><div class="ch-wrap ch-social__in">'
-			. '<div class="ch-social__text"><h2 class="ch-social__title">' . self::e( $data['heading'] ) . '</h2>'
-			. '<p class="ch-social__lede">' . self::e( $data['lede'] ) . '</p></div>'
-			. '<div class="ch-social__links" role="list">' . $out . '</div>'
-			. '</div></section>';
+	/**
+	 * The page's closing band: "follow us" links (not a live/embedded feed) and the
+	 * find-us details in one light section flush against the footer. They were two
+	 * stacked sections — a light social band above a dark info strip — which read as
+	 * two endings and left a slab of dark between the content and the footer.
+	 *
+	 * Either half may be empty (its section toggle is off) and the band still works.
+	 *
+	 * @param array{heading:string,lede:string,facebook_url:string,instagram_url:string,linkedin_url:string,columns:array<int,array{label:string,lines:array<int,string>,link_label:string,link_href:string}>} $data
+	 */
+	public static function closing_band( array $data ): string {
+		$social = '';
+		if ( '' !== $data['heading'] || '' !== $data['lede'] ) {
+			$links   = self::social_links( array(
+				'Facebook'  => $data['facebook_url'],
+				'Instagram' => $data['instagram_url'],
+				'LinkedIn'  => $data['linkedin_url'],
+			) );
+			$social  = '<div class="ch-wrap ch-social__in">'
+				. '<div class="ch-social__text"><h2 class="ch-social__title">' . self::e( $data['heading'] ) . '</h2>'
+				. '<p class="ch-social__lede">' . self::e( $data['lede'] ) . '</p></div>'
+				. '<div class="ch-social__links" role="list">' . $links . '</div>'
+				. '</div>';
+		}
+		$cols = '';
+		foreach ( $data['columns'] as $c ) {
+			$lines = '';
+			foreach ( $c['lines'] as $line ) {
+				$lines .= '<span class="ch-social__col-line">' . self::e( $line ) . '</span>';
+			}
+			$link = ( '' !== $c['link_label'] && '' !== $c['link_href'] )
+				? '<a class="ch-social__col-link" href="' . self::e( $c['link_href'] ) . '">' . self::e( $c['link_label'] ) . ' →</a>' : '';
+			$cols .= '<div class="ch-social__col" role="listitem"><div class="ch-social__col-label">' . self::e( $c['label'] ) . '</div>'
+				. '<div class="ch-social__col-body">' . $lines . $link . '</div></div>';
+		}
+		if ( '' !== $cols ) {
+			$only = '' === $social ? ' ch-social__cols--only' : '';
+			$cols = '<div class="ch-wrap ch-social__cols' . $only . '" role="list">' . $cols . '</div>';
+		}
+		if ( '' === $social && '' === $cols ) {
+			return '';
+		}
+		return '<section class="ch-social">' . $social . $cols . '</section>';
 	}
 }

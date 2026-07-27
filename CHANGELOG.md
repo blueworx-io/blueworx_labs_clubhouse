@@ -5,6 +5,11 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.37.0
+
+- **The page now ends on one band instead of two.** "Follow the club" and the find-us details (location, opening hours, contact, map link) were two stacked sections — a light band above a dark strip — which read as two endings and dropped a slab of dark between your content and the footer. They are now a single light section, in the same style as the section above it, sitting flush against the footer. Both halves keep their own section switch: turn either off and the band simply carries the other.
+- **Footer social links are icons only.** Facebook, Instagram and LinkedIn now show as round icon buttons rather than name pills, so the footer's first column stays tight. Each button still announces its network name to screen readers and keeps a full-size touch target. The social links elsewhere on the site are unchanged.
+
 ## 0.36.0
 
 - **An import can now switch off the sections it has no content for.** Previously, uploading a file filled in your own content but left every section the file said nothing about still showing its demo content. The preview now offers a tick box — on by default — that names those sections and switches them off, and switches on any section your file fills in. Only pages your file writes about are affected, so importing one page at a time is still safe; the header and footer are never touched. Untick the box to apply the content and leave every section switch exactly as it is.

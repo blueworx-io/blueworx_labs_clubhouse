@@ -109,7 +109,7 @@
 	.ch-cal__detail{grid-column:2/-1}
 }
 
-/* ---- Social — a "follow us" band linking out to Facebook/Instagram (no live feed). ---- */
+/* ---- Closing band — "follow us" links (no live feed) plus the find-us details. ---- */
 .ch-social{background:var(--color-paper);padding:var(--space-12) var(--space-10)}
 /* Social closes the page, so it seats directly onto the footer with no gap. Scoped
    via :has() because .ch-footer's --flow-lg top margin must survive on every other
@@ -126,3 +126,19 @@
 .ch-social__icon svg{width:100%;height:100%}
 @media(prefers-reduced-motion:reduce){.ch-social__link:hover,.ch-social__link:active{transform:none}}
 @media(max-width:760px){.ch-social{padding:var(--space-10) var(--space-6)}.ch-social__in{flex-direction:column;align-items:flex-start}.ch-social__links{width:100%}.ch-social__link{flex:1 1 160px;justify-content:center}}
+/* Footer variant: beside a brand mark in a narrow column the network name is
+   redundant, so the pill collapses to a round icon button — the name still ships
+   in the link's aria-label. Declared AFTER the mobile block on purpose: that
+   block's .ch-social__link{flex:1 1 160px} is equal specificity, so only source
+   order stops a fixed-size icon button from stretching on small screens. */
+.ch-social__link--icon{width:44px;height:44px;padding:0;gap:0;flex:0 0 auto;justify-content:center}
+/* Find-us columns, now on paper inside the closing band rather than in the dark
+   strip they used to be — hence accent-deep labels, not accent. */
+.ch-social__cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(200px,100%),1fr));gap:32px;margin-top:var(--space-10);padding-top:var(--space-8);border-top:1px solid var(--color-line)}
+/* Socials toggled off: the columns are the whole band, so the rule above them has
+   nothing to divide. */
+.ch-social__cols--only{margin-top:0;padding-top:0;border-top:0}
+.ch-social__col-label{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--color-accent-deep);margin-bottom:12px}
+.ch-social__col-body{display:flex;flex-direction:column;gap:2px;font-size:16px;line-height:1.5;color:var(--color-ink-soft)}
+.ch-social__col-link{color:var(--color-accent-deep);font-weight:700;font-size:13px;text-transform:uppercase;letter-spacing:.08em;margin-top:6px}
+.ch-social__col-link:hover{color:var(--color-ink)}

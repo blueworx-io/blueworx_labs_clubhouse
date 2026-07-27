@@ -486,26 +486,21 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'names'   => array_map( static fn( array $s ): string => $s['name'], $collections->sponsors() ),
 			) );
 		}
-		if ( $visibility->is_section_visible( 'home', 'social' ) ) {
-			$out .= Blueworx_Clubhouse_Sections::social( array(
-				'heading'       => self::cget( $content, 'home', 'social', 'heading', 'Follow the club' ),
-				'lede'          => self::cget( $content, 'home', 'social', 'lede', 'Match-day photos, results and behind-the-scenes — join us on socials.' ),
-				'facebook_url'  => $branding->get_facebook_url(),
-				'instagram_url' => $branding->get_instagram_url(),
-				'linkedin_url'  => $branding->get_linkedin_url(),
-			) );
-		}
-		// Contact / Find-us closes the page: address, hours and the map link belong at
-		// the foot, nearest the footer, not mid-scroll between content sections.
-		if ( $visibility->is_section_visible( 'home', 'info' ) ) {
+		// Socials and the find-us details close the page as ONE light band flush
+		// against the footer: address, hours and the map link belong at the foot,
+		// nearest the footer, not mid-scroll between content sections. Either half
+		// disappears on its own toggle; the band only renders if something is left.
+		$social_on = $visibility->is_section_visible( 'home', 'social' );
+		$info_on   = $visibility->is_section_visible( 'home', 'info' );
+		if ( $social_on || $info_on ) {
 			$default = array(
 				array( 'label' => 'Location', 'lines' => array( '12 Riverside Lane', 'Marlow, SL7 1AA' ), 'link_label' => '', 'link_href' => '' ),
 				array( 'label' => 'Opening hours', 'lines' => array( 'Mon–Sun', '7:00am – 10:00pm' ), 'link_label' => '', 'link_href' => '' ),
 				array( 'label' => 'Contact', 'lines' => array( 'hello@clubhouse.example', '01628 000 000' ), 'link_label' => '', 'link_href' => '' ),
 				array( 'label' => 'Find us', 'lines' => array(), 'link_label' => 'Open in Maps', 'link_href' => Blueworx_Clubhouse_Sections::maps_url( array( '12 Riverside Lane', 'Marlow, SL7 1AA' ) ) ),
 			);
-			$items = self::citems( $content, 'home', 'info', $default );
-			$out .= Blueworx_Clubhouse_Sections::info_strip( array_map(
+			$items   = $info_on ? self::citems( $content, 'home', 'info', $default ) : array();
+			$columns = array_map(
 				static function ( array $i ): array {
 					return array(
 						'label'      => (string) ( $i['label'] ?? '' ),
@@ -515,6 +510,14 @@ final class Blueworx_Clubhouse_Page_Renderer {
 					);
 				},
 				$items
+			);
+			$out .= Blueworx_Clubhouse_Sections::closing_band( array(
+				'heading'       => $social_on ? self::cget( $content, 'home', 'social', 'heading', 'Follow the club' ) : '',
+				'lede'          => $social_on ? self::cget( $content, 'home', 'social', 'lede', 'Match-day photos, results and behind-the-scenes — join us on socials.' ) : '',
+				'facebook_url'  => $social_on ? $branding->get_facebook_url() : '',
+				'instagram_url' => $social_on ? $branding->get_instagram_url() : '',
+				'linkedin_url'  => $social_on ? $branding->get_linkedin_url() : '',
+				'columns'       => $columns,
 			) );
 		}
 		$out .= '</main>';
@@ -829,12 +832,13 @@ final class Blueworx_Clubhouse_Page_Renderer {
 			) );
 		}
 		if ( $visibility->is_section_visible( 'contact', 'social' ) ) {
-			$out .= Blueworx_Clubhouse_Sections::social( array(
+			$out .= Blueworx_Clubhouse_Sections::closing_band( array(
 				'heading'       => self::cget( $content, 'contact', 'social', 'heading', 'Stay connected' ),
 				'lede'          => 'Follow the club for match-day updates, results and event announcements.',
 				'facebook_url'  => $branding->get_facebook_url(),
 				'instagram_url' => $branding->get_instagram_url(),
 				'linkedin_url'  => $branding->get_linkedin_url(),
+				'columns'       => array(),
 			) );
 		}
 		$out .= '</main>' . self::shell_footer( $club, $visibility, $branding, $content );
