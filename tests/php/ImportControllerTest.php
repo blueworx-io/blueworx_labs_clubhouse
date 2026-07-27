@@ -235,6 +235,67 @@ final class ImportControllerTest extends TestCase {
 		$this->assertEmpty( wp_stub_calls( 'wp_enqueue_style' ) );
 	}
 
+	public function test_a_preview_names_the_sections_that_would_be_switched_off(): void {
+		$model = Blueworx_Clubhouse_Import_Controller::handle_request(
+			array( 'clubhouse_import_upload' => '1' ),
+			$this->upload( $this->valid_json() ),
+			$this->storage
+		);
+		$this->assertContains( 'Global · News', $model['sections_off'] );
+		$this->assertNotContains( 'Global · Hero', $model['sections_off'] );
+	}
+
+	public function test_applying_with_the_tidy_up_ticked_switches_uncovered_sections_off(): void {
+		Blueworx_Clubhouse_Import_Controller::handle_request(
+			array( 'clubhouse_import_upload' => '1' ), $this->upload( $this->valid_json() ), $this->storage
+		);
+		$model = Blueworx_Clubhouse_Import_Controller::handle_request(
+			array(
+				'clubhouse_import_apply'                            => '1',
+				Blueworx_Clubhouse_Import_Controller::SECTIONS_FIELD => '1',
+			),
+			array(),
+			$this->storage
+		);
+
+		$visibility = new Blueworx_Clubhouse_Visibility( $this->storage );
+		$this->assertFalse( $visibility->is_section_visible( 'home', 'news' ) );
+		$this->assertTrue( $visibility->is_section_visible( 'home', 'hero' ) );
+
+		$labels = array_column( $model['rows'], 'detail', 'label' );
+		$this->assertArrayHasKey( 'Sections', $labels );
+	}
+
+	/** Unticked, an import writes content and leaves every toggle where it was. */
+	public function test_applying_without_the_tidy_up_leaves_every_section_where_it_was(): void {
+		Blueworx_Clubhouse_Import_Controller::handle_request(
+			array( 'clubhouse_import_upload' => '1' ), $this->upload( $this->valid_json() ), $this->storage
+		);
+		Blueworx_Clubhouse_Import_Controller::handle_request(
+			array( 'clubhouse_import_apply' => '1' ), array(), $this->storage
+		);
+
+		$this->assertTrue( ( new Blueworx_Clubhouse_Visibility( $this->storage ) )->is_section_visible( 'home', 'news' ) );
+	}
+
+	/**
+	 * The screen's hardcoded checkbox name and the constant the controller reads
+	 * it back through must stay the same string, or the box silently does nothing.
+	 */
+	public function test_the_tidy_up_checkbox_posts_the_name_the_controller_reads(): void {
+		$html = Blueworx_Clubhouse_Import_Screen::render( array(
+			'state'        => 'preview',
+			'action_url'   => 'https://club.test/wp-admin/admin.php?page=clubhouse-import',
+			'nonce_field'  => '',
+			'rows'         => array( array( 'label' => 'Global · Hero', 'detail' => '1 field' ) ),
+			'sections_off' => array(),
+		) );
+		$this->assertStringContainsString(
+			'name="' . Blueworx_Clubhouse_Import_Controller::SECTIONS_FIELD . '"',
+			$html
+		);
+	}
+
 	public function test_a_preview_names_the_demo_entries_a_collection_would_replace(): void {
 		wp_stub_add_post( 'clubhouse_sport', 30, 'Rugby', array( Blueworx_Clubhouse_Collection_Seeder::DEMO_META => '1' ) );
 		$json  = '{"clubhouse_import":1,"collections":{"clubhouse_sport":[{"title":"Squash"}]}}';

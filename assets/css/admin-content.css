@@ -195,3 +195,10 @@ textarea.clubhouse-input { resize: vertical; }
 .clubhouse-import__step p { font-size: 13px; color: var(--color-ink-soft); margin: 0 0 12px; max-width: 60ch; }
 .clubhouse-import__step .description { font-size: 12px; color: var(--color-ink-soft); }
 .clubhouse-import__rows { margin: 0 0 16px; }
+/* The sections an import would switch off — a quiet aside under its tick box, not a second content list. */
+.clubhouse-import__off {
+	margin: 0 0 16px 18px;
+	font-size: 12px;
+	color: var(--color-ink-soft);
+	list-style: disc;
+}

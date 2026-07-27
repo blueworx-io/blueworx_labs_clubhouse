@@ -25,6 +25,12 @@ final class Blueworx_Clubhouse_Import_Controller {
 	public const DOWNLOAD_ACTION   = 'clubhouse_import_prompt';
 	public const IMAGES_NEEDED_KEY = 'import_images_needed';
 
+	/**
+	 * The preview's "switch off the sections this file has no content for"
+	 * checkbox. A checkbox only posts when ticked, so presence is the value.
+	 */
+	public const SECTIONS_FIELD = 'clubhouse_import_sections';
+
 	/** Import files are text; a megabyte is a very large club's worth of copy. */
 	public const MAX_BYTES = 1048576;
 
@@ -136,16 +142,16 @@ final class Blueworx_Clubhouse_Import_Controller {
 			return self::model( 'start' );
 		}
 		if ( isset( $post['clubhouse_import_apply'] ) ) {
-			return self::apply( $storage );
+			return self::apply( $storage, isset( $post[ self::SECTIONS_FIELD ] ) );
 		}
 		if ( isset( $post['clubhouse_import_upload'] ) ) {
-			return self::preview( $file );
+			return self::preview( $file, $storage );
 		}
 		return self::model( 'start' );
 	}
 
 	/** @param array<string,mixed> $file */
-	private static function preview( array $file ): array {
+	private static function preview( array $file, Blueworx_Clubhouse_Storage $storage ): array {
 		$error = self::upload_error( $file );
 		if ( '' !== $error ) {
 			return self::model( 'start', array( 'error' => $error ) );
@@ -177,12 +183,13 @@ final class Blueworx_Clubhouse_Import_Controller {
 		set_transient( self::plan_key(), $plan->to_array(), self::PLAN_TTL );
 
 		return self::model( 'preview', array(
-			'rows'     => $summary['rows'],
-			'warnings' => $summary['warnings'],
+			'rows'         => $summary['rows'],
+			'warnings'     => $summary['warnings'],
+			'sections_off' => Blueworx_Clubhouse_Import_Sections::switching_off( $plan, $storage ),
 		) );
 	}
 
-	private static function apply( Blueworx_Clubhouse_Storage $storage ): array {
+	private static function apply( Blueworx_Clubhouse_Storage $storage, bool $sync_sections ): array {
 		$stored = get_transient( self::plan_key() );
 		if ( ! is_array( $stored ) ) {
 			return self::model( 'start', array( 'error' => 'That import has expired. Upload the file again.' ) );
@@ -191,7 +198,8 @@ final class Blueworx_Clubhouse_Import_Controller {
 
 		$result = Blueworx_Clubhouse_Import_Applier::apply(
 			Blueworx_Clubhouse_Import_Plan::from_array( $stored ),
-			$storage
+			$storage,
+			$sync_sections
 		);
 
 		$existing = $storage->get( self::IMAGES_NEEDED_KEY, array() );
@@ -270,6 +278,7 @@ final class Blueworx_Clubhouse_Import_Controller {
 			'rows'          => array(),
 			'warnings'      => array(),
 			'images_needed' => array(),
+			'sections_off'  => array(),
 		), $overrides );
 	}
 }

@@ -5,6 +5,10 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.36.0
+
+- **An import can now switch off the sections it has no content for.** Previously, uploading a file filled in your own content but left every section the file said nothing about still showing its demo content. The preview now offers a tick box — on by default — that names those sections and switches them off, and switches on any section your file fills in. Only pages your file writes about are affected, so importing one page at a time is still safe; the header and footer are never touched. Untick the box to apply the content and leave every section switch exactly as it is.
+
 ## 0.35.1
 
 - **Fixed: "Download the prompt" on Club Content → Import failed with "The link you followed has expired."** The link's security token was escaped twice, so it reached WordPress under the wrong name and the download was refused every time. The prompt now downloads on the first click.

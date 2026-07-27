@@ -16,8 +16,42 @@ final class ImportScreenTest extends TestCase {
 			'rows'          => array(),
 			'warnings'      => array(),
 			'images_needed' => array(),
+			'sections_off'  => array(),
 			'max_upload'    => '1 MB',
 		), $overrides );
+	}
+
+	/** @param array<string,mixed> $overrides */
+	private function preview( array $overrides = array() ): string {
+		return Blueworx_Clubhouse_Import_Screen::render( $this->model( array_merge( array(
+			'state' => 'preview',
+			'rows'  => array( array( 'label' => 'Global · Hero', 'detail' => '5 fields' ) ),
+		), $overrides ) ) );
+	}
+
+	public function test_the_preview_offers_the_tidy_up_ticked(): void {
+		$html = $this->preview();
+		$this->assertMatchesRegularExpression(
+			'/<input type="checkbox" name="clubhouse_import_sections" value="1" checked>/',
+			$html
+		);
+	}
+
+	public function test_the_preview_names_the_sections_it_would_switch_off(): void {
+		$html = $this->preview( array( 'sections_off' => array( 'Global · News', 'Global · Ticker' ) ) );
+		$this->assertStringContainsString( '<li>Global · News</li>', $html );
+		$this->assertStringContainsString( '<li>Global · Ticker</li>', $html );
+	}
+
+	public function test_a_section_label_is_escaped(): void {
+		$html = $this->preview( array( 'sections_off' => array( '<script>' ) ) );
+		$this->assertStringNotContainsString( '<li><script>', $html );
+		$this->assertStringContainsString( '&lt;script&gt;', $html );
+	}
+
+	public function test_the_preview_says_so_when_nothing_would_be_switched_off(): void {
+		$html = $this->preview();
+		$this->assertStringContainsString( 'Nothing would be switched off', $html );
 	}
 
 	/** The title must share Content/Setup's class, or admin-content.css's rule for it never matches. */

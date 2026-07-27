@@ -106,11 +106,44 @@ final class Blueworx_Clubhouse_Import_Screen {
 		$out .= self::rows_table( $rows );
 		$out .= '<form method="post" action="' . self::esc_url( (string) $model['action_url'] ) . '">';
 		$out .= (string) $model['nonce_field'];
+		$out .= self::sections_choice( $model );
 		$out .= '<p><button type="submit" class="button button-primary" name="clubhouse_import_apply" value="1">Apply this import</button> ';
 		$out .= '<button type="submit" class="button" name="clubhouse_import_cancel" value="1">Cancel</button></p>';
 		$out .= '</form></div>';
 		$out .= self::warnings( $model );
 		return $out;
+	}
+
+	/**
+	 * The "tidy up the sections" choice, ticked by default: an owner importing
+	 * their own content almost never wants the demo sections the file says
+	 * nothing about left showing underneath it. Naming the sections that would
+	 * go is the whole point — the content rows above already show what is being
+	 * filled in, but nothing else on this screen shows what is being taken away.
+	 *
+	 * The field name is the plain-HTML twin of Import_Controller::SECTIONS_FIELD,
+	 * hardcoded here the same way the apply and cancel buttons are.
+	 *
+	 * @param array<string,mixed> $model
+	 */
+	private static function sections_choice( array $model ): string {
+		$off = is_array( $model['sections_off'] ?? null ) ? $model['sections_off'] : array();
+
+		$out = '<p><label><input type="checkbox" name="clubhouse_import_sections" value="1" checked> '
+			. 'Switch off the sections this file has no content for</label></p>';
+
+		if ( array() === $off ) {
+			$out .= '<p class="description">Nothing would be switched off — this file covers every section '
+				. 'showing on the pages it touches.</p>';
+			return $out;
+		}
+
+		$out .= '<p class="description">These sections are showing demo content and would be switched off. '
+			. 'You can switch any of them back on later under Clubhouse Setup.</p><ul class="clubhouse-import__off">';
+		foreach ( $off as $label ) {
+			$out .= '<li>' . self::esc( (string) $label ) . '</li>';
+		}
+		return $out . '</ul>';
 	}
 
 	/** @param array<string,mixed> $model */
