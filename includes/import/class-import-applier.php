@@ -20,9 +20,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 final class Blueworx_Clubhouse_Import_Applier {
 
 	/**
+	 * @param bool $sync_sections Switch page sections on or off to match what the
+	 *                            file supplied — see Import_Sections. Opt-in: the
+	 *                            owner ticks it on the preview screen.
 	 * @return array{rows:array<int,array{label:string,detail:string}>,images_needed:array<int,array{label:string,page:string,section:string,field:string,index:int}>,warnings:array<int,string>}
 	 */
-	public static function apply( Blueworx_Clubhouse_Import_Plan $plan, Blueworx_Clubhouse_Storage $storage ): array {
+	public static function apply( Blueworx_Clubhouse_Import_Plan $plan, Blueworx_Clubhouse_Storage $storage, bool $sync_sections = false ): array {
 		$store    = new Blueworx_Clubhouse_Content_Store( $storage );
 		$needed   = array();
 		$warnings = array();
@@ -67,6 +70,14 @@ final class Blueworx_Clubhouse_Import_Applier {
 
 		if ( $fetched > 0 ) {
 			$rows[] = array( 'label' => 'Images', 'detail' => $fetched . ' fetched' );
+		}
+
+		if ( $sync_sections ) {
+			$moved = Blueworx_Clubhouse_Import_Sections::apply( $plan, $storage );
+			$row   = self::sections_row( $moved );
+			if ( null !== $row ) {
+				$rows[] = $row;
+			}
 		}
 
 		return array( 'rows' => $rows, 'images_needed' => $needed, 'warnings' => $warnings );
@@ -287,6 +298,24 @@ final class Blueworx_Clubhouse_Import_Applier {
 			'field'   => $image['field'],
 			'index'   => $image['index'] ?? -1,
 		);
+	}
+
+	/**
+	 * @param array{on:int,off:int} $moved
+	 * @return array{label:string,detail:string}|null null when nothing moved
+	 */
+	private static function sections_row( array $moved ): ?array {
+		$detail = array();
+		if ( $moved['off'] > 0 ) {
+			$detail[] = $moved['off'] . ' switched off';
+		}
+		if ( $moved['on'] > 0 ) {
+			$detail[] = $moved['on'] . ' switched on';
+		}
+		if ( array() === $detail ) {
+			return null;
+		}
+		return array( 'label' => 'Sections', 'detail' => implode( ', ', $detail ) );
 	}
 
 	/** @return array<int,array{label:string,detail:string}> */

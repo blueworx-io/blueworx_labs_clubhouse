@@ -245,6 +245,11 @@ Rules for the file:
 - **Leave out anything you did not discuss.** Uploading only changes what the
   file contains; absent sections keep whatever is already on the site. A blank
   string is not the same as leaving a field out — a blank string clears it.
+- **Cover every section of a page you write about.** On upload the club is
+  offered a tick box that switches off the sections a page's own file has no
+  content for, so their site shows only what they gave you rather than leftover
+  demo content. Pages the file says nothing about are never touched — so it is
+  safe to do one page at a time, but half a page is not.
 - Repeatable sections take their entries as a list under `items`.
 - Images are `{ "url": "https://…", "alt": "…" }`. The `alt` is optional.
 - Collections are lists of entries, each with a `title`.
