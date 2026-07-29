@@ -22,6 +22,18 @@
 :root{--space-2:8px;--space-3:12px;--space-4:16px;--space-6:24px;--space-8:32px;--space-10:40px;--space-12:48px;--space-16:64px;--space-20:80px;--flow-lg:88px;--flow-sm:24px}
 
 /*
+ * Form controls do not inherit typography from body — the UA stylesheet gives
+ * them its own font, so they render in Arial/system while everything around
+ * them uses the look's fonts. Every other element picks the body font up by
+ * inheritance; these four have to ask for it.
+ *
+ * Kept to font-family alone. `font: inherit` would also pull in size, weight and
+ * line-height, and a control sitting inside a bold or large-type block would
+ * then inherit that too, which is not what a button wants.
+ */
+button,input,select,textarea{font-family:inherit}
+
+/*
  * Moved verbatim from court-side.css. These six components were styled by that
  * look alone, leaving sports, teams, events and calendar unstyled under
  * Floodlight and Members House. They were already fully tokenized, so they are

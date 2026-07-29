@@ -38,6 +38,38 @@ final class FrontendTest extends TestCase {
 		$this->assertContains( 'template_include', $filters );
 	}
 
+	/**
+	 * The look stylesheet must print AFTER the active theme's stylesheet.
+	 *
+	 * Our body rule (font-family/font-size/line-height) is an element selector,
+	 * so it ties on specificity with a theme reset's own `body { font: inherit }`
+	 * or `body { line-height: 1 }`. A tie is broken by source order, so whichever
+	 * sheet is enqueued later wins. Themes register their stylesheet on
+	 * wp_enqueue_scripts at the default priority 10; at 10 we are a coin-flip on
+	 * registration order, and on the live site we lost — body fell back to the
+	 * browser's default serif at line-height 1.
+	 *
+	 * Running later than 10 makes us deterministically last.
+	 */
+	public function test_assets_enqueue_after_theme_stylesheet(): void {
+		Blueworx_Clubhouse_Frontend::register();
+
+		$enqueue = array_values(
+			array_filter(
+				wp_stub_calls( 'add_action' ),
+				static fn( $c ) => 'wp_enqueue_scripts' === $c['args'][0]
+			)
+		);
+
+		$this->assertCount( 1, $enqueue, 'expected exactly one wp_enqueue_scripts registration' );
+		$this->assertArrayHasKey( 2, $enqueue[0]['args'], 'enqueue_assets must declare an explicit priority' );
+		$this->assertGreaterThan(
+			10,
+			$enqueue[0]['args'][2],
+			'look CSS must be enqueued after the default priority so it outranks the theme stylesheet'
+		);
+	}
+
 	public function test_register_rewrites_adds_one_rule_per_non_home_page(): void {
 		Blueworx_Clubhouse_Frontend::register_rewrites();
 
