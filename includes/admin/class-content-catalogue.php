@@ -169,7 +169,7 @@ final class Blueworx_Clubhouse_Content_Catalogue {
 				array( 'key' => 'news', 'label' => 'News', 'type' => 'loop', 'store_page' => 'home',
 					'fields' => array( self::f_text( 'eyebrow', 'Eyebrow' ), self::f_text( 'heading', 'Heading' ) ),
 					'loop' => array( 'name' => 'Article', 'plural' => 'Articles', 'fields' => array( self::f_text( 'tag', 'Tag' ), self::f_text( 'date', 'Date' ), self::f_text( 'title', 'Title' ), self::f_image( 'image', 'Image' ) ) ) ),
-				array( 'key' => 'info', 'label' => 'Info strip', 'type' => 'loop', 'store_page' => 'home',
+				array( 'key' => 'info', 'label' => 'Find us details', 'type' => 'loop', 'store_page' => 'home',
 					'loop' => array( 'name' => 'Column', 'plural' => 'Columns', 'fields' => array( self::f_text( 'label', 'Label' ), self::f_area( 'lines', 'Lines (one per line)' ), self::f_text( 'link_label', 'Link label' ), self::f_url( 'link_href', 'Link href' ) ) ) ),
 				array( 'key' => 'sponsors', 'label' => 'Sponsors', 'type' => 'linkout', 'store_page' => 'home',
 					'link' => array( 'kind' => 'cpt', 'cpt' => 'clubhouse_sponsor', 'label' => 'Manage sponsors', 'text' => 'Sponsors are managed as a collection.' ) ),

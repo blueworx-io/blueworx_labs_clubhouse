@@ -97,16 +97,18 @@ final class PageRendererTest extends TestCase {
 		$this->assertStringContainsString( 'ch-home-hero__foot', $body );
 	}
 
-	public function test_home_places_the_info_strip_after_the_social_band(): void {
-		// Contact / Find-us closes the page — it renders below the social band, not
-		// mid-scroll between content sections.
-		$vis  = new Blueworx_Clubhouse_Visibility( new Blueworx_Clubhouse_Fake_Storage() );
-		$body = Blueworx_Clubhouse_Page_Renderer::home( $this->branding(), $vis, $this->collections() );
+	public function test_home_closes_with_one_band_holding_socials_then_find_us(): void {
+		// Socials and Contact / Find-us close the page as a single section, flush
+		// against the footer — not two stacked endings mid-scroll.
+		$vis    = new Blueworx_Clubhouse_Visibility( new Blueworx_Clubhouse_Fake_Storage() );
+		$body   = Blueworx_Clubhouse_Page_Renderer::home( $this->branding(), $vis, $this->collections() );
 		$social = strpos( $body, 'class="ch-social"' );
-		$info   = strpos( $body, 'class="ch-info"' );
+		$cols   = strpos( $body, 'ch-social__cols' );
 		$this->assertNotFalse( $social );
-		$this->assertNotFalse( $info, 'info strip renders' );
-		$this->assertGreaterThan( $social, $info, 'info strip comes after the social band' );
+		$this->assertNotFalse( $cols, 'find-us columns render' );
+		$this->assertGreaterThan( $social, $cols, 'find-us columns come after the social links' );
+		$this->assertStringNotContainsString( 'class="ch-info"', $body, 'the dark info strip is gone' );
+		$this->assertSame( 1, substr_count( $body, 'class="ch-social"' ), 'one closing section' );
 	}
 
 	public function test_home_omits_the_stat_strip_by_default(): void {
