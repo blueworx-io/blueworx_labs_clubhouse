@@ -5,6 +5,10 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.38.1
+
+- **The home hero's quick links no longer turn black when you point at them.** Hovering one of the four tiles (Join the club, Take a tour, See fixtures, Get in touch) flipped the whole tile to near-black, which dropped a heavy dark slab into a row of pale tiles and looked more like the tile switching off than lighting up. Hovering now outlines the tile in your club colour, lifts it slightly and drops a soft shadow beneath it, leaving the tile's own colour alone. The outline uses the deeper shade of your club colour, so it stays clearly visible whether your colour is light or dark, and the tile never changes size — the tiles beside it stay put.
+
 ## 0.38.0
 
 - **The page now ends on one band instead of two.** "Follow the club" and the find-us details (location, opening hours, contact, map link) were two stacked sections — a light band above a dark strip — which read as two endings and dropped a slab of dark between your content and the footer. They are now a single light section, in the same style as the section above it, sitting flush against the footer. Both halves keep their own section switch: turn either off and the band simply carries the other.

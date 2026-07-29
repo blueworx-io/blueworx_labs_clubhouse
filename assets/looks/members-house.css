@@ -48,7 +48,9 @@ a{color:inherit;text-decoration:none}
 .ch-btn--ink:hover{background:color-mix(in oklab,var(--color-ink) 86%,var(--color-accent-deep));box-shadow:0 12px 24px -16px rgba(0,0,0,.4)}
 .ch-btn--ghost{border:1px solid var(--color-ink);color:var(--color-ink)}
 .ch-btn--ghost:hover{background:var(--color-ink);color:var(--color-bg)}
-@media(prefers-reduced-motion:reduce){.ch-btn:hover,.ch-btn:active{transform:none}}
+/* The tile's hover lift follows the same rule as the buttons'. The border and
+   ring stay — they carry the state without moving anything. */
+@media(prefers-reduced-motion:reduce){.ch-btn:hover,.ch-btn:active,.ch-home-hero__tile:hover{transform:none}}
 
 /* Nav — hairline foot, links via body token, wordmark via display token, ink brand mark (not accent). */
 .ch-nav{position:sticky;top:0;z-index:40;background:color-mix(in oklab,var(--color-bg) 88%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--color-line)}
@@ -139,13 +141,31 @@ a{color:inherit;text-decoration:none}
 .ch-home-hero .ch-btn--ghost{background:transparent;color:var(--color-bg);border:1px solid color-mix(in oklab,var(--color-bg) 50%,transparent)}
 .ch-home-hero .ch-btn--ghost:hover{background:var(--color-bg);color:var(--color-ink);border-color:var(--color-bg)}
 .ch-home-hero__foot{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(160px,100%),1fr));gap:12px;margin-top:var(--space-10)}
-.ch-home-hero__tile{display:flex;align-items:center;gap:12px;background:color-mix(in oklab,var(--color-paper) 92%,transparent);color:var(--color-ink);border:1px solid color-mix(in oklab,var(--color-ink) 8%,transparent);border-radius:var(--radius-md);padding:16px 18px;font-weight:700;font-size:15px;backdrop-filter:blur(6px);transition:background .18s ease,color .18s ease,border-color .18s ease}
-.ch-home-hero__tile:hover{background:var(--color-ink);color:var(--color-bg);border-color:var(--color-ink)}
+.ch-home-hero__tile{display:flex;align-items:center;gap:12px;background:color-mix(in oklab,var(--color-paper) 92%,transparent);color:var(--color-ink);border:1px solid color-mix(in oklab,var(--color-ink) 8%,transparent);border-radius:var(--radius-md);padding:16px 18px;font-weight:700;font-size:15px;backdrop-filter:blur(6px);transition:border-color .18s ease,box-shadow .2s ease,transform .16s ease}
+/* Hover moves the border, not the fill. Flipping the whole tile to --color-ink
+   dropped a near-black slab into a row of pale tiles — far heavier than a hover
+   state needs to be, and it read as the tile switching off. Same approach as
+   Floodlight, minus that look's accent glow, which is its own signature.
+   The icon and arrow keep --color-accent-deep throughout: they were only
+   recoloured to compensate for the fill going dark.
+
+   --color-accent-deep, NOT --color-accent. The accent is picked to work as a
+   FILL with accent-ink on top, so a light club colour (Volt Lime, say) sits at
+   about 1.1:1 against these pale tiles — a border nobody can see. accent-deep
+   is the token derive() guarantees at 4.5:1 against the shell, which is
+   effectively what the tile is painted with, so the border stays visible for
+   every club colour rather than only dark ones. */
+/* Three things, none of which repaint the tile:
+   - the border goes to accent-deep
+   - an INSET 1px ring doubles that to a 2px edge without changing the box, so
+     nothing shifts and the neighbouring tiles do not move
+   - the lift + soft shadow are the same idiom .ch-btn already uses here, which
+     is what actually reads as "this is interactive" at a glance
+   A 1px border alone measured fine on paper (4.8:1) but was too quiet to see. */
+.ch-home-hero__tile:hover{border-color:var(--color-accent-deep);box-shadow:inset 0 0 0 1px var(--color-accent-deep),0 10px 22px -14px var(--color-accent-deep);transform:translateY(-2px)}
 .ch-home-hero__tile-ico{display:flex;flex:none;color:var(--color-accent-deep)}
-.ch-home-hero__tile:hover .ch-home-hero__tile-ico{color:var(--color-accent)}
 .ch-home-hero__tile-label{flex:1}
 .ch-home-hero__tile-arrow{flex:none;color:var(--color-accent-deep)}
-.ch-home-hero__tile:hover .ch-home-hero__tile-arrow{color:var(--color-accent)}
 @media(prefers-reduced-motion:no-preference){.ch-home-hero .ch-eyebrow,.ch-home-hero__title,.ch-home-hero__lede,.ch-home-hero__cta,.ch-home-hero__foot{animation:ch-rise .7s cubic-bezier(.2,.7,.2,1) both}.ch-home-hero__title{animation-delay:.07s}.ch-home-hero__lede{animation-delay:.13s}.ch-home-hero__cta{animation-delay:.19s}.ch-home-hero__foot{animation-delay:.25s}}
 @media(max-width:640px){.ch-home-hero{min-height:auto}.ch-home-hero__foot{grid-template-columns:1fr}}
 
