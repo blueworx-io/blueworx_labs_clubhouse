@@ -5,6 +5,10 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.36.2
+
+- **Full-width bands no longer have rounded corners.** The dark clubhouse band, the news ticker and the contact strip run edge to edge, but on the Members House and Floodlight looks they were still drawn with rounded corners — so a sliver of page background cut into each corner and the band read as broken rather than styled. They are now square-cornered, matching Court Side, which was already correct. Panels that sit inside the page margins, like the membership band, keep their rounded corners as before.
+
 ## 0.36.1
 
 - **Fixed: body text ignored the club's fonts and ran the lines together.** The plugin's stylesheet was loaded before the site's theme, so the theme's own reset overruled it and body copy fell back to the browser's default serif at single line spacing — navigation, intro paragraphs, membership points, news dates, ticker items and the footer were all affected. The club's fonts were downloading correctly the whole time; nothing was reaching them. Headings were unaffected, which is why the pages looked almost right. The stylesheet now loads after the theme, so both fonts and line spacing apply as designed.
