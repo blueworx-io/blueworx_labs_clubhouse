@@ -234,4 +234,30 @@ final class Blueworx_Clubhouse_Frontend {
 	public static function club_name(): string {
 		return self::context()->branding->get_club_name();
 	}
+
+	/**
+	 * Compose the document title for a clubhouse page. Every page used to print
+	 * the club name alone, so a search result, a browser tab and a shared link
+	 * were indistinguishable across the whole site. Pure so it can be tested
+	 * without a WP runtime; the home page keeps the bare club name, since
+	 * "Home — Club" reads worse than "Club" for the landing page.
+	 */
+	public static function document_title( string $club_name, string $page_label ): string {
+		$club_name  = trim( $club_name );
+		$page_label = trim( $page_label );
+		if ( '' === $page_label || 'Home' === $page_label ) {
+			return $club_name;
+		}
+		if ( '' === $club_name ) {
+			return $page_label;
+		}
+		return $page_label . ' — ' . $club_name;
+	}
+
+	/** The document title for the page this request renders. */
+	public static function page_title(): string {
+		$slug  = self::current_slug();
+		$label = null === $slug ? '' : Blueworx_Clubhouse_Page_Map::label( $slug );
+		return self::document_title( self::club_name(), $label );
+	}
 }

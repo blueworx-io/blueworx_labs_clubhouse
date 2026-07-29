@@ -114,8 +114,11 @@ final class ContentCatalogueTest extends TestCase {
 		);
 
 		// contact.form -> Sections::contact_form(): intro/submissions_email/success_message never existed there.
+		// The info_* fields do: the address, email and phone beside the form were
+		// hard-coded demo values ("12 Riverside Lane, Marlow") that no club could
+		// change, so they are now content like everything else.
 		$this->assertSame(
-			array( 'eyebrow', 'heading', 'submit_label' ),
+			array( 'eyebrow', 'heading', 'submit_label', 'info_heading', 'address', 'email', 'phone', 'map_image' ),
 			$this->fieldKeysByTabAndSection( 'contact', 'form' )
 		);
 

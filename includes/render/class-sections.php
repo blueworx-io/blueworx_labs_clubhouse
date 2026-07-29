@@ -108,8 +108,24 @@ final class Blueworx_Clubhouse_Sections {
 	 */
 	private static function hero_head( string $block, array $data ): string {
 		return '<span class="ch-eyebrow">' . self::e( $data['eyebrow'] ) . '</span>'
-			. '<h1 class="' . $block . '__title">' . self::e( $data['title_lead'] )
+			. '<h1 class="' . $block . '__title">' . self::e( self::lead_with_gap( $data['title_lead'] ) )
 			. '<span class="' . $block . '__hl">' . self::e( $data['title_highlight'] ) . '</span></h1>';
+	}
+
+	/**
+	 * The highlight is an inline sibling of the lead, so without a separator the
+	 * two run together — "Represent" + "Crewe Vagrants" rendered as
+	 * "RepresentCrewe Vagrants". Content authors cannot fix it themselves: a
+	 * trailing space in the field is stripped on save. Add one here unless the
+	 * lead already ends in whitespace or opens a word the highlight completes
+	 * (a trailing hyphen or en dash). Harmless on the looks where the highlight
+	 * is a block-level box, since the space collapses at the end of the line.
+	 */
+	public static function lead_with_gap( string $lead ): string {
+		if ( '' === $lead || preg_match( '/[\s\-–—]$/u', $lead ) ) {
+			return $lead;
+		}
+		return $lead . ' ';
 	}
 
 	public static function hero( array $data ): string {
@@ -206,6 +222,31 @@ final class Blueworx_Clubhouse_Sections {
 			. '</div></section>';
 	}
 
+	/**
+	 * What a collection-backed section renders when its collection is empty.
+	 *
+	 * A club that has not entered a committee, or has no upcoming events, was
+	 * still given the section's eyebrow and heading with nothing under them — the
+	 * About page showed a bare "The committee", the Events page a bare "Upcoming
+	 * events". The import's switch-off-empty-sections tick box cannot reach these:
+	 * they take no content from the file, so the file can never be "missing" them.
+	 * Decide at render time instead — nothing at all by default, or a short note
+	 * where the section sits behind a filter and vanishing entirely would leave
+	 * the reader wondering whether the filter worked.
+	 *
+	 * @param array{eyebrow?:string,heading?:string,empty_text?:string} $data
+	 */
+	private static function empty_section( array $data ): string {
+		$text = (string) ( $data['empty_text'] ?? '' );
+		if ( '' === $text ) {
+			return '';
+		}
+		return '<section class="ch-sec"><div class="ch-wrap">'
+			. '<span class="ch-eyebrow">' . self::e( (string) ( $data['eyebrow'] ?? '' ) ) . '</span>'
+			. '<h2 class="ch-sec__title">' . self::e( (string) ( $data['heading'] ?? '' ) ) . '</h2>'
+			. '<p class="ch-empty">' . self::e( $text ) . '</p></div></section>';
+	}
+
 	/** @param array<int,array{value:string,label:string,featured?:bool}> $stats */
 	public static function stat_strip( array $stats ): string {
 		$items = '';
@@ -274,6 +315,9 @@ final class Blueworx_Clubhouse_Sections {
 	 *   stats:array<int,array{value:string,label:string}>}>} $data
 	 */
 	public static function stat_card_grid( array $data ): string {
+		if ( array() === $data['cards'] ) {
+			return self::empty_section( $data );
+		}
 		$cards = '';
 		foreach ( $data['cards'] as $c ) {
 			$stats = '';
@@ -432,6 +476,9 @@ final class Blueworx_Clubhouse_Sections {
 	 *   cards:array<int,array{tag:string,date:string,title:string,detail:string,cta_label:string,cta_href:string}>} $data
 	 */
 	public static function event_grid( array $data ): string {
+		if ( array() === $data['cards'] ) {
+			return self::empty_section( $data );
+		}
 		$cards = '';
 		foreach ( $data['cards'] as $c ) {
 			$cta = '' !== $c['cta_label']
@@ -551,6 +598,9 @@ final class Blueworx_Clubhouse_Sections {
 
 	/** @param array{eyebrow:string,heading:string,people:array<int,array{name:string,role:string,email:string}>} $data */
 	public static function people_grid( array $data ): string {
+		if ( array() === $data['people'] ) {
+			return self::empty_section( $data );
+		}
 		$people = '';
 		foreach ( $data['people'] as $p ) {
 			$email = '' !== $p['email']
@@ -641,9 +691,9 @@ final class Blueworx_Clubhouse_Sections {
 	}
 
 	/**
-	 * @param array{eyebrow:string,heading:string,name_label:string,email_label:string,enquiry_label:string,
+	 * @param array{eyebrow:string,heading:string,club_name:string,name_label:string,email_label:string,enquiry_label:string,
 	 *   enquiry_options:array<int,string>,message_label:string,submit_label:string,
-	 *   info:array{heading:string,address:array<int,string>,email:string,phone:string,socials:array<string,string>}} $data
+	 *   info:array{heading:string,address:array<int,string>,email:string,phone:string,map:string,socials:array<string,string>}} $data
 	 */
 	public static function contact_form( array $data ): string {
 		$opts = '';
@@ -664,12 +714,28 @@ final class Blueworx_Clubhouse_Sections {
 			. '<label class="ch-field"><span class="ch-field__label">' . self::e( $data['message_label'] ) . '</span>'
 			. '<textarea class="ch-field__input" name="message" rows="5"></textarea></label>'
 			. '<button class="ch-btn ch-btn--accent" type="submit">' . self::e( $data['submit_label'] ) . '</button></form>';
-		$tel  = preg_replace( '/\s+/', '', $data['info']['phone'] );
+		$tel = preg_replace( '/\s+/', '', $data['info']['phone'] );
+		// The map is a link to Google Maps for the club's own address, not a dead
+		// tile: with no map image set the placeholder was unfillable — there was no
+		// field for it — and its alt said "ClubHouse" on every club's site.
+		$club = trim( (string) ( $data['club_name'] ?? '' ) );
+		$map  = self::media( (string) ( $data['info']['map'] ?? '' ), '' !== $club ? 'Map of ' . $club : 'Map', 'ch-contact__map' );
+		$maps_href = self::maps_url( $data['info']['address'] );
+		if ( '' !== $maps_href ) {
+			$map = '<a class="ch-contact__map-link" href="' . self::e( $maps_href ) . '" target="_blank" rel="noopener">' . $map . '</a>';
+		}
 		$info = '<aside class="ch-contact__info"><h3 class="ch-contact__h">' . self::e( $data['info']['heading'] ) . '</h3>'
-			. self::media( '', 'Map of ClubHouse', 'ch-contact__map' )
+			. $map
 			. '<div class="ch-contact__lines">' . $addr . '</div>'
-			. '<a class="ch-contact__link" href="mailto:' . self::e( $data['info']['email'] ) . '">' . self::e( $data['info']['email'] ) . '</a>'
-			. '<a class="ch-contact__link" href="tel:' . self::e( $tel ) . '">' . self::e( $data['info']['phone'] ) . '</a>'
+			// Not every club publishes both. An empty value used to still print its
+			// link, giving an empty target the keyboard could land on and a screen
+			// reader would announce as an unlabelled link to "mailto:" or "tel:".
+			. ( '' !== $data['info']['email']
+				? '<a class="ch-contact__link" href="mailto:' . self::e( $data['info']['email'] ) . '">' . self::e( $data['info']['email'] ) . '</a>'
+				: '' )
+			. ( '' !== $data['info']['phone']
+				? '<a class="ch-contact__link" href="tel:' . self::e( $tel ) . '">' . self::e( $data['info']['phone'] ) . '</a>'
+				: '' )
 			. '<div class="ch-contact__connect ch-social__links" role="list">' . self::social_links( $data['info']['socials'] ) . '</div></aside>';
 		return '<section class="ch-sec"><div class="ch-wrap">'
 			. '<span class="ch-eyebrow">' . self::e( $data['eyebrow'] ) . '</span>'
@@ -715,6 +781,9 @@ final class Blueworx_Clubhouse_Sections {
 	 *   matchup:string,detail:string,outcome:string}>}>} $data
 	 */
 	public static function calendar_months( array $data ): string {
+		if ( array() === $data['months'] ) {
+			return self::empty_section( $data );
+		}
 		$months = '';
 		foreach ( $data['months'] as $m ) {
 			$rows = '';

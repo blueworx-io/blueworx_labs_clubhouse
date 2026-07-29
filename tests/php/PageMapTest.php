@@ -21,6 +21,14 @@ final class PageMapTest extends TestCase {
 		$this->assertSame( 'home', $pages[0]['method'] );
 	}
 
+	/** Labels back the per-page document title. */
+	public function test_label_for_known_and_unknown_slugs(): void {
+		$this->assertSame( 'Home', Blueworx_Clubhouse_Page_Map::label( '' ) );
+		$this->assertSame( 'Membership', Blueworx_Clubhouse_Page_Map::label( 'membership' ) );
+		$this->assertSame( 'Calendar', Blueworx_Clubhouse_Page_Map::label( 'calendar' ) );
+		$this->assertSame( '', Blueworx_Clubhouse_Page_Map::label( 'nope' ) );
+	}
+
 	public function test_has_known_and_unknown(): void {
 		$this->assertTrue( Blueworx_Clubhouse_Page_Map::has( '' ) );
 		$this->assertTrue( Blueworx_Clubhouse_Page_Map::has( 'calendar' ) );

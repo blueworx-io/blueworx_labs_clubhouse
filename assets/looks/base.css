@@ -76,9 +76,13 @@ button,input,select,textarea{font-family:inherit}
 .ch-scard__body{display:flex;flex-direction:column;gap:8px;padding:16px 20px 20px}
 .ch-scard__title{font-family:var(--font-display);font-weight:800;font-size:21px}
 .ch-scard__desc{font-size:15px;color:var(--color-ink-soft)}
-.ch-scard__stats{display:flex;gap:20px;margin-top:auto;padding-top:16px;border-top:1px solid var(--color-line)}
-.ch-scard__stat{display:flex;flex-direction:column}
-.ch-scard__stat-v{font-family:var(--font-display);font-weight:800;font-size:20px}
+/* The stat pair is not always numeric — a team card puts "Thursday evening" and
+   "North West Counties" here. Without min-width:0 a flex item refuses to shrink
+   below its content, so long values were clipped at the card edge. Wrap, let each
+   column shrink, and scale the value down so text-shaped stats still fit. */
+.ch-scard__stats{display:flex;flex-wrap:wrap;gap:12px 20px;margin-top:auto;padding-top:16px;border-top:1px solid var(--color-line)}
+.ch-scard__stat{display:flex;flex-direction:column;min-width:0;flex:1 1 120px}
+.ch-scard__stat-v{font-family:var(--font-display);font-weight:800;font-size:clamp(15px,1.35vw,20px);line-height:1.15;overflow-wrap:break-word}
 .ch-scard__stat-l{font-size:11px;font-weight:600;color:var(--color-ink-soft);text-transform:uppercase;letter-spacing:.06em}
 
 /* ---- Event grid + archive (Events) ---- */
@@ -154,3 +158,11 @@ button,input,select,textarea{font-family:inherit}
 .ch-social__col-body{display:flex;flex-direction:column;gap:2px;font-size:16px;line-height:1.5;color:var(--color-ink-soft)}
 .ch-social__col-link{color:var(--color-accent-deep);font-weight:700;font-size:13px;text-transform:uppercase;letter-spacing:.08em;margin-top:6px}
 .ch-social__col-link:hover{color:var(--color-ink)}
+
+/* The note a collection-backed section shows in place of its list when a filter
+   matches nothing. With no filter the section renders nothing at all, so this
+   only ever appears as feedback that the filter was applied. */
+.ch-empty{margin-top:20px;font-size:16px;color:var(--color-ink-soft)}
+
+/* The contact map is wrapped in a link to Google Maps for the club's address. */
+.ch-contact__map-link{display:block}

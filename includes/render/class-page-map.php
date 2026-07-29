@@ -29,6 +29,16 @@ final class Blueworx_Clubhouse_Page_Map {
 		);
 	}
 
+	/** The human label for a slug — '' for one this map does not serve. */
+	public static function label( string $slug ): string {
+		foreach ( self::pages() as $page ) {
+			if ( $page['slug'] === $slug ) {
+				return $page['label'];
+			}
+		}
+		return '';
+	}
+
 	public static function has( string $slug ): bool {
 		foreach ( self::pages() as $page ) {
 			if ( $page['slug'] === $slug ) {
