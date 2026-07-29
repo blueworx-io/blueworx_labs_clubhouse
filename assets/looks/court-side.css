@@ -170,8 +170,9 @@ a{color:inherit;text-decoration:none}
    the 1px so the hover border appears without nudging the tile's box. */
 .ch-home-hero__tile{display:flex;align-items:center;gap:12px;background:color-mix(in oklab,var(--color-paper) 92%,transparent);color:var(--color-ink);border:1px solid transparent;border-radius:var(--radius-md);padding:16px 18px;font-weight:600;font-size:15px;backdrop-filter:blur(6px);transition:border-color .18s ease}
 /* Hover moves the border, not the fill — see the same change in
-   members-house.css. Court Side had the identical near-black fill on hover. */
-.ch-home-hero__tile:hover{border-color:color-mix(in oklab,var(--color-accent) 60%,transparent)}
+   members-house.css, including why this is --color-accent-deep and not
+   --color-accent. Court Side had the identical near-black fill on hover. */
+.ch-home-hero__tile:hover{border-color:var(--color-accent-deep)}
 .ch-home-hero__tile-ico{display:flex;flex:none;color:var(--color-accent-deep)}
 .ch-home-hero__tile-label{flex:1}
 .ch-home-hero__tile-arrow{flex:none;color:var(--color-accent-deep)}

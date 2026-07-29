@@ -63,5 +63,41 @@ for (const look of ['court-side', 'members-house', 'floodlight']) {
     expect(after.background, 'hover must not repaint the tile fill').toBe(before.background);
     expect(after.color, 'hover must not repaint the label').toBe(before.color);
     expect(after.border, 'hover must change the border colour').not.toBe(before.border);
+
+    // "Changed" is not enough. The first attempt at this used --color-accent,
+    // which changed the value but landed at ~1.1:1 against the pale tiles on
+    // the two light looks — a hover state you cannot see. Measure it.
+    const contrast = await tile.evaluate((el) => {
+      const ctx = document.createElement('canvas').getContext('2d', { willReadFrequently: true });
+      const over = (base, top) => {
+        ctx.clearRect(0, 0, 1, 1);
+        ctx.fillStyle = base;
+        ctx.fillRect(0, 0, 1, 1);
+        ctx.fillStyle = top;
+        ctx.fillRect(0, 0, 1, 1);
+        const d = ctx.getImageData(0, 0, 1, 1).data;
+        return [d[0], d[1], d[2]];
+      };
+      const s = getComputedStyle(el);
+      const heroBg = getComputedStyle(
+        document.querySelector('.ch-home-hero__bg') || document.body
+      ).backgroundColor;
+      // Both the tile fill and the border can be translucent, so composite each
+      // onto what is actually behind it before comparing.
+      const fill = over(heroBg, s.backgroundColor);
+      const border = over(`rgb(${fill.join(',')})`, s.borderTopColor);
+      const ch = (v) => {
+        v /= 255;
+        return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+      };
+      const lum = (c) => 0.2126 * ch(c[0]) + 0.7152 * ch(c[1]) + 0.0722 * ch(c[2]);
+      const [l1, l2] = [lum(border), lum(fill)];
+      return (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
+    });
+
+    expect(
+      contrast,
+      `hover border must be visible against the tile (got ${contrast.toFixed(2)}:1)`
+    ).toBeGreaterThan(3);
   });
 }

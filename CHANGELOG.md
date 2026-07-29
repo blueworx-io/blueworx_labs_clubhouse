@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## 0.38.1
 
-- **The home hero's quick links no longer turn black when you point at them.** Hovering one of the four tiles (Join the club, Take a tour, See fixtures, Get in touch) flipped the whole tile to near-black, which dropped a heavy dark slab into a row of pale tiles and looked more like the tile switching off than lighting up. Hovering now tints the tile's border in your club colour and leaves the tile itself alone — the same, lighter treatment the Floodlight look already used.
+- **The home hero's quick links no longer turn black when you point at them.** Hovering one of the four tiles (Join the club, Take a tour, See fixtures, Get in touch) flipped the whole tile to near-black, which dropped a heavy dark slab into a row of pale tiles and looked more like the tile switching off than lighting up. Hovering now outlines the tile in your club colour and leaves the tile itself alone — the same, lighter treatment the Floodlight look already used. The outline uses the deeper shade of your club colour, so it stays clearly visible whether your colour is light or dark.
 
 ## 0.38.0
 

@@ -145,8 +145,15 @@ a{color:inherit;text-decoration:none}
    state needs to be, and it read as the tile switching off. Same approach as
    Floodlight, minus that look's accent glow, which is its own signature.
    The icon and arrow keep --color-accent-deep throughout: they were only
-   recoloured to compensate for the fill going dark. */
-.ch-home-hero__tile:hover{border-color:color-mix(in oklab,var(--color-accent) 60%,transparent)}
+   recoloured to compensate for the fill going dark.
+
+   --color-accent-deep, NOT --color-accent. The accent is picked to work as a
+   FILL with accent-ink on top, so a light club colour (Volt Lime, say) sits at
+   about 1.1:1 against these pale tiles — a border nobody can see. accent-deep
+   is the token derive() guarantees at 4.5:1 against the shell, which is
+   effectively what the tile is painted with, so the border stays visible for
+   every club colour rather than only dark ones. */
+.ch-home-hero__tile:hover{border-color:var(--color-accent-deep)}
 .ch-home-hero__tile-ico{display:flex;flex:none;color:var(--color-accent-deep)}
 .ch-home-hero__tile-label{flex:1}
 .ch-home-hero__tile-arrow{flex:none;color:var(--color-accent-deep)}
