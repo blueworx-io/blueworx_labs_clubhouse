@@ -51,7 +51,16 @@ for (const look of ['court-side', 'members-house', 'floodlight']) {
     const read = () =>
       tile.evaluate((el) => {
         const s = getComputedStyle(el);
-        return { background: s.backgroundColor, border: s.borderTopColor, color: s.color };
+        return {
+          background: s.backgroundColor,
+          border: s.borderTopColor,
+          color: s.color,
+          shadow: s.boxShadow,
+          // Box geometry — the hover must not resize the tile or shunt its
+          // neighbours along, which is what a plain border-width change would do.
+          width: Math.round(el.getBoundingClientRect().width),
+          height: Math.round(el.getBoundingClientRect().height),
+        };
       });
 
     const before = await read();
@@ -63,6 +72,11 @@ for (const look of ['court-side', 'members-house', 'floodlight']) {
     expect(after.background, 'hover must not repaint the tile fill').toBe(before.background);
     expect(after.color, 'hover must not repaint the label').toBe(before.color);
     expect(after.border, 'hover must change the border colour').not.toBe(before.border);
+    expect(after.shadow, 'hover must add a ring/glow').not.toBe(before.shadow);
+    expect(after.shadow, 'hover must add a ring/glow').not.toBe('none');
+    // The ring is drawn with an inset shadow precisely so the box does not grow.
+    expect(after.width, 'hover must not resize the tile').toBe(before.width);
+    expect(after.height, 'hover must not resize the tile').toBe(before.height);
 
     // "Changed" is not enough. The first attempt at this used --color-accent,
     // which changed the value but landed at ~1.1:1 against the pale tiles on
