@@ -36,3 +36,32 @@ test('the ticker immediately follows the home hero', async ({ page }) => {
   });
   expect(nextTag).toContain('ch-ticker');
 });
+
+// Hovering a quick-link used to flip the whole tile to --color-ink, dropping a
+// near-black slab into a row of pale tiles. The hover now moves the border and
+// leaves the fill alone — Floodlight already worked this way. Asserted for every
+// look so a look cannot reintroduce a fill-swap hover.
+// @preview — ?look= is a preview affordance.
+for (const look of ['court-side', 'members-house', 'floodlight']) {
+  test(`hero quick-link hover changes the border, not the fill — ${look} @preview`, async ({ page }) => {
+    await page.goto(`?clubhouse_page=home&look=${look}`);
+    const tile = page.locator('.ch-home-hero__tile').first();
+    await expect(tile).toBeVisible();
+
+    const read = () =>
+      tile.evaluate((el) => {
+        const s = getComputedStyle(el);
+        return { background: s.backgroundColor, border: s.borderTopColor, color: s.color };
+      });
+
+    const before = await read();
+    await tile.hover();
+    // Border transition is .18s; give it room to land.
+    await page.waitForTimeout(400);
+    const after = await read();
+
+    expect(after.background, 'hover must not repaint the tile fill').toBe(before.background);
+    expect(after.color, 'hover must not repaint the label').toBe(before.color);
+    expect(after.border, 'hover must change the border colour').not.toBe(before.border);
+  });
+}
