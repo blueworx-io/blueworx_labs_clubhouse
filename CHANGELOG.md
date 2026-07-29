@@ -5,6 +5,12 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.36.1
+
+- **Fixed: body text ignored the club's fonts and ran the lines together.** The plugin's stylesheet was loaded before the site's theme, so the theme's own reset overruled it and body copy fell back to the browser's default serif at single line spacing — navigation, intro paragraphs, membership points, news dates, ticker items and the footer were all affected. The club's fonts were downloading correctly the whole time; nothing was reaching them. Headings were unaffected, which is why the pages looked almost right. The stylesheet now loads after the theme, so both fonts and line spacing apply as designed.
+- Buttons, inputs and dropdowns now use the club's font. Browsers give form controls their own font unless told otherwise, so they had been rendering in the system default while everything around them used the club's.
+- The small uppercase label above a section heading is now legible on the membership band for every club colour. On darker club colours it fell just under the accessible contrast minimum.
+
 ## 0.36.0
 
 - **An import can now switch off the sections it has no content for.** Previously, uploading a file filled in your own content but left every section the file said nothing about still showing its demo content. The preview now offers a tick box — on by default — that names those sections and switches them off, and switches on any section your file fills in. Only pages your file writes about are affected, so importing one page at a time is still safe; the header and footer are never touched. Untick the box to apply the content and leave every section switch exactly as it is.

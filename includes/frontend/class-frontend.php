@@ -73,7 +73,14 @@ final class Blueworx_Clubhouse_Frontend {
 	public static function register(): void {
 		add_action( 'init', array( self::class, 'register_rewrites' ) );
 		add_action( 'init', array( Blueworx_Clubhouse_Collection_Types::class, 'register' ) );
-		add_action( 'wp_enqueue_scripts', array( self::class, 'enqueue_assets' ) );
+		// Priority 20, not the default 10: the look stylesheet has to print after
+		// the active theme's. Our body rule is an element selector, so it ties on
+		// specificity with a theme reset's `body { font: inherit }` or
+		// `body { line-height: 1 }`, and a tie is settled by source order. Themes
+		// enqueue at 10, so at 10 the winner is whichever happened to register
+		// first — a coin flip we lost in production, dropping body copy to the
+		// browser's default serif at line-height 1.
+		add_action( 'wp_enqueue_scripts', array( self::class, 'enqueue_assets' ), 20 );
 		add_action( 'wp_head', array( self::class, 'render_favicon' ) );
 		add_filter( 'template_include', array( self::class, 'filter_template' ) );
 	}

@@ -233,6 +233,14 @@ a{color:inherit;text-decoration:none}
 .ch-band{border-radius:var(--radius-xl);padding:64px 52px;text-align:center;border:1px solid transparent}
 @media(max-width:520px){.ch-band{padding:40px 22px}}
 .ch-band--accent{background:var(--color-accent-wash);color:var(--color-ink);border-color:color-mix(in oklab,var(--color-accent) 40%,var(--color-line))}
+/*
+ * The eyebrow is --color-ink-soft everywhere, which clears AA on every surface
+ * this look paints (5.15 on --color-bg, 5.67 on --color-paper) except one:
+ * --color-accent-wash is darker than both, and there ink-soft lands at 4.17 —
+ * under the 4.5 needed for 12px text. Nudged toward ink on this band only, so
+ * the soft/strong hierarchy survives everywhere it was already legible.
+ */
+.ch-band--accent .ch-eyebrow{color:color-mix(in oklab,var(--color-ink-soft) 72%,var(--color-ink))}
 .ch-band--ink{background:var(--color-ink);color:var(--color-bg)}
 .ch-eyebrow--band::before{background:var(--color-accent-deep)}
 .ch-band--ink .ch-eyebrow{color:color-mix(in oklab,var(--color-bg) 78%,transparent)}
