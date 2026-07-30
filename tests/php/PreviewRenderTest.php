@@ -13,6 +13,13 @@ final class PreviewRenderTest extends TestCase {
 	 */
 	protected function tearDown(): void {
 		Blueworx_Clubhouse_Integrations::set_detector( null );
+		// Same reasoning as the detector above: this suite's whole premise is "no
+		// provider installed, so Menu::current() falls back to DEFAULTS". A
+		// Frontend/External_Chrome test earlier in the run installs one and never
+		// tears it down (that is production behaviour, not a test concern — see
+		// Frontend/External_Chrome), so this suite must reset it defensively
+		// rather than trust it was left alone.
+		Blueworx_Clubhouse_Menu::set_provider( null );
 	}
 
 	public function test_preview_builds_a_full_court_side_home_document(): void {

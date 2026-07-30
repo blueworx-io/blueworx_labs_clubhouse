@@ -10,6 +10,13 @@ use PHPUnit\Framework\TestCase;
  */
 final class ExternalChromeTest extends TestCase {
 
+	protected function tearDown(): void {
+		// wrap() installs a Menu provider backed by real options, same as
+		// Frontend::render_body() — process-global state that must not survive
+		// past this suite (see FrontendTest for the full reasoning).
+		Blueworx_Clubhouse_Menu::set_provider( null );
+	}
+
 	/** SureCart's dashboard is the page this exists for. */
 	public function test_a_surecart_templated_page_is_dressed(): void {
 		$this->assertTrue(
