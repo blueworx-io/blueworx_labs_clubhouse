@@ -5,6 +5,10 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.42.1
+
+- **Fixed: a new page's web address 404s until permalinks are re-saved.** v0.42.0 added the Book a court page, and `/booking/` returned "Page not found" even though the page itself worked — the plugin told WordPress about the new address, but WordPress keeps a cached list of addresses and only rebuilds it when the plugin is activated. Updating by uploading a new zip over a running plugin does not count as activating it, so the cached list stayed as it was. The plugin now rebuilds that list once by itself after any update that changes its pages, so a new page works as soon as it is uploaded. Nothing to do by hand.
+
 ## 0.42.0
 
 - **A "Book a court" page, built from LatePoint.** A new page carrying the whole booking journey in the order a member thinks about it: what you can book, where you play, who you book with, and when. Each of the four is a LatePoint shortcode, pre-filled and editable under Club content → Book a court, so a club can change the calendar view or the number of columns without waiting for a release.

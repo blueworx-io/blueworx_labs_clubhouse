@@ -22,6 +22,53 @@ final class FrontendTest extends TestCase {
 		Blueworx_Clubhouse_Integrations::set_detector( null );
 	}
 
+	/**
+	 * Upgrading by uploading a zip over a live plugin does not re-run activation,
+	 * so a release that adds a page slug needs its own flush — otherwise the rule
+	 * is registered while WordPress serves cached rules, and the new permalink
+	 * 404s with nothing to say why. This is how v0.42.0's /booking/ shipped broken.
+	 */
+	public function test_rewrites_flush_once_per_version_then_stay_quiet(): void {
+		$this->assertTrue(
+			Blueworx_Clubhouse_Frontend::rewrites_need_flush( '0.42.1', null ),
+			'never stamped — a fresh install or an upgrade from before the stamp existed'
+		);
+		$this->assertTrue(
+			Blueworx_Clubhouse_Frontend::rewrites_need_flush( '0.42.1', '0.42.0' ),
+			'stamp predates the running version'
+		);
+		$this->assertFalse(
+			Blueworx_Clubhouse_Frontend::rewrites_need_flush( '0.42.1', '0.42.1' ),
+			'already flushed for this version — must not flush on every request'
+		);
+		$this->assertTrue(
+			Blueworx_Clubhouse_Frontend::rewrites_need_flush( '0.42.1', array( 'junk' ) ),
+			'a non-string option is not a usable stamp'
+		);
+	}
+
+	public function test_register_hooks_the_flush_after_registering_the_rules(): void {
+		Blueworx_Clubhouse_Frontend::register();
+		$init = array_values( array_filter(
+			wp_stub_calls( 'add_action' ),
+			static fn( array $c ): bool => 'init' === $c['args'][0]
+		) );
+		$rules = null;
+		$flush = null;
+		foreach ( $init as $call ) {
+			$target = $call['args'][1];
+			if ( is_array( $target ) && 'register_rewrites' === $target[1] ) {
+				$rules = $call['args'][2] ?? 10;
+			}
+			if ( is_array( $target ) && 'maybe_flush_rewrites' === $target[1] ) {
+				$flush = $call['args'][2] ?? 10;
+			}
+		}
+		$this->assertNotNull( $rules, 'rules are registered on init' );
+		$this->assertNotNull( $flush, 'the flush check runs on init' );
+		$this->assertGreaterThan( $rules, $flush, 'flushing before registering would cache the old rules' );
+	}
+
 	public function test_link_url_home_is_site_root(): void {
 		$this->assertSame( 'https://club.test/', Blueworx_Clubhouse_Frontend::link_url( 'home' ) );
 	}
