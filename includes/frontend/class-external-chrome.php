@@ -157,13 +157,16 @@ final class Blueworx_Clubhouse_External_Chrome {
 	 */
 	public static function wrap( string $html ): string {
 		Blueworx_Clubhouse_Links::set_resolver( array( Blueworx_Clubhouse_Frontend::class, 'link_url' ) );
+		Blueworx_Clubhouse_Menu::set_provider(
+			static fn(): Blueworx_Clubhouse_Menu => new Blueworx_Clubhouse_Menu( new Blueworx_Clubhouse_Options_Storage() )
+		);
 		$ctx = Blueworx_Clubhouse_Frontend::context();
 		if ( null === $ctx->look ) {
 			return $html;
 		}
 		$logo_url = Blueworx_Clubhouse_Frontend::resolve_logo( $ctx->branding->get_logo() );
 		$club     = $ctx->branding->get_club_name();
-		$header   = Blueworx_Clubhouse_Page_Renderer::chrome_header( $club, $ctx->visibility, $logo_url, $ctx->content )
+		$header   = Blueworx_Clubhouse_Page_Renderer::chrome_header( $club, $ctx->visibility, $ctx->collections, $logo_url, $ctx->content )
 			. self::open_content();
 		$footer   = self::close_content()
 			. Blueworx_Clubhouse_Page_Renderer::chrome_footer( $club, $ctx->visibility, $ctx->branding, $ctx->content );

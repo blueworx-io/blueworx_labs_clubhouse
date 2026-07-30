@@ -46,6 +46,28 @@ final class Blueworx_Clubhouse_Menu {
 		$this->storage = $storage;
 	}
 
+	/** @var (callable():Blueworx_Clubhouse_Menu)|null */
+	private static $provider = null;
+
+	/**
+	 * Where the renderer gets its menu. WordPress installs one backed by real
+	 * options (see Frontend); the preview and the tests leave it unset and get
+	 * the defaults, which is what keeps the two renders identical for a site
+	 * that has not edited its nav.
+	 *
+	 * @param (callable():Blueworx_Clubhouse_Menu)|null $provider
+	 */
+	public static function set_provider( ?callable $provider ): void {
+		self::$provider = $provider;
+	}
+
+	public static function current(): Blueworx_Clubhouse_Menu {
+		if ( null !== self::$provider ) {
+			return ( self::$provider )();
+		}
+		return new self( new Blueworx_Clubhouse_Null_Storage() );
+	}
+
 	/**
 	 * The stored tree, or the defaults when nothing was ever written. A stored
 	 * empty array is returned as-is — see the class comment.

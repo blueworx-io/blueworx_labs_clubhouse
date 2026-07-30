@@ -14,6 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 // Core primitives. Interface must load before its implementor.
 require_once __DIR__ . '/core/interface-storage.php';
 require_once __DIR__ . '/core/class-options-storage.php';
+require_once __DIR__ . '/core/class-null-storage.php';
 require_once __DIR__ . '/core/class-registry.php';
 
 // Content

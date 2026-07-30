@@ -302,6 +302,9 @@ final class Blueworx_Clubhouse_Frontend {
 			return '';
 		}
 		Blueworx_Clubhouse_Links::set_resolver( array( self::class, 'link_url' ) );
+		Blueworx_Clubhouse_Menu::set_provider(
+			static fn(): Blueworx_Clubhouse_Menu => new Blueworx_Clubhouse_Menu( new Blueworx_Clubhouse_Options_Storage() )
+		);
 		$ctx      = self::context();
 		$logo_url = self::resolve_logo( $ctx->branding->get_logo() );
 		return Blueworx_Clubhouse_Page_Map::render( $slug, $ctx->branding, $ctx->visibility, $ctx->collections, $logo_url, $ctx->content, self::current_filter() );

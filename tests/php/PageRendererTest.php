@@ -407,4 +407,39 @@ final class PageRendererTest extends TestCase {
 		$this->assertStringContainsString( 'ch-nav__link--active', $html );
 		$this->assertStringNotContainsString( 'ch-nav__sub', $html );
 	}
+
+	public function test_home_nav_comes_from_the_stored_menu(): void {
+		$storage = new Blueworx_Clubhouse_Fake_Storage();
+		$menu    = new Blueworx_Clubhouse_Menu( $storage );
+		$menu->save( array(
+			array( 'label' => 'Say hello', 'target' => 'page:contact', 'children' => array() ),
+		) );
+		Blueworx_Clubhouse_Menu::set_provider( static fn(): Blueworx_Clubhouse_Menu => $menu );
+		try {
+			$html = Blueworx_Clubhouse_Page_Renderer::home(
+				$this->branding(),
+				new Blueworx_Clubhouse_Visibility( $storage ),
+				$this->collections()
+			);
+		} finally {
+			Blueworx_Clubhouse_Menu::set_provider( null );
+		}
+		// Scoped to the header: shell_footer() still hardcodes its own columns
+		// (out of scope for this task, see nav_links()), and those columns
+		// legitimately contain the literal string '>Membership</a>' too.
+		$header_html = substr( $html, 0, strpos( $html, '<main' ) );
+		$this->assertStringContainsString( '>Say hello<', $header_html );
+		$this->assertStringNotContainsString( '>Membership</a>', $header_html );
+	}
+
+	public function test_home_nav_falls_back_to_the_defaults_with_no_provider(): void {
+		Blueworx_Clubhouse_Menu::set_provider( null );
+		$html = Blueworx_Clubhouse_Page_Renderer::home(
+			$this->branding(),
+			new Blueworx_Clubhouse_Visibility( new Blueworx_Clubhouse_Fake_Storage() ),
+			$this->collections()
+		);
+		$this->assertStringContainsString( '>Membership<', $html );
+		$this->assertStringContainsString( '>Contact<', $html );
+	}
 }
