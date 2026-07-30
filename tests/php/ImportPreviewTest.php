@@ -22,7 +22,7 @@ final class ImportPreviewTest extends TestCase {
 		$plan->add_field( 'home', 'hero', 'eyebrow', 'Est. 1974' );
 		$plan->add_field( 'home', 'hero', 'lede', 'A club for all' );
 		$out = Blueworx_Clubhouse_Import_Preview::summary( $plan, array() );
-		$this->assertSame( 'Global · Hero', $out['rows'][0]['label'] );
+		$this->assertSame( 'Home · Hero', $out['rows'][0]['label'] );
 		$this->assertSame( '2 fields', $out['rows'][0]['detail'] );
 	}
 
@@ -56,7 +56,7 @@ final class ImportPreviewTest extends TestCase {
 		$plan->add_field( 'home', 'hero', 'eyebrow', 'Est. 1974' );
 		$out = Blueworx_Clubhouse_Import_Preview::summary( $plan, array() );
 		// Home's hero is declared on the Global tab, before Contact.
-		$this->assertSame( 'Global · Hero', $out['rows'][0]['label'] );
+		$this->assertSame( 'Home · Hero', $out['rows'][0]['label'] );
 		$this->assertSame( 'Contact · Contact form', $out['rows'][1]['label'] );
 	}
 

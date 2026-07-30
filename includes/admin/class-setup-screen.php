@@ -153,6 +153,7 @@ final class Blueworx_Clubhouse_Setup_Screen {
 		$out .= self::text_field( 'clubhouse_facebook', 'Facebook URL', (string) $b['facebook'], 'url' );
 		$out .= self::text_field( 'clubhouse_instagram', 'Instagram URL', (string) $b['instagram'], 'url' );
 		$out .= self::text_field( 'clubhouse_linkedin', 'LinkedIn URL', (string) $b['linkedin'], 'url' );
+		$out .= self::text_field( 'clubhouse_x', 'X (Twitter) URL', (string) $b['x'], 'url' );
 		$out .= '</div></div>';
 		return $out;
 	}

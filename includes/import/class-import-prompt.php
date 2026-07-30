@@ -209,12 +209,6 @@ MD;
         "title_lead": "One club, ",
         "title_highlight": "every sport",
         "image": { "url": "https://example.org/pavilion.jpg", "alt": "The pavilion" }
-      },
-      "stats": {
-        "items": [
-          { "value": "450", "label": "Members", "featured": true },
-          { "value": "6", "label": "Sports", "featured": false }
-        ]
       }
     },
     "global": { "header": { "join": "Join the club" } }

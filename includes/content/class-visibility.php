@@ -24,7 +24,9 @@ final class Blueworx_Clubhouse_Visibility {
 	 * @var array<string, bool>
 	 */
 	private const SECTION_DEFAULTS = array(
-		'home.stats' => false,
+		// Empty today: home.stats was the only opt-in section and the stat strip has
+		// been withdrawn. The mechanism stays — it is how a future section ships off
+		// by default — and is_section_visible() still consults it.
 	);
 
 	private Blueworx_Clubhouse_Storage $storage;

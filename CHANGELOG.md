@@ -5,6 +5,18 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.40.0
+
+- **X (Twitter) joins Facebook, Instagram and LinkedIn as a club social link.** Add the club's profile under Site setup → Branding → "X (Twitter) URL" and it appears wherever the other three do: the footer, the "Follow the club" band and the Contact page. Unlike the other three it ships empty rather than pointing at a demo profile, so no existing site gains a link it did not ask for, and the setup progress bar counts it towards the social step.
+- **The header shows the logo or the club name, never both.** A crest that already spells out the club's name sat next to the same name set in type, reading as a doubled title. When a logo is set it now stands alone; without one the club name stands alone, as before. The link still announces the club's name either way.
+- **Filters no longer reload the page.** On Sports, Teams, Events and Calendar, clicking a filter pill swapped the whole page — the hero re-rendered and the scroll position jumped. The list below now changes in place while everything above holds still. The pills stay ordinary links, so each filtered view remains shareable and bookmarkable, and the page still works with JavaScript switched off.
+- **Home's sports section now switches between Sports and Teams.** One section, two collections, chosen by the reader instead of by the page — each with its own "see them all" link. If the club has only one of the two, it renders as a plain grid with no switch.
+- **Link fields suggest your Clubhouse pages as you type.** Every link box in Club content now offers the club's own pages by name, so filling one in no longer means knowing the `?clubhouse_page=…` form by heart. They remain free-text fields — external links and other plugins' pages still work.
+- **"Global" and "Home" are now separate tabs in Club content.** The Global tab held the sitewide header and footer *and* every section of the Home page, so editing the Home hero looked like a sitewide change. Global now holds only the header and footer; everything Home-specific has moved to its own Home tab. Your saved content is untouched.
+- **Save is always reachable.** The Save bar in Site setup and Club content sat at the foot of the form, so on long forms you had to scroll to the bottom to use it. It now stays pinned to the bottom of the screen with the form scrolling behind it.
+- **Background images are easier to read over.** The wash over the Home hero photo was too light at the top to carry the heading on a bright image. It is now stronger overall and weighted towards the side the text sits on, in all three looks.
+- **Removed: the Home stats strip.** The row of big numbers ("900+ Members", "9 Sports") has been withdrawn from the template, along with its section toggle and its content fields. No club can show it, and any numbers previously entered are simply no longer rendered.
+
 ## 0.39.0
 
 - **Your club's address, email and phone are now yours to set.** The details beside the contact form were fixed text baked into the plugin — every club's Contact page published "12 Riverside Lane, Marlow, SL7 1AA", `hello@clubhouse.example` and `01628 000 000`, and there was no setting anywhere that changed them. They are now ordinary content, under Club content → Contact → Contact form, alongside a heading for the block and an optional photo or map image. The map tile is also a link to Google Maps for whatever address you enter, and it now describes itself to screen readers using your club's name rather than the word "ClubHouse".

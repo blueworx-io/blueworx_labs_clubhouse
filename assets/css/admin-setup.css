@@ -15,7 +15,10 @@ body.toplevel_page_clubhouse-setup #wpfooter { display: none; }
 	display: flex;
 	flex-direction: column;
 	max-width: 100%;
-	height: 100vh;
+	/* min-height, not height: the container must be free to grow past the viewport
+	   so the sticky save bar can travel the whole scroll length. A fixed 100vh caps
+	   the form's height, which would confine the bar to the first screenful. */
+	min-height: 100vh;
 	margin: 0;
 	padding: 0;
 	border-radius: 0;
@@ -115,8 +118,12 @@ body.toplevel_page_clubhouse-setup #wpfooter { display: none; }
 /* Demo card (admin-only panel) */
 .clubhouse-demo-card { border: 1px solid var(--color-line); border-radius: var(--radius-md); padding: 18px; background: var(--color-bg); }
 
-/* Full-width save-bar footer, pinned to the bottom of the container. */
-.clubhouse-bar { margin-top: auto; display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 16px var(--pad); background: var(--color-paper); border-top: 1px solid var(--color-line); }
+/* Full-width save bar, pinned to the bottom of the viewport at all times so Save
+   is reachable from anywhere in a long form — panels scroll behind it. `sticky`
+   rather than `fixed`: it still occupies flow space at the end of the form, so the
+   last field is never trapped underneath. z-index keeps it above panel content;
+   the opaque paper background stops text showing through as it passes under. */
+.clubhouse-bar { position: sticky; bottom: 0; z-index: 20; margin-top: auto; display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 16px var(--pad); background: var(--color-paper); border-top: 1px solid var(--color-line); box-shadow: 0 -8px 20px -14px rgb(0 0 0 / .35); }
 .clubhouse-bar__hint { margin: 0; font-size: 13px; color: var(--color-ink-soft); }
 
 @media (max-width: 782px) {

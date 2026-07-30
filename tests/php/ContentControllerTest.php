@@ -16,7 +16,7 @@ final class ContentControllerTest extends TestCase {
 	public function test_saves_and_sanitises_a_text_field(): void {
 		$s = $this->storage();
 		Blueworx_Clubhouse_Content_Controller::handle_save( array(
-			'clubhouse_content_tab' => 'global',
+			'clubhouse_content_tab' => 'home',
 			'field' => array( 'home' => array( 'hero' => array( 'title_highlight' => '  One club <script>  ' ) ) ),
 		), $s );
 		$store = new Blueworx_Clubhouse_Content_Store( $s );
@@ -40,7 +40,7 @@ final class ContentControllerTest extends TestCase {
 	public function test_unknown_field_keys_are_ignored(): void {
 		$s = $this->storage();
 		Blueworx_Clubhouse_Content_Controller::handle_save( array(
-			'clubhouse_content_tab' => 'global',
+			'clubhouse_content_tab' => 'home',
 			'field' => array( 'home' => array( 'hero' => array( 'evil' => 'x', 'eyebrow' => 'ok' ) ) ),
 		), $s );
 		$store = new Blueworx_Clubhouse_Content_Store( $s );
@@ -51,7 +51,7 @@ final class ContentControllerTest extends TestCase {
 	public function test_section_visibility_toggle_persists(): void {
 		$s = $this->storage();
 		Blueworx_Clubhouse_Content_Controller::handle_save( array(
-			'clubhouse_content_tab' => 'global',
+			'clubhouse_content_tab' => 'home',
 			'hidden' => array( 'home' => array( 'ticker' => '1' ) ), // present = hide
 		), $s );
 		$vis = new Blueworx_Clubhouse_Visibility( $s );
@@ -61,7 +61,7 @@ final class ContentControllerTest extends TestCase {
 	public function test_visibility_defaults_to_shown_when_hidden_flag_absent(): void {
 		$s = $this->storage();
 		Blueworx_Clubhouse_Content_Controller::handle_save( array(
-			'clubhouse_content_tab' => 'global',
+			'clubhouse_content_tab' => 'home',
 		), $s );
 		$vis = new Blueworx_Clubhouse_Visibility( $s );
 		$this->assertTrue( $vis->is_section_visible( 'home', 'ticker' ) );
@@ -70,7 +70,7 @@ final class ContentControllerTest extends TestCase {
 	public function test_image_field_stored_as_attachment_id(): void {
 		$s = $this->storage();
 		Blueworx_Clubhouse_Content_Controller::handle_save( array(
-			'clubhouse_content_tab' => 'global',
+			'clubhouse_content_tab' => 'home',
 			'field' => array( 'home' => array( 'clubhouse' => array( 'image' => '42abc' ) ) ),
 		), $s );
 		$store = new Blueworx_Clubhouse_Content_Store( $s );
@@ -80,7 +80,7 @@ final class ContentControllerTest extends TestCase {
 	public function test_select_field_only_accepts_known_option_keys(): void {
 		$s = $this->storage();
 		Blueworx_Clubhouse_Content_Controller::handle_save( array(
-			'clubhouse_content_tab' => 'global',
+			'clubhouse_content_tab' => 'home',
 			'item' => array( 'home' => array( 'quick_tiles' => array(
 				array( 'label' => 'Join', 'href' => 'https://x.test/join', 'icon' => 'join' ),
 				array( 'label' => 'Bad', 'href' => 'https://x.test/bad', 'icon' => 'not-a-real-option' ),
@@ -95,13 +95,13 @@ final class ContentControllerTest extends TestCase {
 	public function test_toggle_field_absent_in_item_is_false(): void {
 		$s = $this->storage();
 		Blueworx_Clubhouse_Content_Controller::handle_save( array(
-			'clubhouse_content_tab' => 'global',
-			'item' => array( 'home' => array( 'stats' => array(
-				array( 'value' => '10', 'label' => 'Teams' ), // no 'featured' key => unchecked
+			'clubhouse_content_tab' => 'membership',
+			'item' => array( 'membership' => array( 'tiers' => array(
+				array( 'name' => 'Adult', 'price' => '£295' ), // no 'featured' key => unchecked
 			) ) ),
 		), $s );
 		$store = new Blueworx_Clubhouse_Content_Store( $s );
-		$this->assertFalse( $store->get_items( 'home', 'stats' )[0]['featured'] );
+		$this->assertFalse( $store->get_items( 'membership', 'tiers' )[0]['featured'] );
 	}
 
 	public function test_clubhouse_content_add_appends_a_blank_loop_item(): void {
@@ -137,10 +137,10 @@ final class ContentControllerTest extends TestCase {
 
 	public function test_only_the_submitted_tab_sections_are_persisted(): void {
 		$s = $this->storage();
-		// Pre-seed the about hero title so we can confirm a global-tab save leaves it alone.
+		// Pre-seed the about hero title so we can confirm a Home-tab save leaves it alone.
 		( new Blueworx_Clubhouse_Content_Store( $s ) )->set( 'about', 'hero', 'title_lead', 'Existing About' );
 		Blueworx_Clubhouse_Content_Controller::handle_save( array(
-			'clubhouse_content_tab' => 'global',
+			'clubhouse_content_tab' => 'home',
 			'field' => array( 'home' => array( 'hero' => array( 'title_lead' => 'New Home' ) ) ),
 		), $s );
 		$store = new Blueworx_Clubhouse_Content_Store( $s );
@@ -159,7 +159,7 @@ final class ContentControllerTest extends TestCase {
 	public function test_save_returns_a_success_notice(): void {
 		$s = $this->storage();
 		$notices = Blueworx_Clubhouse_Content_Controller::handle_save( array(
-			'clubhouse_content_tab' => 'global',
+			'clubhouse_content_tab' => 'home',
 		), $s );
 		$this->assertSame( array( array( 'type' => 'success', 'text' => 'Your changes have been saved.' ) ), $notices );
 	}
@@ -206,17 +206,17 @@ final class ContentControllerTest extends TestCase {
 		$this->assertSame( 'https://x.test/admin.php?page=clubhouse-site-content', $model['action_url'] );
 		$this->assertArrayHasKey( 'catalogue', $model );
 
-		$global_page = null;
+		$home_page = null;
 		foreach ( $model['catalogue'] as $page ) {
-			if ( 'global' === $page['tab'] ) {
-				$global_page = $page;
+			if ( 'home' === $page['tab'] ) {
+				$home_page = $page;
 			}
 		}
-		$this->assertNotNull( $global_page );
+		$this->assertNotNull( $home_page );
 
 		$hero = null;
 		$ticker = null;
-		foreach ( $global_page['sections'] as $section ) {
+		foreach ( $home_page['sections'] as $section ) {
 			if ( 'hero' === $section['key'] ) { $hero = $section; }
 			if ( 'ticker' === $section['key'] ) { $ticker = $section; }
 		}
@@ -227,7 +227,7 @@ final class ContentControllerTest extends TestCase {
 	public function test_url_field_rejects_a_javascript_scheme(): void {
 		$s = $this->storage();
 		Blueworx_Clubhouse_Content_Controller::handle_save( array(
-			'clubhouse_content_tab' => 'global',
+			'clubhouse_content_tab' => 'home',
 			'field' => array( 'home' => array( 'hero' => array( 'cta_primary_href' => 'javascript:alert(1)' ) ) ),
 		), $s );
 		$store = new Blueworx_Clubhouse_Content_Store( $s );
@@ -237,7 +237,7 @@ final class ContentControllerTest extends TestCase {
 	public function test_url_field_keeps_a_valid_http_url(): void {
 		$s = $this->storage();
 		Blueworx_Clubhouse_Content_Controller::handle_save( array(
-			'clubhouse_content_tab' => 'global',
+			'clubhouse_content_tab' => 'home',
 			'field' => array( 'home' => array( 'hero' => array( 'cta_primary_href' => 'https://x.test/join' ) ) ),
 		), $s );
 		$store = new Blueworx_Clubhouse_Content_Store( $s );
@@ -247,7 +247,7 @@ final class ContentControllerTest extends TestCase {
 	public function test_textarea_field_is_sanitised(): void {
 		$s = $this->storage();
 		Blueworx_Clubhouse_Content_Controller::handle_save( array(
-			'clubhouse_content_tab' => 'global',
+			'clubhouse_content_tab' => 'home',
 			'field' => array( 'home' => array( 'hero' => array( 'lede' => "  Line one  \n<script>bad</script>Line two  " ) ) ),
 		), $s );
 		$store = new Blueworx_Clubhouse_Content_Store( $s );
@@ -259,29 +259,44 @@ final class ContentControllerTest extends TestCase {
 		$s     = $this->storage();
 		$model = Blueworx_Clubhouse_Content_Controller::build_model( $s, array(), '<nonce>', 'https://x.test/admin.php' );
 
-		$global_page = null;
-		foreach ( $model['catalogue'] as $page ) {
-			if ( 'global' === $page['tab'] ) {
-				$global_page = $page;
+		$tab = static function ( array $model, string $want ): ?array {
+			foreach ( $model['catalogue'] as $page ) {
+				if ( $want === $page['tab'] ) {
+					return $page;
+				}
 			}
-		}
-		$this->assertNotNull( $global_page );
-		$this->assertSame( 'home', $global_page['vis_page'] ); // Global tab's Visibility page is 'home'.
+			return null;
+		};
+		$section = static function ( array $page, string $key ): ?array {
+			foreach ( $page['sections'] as $s ) {
+				if ( $key === $s['key'] ) {
+					return $s;
+				}
+			}
+			return null;
+		};
 
-		$header = null;
-		$hero   = null;
-		foreach ( $global_page['sections'] as $section ) {
-			if ( 'header' === $section['key'] ) { $header = $section; }
-			if ( 'hero' === $section['key'] ) { $hero = $section; }
-		}
-		$this->assertNotNull( $header );
-		$this->assertNotNull( $hero );
+		// Global and Home are two tabs over Visibility's single 'home' page.
+		$global = $tab( $model, 'global' );
+		$home   = $tab( $model, 'home' );
+		$this->assertNotNull( $global );
+		$this->assertNotNull( $home );
+		$this->assertSame( 'home', $global['vis_page'] );
+		$this->assertSame( 'home', $home['vis_page'] );
+
 		// Header's store_page is 'global' but its hide flag lives under 'home' —
 		// vis_page must reflect that even though store_page differs.
+		$header = $section( $global, 'header' );
+		$this->assertNotNull( $header );
 		$this->assertSame( 'global', $header['store_page'] );
 		$this->assertSame( 'home', $header['vis_page'] );
+
+		// The Home hero has moved off the Global tab; store_page and vis_page agree.
+		$hero = $section( $home, 'hero' );
+		$this->assertNotNull( $hero );
 		$this->assertSame( 'home', $hero['store_page'] );
 		$this->assertSame( 'home', $hero['vis_page'] );
+		$this->assertNull( $section( $global, 'hero' ), 'Global is header/footer only' );
 	}
 
 	/** Regression for Important 1: non-global tabs have a matching store_page/vis_page. */
@@ -309,7 +324,7 @@ final class ContentControllerTest extends TestCase {
 		// Simulate a truncated POST: the 'field' key is present for other data
 		// but the hero section's group never appears at all.
 		Blueworx_Clubhouse_Content_Controller::handle_save( array(
-			'clubhouse_content_tab' => 'global',
+			'clubhouse_content_tab' => 'home',
 			'field' => array( 'home' => array( 'clubhouse' => array( 'eyebrow' => 'x' ) ) ),
 		), $s );
 
@@ -325,7 +340,7 @@ final class ContentControllerTest extends TestCase {
 		$store->set( 'home', 'hero', 'title_highlight', 'Existing Highlight' );
 
 		Blueworx_Clubhouse_Content_Controller::handle_save( array(
-			'clubhouse_content_tab' => 'global',
+			'clubhouse_content_tab' => 'home',
 			'field' => array( 'home' => array( 'hero' => array( 'title_lead' => 'New Lead' ) ) ),
 		), $s );
 
@@ -337,7 +352,7 @@ final class ContentControllerTest extends TestCase {
 	public function test_non_scalar_text_field_sanitises_to_empty_string(): void {
 		$s = $this->storage();
 		Blueworx_Clubhouse_Content_Controller::handle_save( array(
-			'clubhouse_content_tab' => 'global',
+			'clubhouse_content_tab' => 'home',
 			'field' => array( 'home' => array( 'hero' => array( 'title_lead' => array( 'x' ) ) ) ),
 		), $s );
 		$store = new Blueworx_Clubhouse_Content_Store( $s );
@@ -348,7 +363,7 @@ final class ContentControllerTest extends TestCase {
 	public function test_non_scalar_image_field_sanitises_to_the_unset_sentinel(): void {
 		$s = $this->storage();
 		Blueworx_Clubhouse_Content_Controller::handle_save( array(
-			'clubhouse_content_tab' => 'global',
+			'clubhouse_content_tab' => 'home',
 			'field' => array( 'home' => array( 'clubhouse' => array( 'image' => array( '1' ) ) ) ),
 		), $s );
 		$store = new Blueworx_Clubhouse_Content_Store( $s );
@@ -363,7 +378,7 @@ final class ContentControllerTest extends TestCase {
 	public function test_untouched_image_field_stores_the_unset_sentinel_not_zero(): void {
 		$s = $this->storage();
 		Blueworx_Clubhouse_Content_Controller::handle_save( array(
-			'clubhouse_content_tab' => 'global',
+			'clubhouse_content_tab' => 'home',
 			'field' => array( 'home' => array( 'hero' => array( 'title_lead' => 'x', 'image' => '' ) ) ),
 		), $s );
 		$store = new Blueworx_Clubhouse_Content_Store( $s );
@@ -374,7 +389,7 @@ final class ContentControllerTest extends TestCase {
 	public function test_image_field_keeps_a_real_attachment_id(): void {
 		$s = $this->storage();
 		Blueworx_Clubhouse_Content_Controller::handle_save( array(
-			'clubhouse_content_tab' => 'global',
+			'clubhouse_content_tab' => 'home',
 			'field' => array( 'home' => array( 'hero' => array( 'image' => '42' ) ) ),
 		), $s );
 		$store = new Blueworx_Clubhouse_Content_Store( $s );
@@ -401,12 +416,13 @@ final class ContentControllerTest extends TestCase {
 	public function test_outstanding_import_images_become_a_notice(): void {
 		$s = $this->storage();
 		$s->set( Blueworx_Clubhouse_Import_Controller::IMAGES_NEEDED_KEY, array(
-			array( 'label' => 'Global · Hero — Background image', 'page' => 'home', 'section' => 'hero', 'field' => 'image' ),
+			array( 'label' => 'Home · Hero — Background image', 'page' => 'home', 'section' => 'hero', 'field' => 'image' ),
 		) );
 		$model = Blueworx_Clubhouse_Content_Controller::build_model( $s, array(), '', '' );
 		$this->assertSame( 'warning', $model['notices'][0]['type'] );
 		$this->assertStringContainsString( '1 picture', $model['notices'][0]['text'] );
-		$this->assertSame( 'global', $model['notices'][0]['links'][0]['tab'] );
+		// home/hero now lives on the Home tab, so the notice's deep link goes there.
+		$this->assertSame( 'home', $model['notices'][0]['links'][0]['tab'] );
 		$this->assertSame( 'hero', $model['notices'][0]['links'][0]['sec'] );
 	}
 
@@ -422,7 +438,7 @@ final class ContentControllerTest extends TestCase {
 			array( 'label' => 'About · Facilities — Image', 'page' => 'about', 'section' => 'facilities', 'field' => 'image' ),
 		) );
 		Blueworx_Clubhouse_Content_Controller::handle_save( array(
-			'clubhouse_content_tab' => 'global',
+			'clubhouse_content_tab' => 'home',
 			'field' => array( 'home' => array( 'hero' => array( 'image' => '42' ) ) ),
 		), $s );
 		$left = $s->get( Blueworx_Clubhouse_Import_Controller::IMAGES_NEEDED_KEY, array() );
@@ -443,7 +459,7 @@ final class ContentControllerTest extends TestCase {
 			array( 'label' => 'Global · News — Image', 'page' => 'home', 'section' => 'news', 'field' => 'image', 'index' => 1 ),
 		) );
 		Blueworx_Clubhouse_Content_Controller::handle_save( array(
-			'clubhouse_content_tab' => 'global',
+			'clubhouse_content_tab' => 'home',
 			'item' => array( 'home' => array( 'news' => array(
 				array( 'title' => 'First', 'image' => '' ),
 				array( 'title' => 'Second', 'image' => '42' ),
@@ -461,7 +477,7 @@ final class ContentControllerTest extends TestCase {
 			array( 'label' => 'Global · Hero — Background image', 'page' => 'home', 'section' => 'hero', 'field' => 'image' ),
 		) );
 		Blueworx_Clubhouse_Content_Controller::handle_save( array(
-			'clubhouse_content_tab' => 'global',
+			'clubhouse_content_tab' => 'home',
 			'field' => array( 'home' => array( 'hero' => array( 'image' => '42' ) ) ),
 		), $s );
 		$left = $s->get( Blueworx_Clubhouse_Import_Controller::IMAGES_NEEDED_KEY, array() );

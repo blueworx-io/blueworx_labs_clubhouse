@@ -151,8 +151,12 @@ textarea.clubhouse-input { resize: vertical; }
 .clubhouse-badge { display: inline-block; font-size: 10px; letter-spacing: .08em; text-transform: uppercase; border-radius: 999px; padding: 3px 8px; flex: none; }
 .clubhouse-badge--auto { background: var(--color-accent-wash); color: var(--color-accent-deep); }
 
-/* Full-width save-bar footer, pinned to the bottom of the active page panel. */
-.clubhouse-bar { margin-top: auto; display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 16px var(--pad); background: var(--color-paper); border-top: 1px solid var(--color-line); }
+/* Full-width save bar, pinned to the bottom of the viewport at all times so Save
+   is reachable from anywhere in a long form — panels scroll behind it. `sticky`
+   rather than `fixed`: it still occupies flow space at the end of the form, so the
+   last field is never trapped underneath. z-index keeps it above panel content;
+   the opaque paper background stops text showing through as it passes under. */
+.clubhouse-bar { position: sticky; bottom: 0; z-index: 20; margin-top: auto; display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 16px var(--pad); background: var(--color-paper); border-top: 1px solid var(--color-line); box-shadow: 0 -8px 20px -14px rgb(0 0 0 / .35); }
 .clubhouse-bar__hint { margin: 0; font-size: 13px; color: var(--color-ink-soft); }
 
 @media (max-width: 782px) {

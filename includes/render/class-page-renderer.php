@@ -286,6 +286,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'Facebook'  => $branding->get_facebook_url(),
 				'Instagram' => $branding->get_instagram_url(),
 				'LinkedIn'  => $branding->get_linkedin_url(),
+				'X'         => $branding->get_x_url(),
 			),
 			'columns'    => array(
 				array( 'title' => 'Club', 'links' => self::nav_links( array(
@@ -383,32 +384,49 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				$items
 			) ) );
 		}
-		if ( $visibility->is_section_visible( 'home', 'stats' ) ) {
-			$out .= Blueworx_Clubhouse_Sections::stat_strip( self::citems( $content, 'home', 'stats', array(
-				array( 'value' => '900+', 'label' => 'Members', 'featured' => true ),
-				array( 'value' => '9', 'label' => 'Sports' ),
-				array( 'value' => '24', 'label' => 'Teams' ),
-				array( 'value' => '1974', 'label' => 'Founded' ),
-			) ) );
-		}
 		if ( $visibility->is_section_visible( 'home', 'sports' ) ) {
-			$sports = array_slice( $collections->sports(), 0, 4 );
-			$out .= Blueworx_Clubhouse_Sections::card_grid( array(
-				'eyebrow'    => self::cget( $content, 'home', 'sports', 'eyebrow', 'Our sports' ),
-				'heading'    => self::cget( $content, 'home', 'sports', 'heading', 'Pick your game.' ),
-				'link_label' => 'All sections →',
-				'link_href'  => Blueworx_Clubhouse_Links::url( 'sports' ),
-				'cards'      => array_map(
-					static function ( array $s ): array {
-						return array(
-							'image'     => $s['image'],
-							'image_alt' => $s['title'],
-							'tag'       => $s['label'],
-							'title'     => $s['title'],
-							'subtitle'  => $s['subtitle'],
-						);
-					},
-					$sports
+			// One section, two collections: the reader switches between the club's
+			// sports and its teams rather than the page picking one for them. Each
+			// group keeps its own "see them all" link, and a group with nothing in it
+			// drops out (see Sections::card_grid_switch).
+			$out .= Blueworx_Clubhouse_Sections::card_grid_switch( array(
+				'eyebrow' => self::cget( $content, 'home', 'sports', 'eyebrow', 'Our sports' ),
+				'heading' => self::cget( $content, 'home', 'sports', 'heading', 'Pick your game.' ),
+				'groups'  => array(
+					'sports' => array(
+						'label'      => 'Sports',
+						'link_label' => 'All sections →',
+						'link_href'  => Blueworx_Clubhouse_Links::url( 'sports' ),
+						'cards'      => array_map(
+							static function ( array $s ): array {
+								return array(
+									'image'     => $s['image'],
+									'image_alt' => $s['title'],
+									'tag'       => $s['label'],
+									'title'     => $s['title'],
+									'subtitle'  => $s['subtitle'],
+								);
+							},
+							array_slice( $collections->sports(), 0, 4 )
+						),
+					),
+					'teams'  => array(
+						'label'      => 'Teams',
+						'link_label' => 'All teams →',
+						'link_href'  => Blueworx_Clubhouse_Links::url( 'teams' ),
+						'cards'      => array_map(
+							static function ( array $t ): array {
+								return array(
+									'image'     => $t['image'],
+									'image_alt' => $t['sport'] . ' ' . $t['title'],
+									'tag'       => $t['sport'],
+									'title'     => $t['title'],
+									'subtitle'  => $t['description'],
+								);
+							},
+							array_slice( $collections->teams(), 0, 4 )
+						),
+					),
 				),
 			) );
 		}
@@ -517,6 +535,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'facebook_url'  => $social_on ? $branding->get_facebook_url() : '',
 				'instagram_url' => $social_on ? $branding->get_instagram_url() : '',
 				'linkedin_url'  => $social_on ? $branding->get_linkedin_url() : '',
+				'x_url'         => $social_on ? $branding->get_x_url() : '',
 				'columns'       => $columns,
 			) );
 		}
@@ -817,6 +836,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 						'Facebook'  => $branding->get_facebook_url(),
 						'Instagram' => $branding->get_instagram_url(),
 						'LinkedIn'  => $branding->get_linkedin_url(),
+						'X'         => $branding->get_x_url(),
 					),
 				),
 			) );
@@ -840,6 +860,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'facebook_url'  => $branding->get_facebook_url(),
 				'instagram_url' => $branding->get_instagram_url(),
 				'linkedin_url'  => $branding->get_linkedin_url(),
+				'x_url'         => $branding->get_x_url(),
 				'columns'       => array(),
 			) );
 		}

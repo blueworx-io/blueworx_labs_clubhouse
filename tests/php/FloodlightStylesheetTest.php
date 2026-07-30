@@ -13,7 +13,7 @@ final class FloodlightStylesheetTest extends TestCase {
 
 	public function test_styles_the_shell_sections(): void {
 		$css = $this->css();
-		foreach ( array( '.ch-nav', '.ch-hero', '.ch-stats', '.ch-footer', '.ch-btn', '.ch-faq', '.ch-tiers', '.ch-auth' ) as $sel ) {
+		foreach ( array( '.ch-nav', '.ch-hero', '.ch-footer', '.ch-btn', '.ch-faq', '.ch-tiers', '.ch-auth' ) as $sel ) {
 			$this->assertStringContainsString( $sel, $css );
 		}
 	}

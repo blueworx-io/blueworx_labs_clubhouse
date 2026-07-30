@@ -23,6 +23,10 @@ final class Blueworx_Clubhouse_Branding {
 		'facebook'  => 'https://facebook.com/clubhouse',
 		'instagram' => 'https://instagram.com/clubhouse',
 		'linkedin'  => 'https://linkedin.com/company/clubhouse',
+		// X ships empty, unlike the three networks above: it arrived after clubs had
+		// already saved their branding, and a demo default would silently add a dead
+		// link to a live footer. Empty = no X icon until the owner sets one.
+		'x'         => '',
 		'favicon'   => '',
 	);
 
@@ -95,6 +99,14 @@ final class Blueworx_Clubhouse_Branding {
 
 	public function set_linkedin_url( string $url ): void {
 		$this->put( 'linkedin', $url );
+	}
+
+	public function get_x_url(): string {
+		return (string) $this->value( 'x' );
+	}
+
+	public function set_x_url( string $url ): void {
+		$this->put( 'x', $url );
 	}
 
 	public function get_favicon(): string {
