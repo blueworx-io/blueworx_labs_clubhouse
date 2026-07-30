@@ -5,6 +5,12 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.46.0
+
+- Added a Menu tab to Club Content: reorder, rename and nest header nav items, and point each one at a page, a section of a page, a filtered sport/team/event view, or a custom URL.
+- Every editable section now carries a stable anchor id, so a menu item can link straight to it.
+- The suggestion list behind every URL field in Club Content now offers section anchors and filtered collection views, not just the top-level pages.
+
 ## 0.45.0
 
 - **Club owners now get the shop and the diary.** SureCart and LatePoint have joined the owner's menu, and both are theirs to run in full — products, orders and shop settings on one side, bookings, agents and availability on the other. Neither plugin was reachable before: their menus are locked to capabilities the owner did not hold, so they simply were not there.

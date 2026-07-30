@@ -30,19 +30,25 @@ final class Blueworx_Clubhouse_Content_Screen {
 	private const LINKS_DATALIST_ID = 'clubhouse-links';
 
 	/**
-	 * Every Clubhouse page as a URL suggestion, so a link field can be filled by
-	 * typing "member" instead of knowing the ?clubhouse_page=… form. Rendered once
-	 * per screen and shared by every url input via list=.
+	 * The suggestion list every URL field points at, drawn from the same
+	 * Link_Catalogue the menu editor uses — so a link an owner can pick in the
+	 * menu is a link they can pick anywhere.
 	 *
 	 * Suggestions only: the input stays a free-text URL field, because plenty of
 	 * links point at pages this plugin does not own.
+	 *
+	 * @param array<int,array{target:string,label:string,group:string,url:string}> $targets
 	 */
-	private static function links_datalist(): string {
-		$out = '<datalist id="' . self::LINKS_DATALIST_ID . '">';
-		foreach ( Blueworx_Clubhouse_Page_Map::pages() as $page ) {
-			$url  = Blueworx_Clubhouse_Links::url( '' === $page['slug'] ? 'home' : $page['slug'] );
-			$out .= '<option value="' . self::esc( $url ) . '" label="' . self::esc( $page['label'] ) . '">'
-				. self::esc( $page['label'] ) . '</option>';
+	private static function links_datalist( array $targets ): string {
+		$out  = '<datalist id="' . self::LINKS_DATALIST_ID . '">';
+		$seen = array();
+		foreach ( $targets as $entry ) {
+			if ( '' === $entry['url'] || in_array( $entry['url'], $seen, true ) ) {
+				continue;
+			}
+			$seen[] = $entry['url'];
+			$out   .= '<option value="' . self::esc( $entry['url'] ) . '" label="' . self::esc( $entry['label'] ) . '">'
+				. self::esc( $entry['label'] ) . '</option>';
 		}
 		return $out . '</datalist>';
 	}
@@ -109,7 +115,7 @@ final class Blueworx_Clubhouse_Content_Screen {
 		$out .= self::header();
 		$out .= self::notices( $model['notices'], $action_url );
 		$out .= self::page_tabs( $catalogue, $action_url );
-		$out .= self::links_datalist();
+		$out .= self::links_datalist( $model['menu_targets'] );
 
 		// The Menu tab is not a catalogue page — it edits the nav tree, not
 		// section content — so it renders through its own panel rather than

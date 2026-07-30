@@ -90,4 +90,22 @@ final class MenuPanelTest extends TestCase {
 		) ) );
 		$this->assertStringNotContainsString( '<script>', $html );
 	}
+
+	/**
+	 * screen_html() builds its model with the real Blueworx_Clubhouse_WP_Collections,
+	 * which reads get_posts() — empty under a fresh Fake_Storage/stub set unless a
+	 * post is seeded into $GLOBALS['wp_stub_posts']. Asserting through it here would
+	 * only prove sport/team targets are missing, not present, so this asserts
+	 * against Content_Screen::render() with a hand-built model instead, using
+	 * Demo_Collections the way the rest of this file's tests already do — it is a
+	 * DB-free stand-in for the same Link_Catalogue::targets() the controller calls.
+	 */
+	public function test_the_shared_datalist_offers_anchors_and_filters(): void {
+		$s     = new Blueworx_Clubhouse_Fake_Storage();
+		$model = Blueworx_Clubhouse_Content_Controller::build_model( $s, array(), '', '' );
+		$model['menu_targets'] = Blueworx_Clubhouse_Link_Catalogue::targets( new Blueworx_Clubhouse_Demo_Collections() );
+		$html = Blueworx_Clubhouse_Content_Screen::render( $model );
+		$this->assertStringContainsString( 'About → History', $html );
+		$this->assertStringContainsString( 'Sports → Rugby', $html );
+	}
 }

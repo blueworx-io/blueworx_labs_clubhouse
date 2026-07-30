@@ -40,6 +40,11 @@ module.exports = async () => {
 require_once ${JSON.stringify(WP_LOAD)};
 update_option( 'clubhouse_demo_active', true, true );
 
+// menu-editor.spec.js edits the stored header menu — reset it before the run
+// so every run starts from Menu::current()'s defaults, the same way demo mode
+// above is seeded fresh each time rather than trusting a prior run's option.
+delete_option( 'clubhouse_menu' );
+
 $existing = get_page_by_path( 'external-chrome-fixture' );
 $id = $existing instanceof WP_Post ? $existing->ID : wp_insert_post( array(
 	'post_type'    => 'page',
