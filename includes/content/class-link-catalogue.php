@@ -39,7 +39,7 @@ final class Blueworx_Clubhouse_Link_Catalogue {
 	 * @return array<int,array{target:string,label:string,group:string,url:string}>
 	 */
 	public static function targets( Blueworx_Clubhouse_Collections $collections ): array {
-		return array_merge( self::pages(), self::anchors() );
+		return array_merge( self::pages(), self::anchors(), self::filters( $collections ) );
 	}
 
 	/** @return array<int,array{target:string,label:string,group:string,url:string}> */
@@ -80,6 +80,44 @@ final class Blueworx_Clubhouse_Link_Catalogue {
 					'label'  => (string) $page['label'] . ' → ' . (string) $section['label'],
 					'group'  => 'Sections',
 					'url'    => Blueworx_Clubhouse_Links::url( $tab ) . '#' . self::anchor_id( $tab, $key ),
+				);
+			}
+		}
+		return $out;
+	}
+
+	/**
+	 * Filtered list views, one per distinct pill the page would render. Read the
+	 * same field each page's pill row reads — /teams filters by the team's sport,
+	 * not its name — so every target here corresponds to a pill that exists and
+	 * a list that has something in it.
+	 *
+	 * @return array<int,array{target:string,label:string,group:string,url:string}>
+	 */
+	private static function filters( Blueworx_Clubhouse_Collections $collections ): array {
+		$groups = array(
+			array( 'page' => 'sports', 'group' => 'Sports', 'rows' => $collections->sports(), 'field' => 'title' ),
+			array( 'page' => 'teams',  'group' => 'Teams',  'rows' => $collections->teams(),  'field' => 'sport' ),
+			array( 'page' => 'events', 'group' => 'Events', 'rows' => $collections->events(), 'field' => 'tag' ),
+		);
+		$out = array();
+		foreach ( $groups as $g ) {
+			if ( ! Blueworx_Clubhouse_Page_Map::is_available( $g['page'] ) ) {
+				continue;
+			}
+			$seen = array();
+			foreach ( $g['rows'] as $row ) {
+				$label = trim( (string) ( $row[ $g['field'] ] ?? '' ) );
+				$slug  = Blueworx_Clubhouse_Page_Renderer::slugify( $label );
+				if ( '' === $slug || in_array( $slug, $seen, true ) ) {
+					continue;
+				}
+				$seen[] = $slug;
+				$out[]  = array(
+					'target' => 'filter:' . $g['page'] . ':' . $slug,
+					'label'  => $g['group'] . ' → ' . $label,
+					'group'  => $g['group'],
+					'url'    => Blueworx_Clubhouse_Links::filtered_url( $g['page'], $slug ),
 				);
 			}
 		}

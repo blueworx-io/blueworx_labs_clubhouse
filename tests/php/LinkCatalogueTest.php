@@ -84,4 +84,32 @@ final class LinkCatalogueTest extends TestCase {
 		$this->assertSame( '', Blueworx_Clubhouse_Link_Catalogue::resolve( 'nonsense', $this->collections() ) );
 		$this->assertSame( '', Blueworx_Clubhouse_Link_Catalogue::resolve( '', $this->collections() ) );
 	}
+
+	public function test_sports_targets_come_from_sport_titles(): void {
+		$entry = $this->find( 'filter:sports:rugby' );
+		$this->assertNotNull( $entry );
+		$this->assertSame( 'Sports', $entry['group'] );
+		$this->assertSame( 'Sports → Rugby', $entry['label'] );
+		$this->assertStringContainsString( 'clubhouse_filter=rugby', $entry['url'] );
+	}
+
+	public function test_teams_targets_come_from_the_team_sport_not_the_team_name(): void {
+		$this->assertNotNull( $this->find( 'filter:teams:rugby' ) );
+		$this->assertNull( $this->find( 'filter:teams:1st-xv' ) );
+	}
+
+	public function test_collection_targets_are_deduplicated(): void {
+		$seen = array();
+		foreach ( $this->targets() as $entry ) {
+			$this->assertNotContains( $entry['target'], $seen, 'duplicate target ' . $entry['target'] );
+			$seen[] = $entry['target'];
+		}
+	}
+
+	public function test_resolve_returns_empty_for_a_collection_item_that_is_gone(): void {
+		$this->assertSame(
+			'',
+			Blueworx_Clubhouse_Link_Catalogue::resolve( 'filter:sports:quidditch', $this->collections() )
+		);
+	}
 }
