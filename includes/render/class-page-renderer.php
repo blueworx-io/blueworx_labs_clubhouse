@@ -247,6 +247,22 @@ final class Blueworx_Clubhouse_Page_Renderer {
 		);
 	}
 
+	/**
+	 * The site header for a page this plugin does not render itself — a page
+	 * another plugin owns, dressed in the Clubhouse chrome by External_Chrome.
+	 * Delegates to the same shell every clubhouse page uses, so the nav cannot
+	 * drift between the two. No nav item is marked active: the current page is
+	 * not one of ours.
+	 */
+	public static function chrome_header( string $club, Blueworx_Clubhouse_Visibility $visibility, string $logo_url = '', ?Blueworx_Clubhouse_Content_Store $content = null ): string {
+		return self::shell_header( $club, '', $visibility, $logo_url, $content );
+	}
+
+	/** The site footer for a page this plugin does not render itself. See chrome_header(). */
+	public static function chrome_footer( string $club, Blueworx_Clubhouse_Visibility $visibility, Blueworx_Clubhouse_Branding $branding, ?Blueworx_Clubhouse_Content_Store $content = null ): string {
+		return self::shell_footer( $club, $visibility, $branding, $content );
+	}
+
 	private static function shell_header( string $club, string $active, Blueworx_Clubhouse_Visibility $visibility, string $logo_url = '', ?Blueworx_Clubhouse_Content_Store $content = null ): string {
 		// The announcement bar is owner-configurable (Content → Global → Header):
 		// a show/hide toggle plus editable text + link. When off — or when the text

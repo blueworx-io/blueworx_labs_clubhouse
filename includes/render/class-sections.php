@@ -139,6 +139,24 @@ final class Blueworx_Clubhouse_Sections {
 	}
 
 	/**
+	 * The content well for a page this plugin does not render — one another
+	 * plugin owns, framed by the Clubhouse header and footer (External_Chrome).
+	 *
+	 * Two halves rather than one wrapper because the other plugin's output lands
+	 * between them, and we never see it as a string. Deliberately NOT .ch-main:
+	 * the looks give .ch-main's children flow margins and reveal.js hides them
+	 * until they scroll in, and neither belongs on markup that is not ours.
+	 * The id stays #ch-main so the header's skip link still lands.
+	 */
+	public static function external_open(): string {
+		return '<main class="ch-external" id="ch-main" tabindex="-1"><div class="ch-external__in">';
+	}
+
+	public static function external_close(): string {
+		return '</div></main>';
+	}
+
+	/**
 	 * @param array{eyebrow:string,title_lead:string,title_highlight:string,lede:string,
 	 *   cta_primary:string,cta_primary_href:string,cta_secondary:string,
 	 *   cta_secondary_href:string,image:string,image_alt:string,image_caption:string} $data

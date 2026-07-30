@@ -5,6 +5,12 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.44.0
+
+- **SureCart's customer dashboard now looks like the rest of the site.** Pages another plugin owns — SureCart's account and customer dashboard — were being rendered by the bare theme underneath the Clubhouse, so they arrived with no header, no menu, no footer, no page width and none of the club's fonts or colours. They now open inside the same header and footer as every other page, and in the club's own type and colour. Nothing to switch on.
+- **SureCart still styles SureCart.** The Clubhouse only frames the page: it adds the chrome around the outside and the club's fonts and colours, and applies nothing at all to SureCart's own buttons, forms and panels. The scroll animation used on Clubhouse pages is deliberately left off here, so nothing of SureCart's is ever hidden waiting to animate in.
+- Pages that carry no clue they belong to another plugin — SureCart's checkout, for one — can be brought in with the `blueworx_clubhouse_dress_external_page` filter.
+
 ## 0.43.0
 
 - **The booking calendar has moved to the Calendar page.** LatePoint's availability calendar now sits on Calendar, above the fixtures and results — a member looking at that page is working out when to play, and booking is what follows. Book a court keeps the three lists that tell you what you are booking: sessions and services, courts and locations, coaches and staff. Both the new section and its editable shortcode appear under Club content → Calendar → Book a court, and it has its own switch under Site setup → Visibility.
