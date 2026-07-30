@@ -1,0 +1,123 @@
+<?php
+declare(strict_types=1);
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
+/**
+ * Every place inside this site an owner can point a link, as a flat list of
+ * target tags. One catalogue serves both the menu editor and the URL fields in
+ * Club Content, so the two can never offer different destinations.
+ *
+ * A target is a tagged string rather than a URL, because a URL cannot say what
+ * it meant: a stored '/about' does not know it was "the About page" and so
+ * cannot follow a rename or disappear with the page. The tags are:
+ *
+ *   page:<key>              a plugin page          → /about
+ *   anchor:<page>.<section> a section of a page    → /about#ch-about-history
+ *   filter:<page>:<slug>    a filtered list view   → /sports?clubhouse_filter=netball
+ *   url:<href>              anything else          → itself
+ *
+ * @package BlueworxLabsClubhouse
+ */
+final class Blueworx_Clubhouse_Link_Catalogue {
+
+	/**
+	 * The id a section's markup carries and an anchor target points at. Section
+	 * keys are snake_case in the catalogue ('quick_tiles') and hyphenated in
+	 * markup, so this is the one place the two spellings meet.
+	 */
+	public static function anchor_id( string $page, string $section ): string {
+		return 'ch-' . str_replace( '_', '-', $page ) . '-' . str_replace( '_', '-', $section );
+	}
+
+	/**
+	 * Everything linkable, in group order. Collections are passed in rather than
+	 * constructed so the preview and the tests can offer fixture content.
+	 *
+	 * @return array<int,array{target:string,label:string,group:string,url:string}>
+	 */
+	public static function targets( Blueworx_Clubhouse_Collections $collections ): array {
+		return array_merge( self::pages(), self::anchors() );
+	}
+
+	/** @return array<int,array{target:string,label:string,group:string,url:string}> */
+	private static function pages(): array {
+		$out = array();
+		foreach ( Blueworx_Clubhouse_Page_Map::available() as $page ) {
+			$key   = '' === $page['slug'] ? 'home' : $page['slug'];
+			$out[] = array(
+				'target' => 'page:' . $key,
+				'label'  => (string) $page['label'],
+				'group'  => 'Pages',
+				'url'    => Blueworx_Clubhouse_Links::url( $key ),
+			);
+		}
+		return $out;
+	}
+
+	/**
+	 * One target per editable section, labelled "Page → Section" so a long list
+	 * stays scannable. Sections of a page the site cannot serve are skipped —
+	 * the catalogue's tabs and Page_Map's slugs share their spelling except for
+	 * Home, whose slug is ''.
+	 *
+	 * @return array<int,array{target:string,label:string,group:string,url:string}>
+	 */
+	private static function anchors(): array {
+		$out = array();
+		foreach ( Blueworx_Clubhouse_Content_Catalogue::pages() as $page ) {
+			$tab  = (string) $page['tab'];
+			$slug = 'home' === $tab ? '' : $tab;
+			if ( 'global' === $tab || ! Blueworx_Clubhouse_Page_Map::is_available( $slug ) ) {
+				continue;
+			}
+			foreach ( $page['sections'] as $section ) {
+				$key   = (string) $section['key'];
+				$out[] = array(
+					'target' => 'anchor:' . $tab . '.' . $key,
+					'label'  => (string) $page['label'] . ' → ' . (string) $section['label'],
+					'group'  => 'Sections',
+					'url'    => Blueworx_Clubhouse_Links::url( $tab ) . '#' . self::anchor_id( $tab, $key ),
+				);
+			}
+		}
+		return $out;
+	}
+
+	/**
+	 * A target tag's href, or '' when it no longer names anything this site can
+	 * serve. Callers treat '' as "drop this link" — a link that goes nowhere is
+	 * worse than one that is not shown.
+	 */
+	public static function resolve( string $target, Blueworx_Clubhouse_Collections $collections ): string {
+		if ( 0 === strpos( $target, 'url:' ) ) {
+			return self::safe_url( substr( $target, 4 ) );
+		}
+		foreach ( self::targets( $collections ) as $entry ) {
+			if ( $entry['target'] === $target ) {
+				return $entry['url'];
+			}
+		}
+		return '';
+	}
+
+	/**
+	 * Reject every scheme but http, https, mailto, tel and site-relative — a
+	 * stored 'javascript:' must never reach an href, however it got in.
+	 */
+	private static function safe_url( string $url ): string {
+		$url = trim( $url );
+		if ( '' === $url ) {
+			return '';
+		}
+		if ( '/' === $url[0] || '#' === $url[0] || '?' === $url[0] ) {
+			return $url;
+		}
+		if ( (bool) preg_match( '#^(https?://|mailto:|tel:)#i', $url ) ) {
+			return $url;
+		}
+		return '';
+	}
+}

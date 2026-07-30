@@ -125,8 +125,10 @@ final class Blueworx_Clubhouse_Page_Renderer {
 		return array_values( array_filter( array_map( 'trim', explode( "\n", (string) $val ) ), static fn( string $l ): bool => '' !== $l ) );
 	}
 
-	/** Lowercase slug of a label: non-alphanumeric runs collapse to '-'. */
-	private static function slugify( string $s ): string {
+	/** Lowercase, hyphenated slug — the one place a label becomes a filter slug.
+	 * Public because Link_Catalogue builds filter targets from the same labels
+	 * the pill rows do; two implementations would drift. */
+	public static function slugify( string $s ): string {
 		$s = strtolower( trim( $s ) );
 		return trim( (string) preg_replace( '/[^a-z0-9]+/', '-', $s ), '-' );
 	}
