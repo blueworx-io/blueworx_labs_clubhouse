@@ -360,6 +360,31 @@ final class Blueworx_Clubhouse_Page_Renderer {
 		return $out;
 	}
 
+	/**
+	 * Stamp a section's root element with the id its anchor target points at.
+	 *
+	 * The id goes on the section's own root rather than a wrapper: the looks
+	 * give .ch-main's children flow margins and reveal.js hides them until they
+	 * scroll in, so an extra element in that child list would take styling meant
+	 * for a section and shift the page. An already-identified root is left alone.
+	 */
+	public static function anchored( string $page, string $section, string $html ): string {
+		if ( '' === $html || '<' !== $html[0] ) {
+			return $html;
+		}
+		$id = Blueworx_Clubhouse_Link_Catalogue::anchor_id( $page, $section );
+		// Match the opening tag's name only; a root that already carries an id
+		// keeps it, because something else is relying on that one.
+		if ( ! (bool) preg_match( '/^<([a-z][a-z0-9]*)(\s[^>]*)?>/i', $html, $m ) ) {
+			return $html;
+		}
+		if ( isset( $m[2] ) && (bool) preg_match( '/\sid\s*=/i', $m[2] ) ) {
+			return $html;
+		}
+		$rest = $m[2] ?? '';
+		return '<' . $m[1] . ' id="' . $id . '"' . $rest . '>' . substr( $html, strlen( $m[0] ) );
+	}
+
 	public static function home(
 		Blueworx_Clubhouse_Branding $branding,
 		Blueworx_Clubhouse_Visibility $visibility,
@@ -377,7 +402,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 		if ( $visibility->is_section_visible( 'home', 'hero' ) ) {
 			// Home uses the full-bleed home_hero() (not the shared hero()); the
 			// quick-links live in its foot, so no separate quick_tiles section here.
-			$out .= Blueworx_Clubhouse_Sections::home_hero( array(
+			$out .= self::anchored( 'home', 'hero', Blueworx_Clubhouse_Sections::home_hero( array(
 				'eyebrow'            => self::cget( $content, 'home', 'hero', 'eyebrow', 'Est. 1974 · Marlow, UK' ),
 				'title_lead'         => self::cget( $content, 'home', 'hero', 'title_lead', 'Every sport. Every age. ' ),
 				'title_highlight'    => self::cget( $content, 'home', 'hero', 'title_highlight', 'One community.' ),
@@ -397,7 +422,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 					array( 'label' => 'See fixtures', 'href' => Blueworx_Clubhouse_Links::url( 'calendar' ), 'icon' => 'fixtures' ),
 					array( 'label' => 'Get in touch', 'href' => Blueworx_Clubhouse_Links::url( 'contact' ), 'icon' => 'contact' ),
 				) ),
-			) );
+			) ) );
 		}
 		if ( $visibility->is_section_visible( 'home', 'ticker' ) ) {
 			$default = array(
@@ -407,17 +432,17 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				array( 'text' => 'Summer Football Camp · 4–8 Aug' ),
 			);
 			$items = self::citems( $content, 'home', 'ticker', $default );
-			$out  .= Blueworx_Clubhouse_Sections::ticker( array_values( array_map(
+			$out  .= self::anchored( 'home', 'ticker', Blueworx_Clubhouse_Sections::ticker( array_values( array_map(
 				static fn( array $i ): string => (string) ( $i['text'] ?? '' ),
 				$items
-			) ) );
+			) ) ) );
 		}
 		if ( $visibility->is_section_visible( 'home', 'sports' ) ) {
 			// One section, two collections: the reader switches between the club's
 			// sports and its teams rather than the page picking one for them. Each
 			// group keeps its own "see them all" link, and a group with nothing in it
 			// drops out (see Sections::card_grid_switch).
-			$out .= Blueworx_Clubhouse_Sections::card_grid_switch( array(
+			$out .= self::anchored( 'home', 'sports', Blueworx_Clubhouse_Sections::card_grid_switch( array(
 				'eyebrow' => self::cget( $content, 'home', 'sports', 'eyebrow', 'Our sports' ),
 				'heading' => self::cget( $content, 'home', 'sports', 'heading', 'Pick your game.' ),
 				'groups'  => array(
@@ -456,25 +481,25 @@ final class Blueworx_Clubhouse_Page_Renderer {
 						),
 					),
 				),
-			) );
+			) ) );
 		}
 		if ( $visibility->is_section_visible( 'home', 'clubhouse' ) ) {
-			$out .= Blueworx_Clubhouse_Sections::image_band( array(
+			$out .= self::anchored( 'home', 'clubhouse', Blueworx_Clubhouse_Sections::image_band( array(
 				'eyebrow'   => self::cget( $content, 'home', 'clubhouse', 'eyebrow', 'The clubhouse' ),
 				'heading'   => self::cget( $content, 'home', 'clubhouse', 'heading', "Bar, kitchen and a full social calendar — the club doesn\u{2019}t stop at the final whistle" ),
 				'image'     => self::media_src( (string) self::cget( $content, 'home', 'clubhouse', 'image', '' ) ), 'image_alt' => 'ClubHouse pavilion at dusk',
 				'cta_label' => self::cget( $content, 'home', 'clubhouse', 'cta_label', 'Visit us' ), 'cta_href' => self::cget( $content, 'home', 'clubhouse', 'cta_href', Blueworx_Clubhouse_Links::url( 'contact' ) ),
-			) );
+			) ) );
 		}
 		if ( $visibility->is_section_visible( 'home', 'membership' ) ) {
-			$out .= Blueworx_Clubhouse_Sections::band( array(
+			$out .= self::anchored( 'home', 'membership', Blueworx_Clubhouse_Sections::band( array(
 				'variant'   => 'accent',
 				'eyebrow'   => self::cget( $content, 'home', 'membership', 'eyebrow', 'Membership' ),
 				'heading'   => self::cget( $content, 'home', 'membership', 'heading', 'Open to everyone, from £28/month.' ),
 				'lede'      => self::cget( $content, 'home', 'membership', 'lede', 'From first-timers to county players — every tier includes clubhouse access, discounted events and a free trial session.' ),
 				'cta_label' => self::cget( $content, 'home', 'membership', 'cta_label', Blueworx_Clubhouse_Cta::JOIN . ' →' ),
 				'cta_href'  => self::cget( $content, 'home', 'membership', 'cta_href', Blueworx_Clubhouse_Links::url( 'membership' ) ),
-			) );
+			) ) );
 			// The Home tier grid mirrors the single Membership tiers source, then
 			// funnels each CTA to the fuller Membership page (where conversion → contact
 			// happens). Editing the Membership tiers updates both pages.
@@ -489,7 +514,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 			$out .= Blueworx_Clubhouse_Sections::tier_grid( $home_tiers );
 		}
 		if ( $visibility->is_section_visible( 'home', 'activity' ) ) {
-			$out .= Blueworx_Clubhouse_Sections::activity_tabs( array(
+			$out .= self::anchored( 'home', 'activity', Blueworx_Clubhouse_Sections::activity_tabs( array(
 				'eyebrow'  => 'Club activity',
 				'heading'  => "What\u{2019}s happening",
 				'fixtures' => Blueworx_Clubhouse_Fixture_Projection::home_fixtures( $collections->fixtures() ),
@@ -499,7 +524,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 					},
 					array_slice( array_values( array_filter( $collections->events(), static fn( $e ) => 'upcoming' === $e['status'] ) ), 0, 3 )
 				),
-			) );
+			) ) );
 		}
 		if ( $visibility->is_section_visible( 'home', 'news' ) ) {
 			$default = array(
@@ -508,7 +533,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				array( 'image' => '', 'image_alt' => 'Volunteers', 'tag' => 'Volunteering', 'date' => '24 Jun', 'title' => 'Volunteers needed for the Open Day' ),
 			);
 			$items = self::citems( $content, 'home', 'news', $default );
-			$out .= Blueworx_Clubhouse_Sections::news_cards( array(
+			$out .= self::anchored( 'home', 'news', Blueworx_Clubhouse_Sections::news_cards( array(
 				'eyebrow' => self::cget( $content, 'home', 'news', 'eyebrow', 'Latest news' ),
 				'heading' => self::cget( $content, 'home', 'news', 'heading', 'From the clubhouse' ),
 				'cards'   => array_map(
@@ -523,14 +548,14 @@ final class Blueworx_Clubhouse_Page_Renderer {
 					},
 					$items
 				),
-			) );
+			) ) );
 		}
 		if ( $visibility->is_section_visible( 'home', 'sponsors' ) ) {
-			$out .= Blueworx_Clubhouse_Sections::sponsors( array(
+			$out .= self::anchored( 'home', 'sponsors', Blueworx_Clubhouse_Sections::sponsors( array(
 				'eyebrow' => 'Our partners', 'heading' => 'Our sponsors & partners', 'link_label' => 'Become a sponsor',
 				'link_href' => Blueworx_Clubhouse_Links::url( 'contact' ),
 				'names'   => array_map( static fn( array $s ): string => $s['name'], $collections->sponsors() ),
-			) );
+			) ) );
 		}
 		// Socials and the find-us details close the page as ONE light band flush
 		// against the footer: address, hours and the map link belong at the foot,
@@ -557,7 +582,9 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				},
 				$items
 			);
-			$out .= Blueworx_Clubhouse_Sections::closing_band( array(
+			// One shared root serves both toggles; the anchor goes on 'social' — 'info'
+			// has no root of its own to carry a second id (see Link_Catalogue::anchors()).
+			$out .= self::anchored( 'home', 'social', Blueworx_Clubhouse_Sections::closing_band( array(
 				'heading'       => $social_on ? self::cget( $content, 'home', 'social', 'heading', 'Follow the club' ) : '',
 				'lede'          => $social_on ? self::cget( $content, 'home', 'social', 'lede', 'Match-day photos, results and behind-the-scenes — join us on socials.' ) : '',
 				'facebook_url'  => $social_on ? $branding->get_facebook_url() : '',
@@ -565,7 +592,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'linkedin_url'  => $social_on ? $branding->get_linkedin_url() : '',
 				'x_url'         => $social_on ? $branding->get_x_url() : '',
 				'columns'       => $columns,
-			) );
+			) ) );
 		}
 		$out .= '</main>';
 		if ( $visibility->is_section_visible( 'home', 'footer' ) ) {
@@ -585,7 +612,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 		$out  = self::shell_header( $club, Blueworx_Clubhouse_Links::url( 'about' ), $visibility, $logo_url, $content ) . '<main class="ch-main" id="ch-main" tabindex="-1">';
 
 		if ( $visibility->is_section_visible( 'about', 'hero' ) ) {
-			$out .= Blueworx_Clubhouse_Sections::hero( array(
+			$out .= self::anchored( 'about', 'hero', Blueworx_Clubhouse_Sections::hero( array(
 				'eyebrow'            => self::cget( $content, 'about', 'hero', 'eyebrow', 'About the club' ),
 				'title_lead'         => self::cget( $content, 'about', 'hero', 'title_lead', 'Fifty-two years of ' ),
 				'title_highlight'    => self::cget( $content, 'about', 'hero', 'title_highlight', 'community sport.' ),
@@ -597,10 +624,10 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'image'              => self::media_src( (string) self::cget( $content, 'about', 'hero', 'image', '' ) ),
 				'image_alt'          => 'ClubHouse members on the terrace',
 				'image_caption'      => '',
-			) );
+			) ) );
 		}
 		if ( $visibility->is_section_visible( 'about', 'history' ) ) {
-			$out .= Blueworx_Clubhouse_Sections::timeline( array(
+			$out .= self::anchored( 'about', 'history', Blueworx_Clubhouse_Sections::timeline( array(
 				'eyebrow'    => 'Our story',
 				'heading'    => self::cget( $content, 'about', 'history', 'heading', 'From one pitch to nine sports' ),
 				'milestones' => array_map(
@@ -620,10 +647,10 @@ final class Blueworx_Clubhouse_Page_Renderer {
 						array( 'year' => '2024', 'title' => 'A modern home', 'desc' => 'A full clubhouse refurbishment for the next generation.' ),
 					) )
 				),
-			) );
+			) ) );
 		}
 		if ( $visibility->is_section_visible( 'about', 'values' ) ) {
-			$out .= Blueworx_Clubhouse_Sections::benefit_grid( array(
+			$out .= self::anchored( 'about', 'values', Blueworx_Clubhouse_Sections::benefit_grid( array(
 				'eyebrow' => 'What we stand for',
 				'heading' => 'Our values',
 				'cards'   => self::citems( $content, 'about', 'values', array(
@@ -632,20 +659,20 @@ final class Blueworx_Clubhouse_Page_Renderer {
 					array( 'title' => 'Community first', 'description' => 'The clubhouse is a place to belong, on and off the pitch.' ),
 					array( 'title' => 'Play for life', 'description' => 'Pathways from minis to vets — a home for the whole journey.' ),
 				) ),
-			) );
+			) ) );
 		}
 		// Facilities — the tangible "what we've got" — moves up above the committee,
 		// so it lands right after the club's values.
 		if ( $visibility->is_section_visible( 'about', 'facilities' ) ) {
-			$out .= Blueworx_Clubhouse_Sections::image_band( array(
+			$out .= self::anchored( 'about', 'facilities', Blueworx_Clubhouse_Sections::image_band( array(
 				'eyebrow'   => self::cget( $content, 'about', 'facilities', 'eyebrow', 'The facilities' ),
 				'heading'   => self::cget( $content, 'about', 'facilities', 'heading', 'Five pitches, four courts, one clubhouse' ),
 				'image'     => self::media_src( (string) self::cget( $content, 'about', 'facilities', 'image', '' ) ), 'image_alt' => 'ClubHouse grounds from the air',
 				'cta_label' => self::cget( $content, 'about', 'facilities', 'cta_label', 'Book a visit' ), 'cta_href' => self::cget( $content, 'about', 'facilities', 'cta_href', Blueworx_Clubhouse_Links::url( 'contact' ) ),
-			) );
+			) ) );
 		}
 		if ( $visibility->is_section_visible( 'about', 'committee' ) ) {
-			$out .= Blueworx_Clubhouse_Sections::people_grid( array(
+			$out .= self::anchored( 'about', 'committee', Blueworx_Clubhouse_Sections::people_grid( array(
 				'eyebrow' => 'Who runs the club',
 				'heading' => 'The committee',
 				'people'  => array_map(
@@ -654,12 +681,12 @@ final class Blueworx_Clubhouse_Page_Renderer {
 					},
 					array_values( array_filter( $collections->people(), static fn( $p ) => '' !== $p['committee_role'] ) )
 				),
-			) );
+			) ) );
 		}
 		// "Get involved" — non-playing ways to support the club, distinct from the
 		// membership Join CTA that closes the page.
 		if ( $visibility->is_section_visible( 'about', 'get_involved' ) ) {
-			$out .= Blueworx_Clubhouse_Sections::benefit_grid( array(
+			$out .= self::anchored( 'about', 'get_involved', Blueworx_Clubhouse_Sections::benefit_grid( array(
 				'eyebrow' => self::cget( $content, 'about', 'get_involved', 'eyebrow', 'Beyond the pitch' ),
 				'heading' => self::cget( $content, 'about', 'get_involved', 'heading', 'Get involved' ),
 				'cards'   => self::citems( $content, 'about', 'get_involved', array(
@@ -667,17 +694,17 @@ final class Blueworx_Clubhouse_Page_Renderer {
 					array( 'title' => 'Coach & officiate', 'description' => 'Gain qualifications and give the next generation their start.' ),
 					array( 'title' => 'Sponsor & partner', 'description' => 'Back a team or the clubhouse and reach the whole community.' ),
 				) ),
-			) );
+			) ) );
 		}
 		if ( $visibility->is_section_visible( 'about', 'cta' ) ) {
-			$out .= Blueworx_Clubhouse_Sections::band( array(
+			$out .= self::anchored( 'about', 'cta', Blueworx_Clubhouse_Sections::band( array(
 				'variant'   => 'ink',
 				'eyebrow'   => 'Membership',
 				'heading'   => self::cget( $content, 'about', 'cta', 'heading', 'Want to be part of it?' ),
 				'lede'      => self::cget( $content, 'about', 'cta', 'lede', 'Play, volunteer, or just come for the atmosphere.' ),
 				'cta_label' => self::cget( $content, 'about', 'cta', 'cta_label', Blueworx_Clubhouse_Cta::JOIN . ' →' ),
 				'cta_href'  => self::cget( $content, 'about', 'cta', 'cta_href', Blueworx_Clubhouse_Links::url( 'membership' ) ),
-			) );
+			) ) );
 		}
 		$out .= '</main>' . self::shell_footer( $club, $visibility, $branding, $content );
 		return $out;
@@ -694,7 +721,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 		$out  = self::shell_header( $club, Blueworx_Clubhouse_Links::url( 'membership' ), $visibility, $logo_url, $content ) . '<main class="ch-main" id="ch-main" tabindex="-1">';
 
 		if ( $visibility->is_section_visible( 'membership', 'hero' ) ) {
-			$out .= Blueworx_Clubhouse_Sections::hero( array(
+			$out .= self::anchored( 'membership', 'hero', Blueworx_Clubhouse_Sections::hero( array(
 				'eyebrow'            => self::cget( $content, 'membership', 'hero', 'eyebrow', 'Membership' ),
 				'title_lead'         => self::cget( $content, 'membership', 'hero', 'title_lead', 'Join in five minutes. ' ),
 				'title_highlight'    => self::cget( $content, 'membership', 'hero', 'title_highlight', 'Play for years.' ),
@@ -706,15 +733,15 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'image'              => self::media_src( (string) self::cget( $content, 'membership', 'hero', 'image', '' ) ),
 				'image_alt'          => 'ClubHouse members warming up',
 				'image_caption'      => '',
-			) );
+			) ) );
 		}
 		// Tiers sit above the fold — the pricing is the primary intent, so it comes
 		// straight after the hero, before the supporting "Why join" benefits.
 		if ( $visibility->is_section_visible( 'membership', 'tiers' ) ) {
-			$out .= Blueworx_Clubhouse_Sections::tier_grid( self::membership_tiers( $content ) );
+			$out .= self::anchored( 'membership', 'tiers', Blueworx_Clubhouse_Sections::tier_grid( self::membership_tiers( $content ) ) );
 		}
 		if ( $visibility->is_section_visible( 'membership', 'why' ) ) {
-			$out .= Blueworx_Clubhouse_Sections::benefit_grid( array(
+			$out .= self::anchored( 'membership', 'why', Blueworx_Clubhouse_Sections::benefit_grid( array(
 				'eyebrow' => self::cget( $content, 'membership', 'why', 'eyebrow', 'Why join' ),
 				'heading' => self::cget( $content, 'membership', 'why', 'heading', 'More than a membership' ),
 				'cards'   => self::citems( $content, 'membership', 'why', array(
@@ -723,7 +750,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 					array( 'title' => 'Clubhouse & socials', 'description' => 'The bar, the terrace, and a calendar of member events.' ),
 					array( 'title' => 'Kit discounts', 'description' => 'Save on team kit at our partner suppliers.' ),
 				) ),
-			) );
+			) ) );
 		}
 		if ( $visibility->is_section_visible( 'membership', 'detail' ) ) {
 			$default = array_merge(
@@ -737,7 +764,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				)
 			);
 			$items = self::citems( $content, 'membership', 'detail', $default );
-			$out .= Blueworx_Clubhouse_Sections::list_split( array(
+			$out .= self::anchored( 'membership', 'detail', Blueworx_Clubhouse_Sections::list_split( array(
 				'eyebrow'            => 'The detail',
 				'heading'            => 'What is included',
 				'included_label'     => 'Included',
@@ -756,7 +783,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 					array( 'title' => 'Juniors', 'desc' => 'Under-18s pay a reduced rate; safeguarding applies to all youth sections.' ),
 					array( 'title' => 'Family cap', 'desc' => 'Family membership covers up to five people at one address.' ),
 				),
-			) );
+			) ) );
 		}
 		if ( $visibility->is_section_visible( 'membership', 'steps' ) ) {
 			$default = array(
@@ -766,7 +793,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				array( 'number' => '04', 'title' => 'Come and play', 'description' => 'We will match you to a coach and a session.' ),
 			);
 			$items = array_values( self::citems( $content, 'membership', 'steps', $default ) );
-			$out .= Blueworx_Clubhouse_Sections::step_grid( array(
+			$out .= self::anchored( 'membership', 'steps', Blueworx_Clubhouse_Sections::step_grid( array(
 				'eyebrow' => 'How to join',
 				'heading' => 'Four steps to playing',
 				'steps'   => array_map(
@@ -780,7 +807,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 					$items,
 					array_keys( $items )
 				),
-			) );
+			) ) );
 		}
 		if ( $visibility->is_section_visible( 'membership', 'faq' ) ) {
 			$default = array(
@@ -791,7 +818,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				array( 'question' => 'How do I pay?', 'answer' => 'Payment details are arranged once your interest is confirmed.', 'open' => false ),
 			);
 			$items = self::citems( $content, 'membership', 'faq', $default );
-			$out .= Blueworx_Clubhouse_Sections::faq( array(
+			$out .= self::anchored( 'membership', 'faq', Blueworx_Clubhouse_Sections::faq( array(
 				'eyebrow' => 'Questions',
 				'heading' => 'Frequently asked',
 				'items'   => array_map(
@@ -804,17 +831,17 @@ final class Blueworx_Clubhouse_Page_Renderer {
 					},
 					$items
 				),
-			) );
+			) ) );
 		}
 		if ( $visibility->is_section_visible( 'membership', 'cta' ) ) {
-			$out .= Blueworx_Clubhouse_Sections::band( array(
+			$out .= self::anchored( 'membership', 'cta', Blueworx_Clubhouse_Sections::band( array(
 				'variant'   => 'ink',
 				'eyebrow'   => 'Ready?',
 				'heading'   => self::cget( $content, 'membership', 'cta', 'heading', 'Register your interest' ),
 				'lede'      => self::cget( $content, 'membership', 'cta', 'lede', 'Tell us a little about you and we will be in touch within a few days.' ),
 				'cta_label' => self::cget( $content, 'membership', 'cta', 'cta_label', 'Register interest →' ),
 				'cta_href'  => self::cget( $content, 'membership', 'cta', 'cta_href', Blueworx_Clubhouse_Links::url( 'contact' ) ),
-			) );
+			) ) );
 		}
 		$out .= '</main>' . self::shell_footer( $club, $visibility, $branding, $content );
 		return $out;
@@ -831,7 +858,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 		$out  = self::shell_header( $club, Blueworx_Clubhouse_Links::url( 'contact' ), $visibility, $logo_url, $content ) . '<main class="ch-main" id="ch-main" tabindex="-1">';
 
 		if ( $visibility->is_section_visible( 'contact', 'hero' ) ) {
-			$out .= Blueworx_Clubhouse_Sections::hero( array(
+			$out .= self::anchored( 'contact', 'hero', Blueworx_Clubhouse_Sections::hero( array(
 				'eyebrow'            => self::cget( $content, 'contact', 'hero', 'eyebrow', 'Contact' ),
 				'title_lead'         => self::cget( $content, 'contact', 'hero', 'title_lead', 'We will point you to ' ),
 				'title_highlight'    => self::cget( $content, 'contact', 'hero', 'title_highlight', 'the right person.' ),
@@ -841,10 +868,10 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'cta_secondary'      => self::cget( $content, 'contact', 'hero', 'cta_secondary', 'Call 01628 000 000' ),
 				'cta_secondary_href' => self::cget( $content, 'contact', 'hero', 'cta_secondary_href', 'tel:01628000000' ),
 				'image'              => self::media_src( (string) self::cget( $content, 'contact', 'hero', 'image', '' ) ), 'image_alt' => '', 'image_caption' => '',
-			) );
+			) ) );
 		}
 		if ( $visibility->is_section_visible( 'contact', 'form' ) ) {
-			$out .= Blueworx_Clubhouse_Sections::contact_form( array(
+			$out .= self::anchored( 'contact', 'form', Blueworx_Clubhouse_Sections::contact_form( array(
 				'eyebrow'         => self::cget( $content, 'contact', 'form', 'eyebrow', 'Get in touch' ),
 				'heading'         => self::cget( $content, 'contact', 'form', 'heading', 'Send us a message' ),
 				'club_name'       => $branding->get_club_name(),
@@ -867,10 +894,10 @@ final class Blueworx_Clubhouse_Page_Renderer {
 						'X'         => $branding->get_x_url(),
 					),
 				),
-			) );
+			) ) );
 		}
 		if ( $visibility->is_section_visible( 'contact', 'directory' ) ) {
-			$out .= Blueworx_Clubhouse_Sections::people_grid( array(
+			$out .= self::anchored( 'contact', 'directory', Blueworx_Clubhouse_Sections::people_grid( array(
 				'eyebrow' => 'Who to contact',
 				'heading' => 'The directory',
 				'people'  => array_map(
@@ -879,10 +906,10 @@ final class Blueworx_Clubhouse_Page_Renderer {
 					},
 					array_values( array_filter( $collections->people(), static fn( $p ) => '' !== $p['directory_role'] ) )
 				),
-			) );
+			) ) );
 		}
 		if ( $visibility->is_section_visible( 'contact', 'social' ) ) {
-			$out .= Blueworx_Clubhouse_Sections::closing_band( array(
+			$out .= self::anchored( 'contact', 'social', Blueworx_Clubhouse_Sections::closing_band( array(
 				'heading'       => self::cget( $content, 'contact', 'social', 'heading', 'Stay connected' ),
 				'lede'          => 'Follow the club for match-day updates, results and event announcements.',
 				'facebook_url'  => $branding->get_facebook_url(),
@@ -890,7 +917,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'linkedin_url'  => $branding->get_linkedin_url(),
 				'x_url'         => $branding->get_x_url(),
 				'columns'       => array(),
-			) );
+			) ) );
 		}
 		$out .= '</main>' . self::shell_footer( $club, $visibility, $branding, $content );
 		return $out;
@@ -907,7 +934,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 		$out  = self::shell_header( $club, Blueworx_Clubhouse_Links::url( 'login' ), $visibility, $logo_url, $content ) . '<main class="ch-main" id="ch-main" tabindex="-1">';
 
 		if ( $visibility->is_section_visible( 'login', 'form' ) ) {
-			$out .= Blueworx_Clubhouse_Sections::auth( array(
+			$out .= self::anchored( 'login', 'form', Blueworx_Clubhouse_Sections::auth( array(
 				'eyebrow'        => 'Members',
 				'heading'        => self::cget( $content, 'login', 'form', 'heading', 'Log in to your account' ),
 				'lede'           => self::cget( $content, 'login', 'form', 'lede', 'Access your membership, bookings and club events.' ),
@@ -920,7 +947,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'join_prompt'    => 'Not a member yet?',
 				'join_label'     => Blueworx_Clubhouse_Cta::JOIN,
 				'join_href'      => Blueworx_Clubhouse_Links::url( 'membership' ),
-			) );
+			) ) );
 		}
 		$out .= '</main>' . self::shell_footer( $club, $visibility, $branding, $content );
 		return $out;
@@ -942,17 +969,17 @@ final class Blueworx_Clubhouse_Page_Renderer {
 		$filter = self::valid_filter( $filter, $labels );
 
 		if ( $visibility->is_section_visible( 'sports', 'hero' ) ) {
-			$out .= Blueworx_Clubhouse_Sections::hero_filter( array(
+			$out .= self::anchored( 'sports', 'hero', Blueworx_Clubhouse_Sections::hero_filter( array(
 				'eyebrow'         => self::cget( $content, 'sports', 'hero', 'eyebrow', 'Our sports' ),
 				'title_lead'      => self::cget( $content, 'sports', 'hero', 'title_lead', 'Nine sports, ' ),
 				'title_highlight' => self::cget( $content, 'sports', 'hero', 'title_highlight', 'one club.' ),
 				'lede'            => self::cget( $content, 'sports', 'hero', 'lede', 'From first session to first team — find your section and get playing.' ),
 				'filter_label'    => 'Filter by sport',
 				'filters'         => self::filter_pills( 'sports', $labels, $filter ),
-			) );
+			) ) );
 		}
 		if ( $visibility->is_section_visible( 'sports', 'directory' ) ) {
-			$out .= Blueworx_Clubhouse_Sections::stat_card_grid( array(
+			$out .= self::anchored( 'sports', 'directory', Blueworx_Clubhouse_Sections::stat_card_grid( array(
 				'eyebrow'    => 'All sections',
 				'heading'    => 'Pick your sport.',
 				'empty_text' => '' !== $filter ? 'No sections match that filter.' : '',
@@ -974,17 +1001,17 @@ final class Blueworx_Clubhouse_Page_Renderer {
 					},
 					self::filter_rows( $sports, $filter, $pick )
 				),
-			) );
+			) ) );
 		}
 		if ( $visibility->is_section_visible( 'sports', 'cta' ) ) {
-			$out .= Blueworx_Clubhouse_Sections::band( array(
+			$out .= self::anchored( 'sports', 'cta', Blueworx_Clubhouse_Sections::band( array(
 				'variant'   => 'ink',
 				'eyebrow'   => 'New to the club?',
 				'heading'   => self::cget( $content, 'sports', 'cta', 'heading', 'Try any sport with a free session' ),
 				'lede'      => self::cget( $content, 'sports', 'cta', 'lede', 'Not sure which section fits? Come down and try before you join.' ),
 				'cta_label' => self::cget( $content, 'sports', 'cta', 'cta_label', 'Register interest →' ),
 				'cta_href'  => self::cget( $content, 'sports', 'cta', 'cta_href', Blueworx_Clubhouse_Links::url( 'contact' ) ),
-			) );
+			) ) );
 		}
 		$out .= '</main>' . self::shell_footer( $club, $visibility, $branding, $content );
 		return $out;
@@ -1006,17 +1033,17 @@ final class Blueworx_Clubhouse_Page_Renderer {
 		$filter = self::valid_filter( $filter, $labels );
 
 		if ( $visibility->is_section_visible( 'teams', 'hero' ) ) {
-			$out .= Blueworx_Clubhouse_Sections::hero_filter( array(
+			$out .= self::anchored( 'teams', 'hero', Blueworx_Clubhouse_Sections::hero_filter( array(
 				'eyebrow'         => self::cget( $content, 'teams', 'hero', 'eyebrow', 'Our teams' ),
 				'title_lead'      => self::cget( $content, 'teams', 'hero', 'title_lead', 'Twenty-four teams, ' ),
 				'title_highlight' => self::cget( $content, 'teams', 'hero', 'title_highlight', 'every level.' ),
 				'lede'            => self::cget( $content, 'teams', 'hero', 'lede', 'League sides, development squads and junior pathways across all nine sports.' ),
 				'filter_label'    => 'Filter teams by sport',
 				'filters'         => self::filter_pills( 'teams', $labels, $filter ),
-			) );
+			) ) );
 		}
 		if ( $visibility->is_section_visible( 'teams', 'directory' ) ) {
-			$out .= Blueworx_Clubhouse_Sections::stat_card_grid( array(
+			$out .= self::anchored( 'teams', 'directory', Blueworx_Clubhouse_Sections::stat_card_grid( array(
 				'eyebrow'    => 'Squads',
 				'heading'    => 'Find your team.',
 				'empty_text' => '' !== $filter ? 'No teams match that filter.' : '',
@@ -1038,17 +1065,17 @@ final class Blueworx_Clubhouse_Page_Renderer {
 					},
 					self::filter_rows( $teams, $filter, $pick )
 				),
-			) );
+			) ) );
 		}
 		if ( $visibility->is_section_visible( 'teams', 'cta' ) ) {
-			$out .= Blueworx_Clubhouse_Sections::band( array(
+			$out .= self::anchored( 'teams', 'cta', Blueworx_Clubhouse_Sections::band( array(
 				'variant'   => 'ink',
 				'eyebrow'   => 'Want to play?',
 				'heading'   => self::cget( $content, 'teams', 'cta', 'heading', 'Trials run all season' ),
 				'lede'      => self::cget( $content, 'teams', 'cta', 'lede', 'Every squad welcomes new players — get in touch and we will match you to a session.' ),
 				'cta_label' => self::cget( $content, 'teams', 'cta', 'cta_label', 'Get in touch →' ),
 				'cta_href'  => self::cget( $content, 'teams', 'cta', 'cta_href', Blueworx_Clubhouse_Links::url( 'contact' ) ),
-			) );
+			) ) );
 		}
 		$out .= '</main>' . self::shell_footer( $club, $visibility, $branding, $content );
 		return $out;
@@ -1073,18 +1100,18 @@ final class Blueworx_Clubhouse_Page_Renderer {
 		$filtered = self::filter_rows( $all, $filter, $pick );
 
 		if ( $visibility->is_section_visible( 'events', 'hero' ) ) {
-			$out .= Blueworx_Clubhouse_Sections::hero_filter( array(
+			$out .= self::anchored( 'events', 'hero', Blueworx_Clubhouse_Sections::hero_filter( array(
 				'eyebrow'         => self::cget( $content, 'events', 'hero', 'eyebrow', "What's on" ),
 				'title_lead'      => self::cget( $content, 'events', 'hero', 'title_lead', 'Socials, camps and ' ),
 				'title_highlight' => self::cget( $content, 'events', 'hero', 'title_highlight', 'open days.' ),
 				'lede'            => self::cget( $content, 'events', 'hero', 'lede', "There's always something happening at the club — on the pitch and off it." ),
 				'filter_label'    => 'Filter events by type',
 				'filters'         => self::filter_pills( 'events', $labels, $filter ),
-			) );
+			) ) );
 		}
 		if ( $visibility->is_section_visible( 'events', 'upcoming' ) ) {
 			$upcoming = array_values( array_filter( $filtered, static fn( $e ) => 'upcoming' === $e['status'] ) );
-			$out .= Blueworx_Clubhouse_Sections::event_grid( array(
+			$out .= self::anchored( 'events', 'upcoming', Blueworx_Clubhouse_Sections::event_grid( array(
 				'eyebrow'    => 'Coming up',
 				'heading'    => 'Upcoming events',
 				'empty_text' => '' !== $filter ? 'No events match that filter.' : '',
@@ -1101,11 +1128,11 @@ final class Blueworx_Clubhouse_Page_Renderer {
 					},
 					$upcoming
 				),
-			) );
+			) ) );
 		}
 		if ( $visibility->is_section_visible( 'events', 'past' ) ) {
 			$past = array_values( array_filter( $filtered, static fn( $e ) => 'past' === $e['status'] ) );
-			$out .= Blueworx_Clubhouse_Sections::event_archive( array(
+			$out .= self::anchored( 'events', 'past', Blueworx_Clubhouse_Sections::event_archive( array(
 				'heading' => 'Recently at the club',
 				'rows'    => array_map(
 					static function ( array $e ): array {
@@ -1113,17 +1140,17 @@ final class Blueworx_Clubhouse_Page_Renderer {
 					},
 					$past
 				),
-			) );
+			) ) );
 		}
 		if ( $visibility->is_section_visible( 'events', 'cta' ) ) {
-			$out .= Blueworx_Clubhouse_Sections::band( array(
+			$out .= self::anchored( 'events', 'cta', Blueworx_Clubhouse_Sections::band( array(
 				'variant'   => 'ink',
 				'eyebrow'   => 'Hosting something?',
 				'heading'   => self::cget( $content, 'events', 'cta', 'heading', 'Hire the clubhouse' ),
 				'lede'      => self::cget( $content, 'events', 'cta', 'lede', 'Function room and bar available for members and the community.' ),
 				'cta_label' => self::cget( $content, 'events', 'cta', 'cta_label', 'Enquire about hire →' ),
 				'cta_href'  => self::cget( $content, 'events', 'cta', 'cta_href', Blueworx_Clubhouse_Links::url( 'contact' ) ),
-			) );
+			) ) );
 		}
 		$out .= '</main>' . self::shell_footer( $club, $visibility, $branding, $content );
 		return $out;
@@ -1147,14 +1174,14 @@ final class Blueworx_Clubhouse_Page_Renderer {
 		$filter   = self::valid_filter( $filter, $labels );
 
 		if ( $visibility->is_section_visible( 'calendar', 'hero' ) ) {
-			$out .= Blueworx_Clubhouse_Sections::hero_filter( array(
+			$out .= self::anchored( 'calendar', 'hero', Blueworx_Clubhouse_Sections::hero_filter( array(
 				'eyebrow'         => self::cget( $content, 'calendar', 'hero', 'eyebrow', 'Fixtures & results' ),
 				'title_lead'      => self::cget( $content, 'calendar', 'hero', 'title_lead', 'Every game, ' ),
 				'title_highlight' => self::cget( $content, 'calendar', 'hero', 'title_highlight', 'all season.' ),
 				'lede'            => self::cget( $content, 'calendar', 'hero', 'lede', 'Match days across all nine sports, with results as they come in.' ),
 				'filter_label'    => 'Filter fixtures by sport',
 				'filters'         => self::filter_pills( 'calendar', $labels, $filter ),
-			) );
+			) ) );
 		}
 		// LatePoint's booking calendar, above the fixtures: a member looking at the
 		// Calendar page is deciding when to play, and booking is the action that
@@ -1162,29 +1189,29 @@ final class Blueworx_Clubhouse_Page_Renderer {
 		// Calendar page itself is served whether or not LatePoint is installed.
 		if ( Blueworx_Clubhouse_Integrations::section_available( 'calendar', 'booking' )
 			&& $visibility->is_section_visible( 'calendar', 'booking' ) ) {
-			$out .= Blueworx_Clubhouse_Sections::shortcode_block( array(
+			$out .= self::anchored( 'calendar', 'booking', Blueworx_Clubhouse_Sections::shortcode_block( array(
 				'eyebrow'   => self::cget( $content, 'calendar', 'booking', 'eyebrow', 'Court bookings' ),
 				'heading'   => self::cget( $content, 'calendar', 'booking', 'heading', 'Book a court' ),
 				'shortcode' => self::cget( $content, 'calendar', 'booking', 'shortcode', '[latepoint_calendar view="month"]' ),
-			) );
+			) ) );
 		}
 		if ( $visibility->is_section_visible( 'calendar', 'schedule' ) ) {
-			$out .= Blueworx_Clubhouse_Sections::calendar_months( array(
+			$out .= self::anchored( 'calendar', 'schedule', Blueworx_Clubhouse_Sections::calendar_months( array(
 				'eyebrow'    => self::cget( $content, 'calendar', 'schedule', 'eyebrow', 'The schedule' ),
 				'heading'    => self::cget( $content, 'calendar', 'schedule', 'heading', 'Fixtures & results' ),
 				'empty_text' => '' !== $filter ? 'No fixtures match that filter.' : '',
 				'months'     => Blueworx_Clubhouse_Fixture_Projection::calendar_months( self::filter_rows( $fixtures, $filter, $pick ) ),
-			) );
+			) ) );
 		}
 		if ( $visibility->is_section_visible( 'calendar', 'cta' ) ) {
-			$out .= Blueworx_Clubhouse_Sections::band( array(
+			$out .= self::anchored( 'calendar', 'cta', Blueworx_Clubhouse_Sections::band( array(
 				'variant'   => 'ink',
 				'eyebrow'   => 'Follow the club',
 				'heading'   => self::cget( $content, 'calendar', 'cta', 'heading', 'Never miss a result' ),
 				'lede'      => self::cget( $content, 'calendar', 'cta', 'lede', 'Fixtures, results and club news — one email a month.' ),
 				'cta_label' => self::cget( $content, 'calendar', 'cta', 'cta_label', 'Join the mailing list →' ),
 				'cta_href'  => self::cget( $content, 'calendar', 'cta', 'cta_href', Blueworx_Clubhouse_Links::url( 'contact' ) ),
-			) );
+			) ) );
 		}
 		$out .= '</main>' . self::shell_footer( $club, $visibility, $branding, $content );
 		return $out;
@@ -1218,7 +1245,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 			. '<main class="ch-main" id="ch-main" tabindex="-1">';
 
 		if ( $visibility->is_section_visible( 'booking', 'hero' ) ) {
-			$out .= Blueworx_Clubhouse_Sections::hero( array(
+			$out .= self::anchored( 'booking', 'hero', Blueworx_Clubhouse_Sections::hero( array(
 				'eyebrow'            => self::cget( $content, 'booking', 'hero', 'eyebrow', 'Court bookings' ),
 				'title_lead'         => self::cget( $content, 'booking', 'hero', 'title_lead', 'Book your ' ),
 				'title_highlight'    => self::cget( $content, 'booking', 'hero', 'title_highlight', 'time on court.' ),
@@ -1230,7 +1257,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'image'              => self::media_src( (string) self::cget( $content, 'booking', 'hero', 'image', '' ) ),
 				'image_alt'          => $club,
 				'image_caption'      => '',
-			) );
+			) ) );
 		}
 		// What, where, who. The "when" — LatePoint's booking calendar — lives on the
 		// Calendar page instead, beside the fixtures, which is where a member
@@ -1256,11 +1283,11 @@ final class Blueworx_Clubhouse_Page_Renderer {
 			if ( ! $visibility->is_section_visible( 'booking', $key ) ) {
 				continue;
 			}
-			$out .= Blueworx_Clubhouse_Sections::shortcode_block( array(
+			$out .= self::anchored( 'booking', $key, Blueworx_Clubhouse_Sections::shortcode_block( array(
 				'eyebrow'   => self::cget( $content, 'booking', $key, 'eyebrow', $slot['eyebrow'] ),
 				'heading'   => self::cget( $content, 'booking', $key, 'heading', $slot['heading'] ),
 				'shortcode' => self::cget( $content, 'booking', $key, 'shortcode', $slot['shortcode'] ),
-			) );
+			) ) );
 		}
 		$out .= '</main>' . self::shell_footer( $club, $visibility, $branding, $content );
 		return $out;

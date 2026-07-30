@@ -58,10 +58,34 @@ final class Blueworx_Clubhouse_Link_Catalogue {
 	}
 
 	/**
+	 * Sections with no root of their own to carry an id, so an anchor here
+	 * would point at nothing:
+	 *  - 'linkout'/'auto' catalogue types only tell the owner where to edit
+	 *    content that lives (and renders) elsewhere — the CPT, or another
+	 *    section's own root — never a markup section in their own right.
+	 *  - home.quick_tiles renders inside home.hero's foot (Page_Renderer::home()),
+	 *    and home.info shares home.social's closing_band() root — neither has a
+	 *    root of its own to stamp a second id onto.
+	 *
+	 * @param array{key:string,type:string} $section
+	 */
+	private static function has_no_anchor( string $tab, array $section ): bool {
+		if ( in_array( (string) $section['type'], array( 'linkout', 'auto' ), true ) ) {
+			return true;
+		}
+		$shared_root = array(
+			'home' => array( 'quick_tiles', 'info' ),
+		);
+		return in_array( (string) $section['key'], $shared_root[ $tab ] ?? array(), true );
+	}
+
+	/**
 	 * One target per editable section, labelled "Page → Section" so a long list
 	 * stays scannable. Sections of a page the site cannot serve are skipped —
 	 * the catalogue's tabs and Page_Map's slugs share their spelling except for
-	 * Home, whose slug is ''.
+	 * Home, whose slug is ''. Sections with no root of their own (see
+	 * has_no_anchor()) are skipped too — the catalogue must never offer an
+	 * anchor the markup does not emit.
 	 *
 	 * @return array<int,array{target:string,label:string,group:string,url:string}>
 	 */
@@ -74,6 +98,9 @@ final class Blueworx_Clubhouse_Link_Catalogue {
 				continue;
 			}
 			foreach ( $page['sections'] as $section ) {
+				if ( self::has_no_anchor( $tab, $section ) ) {
+					continue;
+				}
 				$key   = (string) $section['key'];
 				$out[] = array(
 					'target' => 'anchor:' . $tab . '.' . $key,
