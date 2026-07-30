@@ -45,7 +45,7 @@ final class SetupSectionsTest extends TestCase {
 		$this->withLatePoint();
 		$booking = array_values( array_filter( $this->inventory(), static fn( $p ) => 'booking' === $p['page'] ) )[0];
 		$this->assertSame(
-			array( 'hero', 'services', 'locations', 'agents', 'calendar' ),
+			array( 'hero', 'services', 'locations', 'agents' ),
 			array_map( static fn( $s ) => $s['key'], $booking['sections'] )
 		);
 	}
