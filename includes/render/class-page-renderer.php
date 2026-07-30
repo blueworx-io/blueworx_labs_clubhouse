@@ -1138,6 +1138,18 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'filters'         => self::filter_pills( 'calendar', $labels, $filter ),
 			) );
 		}
+		// LatePoint's booking calendar, above the fixtures: a member looking at the
+		// Calendar page is deciding when to play, and booking is the action that
+		// follows. Gated on the integration as well as the toggle, because the
+		// Calendar page itself is served whether or not LatePoint is installed.
+		if ( Blueworx_Clubhouse_Integrations::section_available( 'calendar', 'booking' )
+			&& $visibility->is_section_visible( 'calendar', 'booking' ) ) {
+			$out .= Blueworx_Clubhouse_Sections::shortcode_block( array(
+				'eyebrow'   => self::cget( $content, 'calendar', 'booking', 'eyebrow', 'Court bookings' ),
+				'heading'   => self::cget( $content, 'calendar', 'booking', 'heading', 'Book a court' ),
+				'shortcode' => self::cget( $content, 'calendar', 'booking', 'shortcode', '[latepoint_calendar view="month"]' ),
+			) );
+		}
 		if ( $visibility->is_section_visible( 'calendar', 'schedule' ) ) {
 			$out .= Blueworx_Clubhouse_Sections::calendar_months( array(
 				'eyebrow'    => self::cget( $content, 'calendar', 'schedule', 'eyebrow', 'The schedule' ),
@@ -1202,9 +1214,9 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'image_caption'      => '',
 			) );
 		}
-		// Ordered as the reader decides: what, where, who, then when. The calendar
-		// sits last because it is the commitment, and the three resource lists are
-		// what tell someone which slot they are looking for.
+		// What, where, who. The "when" — LatePoint's booking calendar — lives on the
+		// Calendar page instead, beside the fixtures, which is where a member
+		// already goes to work out what is happening on court.
 		$slots = array(
 			'services'  => array(
 				'eyebrow'   => 'What you can book',
@@ -1220,11 +1232,6 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'eyebrow'   => 'Who you book with',
 				'heading'   => 'Coaches and staff',
 				'shortcode' => '[latepoint_resources items="agents" columns="3"]',
-			),
-			'calendar'  => array(
-				'eyebrow'   => 'When you can play',
-				'heading'   => 'Availability',
-				'shortcode' => '[latepoint_calendar view="month"]',
 			),
 		);
 		foreach ( $slots as $key => $slot ) {

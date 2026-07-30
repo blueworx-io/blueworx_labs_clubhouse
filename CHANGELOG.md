@@ -5,6 +5,11 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.43.0
+
+- **The booking calendar has moved to the Calendar page.** LatePoint's availability calendar now sits on Calendar, above the fixtures and results — a member looking at that page is working out when to play, and booking is what follows. Book a court keeps the three lists that tell you what you are booking: sessions and services, courts and locations, coaches and staff. Both the new section and its editable shortcode appear under Club content → Calendar → Book a court, and it has its own switch under Site setup → Visibility.
+- Like the Book a court page, the new Calendar section vanishes completely without LatePoint — no section on the page, no toggle, no content fields. The Calendar page itself is unaffected: it has fixtures to show either way.
+
 ## 0.42.1
 
 - **Fixed: a new page's web address 404s until permalinks are re-saved.** v0.42.0 added the Book a court page, and `/booking/` returned "Page not found" even though the page itself worked — the plugin told WordPress about the new address, but WordPress keeps a cached list of addresses and only rebuilds it when the plugin is activated. Updating by uploading a new zip over a running plugin does not count as activating it, so the cached list stayed as it was. The plugin now rebuilds that list once by itself after any update that changes its pages, so a new page works as soon as it is uploaded. Nothing to do by hand.

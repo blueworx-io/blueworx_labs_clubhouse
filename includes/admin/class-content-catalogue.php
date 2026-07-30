@@ -278,6 +278,9 @@ final class Blueworx_Clubhouse_Content_Catalogue {
 			) ),
 			array( 'tab' => 'calendar', 'label' => 'Calendar', 'sections' => array(
 				array( 'key' => 'hero', 'label' => 'Hero', 'type' => 'fields', 'store_page' => 'calendar', 'fields' => self::hero_filter_fields() ),
+				array( 'key' => 'booking', 'label' => 'Book a court', 'type' => 'fields', 'store_page' => 'calendar',
+					'note' => 'LatePoint’s booking calendar, above the fixtures. Switch the section off under Site setup → Visibility to drop it.',
+					'fields' => self::booking_slot_fields() ),
 				array( 'key' => 'schedule', 'label' => 'Schedule', 'type' => 'fields', 'store_page' => 'calendar',
 					'fields' => array( self::f_text( 'heading', 'Heading' ), self::f_area( 'eyebrow', 'Intro' ) ),
 					'auto' => array( 'text' => 'Built from each sport’s fixtures and results.', 'cpt' => 'clubhouse_fixture' ) ),
@@ -297,20 +300,30 @@ final class Blueworx_Clubhouse_Content_Catalogue {
 				array( 'key' => 'agents', 'label' => 'Coaches and staff', 'type' => 'fields', 'store_page' => 'booking',
 					'note' => 'Ships with LatePoint’s agents list. Switch the section off under Site setup → Visibility to drop it.',
 					'fields' => self::booking_slot_fields() ),
-				array( 'key' => 'calendar', 'label' => 'Availability calendar', 'type' => 'fields', 'store_page' => 'booking',
-					'note' => 'Ships with LatePoint’s booking calendar. Switch the section off under Site setup → Visibility to drop it.',
-					'fields' => self::booking_slot_fields() ),
 			) ),
 		);
 
-		return array_values(
-			array_filter(
-				$pages,
-				static fn( array $page ): bool => Blueworx_Clubhouse_Page_Map::is_available(
-					'global' === $page['tab'] || 'home' === $page['tab'] ? '' : $page['tab']
+		// Drop whole pages whose integration is absent, then individual sections —
+		// a page can stand on its own while one of its sections cannot (Calendar
+		// has fixtures either way; its booking calendar needs LatePoint).
+		$available = array();
+		foreach ( $pages as $page ) {
+			$slug = 'global' === $page['tab'] || 'home' === $page['tab'] ? '' : $page['tab'];
+			if ( ! Blueworx_Clubhouse_Page_Map::is_available( $slug ) ) {
+				continue;
+			}
+			$page['sections'] = array_values(
+				array_filter(
+					$page['sections'],
+					static fn( array $s ): bool => Blueworx_Clubhouse_Integrations::section_available(
+						(string) $s['store_page'],
+						(string) $s['key']
+					)
 				)
-			)
-		);
+			);
+			$available[] = $page;
+		}
+		return $available;
 	}
 
 	/** A booking slot: its own heading, plus the LatePoint shortcode that fills it. */

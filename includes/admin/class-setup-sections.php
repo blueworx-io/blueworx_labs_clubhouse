@@ -76,6 +76,7 @@ final class Blueworx_Clubhouse_Setup_Sections {
 		),
 		'calendar' => array(
 			'hero'     => 'Hero',
+			'booking'  => 'Book a court',
 			'schedule' => 'Schedule',
 			'cta'      => 'Call to action',
 		),
@@ -84,7 +85,6 @@ final class Blueworx_Clubhouse_Setup_Sections {
 			'services'  => 'Sessions and services',
 			'locations' => 'Courts and locations',
 			'agents'    => 'Coaches and staff',
-			'calendar'  => 'Availability calendar',
 		),
 	);
 
@@ -109,6 +109,10 @@ final class Blueworx_Clubhouse_Setup_Sections {
 			}
 			$section_list = array();
 			foreach ( $sections as $key => $label ) {
+				// A section needing an absent integration is not offered either.
+				if ( ! Blueworx_Clubhouse_Integrations::section_available( $page, $key ) ) {
+					continue;
+				}
 				$section_list[] = array( 'key' => $key, 'label' => $label );
 			}
 			$out[] = array(

@@ -4,26 +4,39 @@ const { test, expect } = require('@playwright/test');
 // WordPress has no LatePoint. The preview reports every integration present so
 // the page stays designable, which is exactly the harness that can serve it.
 
-test('@preview booking page renders a slot per LatePoint shortcode', async ({ page }) => {
+test('@preview booking page renders a slot per LatePoint resource list', async ({ page }) => {
   await page.goto('?clubhouse_page=booking');
 
   const slots = page.locator('.ch-shortcode');
-  await expect(slots).toHaveCount(4);
+  await expect(slots).toHaveCount(3);
 
   // No expander in the preview, so each slot shows its shortcode as text. That
   // is the point: it shows what will run without pretending to have run it.
   await expect(slots.nth(0)).toContainText('[latepoint_resources items="services" columns="3"]');
   await expect(slots.nth(1)).toContainText('[latepoint_resources items="locations" columns="3"]');
   await expect(slots.nth(2)).toContainText('[latepoint_resources items="agents" columns="3"]');
-  await expect(slots.nth(3)).toContainText('[latepoint_calendar view="month"]');
 });
 
 test('@preview each booking slot is headed so the page reads as a journey', async ({ page }) => {
   await page.goto('?clubhouse_page=booking');
 
-  for (const heading of ['Sessions and services', 'Courts and locations', 'Coaches and staff', 'Availability']) {
+  for (const heading of ['Sessions and services', 'Courts and locations', 'Coaches and staff']) {
     await expect(page.getByRole('heading', { name: heading })).toBeVisible();
   }
+});
+
+// The booking calendar sits on the Calendar page, above the fixtures — deciding
+// when to play comes before looking up results.
+test('@preview the calendar page carries the booking calendar above its fixtures', async ({ page }) => {
+  await page.goto('?clubhouse_page=calendar');
+
+  const slot = page.locator('.ch-shortcode');
+  await expect(slot).toHaveCount(1);
+  await expect(slot).toContainText('[latepoint_calendar view="month"]');
+
+  const slotY = (await slot.boundingBox()).y;
+  const fixturesY = (await page.locator('.ch-cal__month').first().boundingBox()).y;
+  expect(slotY).toBeLessThan(fixturesY);
 });
 
 // A shortcode slot holds another plugin's markup, which ships its own CSS and

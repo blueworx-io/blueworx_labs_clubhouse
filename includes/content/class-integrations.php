@@ -33,6 +33,22 @@ final class Blueworx_Clubhouse_Integrations {
 	/** The shortcode LatePoint registers, taken as proof LatePoint is live. */
 	public const LATEPOINT_TAG = 'latepoint_calendar';
 
+	/**
+	 * Individual sections that exist only when an integration does, keyed
+	 * "page.section" => the shortcode tag they need. Whole pages declare this on
+	 * Page_Map instead; this is for a section sitting on a page that stands on its
+	 * own — the booking calendar on Calendar, which has fixtures to show either way.
+	 *
+	 * Declared once here because three places must agree: the renderer, the
+	 * visibility inventory and the content catalogue. Two of those are held in
+	 * lockstep by a test, and a third copy of the rule is how they drift.
+	 *
+	 * @var array<string,string>
+	 */
+	private const SECTION_REQUIREMENTS = array(
+		'calendar.booking' => self::LATEPOINT_TAG,
+	);
+
 	/** @var (callable(string):bool)|null */
 	private static $detector = null;
 
@@ -57,5 +73,14 @@ final class Blueworx_Clubhouse_Integrations {
 	/** True when LatePoint is live and its pages should be offered. */
 	public static function has_latepoint(): bool {
 		return self::provides( self::LATEPOINT_TAG );
+	}
+
+	/**
+	 * True when this section can be offered — either it needs no integration, or
+	 * the one it needs is live.
+	 */
+	public static function section_available( string $page, string $section ): bool {
+		$requires = self::SECTION_REQUIREMENTS[ $page . '.' . $section ] ?? '';
+		return '' === $requires || self::provides( $requires );
 	}
 }
