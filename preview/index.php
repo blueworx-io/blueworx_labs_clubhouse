@@ -73,6 +73,13 @@ function blueworx_clubhouse_preview_document(): string {
 	$branding   = new Blueworx_Clubhouse_Branding( $storage );
 	$visibility = new Blueworx_Clubhouse_Visibility( $storage );
 
+	// The preview is a design tool, so integration-backed pages have to be
+	// designable here even though there is no WordPress to detect a plugin with.
+	// Everything is reported present; the shortcodes themselves still have no
+	// expander, so each slot shows its shortcode as text rather than pretending
+	// to render a booking calendar the preview could not produce.
+	Blueworx_Clubhouse_Integrations::set_detector( static fn( string $tag ): bool => true );
+
 	// Accepts WordPress's real query var (`clubhouse_page`, see Frontend::QUERY_VAR)
 	// as well as the preview's own `?page=`. The specs navigate with the former so a
 	// single URL form works against both this harness and a real WordPress install;

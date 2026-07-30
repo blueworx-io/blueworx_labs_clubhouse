@@ -14,7 +14,18 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 final class Blueworx_Clubhouse_Page_Map {
 
-	/** @return array<int,array{slug:string,label:string,method:string}> */
+	/**
+	 * Every page this plugin knows how to serve, including ones whose integration
+	 * may not be installed. Rewrite registration reads THIS list, not available():
+	 * rewrite rules are cached until they are flushed, so a rule that appeared and
+	 * disappeared with a third-party plugin would leave the URL 404ing until
+	 * someone re-saved permalinks. Registering the rule unconditionally costs
+	 * nothing — resolve_slug still refuses to serve the page.
+	 *
+	 * A 'requires' key names the shortcode tag whose presence the page depends on.
+	 *
+	 * @return array<int,array{slug:string,label:string,method:string,requires?:string}>
+	 */
 	public static function pages(): array {
 		return array(
 			array( 'slug' => '',           'label' => 'Home',       'method' => 'home' ),
@@ -26,7 +37,46 @@ final class Blueworx_Clubhouse_Page_Map {
 			array( 'slug' => 'teams',      'label' => 'Teams',      'method' => 'teams' ),
 			array( 'slug' => 'events',     'label' => 'Events',     'method' => 'events' ),
 			array( 'slug' => 'calendar',   'label' => 'Calendar',   'method' => 'calendar' ),
+			array(
+				'slug'     => 'booking',
+				'label'    => 'Book a court',
+				'method'   => 'booking',
+				'requires' => Blueworx_Clubhouse_Integrations::LATEPOINT_TAG,
+			),
 		);
+	}
+
+	/**
+	 * The pages this site can actually offer — pages() minus any whose integration
+	 * is absent. Everything an owner or a visitor sees reads this: the nav, the
+	 * visibility toggles, the content editor and the render gate. A page that
+	 * cannot work is not offered anywhere, rather than offered and then empty.
+	 *
+	 * Stored content and visibility for a filtered-out page are untouched, so
+	 * installing the integration later brings the page back exactly as it was.
+	 *
+	 * @return array<int,array{slug:string,label:string,method:string,requires?:string}>
+	 */
+	public static function available(): array {
+		return array_values(
+			array_filter(
+				self::pages(),
+				static function ( array $page ): bool {
+					$requires = (string) ( $page['requires'] ?? '' );
+					return '' === $requires || Blueworx_Clubhouse_Integrations::provides( $requires );
+				}
+			)
+		);
+	}
+
+	/** True when this site can serve the page — known slug, and its integration present. */
+	public static function is_available( string $slug ): bool {
+		foreach ( self::available() as $page ) {
+			if ( $page['slug'] === $slug ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/** The human label for a slug — '' for one this map does not serve. */

@@ -5,6 +5,13 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.42.0
+
+- **A "Book a court" page, built from LatePoint.** A new page carrying the whole booking journey in the order a member thinks about it: what you can book, where you play, who you book with, and when. Each of the four is a LatePoint shortcode, pre-filled and editable under Club content → Book a court, so a club can change the calendar view or the number of columns without waiting for a release.
+- **The page only exists if LatePoint does.** Without LatePoint the page is gone completely — no nav link, no footer link, no entry in Club content, no switches under Site setup → Visibility, and the URL itself is not served. Nobody is left configuring a page that renders nothing. Install LatePoint and it reappears, with any settings you had made still in place; remove LatePoint and nothing is lost, it simply hides again.
+- **Detection is by shortcode, not by plugin file.** The question that matters is whether the shortcode will actually render, so the check asks WordPress whether LatePoint's shortcode is registered. A plugin that is installed but not activated registers nothing, and would otherwise have produced a page of empty boxes.
+- Each of the four sections can be switched off individually under Site setup → Visibility, like any other section. Clearing a shortcode field restores its default rather than hiding the section — an empty field means "use the standard one" everywhere else in the plugin, and this is no different.
+
 ## 0.41.0
 
 - **Clubhouse can now render other plugins' shortcodes.** SureCart, SureDash, LatePoint and SureForms all publish shortcodes, and until now pasting one into a Clubhouse field printed it as text — every content field is escaped on output, which is what keeps club-entered content from breaking a page. There is now a dedicated **shortcode** field type that runs the shortcode instead of escaping it, so a checkout, a booking form or a member dashboard can sit inside a Clubhouse page. It is a distinct field type rather than a change to the existing ones: ordinary text and intro fields are escaped exactly as before, so this cannot leak into the rest of the content. Where these slots appear on the site is the next piece of work — this release is the capability.
