@@ -102,7 +102,7 @@ final class Blueworx_Clubhouse_Sections {
 
 	/**
 	 * @param array{club_name:string,banner:string,banner_href:string,
-	 *   nav:array<int,array{label:string,href:string}>,active:string,
+	 *   nav:array<int,array{label:string,href:string,children?:array<int,array{label:string,href:string}>}>,active:string,
 	 *   login:string,login_href?:string,join:string,join_href:string,logo?:string} $data
 	 */
 	public static function header( array $data ): string {
@@ -115,9 +115,7 @@ final class Blueworx_Clubhouse_Sections {
 		}
 		$links = '';
 		foreach ( $data['nav'] as $item ) {
-			$active  = $item['href'] === $data['active'] ? ' ch-nav__link--active' : '';
-			$links  .= '<a class="ch-nav__link' . $active . '" href="' . self::e( $item['href'] ) . '">'
-				. self::e( $item['label'] ) . '</a>';
+			$links .= self::nav_item( $item, $data['active'] );
 		}
 		return '<a class="ch-skip" href="#ch-main">Skip to content</a>'
 			. $banner
@@ -136,6 +134,39 @@ final class Blueworx_Clubhouse_Sections {
 			. '<a class="ch-nav__link ch-nav__drawer-login" href="' . self::e( $login_href ) . '">' . self::e( $data['login'] ) . '</a>'
 			. '</nav></details>'
 			. '</div></div></header>';
+	}
+
+	/**
+	 * One header nav entry — a link, or a parent with a submenu.
+	 *
+	 * The submenu opens on :hover and :focus-within (see the look stylesheets),
+	 * so it needs no JavaScript and stays reachable by keyboard: tabbing into a
+	 * child keeps the list open because focus is still inside the wrapper.
+	 *
+	 * @param array{label:string,href:string,children?:array<int,array{label:string,href:string}>} $item
+	 */
+	private static function nav_item( array $item, string $active ): string {
+		$children = isset( $item['children'] ) && is_array( $item['children'] ) ? $item['children'] : array();
+		$is_here  = '' !== $item['href'] && $item['href'] === $active;
+		$cls      = 'ch-nav__link' . ( $is_here ? ' ch-nav__link--active' : '' );
+
+		if ( array() === $children ) {
+			return '<a class="' . $cls . '" href="' . self::e( $item['href'] ) . '">' . self::e( $item['label'] ) . '</a>';
+		}
+
+		// A parent whose own target has gone still heads its children, but must
+		// not be a link to nowhere — Menu::items() hands it an empty href.
+		$head = '' === $item['href']
+			? '<span class="' . $cls . ' ch-nav__link--static" aria-haspopup="true">' . self::e( $item['label'] ) . '</span>'
+			: '<a class="' . $cls . '" href="' . self::e( $item['href'] ) . '" aria-haspopup="true">' . self::e( $item['label'] ) . '</a>';
+
+		$sub = '';
+		foreach ( $children as $child ) {
+			$sub .= '<a class="ch-nav__sublink" href="' . self::e( $child['href'] ) . '">' . self::e( $child['label'] ) . '</a>';
+		}
+
+		return '<span class="ch-nav__item ch-nav__item--has-children">' . $head
+			. '<span class="ch-nav__sub">' . $sub . '</span></span>';
 	}
 
 	/**

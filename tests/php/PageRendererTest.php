@@ -309,4 +309,62 @@ final class PageRendererTest extends TestCase {
 		$this->assertStringContainsString( 'ch-brand__logo', $body );
 		$this->assertStringContainsString( 'src="https://club.test/logo.png"', $body );
 	}
+
+	public function test_header_renders_a_child_list_under_a_parent(): void {
+		$html = Blueworx_Clubhouse_Sections::header( array(
+			'club_name'   => 'ClubHouse',
+			'banner'      => '',
+			'banner_href' => '#',
+			'nav'         => array(
+				array( 'label' => 'About', 'href' => '/about', 'children' => array(
+					array( 'label' => 'History', 'href' => '/about#ch-about-history' ),
+				) ),
+			),
+			'active'      => '/about',
+			'login'       => 'Log in',
+			'login_href'  => '/login',
+			'join'        => 'Join',
+			'join_href'   => '/membership',
+		) );
+		$this->assertStringContainsString( 'ch-nav__item--has-children', $html );
+		$this->assertStringContainsString( 'aria-haspopup="true"', $html );
+		$this->assertStringContainsString( 'ch-nav__sub', $html );
+		$this->assertStringContainsString( '/about#ch-about-history', $html );
+	}
+
+	public function test_header_renders_a_hrefless_parent_as_a_non_link(): void {
+		$html = Blueworx_Clubhouse_Sections::header( array(
+			'club_name'   => 'ClubHouse',
+			'banner'      => '',
+			'banner_href' => '#',
+			'nav'         => array(
+				array( 'label' => 'Club', 'href' => '', 'children' => array(
+					array( 'label' => 'About', 'href' => '/about' ),
+				) ),
+			),
+			'active'      => '',
+			'login'       => 'Log in',
+			'login_href'  => '/login',
+			'join'        => 'Join',
+			'join_href'   => '/membership',
+		) );
+		$this->assertStringContainsString( 'ch-nav__link--static', $html );
+		$this->assertStringNotContainsString( '<a class="ch-nav__link" href="">', $html );
+	}
+
+	public function test_header_still_renders_a_flat_nav_unchanged(): void {
+		$html = Blueworx_Clubhouse_Sections::header( array(
+			'club_name'   => 'ClubHouse',
+			'banner'      => '',
+			'banner_href' => '#',
+			'nav'         => array( array( 'label' => 'About', 'href' => '/about' ) ),
+			'active'      => '/about',
+			'login'       => 'Log in',
+			'login_href'  => '/login',
+			'join'        => 'Join',
+			'join_href'   => '/membership',
+		) );
+		$this->assertStringContainsString( 'ch-nav__link--active', $html );
+		$this->assertStringNotContainsString( 'ch-nav__sub', $html );
+	}
 }
