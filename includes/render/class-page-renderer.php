@@ -402,6 +402,8 @@ final class Blueworx_Clubhouse_Page_Renderer {
 		if ( $visibility->is_section_visible( 'home', 'hero' ) ) {
 			// Home uses the full-bleed home_hero() (not the shared hero()); the
 			// quick-links live in its foot, so no separate quick_tiles section here.
+			// Its own anchor id (not 'hero's) goes on that foot via 'tiles_id', so the
+			// catalogue can still offer a link straight to the tiles.
 			$out .= self::anchored( 'home', 'hero', Blueworx_Clubhouse_Sections::home_hero( array(
 				'eyebrow'            => self::cget( $content, 'home', 'hero', 'eyebrow', 'Est. 1974 · Marlow, UK' ),
 				'title_lead'         => self::cget( $content, 'home', 'hero', 'title_lead', 'Every sport. Every age. ' ),
@@ -416,6 +418,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'cta_secondary_href' => self::cget( $content, 'home', 'hero', 'cta_secondary_href', Blueworx_Clubhouse_Links::url( 'about' ) ),
 				'image'              => self::media_src( (string) self::cget( $content, 'home', 'hero', 'image', '' ) ),
 				'image_alt'          => 'ClubHouse floodlit pitch on a Saturday',
+				'tiles_id'           => Blueworx_Clubhouse_Link_Catalogue::anchor_id( 'home', 'quick_tiles' ),
 				'tiles'              => self::citems( $content, 'home', 'quick_tiles', array(
 					array( 'label' => Blueworx_Clubhouse_Cta::JOIN, 'href' => Blueworx_Clubhouse_Links::url( 'membership' ), 'icon' => 'join' ),
 					array( 'label' => 'Take a tour', 'href' => Blueworx_Clubhouse_Links::url( 'about' ), 'icon' => 'tour' ),
@@ -582,8 +585,9 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				},
 				$items
 			);
-			// One shared root serves both toggles; the anchor goes on 'social' — 'info'
-			// has no root of its own to carry a second id (see Link_Catalogue::anchors()).
+			// One shared root serves both toggles; the root itself carries 'social's
+			// anchor, and 'info' gets its own id on the columns element via 'cols_id'
+			// (Sections::closing_band()), so both remain independently linkable.
 			$out .= self::anchored( 'home', 'social', Blueworx_Clubhouse_Sections::closing_band( array(
 				'heading'       => $social_on ? self::cget( $content, 'home', 'social', 'heading', 'Follow the club' ) : '',
 				'lede'          => $social_on ? self::cget( $content, 'home', 'social', 'lede', 'Match-day photos, results and behind-the-scenes — join us on socials.' ) : '',
@@ -592,6 +596,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'linkedin_url'  => $social_on ? $branding->get_linkedin_url() : '',
 				'x_url'         => $social_on ? $branding->get_x_url() : '',
 				'columns'       => $columns,
+				'cols_id'       => Blueworx_Clubhouse_Link_Catalogue::anchor_id( 'home', 'info' ),
 			) ) );
 		}
 		$out .= '</main>';

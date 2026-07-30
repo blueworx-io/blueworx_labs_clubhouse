@@ -221,7 +221,8 @@ final class Blueworx_Clubhouse_Sections {
 	 * @param array{eyebrow:string,title_lead:string,title_highlight:string,lede:string,
 	 *   cta_primary:string,cta_primary_href:string,cta_secondary:string,cta_secondary_href:string,
 	 *   image:string,image_alt:string,
-	 *   tiles:array<int,array{label:string,href:string,icon:string}>} $data
+	 *   tiles:array<int,array{label:string,href:string,icon:string}>,
+	 *   tiles_id?:string} $data
 	 */
 	public static function home_hero( array $data ): string {
 		$has_img = '' !== $data['image'];
@@ -259,6 +260,11 @@ final class Blueworx_Clubhouse_Sections {
 					: '' )
 				. '</div>';
 		}
+		// Quick tiles are owner-editable content in their own right (Content →
+		// Home → Quick tiles) but render inside the hero's own root rather than a
+		// section of their own — 'tiles_id' lets Link_Catalogue's anchor for that
+		// content land on this element instead of a section that doesn't exist.
+		$tiles_id = '' !== (string) ( $data['tiles_id'] ?? '' ) ? ' id="' . self::e( $data['tiles_id'] ) . '"' : '';
 		return '<section class="ch-home-hero">'
 			. $bg
 			. '<div class="ch-home-hero__scrim" aria-hidden="true"></div>'
@@ -266,7 +272,7 @@ final class Blueworx_Clubhouse_Sections {
 			. self::hero_head( 'ch-home-hero', $data )
 			. '<p class="ch-home-hero__lede">' . self::e( $data['lede'] ) . '</p>'
 			. $cta
-			. '<div class="ch-home-hero__foot" role="list">' . $tiles . '</div>'
+			. '<div class="ch-home-hero__foot"' . $tiles_id . ' role="list">' . $tiles . '</div>'
 			. '</div></section>';
 	}
 
@@ -1042,7 +1048,7 @@ final class Blueworx_Clubhouse_Sections {
 	 *
 	 * Either half may be empty (its section toggle is off) and the band still works.
 	 *
-	 * @param array{heading:string,lede:string,facebook_url:string,instagram_url:string,linkedin_url:string,x_url:string,columns:array<int,array{label:string,lines:array<int,string>,link_label:string,link_href:string}>} $data
+	 * @param array{heading:string,lede:string,facebook_url:string,instagram_url:string,linkedin_url:string,x_url:string,columns:array<int,array{label:string,lines:array<int,string>,link_label:string,link_href:string}>,cols_id?:string} $data
 	 */
 	public static function closing_band( array $data ): string {
 		$social = '';
@@ -1071,8 +1077,13 @@ final class Blueworx_Clubhouse_Sections {
 				. '<div class="ch-social__col-body">' . $lines . $link . '</div></div>';
 		}
 		if ( '' !== $cols ) {
-			$only = '' === $social ? ' ch-social__cols--only' : '';
-			$cols = '<div class="ch-wrap ch-social__cols' . $only . '" role="list">' . $cols . '</div>';
+			// The info columns are owner-editable content in their own right (Content
+			// → Home → Find us details) but share this band's root with 'social' —
+			// 'cols_id' lets Link_Catalogue's anchor for that content land on this
+			// element instead of a section that doesn't exist.
+			$only    = '' === $social ? ' ch-social__cols--only' : '';
+			$cols_id = '' !== (string) ( $data['cols_id'] ?? '' ) ? ' id="' . self::e( $data['cols_id'] ) . '"' : '';
+			$cols    = '<div class="ch-wrap ch-social__cols' . $only . '"' . $cols_id . ' role="list">' . $cols . '</div>';
 		}
 		if ( '' === $social && '' === $cols ) {
 			return '';

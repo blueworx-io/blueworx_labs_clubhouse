@@ -30,33 +30,62 @@ final class SectionAnchorTest extends TestCase {
 	}
 
 	/**
-	 * The catalogue must not offer an anchor the markup does not emit. Renders
-	 * every page and asserts each anchor target the catalogue actually offers
-	 * (Link_Catalogue::targets()'s 'Sections' group — not every Content_Catalogue
-	 * section, some of which share another section's root and carry no id of
-	 * their own; see Link_Catalogue::anchors()) has a matching id in the markup.
+	 * The catalogue must not offer an anchor the markup does not emit — and,
+	 * just as importantly, it must not withhold an anchor the markup DOES
+	 * emit (an over-broad exclusion in Link_Catalogue::anchors() would make
+	 * this loop shrink and stay green, hiding the very regression it exists
+	 * to catch). So this walks every Content_Catalogue section — the brief's
+	 * original, unfiltered source — and separately asserts that the ids
+	 * missing from the rendered markup are EXACTLY the ones this test
+	 * explicitly names as deliberately excluded (today: none — see
+	 * Link_Catalogue::has_no_anchor()). If that named list ever needs an
+	 * entry, it must be added here at the same time, in the open, not left to
+	 * an exclusion elsewhere that this test can't see.
 	 */
 	public function test_rendered_pages_carry_the_ids_the_catalogue_advertises(): void {
+		// Sections deliberately excluded from Link_Catalogue::anchors() because
+		// they share another section's root and have no id of their own to
+		// carry — kept in lock-step with Link_Catalogue::has_no_anchor().
+		$expected_missing = array();
+
 		$branding    = new Blueworx_Clubhouse_Branding( new Blueworx_Clubhouse_Fake_Storage() );
 		$visibility  = new Blueworx_Clubhouse_Visibility( new Blueworx_Clubhouse_Fake_Storage() );
 		$collections = new Blueworx_Clubhouse_Demo_Collections();
 
-		$rendered = array();
-		$missing  = array();
-		foreach ( Blueworx_Clubhouse_Link_Catalogue::targets( $collections ) as $entry ) {
-			if ( 'Sections' !== $entry['group'] || 0 !== strpos( $entry['target'], 'anchor:' ) ) {
+		$missing = array();
+		foreach ( Blueworx_Clubhouse_Content_Catalogue::pages() as $page ) {
+			$tab = (string) $page['tab'];
+			if ( 'global' === $tab ) {
 				continue;
 			}
-			[ $tab, $key ] = explode( '.', substr( $entry['target'], strlen( 'anchor:' ) ), 2 );
-			$slug          = 'home' === $tab ? '' : $tab;
-			if ( ! array_key_exists( $slug, $rendered ) ) {
-				$rendered[ $slug ] = Blueworx_Clubhouse_Page_Map::render( $slug, $branding, $visibility, $collections );
+			$slug = 'home' === $tab ? '' : $tab;
+			if ( ! Blueworx_Clubhouse_Page_Map::is_available( $slug ) ) {
+				continue;
 			}
-			$id = Blueworx_Clubhouse_Link_Catalogue::anchor_id( $tab, $key );
-			if ( false === strpos( $rendered[ $slug ], 'id="' . $id . '"' ) ) {
-				$missing[] = $id;
+			$html = Blueworx_Clubhouse_Page_Map::render( $slug, $branding, $visibility, $collections );
+			foreach ( $page['sections'] as $section ) {
+				$id = Blueworx_Clubhouse_Link_Catalogue::anchor_id( $tab, (string) $section['key'] );
+				if ( false === strpos( $html, 'id="' . $id . '"' ) ) {
+					$missing[] = $id;
+				}
 			}
 		}
-		$this->assertSame( array(), $missing, 'catalogued sections with no anchor in the markup' );
+		sort( $missing );
+		sort( $expected_missing );
+		$this->assertSame( $expected_missing, $missing, 'ids missing from the markup must be exactly the sections named as deliberately excluded' );
+
+		// The other direction: the catalogue must not offer an anchor the
+		// markup does not emit either — confirms has_no_anchor() actually
+		// excludes every id that's missing above, nothing more, nothing less.
+		$offered = array();
+		foreach ( Blueworx_Clubhouse_Link_Catalogue::targets( $collections ) as $entry ) {
+			if ( 'Sections' === $entry['group'] && 0 === strpos( $entry['target'], 'anchor:' ) ) {
+				[ $tab, $key ] = explode( '.', substr( $entry['target'], strlen( 'anchor:' ) ), 2 );
+				$offered[]     = Blueworx_Clubhouse_Link_Catalogue::anchor_id( $tab, $key );
+			}
+		}
+		foreach ( $expected_missing as $id ) {
+			$this->assertNotContains( $id, $offered, "catalogue must not offer anchor '$id', which the markup does not emit" );
+		}
 	}
 }

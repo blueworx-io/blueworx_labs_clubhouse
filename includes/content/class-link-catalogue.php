@@ -58,24 +58,26 @@ final class Blueworx_Clubhouse_Link_Catalogue {
 	}
 
 	/**
-	 * Sections with no root of their own to carry an id, so an anchor here
-	 * would point at nothing:
-	 *  - 'linkout'/'auto' catalogue types only tell the owner where to edit
-	 *    content that lives (and renders) elsewhere — the CPT, or another
-	 *    section's own root — never a markup section in their own right.
-	 *  - home.quick_tiles renders inside home.hero's foot (Page_Renderer::home()),
-	 *    and home.info shares home.social's closing_band() root — neither has a
-	 *    root of its own to stamp a second id onto.
+	 * Sections that share another section's rendered root and so have no root
+	 * of their own to carry an id — an anchor here would point at nothing.
+	 * `type` is NOT a signal for this: 'linkout'/'auto' sections (e.g.
+	 * about.committee, sports.directory, home.activity) still render their own
+	 * markup, they only source their *content* from elsewhere (a CPT, or
+	 * another page's section) — they need an anchor like any other section.
+	 *
+	 * Empty today: home.quick_tiles and home.info used to live here, sharing
+	 * home.hero's and home.social's roots respectively, until Page_Renderer
+	 * started passing 'tiles_id'/'cols_id' so Sections::home_hero() and
+	 * Sections::closing_band() stamp a second, distinct id onto each one's own
+	 * inner element. Kept as an explicit, named list (not a type check) so a
+	 * future case that genuinely has no root of its own has one place to be
+	 * declared — and SectionAnchorTest fails loudly if this list and the
+	 * rendered markup ever disagree.
 	 *
 	 * @param array{key:string,type:string} $section
 	 */
 	private static function has_no_anchor( string $tab, array $section ): bool {
-		if ( in_array( (string) $section['type'], array( 'linkout', 'auto' ), true ) ) {
-			return true;
-		}
-		$shared_root = array(
-			'home' => array( 'quick_tiles', 'info' ),
-		);
+		$shared_root = array();
 		return in_array( (string) $section['key'], $shared_root[ $tab ] ?? array(), true );
 	}
 
