@@ -112,15 +112,193 @@ final class OwnerRoleTest extends TestCase {
 	}
 
 	/**
-	 * The two integrations are the owner's to run, so their own caps are handed over
-	 * outright — on the front end as well, since SureCart reads caps outside wp-admin.
+	 * The two integrations are the owner's to run, so their own caps are written
+	 * onto the role at activation rather than lent per request — SureCart and
+	 * LatePoint both read caps outside wp-admin.
 	 */
-	public function test_lend_caps_hands_owners_the_integration_caps(): void {
-		$owner = (object) array( 'roles' => array( 'clubhouse_owner' ) );
-		$caps  = Blueworx_Clubhouse_Owner_Role::lend_caps( array( 'read' => true ), array(), array(), $owner );
+	public function test_activate_writes_the_integration_caps_onto_the_owner(): void {
+		Blueworx_Clubhouse_Owner_Role::activate();
+		$caps = $GLOBALS['wp_stub_roles']['clubhouse_owner']['caps'];
 		$this->assertTrue( $caps['manage_sc_shop_settings'] );
 		$this->assertTrue( $caps['manage_latepoint'] );
-		$this->assertArrayNotHasKey( 'manage_options', $caps, 'not lent outside wp-admin' );
+		$this->assertArrayNotHasKey( 'manage_options', $caps );
+	}
+
+	/**
+	 * The reason LatePoint was unreachable: its menu is gated on a capability of its
+	 * own, not manage_options. Whatever it grants the administrator on activation is
+	 * copied to the owner, so a renamed cap is followed rather than guessed at.
+	 */
+	public function test_activate_copies_unknown_integration_caps_off_the_administrator(): void {
+		$GLOBALS['wp_stub_roles']['administrator']['caps']['latepoint_manage_bookings'] = true;
+		$GLOBALS['wp_stub_roles']['administrator']['caps']['surecart_manage_shop']      = true;
+		$GLOBALS['wp_stub_roles']['administrator']['caps']['manage_woocommerce']        = true;
+
+		Blueworx_Clubhouse_Owner_Role::activate();
+		$caps = $GLOBALS['wp_stub_roles']['clubhouse_owner']['caps'];
+
+		$this->assertTrue( $caps['latepoint_manage_bookings'] );
+		$this->assertTrue( $caps['surecart_manage_shop'] );
+		$this->assertArrayNotHasKey( 'manage_woocommerce', $caps, 'only the two integrations are copied' );
+	}
+
+	public function test_activate_never_copies_a_denied_cap_off_the_administrator(): void {
+		$GLOBALS['wp_stub_roles']['administrator']['caps']['manage_options'] = true;
+		Blueworx_Clubhouse_Owner_Role::activate();
+		$this->assertArrayNotHasKey( 'manage_options', $GLOBALS['wp_stub_roles']['clubhouse_owner']['caps'] );
+	}
+
+	public function test_lend_caps_hands_owners_nothing_outside_wp_admin(): void {
+		$owner = (object) array( 'roles' => array( 'clubhouse_owner' ) );
+		$caps  = Blueworx_Clubhouse_Owner_Role::lend_caps( array( 'read' => true ), array(), array(), $owner );
+		$this->assertArrayNotHasKey( 'manage_options', $caps );
+	}
+
+	public function test_content_editor_is_registered_alongside_the_owner(): void {
+		Blueworx_Clubhouse_Owner_Role::activate();
+		$this->assertArrayHasKey( 'clubhouse_content_editor', $GLOBALS['wp_stub_roles'] );
+		$editor = $GLOBALS['wp_stub_roles']['clubhouse_content_editor'];
+		$this->assertSame( 'ClubHouse - Content Editor', $editor['display'] );
+		$this->assertArrayNotHasKey( 'manage_clubhouse', $editor['caps'], 'the editor never runs Setup' );
+		$this->assertArrayNotHasKey( 'manage_sc_shop_settings', $editor['caps'], 'nor SureCart' );
+		$this->assertArrayNotHasKey( 'manage_latepoint', $editor['caps'], 'nor LatePoint' );
+		$this->assertTrue( $editor['caps']['edit_users'] );
+		$this->assertTrue( $editor['caps']['edit_others_posts'] );
+	}
+
+	public function test_the_content_editor_is_never_lent_anything(): void {
+		$GLOBALS['wp_stub_is_admin'] = true;
+		$GLOBALS['pagenow']          = 'admin.php';
+		$editor                      = (object) array( 'roles' => array( 'clubhouse_content_editor' ) );
+		$caps                        = Blueworx_Clubhouse_Owner_Role::lend_caps( array( 'read' => true ), array(), array(), $editor );
+		$this->assertArrayNotHasKey( 'manage_options', $caps );
+		unset( $GLOBALS['pagenow'] );
+	}
+
+	public function test_uninstall_removes_both_roles(): void {
+		Blueworx_Clubhouse_Owner_Role::activate();
+		Blueworx_Clubhouse_Owner_Role::uninstall();
+		$this->assertArrayNotHasKey( 'clubhouse_owner', $GLOBALS['wp_stub_roles'] );
+		$this->assertArrayNotHasKey( 'clubhouse_content_editor', $GLOBALS['wp_stub_roles'] );
+	}
+
+	/** The escalation this whole guard exists to stop. */
+	public function test_neither_role_may_edit_an_administrator(): void {
+		$GLOBALS['wp_stub_users'] = array(
+			1 => (object) array( 'roles' => array( 'administrator' ) ),
+			2 => (object) array( 'roles' => array( 'clubhouse_owner' ) ),
+			3 => (object) array( 'roles' => array( 'clubhouse_content_editor' ) ),
+			4 => (object) array( 'roles' => array( 'author' ) ),
+		);
+		foreach ( array( 2, 3 ) as $actor ) {
+			$this->assertSame(
+				array( 'do_not_allow' ),
+				Blueworx_Clubhouse_Owner_Role::guard_user_management( array( 'edit_users' ), 'edit_user', $actor, array( 1 ) ),
+				'an administrator is never editable'
+			);
+		}
+	}
+
+	public function test_a_content_editor_may_not_edit_an_owner(): void {
+		$GLOBALS['wp_stub_users'] = array(
+			2 => (object) array( 'roles' => array( 'clubhouse_owner' ) ),
+			3 => (object) array( 'roles' => array( 'clubhouse_content_editor' ) ),
+		);
+		$this->assertSame(
+			array( 'do_not_allow' ),
+			Blueworx_Clubhouse_Owner_Role::guard_user_management( array( 'edit_users' ), 'edit_user', 3, array( 2 ) ),
+			'the owner runs the shop — an editor must not be able to reset their password'
+		);
+	}
+
+	public function test_ordinary_members_stay_editable(): void {
+		$GLOBALS['wp_stub_users'] = array(
+			3 => (object) array( 'roles' => array( 'clubhouse_content_editor' ) ),
+			4 => (object) array( 'roles' => array( 'author' ) ),
+		);
+		$this->assertSame(
+			array( 'edit_users' ),
+			Blueworx_Clubhouse_Owner_Role::guard_user_management( array( 'edit_users' ), 'edit_user', 3, array( 4 ) )
+		);
+	}
+
+	public function test_editing_your_own_profile_is_always_allowed(): void {
+		$GLOBALS['wp_stub_users'] = array( 2 => (object) array( 'roles' => array( 'clubhouse_owner' ) ) );
+		$this->assertSame(
+			array( 'edit_users' ),
+			Blueworx_Clubhouse_Owner_Role::guard_user_management( array( 'edit_users' ), 'edit_user', 2, array( 2 ) )
+		);
+	}
+
+	public function test_creating_deleting_and_promoting_are_refused_outright(): void {
+		$GLOBALS['wp_stub_users'] = array(
+			2 => (object) array( 'roles' => array( 'clubhouse_owner' ) ),
+			4 => (object) array( 'roles' => array( 'author' ) ),
+		);
+		foreach ( array( 'delete_user', 'promote_user', 'remove_user', 'create_users' ) as $cap ) {
+			$this->assertSame(
+				array( 'do_not_allow' ),
+				Blueworx_Clubhouse_Owner_Role::guard_user_management( array( 'edit_users' ), $cap, 2, array( 4 ) ),
+				"{$cap} must be refused"
+			);
+		}
+	}
+
+	public function test_the_guard_leaves_administrators_alone(): void {
+		$GLOBALS['wp_stub_users'] = array(
+			1 => (object) array( 'roles' => array( 'administrator' ) ),
+			4 => (object) array( 'roles' => array( 'author' ) ),
+		);
+		$this->assertSame(
+			array( 'edit_users' ),
+			Blueworx_Clubhouse_Owner_Role::guard_user_management( array( 'edit_users' ), 'edit_user', 1, array( 4 ) )
+		);
+		$this->assertSame(
+			array( 'promote_users' ),
+			Blueworx_Clubhouse_Owner_Role::guard_user_management( array( 'promote_users' ), 'promote_user', 1, array( 4 ) )
+		);
+	}
+
+	public function test_the_role_dropdown_is_narrowed_for_clubhouse_roles(): void {
+		$all = array( 'administrator' => 'Admin', 'editor' => 'Editor', 'author' => 'Author', 'clubhouse_owner' => 'Owner' );
+
+		$GLOBALS['wp_stub_current_user'] = (object) array( 'roles' => array( 'clubhouse_content_editor' ) );
+		$this->assertSame(
+			array( 'editor' => 'Editor', 'author' => 'Author' ),
+			Blueworx_Clubhouse_Owner_Role::limit_editable_roles( $all )
+		);
+
+		$GLOBALS['wp_stub_current_user'] = (object) array( 'roles' => array( 'administrator' ) );
+		$this->assertSame( $all, Blueworx_Clubhouse_Owner_Role::limit_editable_roles( $all ) );
+	}
+
+	public function test_the_content_editor_menu_drops_setup_and_both_integrations(): void {
+		$GLOBALS['menu'] = array(
+			array( '', 'read', 'index.php' ),
+			array( '', 'manage_clubhouse', 'clubhouse-setup' ),
+			array( '', 'manage_clubhouse', 'clubhouse-site-content' ),
+			array( '', 'edit_posts', 'clubhouse-content' ),
+			array( '', 'manage_options', 'sc-dashboard' ),
+			array( '', 'manage_options', 'latepoint' ),
+			array( '', 'edit_posts', 'edit.php' ),
+		);
+		$GLOBALS['wp_stub_current_user'] = (object) array( 'roles' => array( 'clubhouse_content_editor' ) );
+		Blueworx_Clubhouse_Owner_Role::lock_menu();
+		$removed = array_map( static fn( $c ) => $c['args'][0], wp_stub_calls( 'remove_menu_page' ) );
+		$this->assertContains( 'clubhouse-setup', $removed );
+		$this->assertContains( 'sc-dashboard', $removed );
+		$this->assertContains( 'latepoint', $removed );
+		$this->assertNotContains( 'clubhouse-site-content', $removed );
+		$this->assertNotContains( 'clubhouse-content', $removed );
+		$this->assertNotContains( 'edit.php', $removed );
+	}
+
+	public function test_the_dashboard_takeover_is_owner_only(): void {
+		$GLOBALS['wp_meta_boxes']        = array( 'dashboard' => array( 'normal' => array( 'core' => array( 'x' => array() ) ) ) );
+		$GLOBALS['wp_stub_current_user'] = (object) array( 'roles' => array( 'clubhouse_content_editor' ) );
+		Blueworx_Clubhouse_Owner_Role::takeover_dashboard();
+		$this->assertSame( array(), wp_stub_calls( 'wp_add_dashboard_widget' ) );
+		$this->assertNotSame( array(), $GLOBALS['wp_meta_boxes']['dashboard'] );
 	}
 
 	public function test_lend_caps_leaves_everyone_else_alone(): void {

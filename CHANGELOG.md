@@ -11,6 +11,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Every editable section now carries a stable anchor id, so a menu item can link straight to it.
 - The suggestion list behind every URL field in Club Content now offers section anchors and filtered collection views, not just the top-level pages.
 
+## 0.46.0
+
+- **A second Clubhouse role: ClubHouse - Content Editor.** For the person who runs the club's words and its members, but not its money. They get Club Content, Collections, Posts, Media and Users — and nothing else. No Clubhouse Setup, no SureCart, no LatePoint, no plugins, themes, settings, tools or import/export.
+- **The Owner is now everything the Content Editor is, plus the shop and the diary.** Both roles are built from the same capability map; the Owner simply also holds the key to Clubhouse Setup, SureCart and LatePoint. There is no longer any job the junior role can do that the senior cannot.
+- **Both roles can manage members' accounts, and neither can touch a senior one.** They can view and edit ordinary users, and they can never create, delete, remove or promote anybody. Any attempt to edit an administrator, an Owner, or a BlueWorx role is refused outright — so no one can reset an administrator's password and take over the site. The refusal is enforced at the capability layer, which means it holds on every screen, every REST route, and inside any other plugin that asks.
+- **Both roles are now cloned from the site's live editor role** rather than a hard-coded list, so a club that has adjusted its editor keeps that adjustment. Anything dangerous is then stripped back off, so an over-powered editor cannot leak into a Clubhouse role.
+- **Fixed: LatePoint never appeared for the Owner.** LatePoint locks its menu with a capability of its own rather than the usual WordPress one, so no amount of general permission reached it. The Owner is now given whatever LatePoint and SureCart grant an administrator, read from the site at the moment the role is built — so it keeps working when either plugin renames something.
+- Both roles are relabelled to read **ClubHouse - Owner** and **ClubHouse - Content Editor** in the roles list. Existing owners keep their role and their access; only the label changed.
+- Comments are no longer a Clubhouse surface for either role, and neither is the raw Pages editor — pages are served by Clubhouse's own routing and edited under Club Content.
+
 ## 0.45.0
 
 - **Club owners now get the shop and the diary.** SureCart and LatePoint have joined the owner's menu, and both are theirs to run in full — products, orders and shop settings on one side, bookings, agents and availability on the other. Neither plugin was reachable before: their menus are locked to capabilities the owner did not hold, so they simply were not there.

@@ -14,6 +14,7 @@ $GLOBALS['wp_stub_roles']       = array( 'administrator' => array( 'display' => 
 $GLOBALS['wp_stub_current_user'] = (object) array( 'roles' => array() );
 $GLOBALS['wp_stub_is_front_page'] = false;
 $GLOBALS['wp_stub_is_admin']      = false;
+$GLOBALS['wp_stub_users']         = array();
 $GLOBALS['wp_stub_query_vars']    = array();
 $GLOBALS['wp_stub_transients']    = array();
 $GLOBALS['wp_stub_sideload_next'] = 500;
@@ -31,6 +32,7 @@ function wp_stub_reset(): void {
 	$GLOBALS['wp_stub_current_user'] = (object) array( 'roles' => array() );
 	$GLOBALS['wp_stub_is_front_page'] = false;
 	$GLOBALS['wp_stub_is_admin']      = false;
+	$GLOBALS['wp_stub_users']         = array();
 	$GLOBALS['wp_stub_query_vars']    = array();
 	$GLOBALS['wp_stub_transients']    = array();
 	$GLOBALS['wp_stub_sideload_next'] = 500;
@@ -53,6 +55,7 @@ function wp_stub_on_clubhouse_page( string $slug = '' ): void {
 function wp_stub_off_clubhouse_page(): void {
 	$GLOBALS['wp_stub_is_front_page'] = false;
 	$GLOBALS['wp_stub_is_admin']      = false;
+	$GLOBALS['wp_stub_users']         = array();
 	$GLOBALS['wp_stub_query_vars']    = array();
 }
 function wp_stub_calls( string $fn ): array {
@@ -198,6 +201,9 @@ if ( ! function_exists( 'wp_get_current_user' ) ) {
 if ( ! function_exists( 'remove_menu_page' ) ) {
 	function remove_menu_page( $slug ) { wp_stub_record( 'remove_menu_page', array( $slug ) ); return false; }
 }
+if ( ! function_exists( 'get_userdata' ) ) {
+	function get_userdata( $id ) { return $GLOBALS['wp_stub_users'][ (int) $id ] ?? false; }
+}
 if ( ! function_exists( 'is_admin' ) ) {
 	function is_admin() { return (bool) $GLOBALS['wp_stub_is_admin']; }
 }
@@ -274,7 +280,12 @@ if ( ! function_exists( 'selected' ) ) {
 if ( ! class_exists( 'Blueworx_Stub_Role' ) ) {
 	final class Blueworx_Stub_Role {
 		public string $name;
-		public function __construct( string $name ) { $this->name = $name; }
+		/** @var array<string,bool> */
+		public array $capabilities;
+		public function __construct( string $name ) {
+			$this->name         = $name;
+			$this->capabilities = $GLOBALS['wp_stub_roles'][ $name ]['caps'] ?? array();
+		}
 		public function add_cap( string $cap, bool $grant = true ): void {
 			$GLOBALS['wp_stub_roles'][ $this->name ]['caps'][ $cap ] = $grant;
 			wp_stub_record( 'role_add_cap', array( $this->name, $cap ) );
