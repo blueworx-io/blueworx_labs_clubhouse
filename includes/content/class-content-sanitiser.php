@@ -35,6 +35,12 @@ final class Blueworx_Clubhouse_Content_Sanitiser {
 				return $present ? sanitize_text_field( (string) $raw ) : '';
 			case 'textarea':
 				return $present ? sanitize_textarea_field( (string) $raw ) : '';
+			case 'shortcode':
+				// Same sanitising as a textarea — tags stripped, newlines kept. The
+				// brackets, attributes and quotes a shortcode needs all survive that,
+				// and stripping tags means the field cannot be used to smuggle raw
+				// HTML past the escaping that every other field still gets.
+				return $present ? sanitize_textarea_field( (string) $raw ) : '';
 			case 'url':
 				return $present ? esc_url_raw( (string) $raw ) : '';
 			case 'image':

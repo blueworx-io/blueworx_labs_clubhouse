@@ -71,6 +71,17 @@ final class Blueworx_Clubhouse_Frontend {
 	}
 
 	public static function register(): void {
+		// This is the environment that HAS do_shortcode, so this is where the seam
+		// gets its real implementation. The preview and the unit tests leave it
+		// unset and get escaped text instead — see Blueworx_Clubhouse_Shortcodes.
+		//
+		// Wrapped in a closure rather than passed as the string 'do_shortcode', so
+		// the function is looked up when a shortcode is actually rendered rather
+		// than when the plugin boots. register() runs before init, and a string
+		// callable naming a not-yet-loaded function is not callable yet.
+		Blueworx_Clubhouse_Shortcodes::set_expander(
+			static fn( string $text ): string => (string) do_shortcode( $text )
+		);
 		add_action( 'init', array( self::class, 'register_rewrites' ) );
 		add_action( 'init', array( Blueworx_Clubhouse_Collection_Types::class, 'register' ) );
 		// Priority 20, not the default 10: the look stylesheet has to print after

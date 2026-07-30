@@ -336,6 +336,15 @@ final class Blueworx_Clubhouse_Content_Screen {
 				$out .= '<textarea id="' . self::esc( $id ) . '" name="' . self::esc( $name ) . '" rows="' . $rows . '" placeholder="' . self::esc( (string) ( $field_def['placeholder'] ?? '' ) ) . '" class="clubhouse-input">'
 					. self::esc( (string) $value ) . '</textarea>';
 				break;
+			case 'shortcode':
+				// Monospace and a fixed placeholder, because what goes in here is code
+				// rather than prose. The note names the plugins this exists for, so an
+				// owner is not left guessing what a "shortcode" is.
+				$out .= '<textarea id="' . self::esc( $id ) . '" name="' . self::esc( $name ) . '" rows="3" class="clubhouse-input clubhouse-input--code" placeholder="[surecart_checkout]" spellcheck="false">'
+					. self::esc( (string) $value ) . '</textarea>'
+					. '<p class="clubhouse-help">Paste a shortcode from another plugin — SureCart, SureDash, LatePoint or SureForms. '
+					. 'Leave it empty and nothing is shown here.</p>';
+				break;
 			case 'url':
 				// list= offers every Clubhouse page as a type-to-search suggestion, so
 				// nobody has to know the ?clubhouse_page=… form by heart. It is a

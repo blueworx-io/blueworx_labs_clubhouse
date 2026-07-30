@@ -29,6 +29,15 @@ final class Blueworx_Clubhouse_Content_Catalogue {
 	private static function f_toggle( string $key, string $label ): array {
 		return array( 'key' => $key, 'label' => $label, 'type' => 'toggle' );
 	}
+	/**
+	 * A slot for another plugin's shortcode. Unlike every other field type this
+	 * one's value is rendered as HTML rather than escaped, so it is deliberately
+	 * its own type — never a flag on 'text' or 'textarea', which would quietly
+	 * unescape content everywhere those are used.
+	 */
+	private static function f_shortcode( string $key, string $label ): array {
+		return array( 'key' => $key, 'label' => $label, 'type' => 'shortcode' );
+	}
 	/** @param array<string,string> $options value => label */
 	private static function f_select( string $key, string $label, array $options ): array {
 		return array( 'key' => $key, 'label' => $label, 'type' => 'select', 'options' => $options );

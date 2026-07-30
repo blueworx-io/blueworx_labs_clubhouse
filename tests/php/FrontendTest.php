@@ -11,6 +11,11 @@ final class FrontendTest extends TestCase {
 
 	protected function tearDown(): void {
 		unset( $_COOKIE[ Blueworx_Clubhouse_Demo_Mode::COOKIE_LOOK ] );
+		// register() installs the live shortcode expander, which is global state.
+		// Left installed it would make every later test execute shortcode text —
+		// against a do_shortcode() that does not exist in this harness — and which
+		// tests broke would depend on the order they happened to run in.
+		Blueworx_Clubhouse_Shortcodes::set_expander( null );
 	}
 
 	public function test_link_url_home_is_site_root(): void {

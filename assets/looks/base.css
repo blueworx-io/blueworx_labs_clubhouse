@@ -67,6 +67,14 @@ button,input,select,textarea{font-family:inherit}
 .ch-filter:hover{border-color:var(--color-accent)}
 .ch-filter--on{background:var(--color-accent);color:var(--color-accent-ink);border-color:var(--color-accent)}
 
+/* ---- Shortcode slot (SureCart / SureDash / LatePoint / SureForms) ----
+   Deliberately almost unstyled: the markup inside belongs to another plugin and
+   ships its own CSS, so anything opinionated here would fight it. This only
+   guarantees the block cannot burst the page width — a wide table or an embed
+   scrolls inside its own box rather than forcing the body sideways. */
+.ch-shortcode{max-width:100%;overflow-x:auto}
+.ch-shortcode img,.ch-shortcode iframe{max-width:100%}
+
 /* ---- Stat card grid (Sports/Teams) ---- */
 .ch-scards{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(260px,100%),1fr));gap:16px}
 .ch-scard{display:flex;flex-direction:column;background:var(--color-paper);border:1px solid var(--color-line);border-radius:var(--radius-lg);overflow:hidden;transition:transform .2s ease,box-shadow .2s ease}

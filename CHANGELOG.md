@@ -5,6 +5,11 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.41.0
+
+- **Clubhouse can now render other plugins' shortcodes.** SureCart, SureDash, LatePoint and SureForms all publish shortcodes, and until now pasting one into a Clubhouse field printed it as text — every content field is escaped on output, which is what keeps club-entered content from breaking a page. There is now a dedicated **shortcode** field type that runs the shortcode instead of escaping it, so a checkout, a booking form or a member dashboard can sit inside a Clubhouse page. It is a distinct field type rather than a change to the existing ones: ordinary text and intro fields are escaped exactly as before, so this cannot leak into the rest of the content. Where these slots appear on the site is the next piece of work — this release is the capability.
+- **The preview shows shortcodes as text rather than running them.** The design preview has no WordPress behind it, so there is nothing to run a shortcode against. It shows the shortcode literally instead, which is honest about what will appear on the real site without pretending to render it.
+
 ## 0.40.1
 
 - **WordPress's own "Pages" menu is back for administrators.** The plugin hid it from wp-admin entirely, on the grounds that Clubhouse serves every page through its own routing so the built-in editor was redundant. That reasoning only held for pages Clubhouse owns. It does not hold for pages other plugins add — a SureCart customer dashboard, a LatePoint booking page — which exist as ordinary WordPress pages and became unreachable in the admin, with no obvious cause. Administrators now see Pages in the sidebar and "+ New → Page" in the admin bar again. Club owners are unchanged: they still do not see Pages, and stay inside the Clubhouse screens as before. Nothing was ever deleted by the old behaviour — the pages were there the whole time, just hidden.

@@ -19,6 +19,38 @@ final class Blueworx_Clubhouse_Sections {
 		return htmlspecialchars( $s, ENT_QUOTES, 'UTF-8' );
 	}
 
+	/**
+	 * A slot holding another plugin's shortcode — SureCart, SureDash, LatePoint,
+	 * SureForms. The expanded markup is emitted UNESCAPED; this is the single
+	 * place in the render path where that happens, and it is the whole purpose of
+	 * the section. See Blueworx_Clubhouse_Shortcodes::expand() for what keeps it
+	 * contained: only 'shortcode' catalogue fields reach it, and an environment
+	 * with no expander installed gets the text escaped rather than executed.
+	 *
+	 * Renders nothing at all when the field is empty, so an unused slot never
+	 * leaves an empty band on the page.
+	 *
+	 * @param array{eyebrow?:string,heading?:string,shortcode:string} $data
+	 */
+	public static function shortcode_block( array $data ): string {
+		$html = Blueworx_Clubhouse_Shortcodes::expand( (string) $data['shortcode'] );
+		if ( '' === trim( $html ) ) {
+			return '';
+		}
+		$eyebrow = (string) ( $data['eyebrow'] ?? '' );
+		$heading = (string) ( $data['heading'] ?? '' );
+		$head    = '';
+		if ( '' !== $eyebrow || '' !== $heading ) {
+			$head = '<div class="ch-sec__head"><div>'
+				. ( '' !== $eyebrow ? '<span class="ch-eyebrow">' . self::e( $eyebrow ) . '</span>' : '' )
+				. ( '' !== $heading ? '<h2 class="ch-sec__title ch-sec__title--sm">' . self::e( $heading ) . '</h2>' : '' )
+				. '</div></div>';
+		}
+		return '<section class="ch-sec"><div class="ch-wrap">' . $head
+			. '<div class="ch-shortcode">' . $html . '</div>'
+			. '</div></section>';
+	}
+
 	/** Image slot that degrades to a patterned placeholder when no URL is given. */
 	private static function media( string $url, string $alt, string $modifier ): string {
 		$empty = '' === $url;

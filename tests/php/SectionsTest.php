@@ -95,6 +95,43 @@ final class SectionsTest extends TestCase {
 		$this->assertStringNotContainsString( 'ch-hero__media', $html );
 	}
 
+	public function test_shortcode_block_emits_the_expanded_html_unescaped(): void {
+		Blueworx_Clubhouse_Shortcodes::set_expander( static fn( string $t ): string => '<form class="sc-checkout">buy</form>' );
+		$html = Blueworx_Clubhouse_Sections::shortcode_block( array(
+			'eyebrow'   => 'Membership',
+			'heading'   => 'Join online',
+			'shortcode' => '[surecart_checkout]',
+		) );
+		Blueworx_Clubhouse_Shortcodes::set_expander( null );
+
+		$this->assertStringContainsString( '<form class="sc-checkout">buy</form>', $html );
+		$this->assertStringContainsString( 'class="ch-shortcode"', $html );
+		// The heading around it is still escaped — only the expansion is trusted.
+		$this->assertStringContainsString( '>Join online<', $html );
+	}
+
+	/** Without an expander the shortcode shows as text — the preview's behaviour. */
+	public function test_shortcode_block_escapes_when_no_expander_is_installed(): void {
+		$html = Blueworx_Clubhouse_Sections::shortcode_block( array( 'shortcode' => '[surecart_checkout]' ) );
+		$this->assertStringContainsString( '[surecart_checkout]', $html );
+		$this->assertStringNotContainsString( '<form', $html );
+	}
+
+	public function test_shortcode_block_renders_nothing_when_empty(): void {
+		$this->assertSame( '', Blueworx_Clubhouse_Sections::shortcode_block( array( 'shortcode' => '' ) ) );
+		$this->assertSame( '', Blueworx_Clubhouse_Sections::shortcode_block( array( 'shortcode' => '   ' ) ) );
+	}
+
+	/** A heading is optional — a bare slot renders the expansion and nothing else. */
+	public function test_shortcode_block_omits_the_head_when_unlabelled(): void {
+		Blueworx_Clubhouse_Shortcodes::set_expander( static fn( string $t ): string => '<p>x</p>' );
+		$html = Blueworx_Clubhouse_Sections::shortcode_block( array( 'shortcode' => '[x]' ) );
+		Blueworx_Clubhouse_Shortcodes::set_expander( null );
+
+		$this->assertStringNotContainsString( 'ch-sec__head', $html );
+		$this->assertStringContainsString( '<p>x</p>', $html );
+	}
+
 	/** The stat strip was withdrawn — no renderer should reintroduce that markup. */
 	public function test_no_section_renderer_emits_the_withdrawn_stat_strip(): void {
 		$this->assertFalse( method_exists( Blueworx_Clubhouse_Sections::class, 'stat_strip' ) );
