@@ -172,6 +172,16 @@ final class Blueworx_Clubhouse_Content_Controller {
 	 * @return array<int,array{type:string,text:string}>
 	 */
 	private static function save_menu( array $post, Blueworx_Clubhouse_Storage $storage ): array {
+		if ( ! array_key_exists( 'menu', $post ) ) {
+			// Same invariant as the field-group check above: PHP's max_input_vars
+			// can truncate a large POST before the 'menu' key ever arrives, and a
+			// wholly-absent key must not be read as "every row was deleted" —
+			// Menu::tree() treats a stored empty array as exactly that. An
+			// explicitly submitted empty array (the owner really did empty it)
+			// still reaches menu_from_post() below and saves as empty.
+			return array();
+		}
+
 		$tree = self::menu_from_post( self::as_array( $post['menu'] ?? null ) );
 
 		$tree = self::menu_move( $tree, 'up', self::first_key( $post['clubhouse_menu_up'] ?? null ) );

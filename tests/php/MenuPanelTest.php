@@ -71,6 +71,19 @@ final class MenuPanelTest extends TestCase {
 		$this->assertStringContainsString( 'target unavailable', $html );
 	}
 
+	/**
+	 * Marking no option selected would leave the browser preselecting the
+	 * first option in the list — and saving the form would silently overwrite
+	 * the real (if currently unresolvable) target. The unknown target must be
+	 * its own selected option so a resave round-trips it unchanged.
+	 */
+	public function test_a_stored_target_that_no_longer_exists_is_still_the_selected_option(): void {
+		$html = Blueworx_Clubhouse_Menu_Panel::render( $this->model( array(
+			array( 'label' => 'Ghost', 'target' => 'filter:sports:ghost', 'children' => array() ),
+		) ) );
+		$this->assertStringContainsString( '<option value="filter:sports:ghost" selected>', $html );
+	}
+
 	public function test_labels_and_urls_are_escaped(): void {
 		$html = Blueworx_Clubhouse_Menu_Panel::render( $this->model( array(
 			array( 'label' => '"><script>x</script>', 'target' => 'page:home', 'children' => array() ),

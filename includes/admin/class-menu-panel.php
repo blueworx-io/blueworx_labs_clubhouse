@@ -118,6 +118,7 @@ final class Blueworx_Clubhouse_Menu_Panel {
 	 */
 	private static function picker( array $targets, string $name, string $selected ): string {
 		$is_custom = 0 === strpos( $selected, 'url:' );
+		$known     = self::is_known( $targets, $selected );
 
 		$out   = '<select class="clubhouse-input" name="' . self::esc( $name ) . '" aria-label="Links to">';
 		$group = '';
@@ -131,6 +132,15 @@ final class Blueworx_Clubhouse_Menu_Panel {
 			$out .= '<option value="' . self::esc( $entry['target'] ) . '"' . $sel . '>' . self::esc( $entry['label'] ) . '</option>';
 		}
 		$out .= '' === $group ? '' : '</optgroup>';
+		if ( ! $is_custom && '' !== $selected && ! $known ) {
+			// The stored target no longer resolves to any catalogue entry (its
+			// page was deleted, or an integration it depended on is gone). Emit
+			// it as its own selected option — not just the "target unavailable"
+			// flag — so that re-saving this form (for any reason, on any row)
+			// posts back the same target instead of the browser's preselected
+			// first option silently overwriting it.
+			$out .= '<option value="' . self::esc( $selected ) . '" selected>' . self::esc( $selected ) . ' (unavailable)</option>';
+		}
 		$out .= '<option value="url:"' . ( $is_custom ? ' selected' : '' ) . '>Custom URL…</option>';
 		return $out . '</select>';
 	}
