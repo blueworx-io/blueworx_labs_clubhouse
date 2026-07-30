@@ -5,6 +5,10 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.40.1
+
+- **WordPress's own "Pages" menu is back for administrators.** The plugin hid it from wp-admin entirely, on the grounds that Clubhouse serves every page through its own routing so the built-in editor was redundant. That reasoning only held for pages Clubhouse owns. It does not hold for pages other plugins add — a SureCart customer dashboard, a LatePoint booking page — which exist as ordinary WordPress pages and became unreachable in the admin, with no obvious cause. Administrators now see Pages in the sidebar and "+ New → Page" in the admin bar again. Club owners are unchanged: they still do not see Pages, and stay inside the Clubhouse screens as before. Nothing was ever deleted by the old behaviour — the pages were there the whole time, just hidden.
+
 ## 0.40.0
 
 - **X (Twitter) joins Facebook, Instagram and LinkedIn as a club social link.** Add the club's profile under Site setup → Branding → "X (Twitter) URL" and it appears wherever the other three do: the footer, the "Follow the club" band and the Contact page. Unlike the other three it ships empty rather than pointing at a demo profile, so no existing site gains a link it did not ask for, and the setup progress bar counts it towards the social step.
