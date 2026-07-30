@@ -95,26 +95,9 @@ final class SectionsTest extends TestCase {
 		$this->assertStringNotContainsString( 'ch-hero__media', $html );
 	}
 
-	public function test_stat_strip_renders_each_stat(): void {
-		$html = Blueworx_Clubhouse_Sections::stat_strip( array(
-			array( 'value' => '900+', 'label' => 'Members' ),
-			array( 'value' => '9', 'label' => 'Sports' ),
-		) );
-		$this->assertStringContainsString( 'class="ch-stats"', $html );
-		$this->assertSame( 2, substr_count( $html, 'ch-stats__item' ) );
-		$this->assertListSemantics( $html, 1, 2 );
-		$this->assertStringContainsString( '900+', $html );
-	}
-
-	public function test_stat_strip_marks_featured_by_data_not_position(): void {
-		$html = Blueworx_Clubhouse_Sections::stat_strip( array(
-			array( 'value' => '900+', 'label' => 'Members', 'featured' => true ),
-			array( 'value' => '9', 'label' => 'Sports' ),
-		) );
-		// The emphasis is data-driven: exactly the flagged stat gets the modifier.
-		$this->assertSame( 1, substr_count( $html, 'ch-stats__item--feature' ) );
-		$this->assertStringContainsString( 'ch-stats__item--feature" role="listitem"><b class="ch-stats__value">900+', $html );
-		$this->assertStringNotContainsString( 'style=', $html );
+	/** The stat strip was withdrawn — no renderer should reintroduce that markup. */
+	public function test_no_section_renderer_emits_the_withdrawn_stat_strip(): void {
+		$this->assertFalse( method_exists( Blueworx_Clubhouse_Sections::class, 'stat_strip' ) );
 	}
 
 	public function test_output_is_escaped(): void {
@@ -710,7 +693,9 @@ final class SectionsTest extends TestCase {
 		$this->assertStringContainsString( '<nav class="ch-filters" aria-label="Filter by sport">', $html );
 		// 4 = the nav's own class="ch-filters" (a substring match on "ch-filter") + the 3 pills.
 		$this->assertSame( 4, substr_count( $html, 'class="ch-filter' ) );
-		$this->assertSame( 1, substr_count( $html, 'ch-filter--on' ) );
+		// Counted on the rendered class attribute, not the bare modifier: the
+		// no-reload script also names the class when it tests for the active pill.
+		$this->assertSame( 1, substr_count( $html, 'class="ch-filter ch-filter--on"' ) );
 		$this->assertStringContainsString( 'Rugby', $html );
 		$this->assertNoHexColour( $html );
 		$this->assertStringNotContainsString( 'style=', $html );

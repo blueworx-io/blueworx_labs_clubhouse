@@ -79,7 +79,7 @@ final class ImportControllerTest extends TestCase {
 			$this->storage
 		);
 		$this->assertSame( 'preview', $model['state'] );
-		$this->assertSame( 'Global · Hero', $model['rows'][0]['label'] );
+		$this->assertSame( 'Home · Hero', $model['rows'][0]['label'] );
 
 		$store = new Blueworx_Clubhouse_Content_Store( $this->storage );
 		$this->assertNull( $store->get( 'home', 'hero', 'eyebrow' ) );
@@ -181,7 +181,7 @@ final class ImportControllerTest extends TestCase {
 			$this->storage
 		);
 		$needed = $this->storage->get( Blueworx_Clubhouse_Import_Controller::IMAGES_NEEDED_KEY, array() );
-		$this->assertSame( 'Global · Hero — Background image', $needed[0]['label'] );
+		$this->assertSame( 'Home · Hero — Background image', $needed[0]['label'] );
 	}
 
 	public function test_a_second_unrelated_import_does_not_erase_the_first_images_still_needed_list(): void {
@@ -208,7 +208,7 @@ final class ImportControllerTest extends TestCase {
 
 		$needed = $this->storage->get( Blueworx_Clubhouse_Import_Controller::IMAGES_NEEDED_KEY, array() );
 		$this->assertCount( 1, $needed );
-		$this->assertSame( 'Global · Hero — Background image', $needed[0]['label'] );
+		$this->assertSame( 'Home · Hero — Background image', $needed[0]['label'] );
 	}
 
 	public function test_the_same_still_needed_entry_is_not_duplicated_across_imports(): void {
@@ -241,8 +241,8 @@ final class ImportControllerTest extends TestCase {
 			$this->upload( $this->valid_json() ),
 			$this->storage
 		);
-		$this->assertContains( 'Global · News', $model['sections_off'] );
-		$this->assertNotContains( 'Global · Hero', $model['sections_off'] );
+		$this->assertContains( 'Home · News', $model['sections_off'] );
+		$this->assertNotContains( 'Home · Hero', $model['sections_off'] );
 	}
 
 	public function test_applying_with_the_tidy_up_ticked_switches_uncovered_sections_off(): void {
@@ -287,7 +287,7 @@ final class ImportControllerTest extends TestCase {
 			'state'        => 'preview',
 			'action_url'   => 'https://club.test/wp-admin/admin.php?page=clubhouse-import',
 			'nonce_field'  => '',
-			'rows'         => array( array( 'label' => 'Global · Hero', 'detail' => '1 field' ) ),
+			'rows'         => array( array( 'label' => 'Home · Hero', 'detail' => '1 field' ) ),
 			'sections_off' => array(),
 		) );
 		$this->assertStringContainsString(

@@ -35,6 +35,7 @@ final class SetupScreenTest extends TestCase {
 				'favicon' => '', 'favicon_preview' => '',
 				'facebook' => 'https://facebook.com/riverside', 'instagram' => '',
 				'linkedin' => 'https://linkedin.com/company/riverside',
+				'x' => 'https://x.com/riverside',
 			),
 			'inventory'     => Blueworx_Clubhouse_Setup_Sections::inventory(),
 			'visibility'    => array( 'pages' => array( 'events' => false ), 'sections' => array( 'home.ticker' => false ) ),
@@ -92,7 +93,7 @@ final class SetupScreenTest extends TestCase {
 
 	public function test_renders_a_toggle_per_section_plus_per_page(): void {
 		$html = Blueworx_Clubhouse_Setup_Screen::render( $this->model() );
-		$this->assertSame( 46, substr_count( $html, 'name="clubhouse_section[' ) );
+		$this->assertSame( 45, substr_count( $html, 'name="clubhouse_section[' ) );
 		$this->assertSame( 9, substr_count( $html, 'name="clubhouse_page[' ) );
 		$this->assertStringContainsString( 'name="clubhouse_section[home.hero]" value="1" checked', $html );
 		$this->assertStringContainsString( 'name="clubhouse_section[home.ticker]" value="1">', $html );

@@ -98,7 +98,7 @@ final class ImportApplierContentTest extends TestCase {
 		$plan->add_field( 'home', 'hero', 'eyebrow', 'Est. 1974' );
 		$plan->add_field( 'home', 'hero', 'lede', 'All welcome' );
 		$out = Blueworx_Clubhouse_Import_Applier::apply( $plan, $this->storage );
-		$this->assertSame( 'Global · Hero', $out['rows'][0]['label'] );
+		$this->assertSame( 'Home · Hero', $out['rows'][0]['label'] );
 		$this->assertSame( '2 fields saved', $out['rows'][0]['detail'] );
 	}
 

@@ -21,7 +21,6 @@ final class Blueworx_Clubhouse_Setup_Sections {
 			'hero'        => 'Hero',
 			'quick_tiles' => 'Quick tiles',
 			'ticker'      => 'Ticker',
-			'stats'       => 'Stats',
 			'sports'      => 'Sports grid',
 			'clubhouse'   => 'Clubhouse band',
 			'membership'  => 'Membership tiers',

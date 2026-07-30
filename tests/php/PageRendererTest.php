@@ -111,25 +111,23 @@ final class PageRendererTest extends TestCase {
 		$this->assertSame( 1, substr_count( $body, 'class="ch-social"' ), 'one closing section' );
 	}
 
-	public function test_home_omits_the_stat_strip_by_default(): void {
-		$vis  = new Blueworx_Clubhouse_Visibility( new Blueworx_Clubhouse_Fake_Storage() );
-		$body = Blueworx_Clubhouse_Page_Renderer::home( $this->branding(), $vis, $this->collections() );
-		$this->assertStringNotContainsString( 'class="ch-stats"', $body );
-	}
-
-	public function test_home_renders_the_stat_strip_once_switched_on(): void {
+	/**
+	 * The stat strip was withdrawn from the template. Home must not emit it even
+	 * for a site whose stored visibility still carries the old 'stats' key.
+	 */
+	public function test_home_never_renders_the_withdrawn_stat_strip(): void {
 		$vis = new Blueworx_Clubhouse_Visibility( new Blueworx_Clubhouse_Fake_Storage() );
 		$vis->set_section_visible( 'home', 'stats', true );
 		$body = Blueworx_Clubhouse_Page_Renderer::home( $this->branding(), $vis, $this->collections() );
-		$this->assertStringContainsString( 'class="ch-stats"', $body );
+		$this->assertStringNotContainsString( 'class="ch-stats"', $body );
 	}
 
 	public function test_home_respects_visibility(): void {
 		$storage = new Blueworx_Clubhouse_Fake_Storage();
 		$vis     = new Blueworx_Clubhouse_Visibility( $storage );
-		$vis->set_section_visible( 'home', 'stats', false );
+		$vis->set_section_visible( 'home', 'sponsors', false );
 		$body = Blueworx_Clubhouse_Page_Renderer::home( $this->branding(), $vis, $this->collections() );
-		$this->assertStringNotContainsString( 'class="ch-stats"', $body );
+		$this->assertStringNotContainsString( 'class="ch-sponsors"', $body );
 		$this->assertStringContainsString( 'class="ch-home-hero"', $body ); // others still present
 	}
 

@@ -71,6 +71,9 @@ final class Blueworx_Clubhouse_Setup_Controller {
 		if ( isset( $post['clubhouse_linkedin'] ) ) {
 			$branding->set_linkedin_url( esc_url_raw( (string) $post['clubhouse_linkedin'] ) );
 		}
+		if ( isset( $post['clubhouse_x'] ) ) {
+			$branding->set_x_url( esc_url_raw( (string) $post['clubhouse_x'] ) );
+		}
 		if ( isset( $post['clubhouse_favicon'] ) ) {
 			$branding->set_favicon( sanitize_text_field( (string) $post['clubhouse_favicon'] ) );
 		}
@@ -218,6 +221,7 @@ final class Blueworx_Clubhouse_Setup_Controller {
 				'facebook'        => $branding->get_facebook_url(),
 				'instagram'       => $branding->get_instagram_url(),
 				'linkedin'        => $branding->get_linkedin_url(),
+				'x'               => $branding->get_x_url(),
 			),
 			'inventory'     => Blueworx_Clubhouse_Setup_Sections::inventory(),
 			'visibility'    => array( 'pages' => $pages_state, 'sections' => $sections_state ),

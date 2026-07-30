@@ -42,6 +42,21 @@ final class Blueworx_Clubhouse_Sections {
 			: '';
 	}
 
+	/**
+	 * The header brand: the logo on its own, or the club wordmark on its own —
+	 * never both. A crest that already contains the club's name next to the same
+	 * name set in type reads as a doubled title, so the logo replaces the
+	 * wordmark rather than sitting beside it. The link keeps its accessible name
+	 * either way: the logo carries the club name as its alt text.
+	 *
+	 * @param array{club_name:string,logo?:string} $data
+	 */
+	private static function brand_link( array $data ): string {
+		$mark = self::brand_mark( $data );
+		$body = '' !== $mark ? $mark : self::e( $data['club_name'] );
+		return '<a class="ch-brand" href="' . self::e( Blueworx_Clubhouse_Links::url( 'home' ) ) . '">' . $body . '</a>';
+	}
+
 	/** Up-to-two-letter initials for a photo-less avatar (first + last word). */
 	private static function initials( string $name ): string {
 		$parts = array_values( array_filter( preg_split( '/\s+/', trim( $name ) ) ?: array() ) );
@@ -75,7 +90,7 @@ final class Blueworx_Clubhouse_Sections {
 		return '<a class="ch-skip" href="#ch-main">Skip to content</a>'
 			. $banner
 			. '<header class="ch-nav"><div class="ch-wrap ch-nav__in">'
-			. '<a class="ch-brand" href="' . self::e( Blueworx_Clubhouse_Links::url( 'home' ) ) . '">' . self::brand_mark( $data ) . self::e( $data['club_name'] ) . '</a>'
+			. self::brand_link( $data )
 			. '<nav class="ch-nav__links" aria-label="Primary">' . $links . '</nav>'
 			. '<div class="ch-nav__cta">'
 			. '<a class="ch-btn ch-btn--ghost" href="' . self::e( $login_href ) . '">' . self::e( $data['login'] ) . '</a>'
@@ -213,14 +228,51 @@ final class Blueworx_Clubhouse_Sections {
 		$pills = '';
 		foreach ( $data['filters'] as $f ) {
 			$on     = ! empty( $f['active'] ) ? ' ch-filter--on' : '';
-			$pills .= '<a class="ch-filter' . $on . '" href="' . self::e( $f['href'] ) . '">' . self::e( $f['label'] ) . '</a>';
+			$pills .= '<a class="ch-filter' . $on . '" href="' . self::e( $f['href'] ) . '"'
+				. ( ! empty( $f['active'] ) ? ' aria-current="page"' : '' ) . '>' . self::e( $f['label'] ) . '</a>';
 		}
 		return '<section class="ch-hero-filter"><div class="ch-wrap">'
 			. self::hero_head( 'ch-hero-filter', $data )
 			. '<p class="ch-hero-filter__lede">' . self::e( $data['lede'] ) . '</p>'
 			. '<nav class="ch-filters" aria-label="' . self::e( $data['filter_label'] ) . '">' . $pills . '</nav>'
-			. '</div></section>';
+			// Inside the section, not after it: as a sibling in <main> the script
+			// would sit between this section and the next, breaking the adjacent-
+			// sibling rule that tightens the gap below the pill row.
+			. '</div>' . self::FILTER_SCRIPT . '</section>';
 	}
+
+	/**
+	 * Filter pills stay real links — that is the no-JS behaviour and it keeps each
+	 * filter shareable and crawlable — but with JS they swap the page's <main>
+	 * in place instead of reloading, so the hero, header and scroll position hold
+	 * still while the list below changes.
+	 *
+	 * The server keeps doing the filtering. Nothing here re-implements which rows
+	 * match, so the derived structure below the pills (upcoming/past splits, month
+	 * grouping, empty-state copy) stays correct without being duplicated in JS.
+	 *
+	 * Guarded and delegated from `document`, because the pill row lives inside the
+	 * <main> that gets replaced — a listener bound to the pills themselves would
+	 * die on the first swap. Modified clicks and middle-clicks fall through to the
+	 * browser so open-in-new-tab still works; any fetch failure falls back to a
+	 * normal navigation rather than leaving the reader on a stale list.
+	 */
+	private const FILTER_SCRIPT = '<script>(function(){if(window.__chFilters)return;window.__chFilters=1;'
+		. 'document.addEventListener("click",function(e){'
+		. 'if(e.defaultPrevented||e.metaKey||e.ctrlKey||e.shiftKey||e.altKey||0!==e.button)return;'
+		. 'var a=e.target&&e.target.closest?e.target.closest("a.ch-filter"):null;if(!a)return;'
+		. 'if(a.classList.contains("ch-filter--on")){e.preventDefault();return;}'
+		. 'var main=document.querySelector(".ch-main");if(!main)return;'
+		. 'e.preventDefault();main.setAttribute("aria-busy","true");'
+		. 'fetch(a.href,{credentials:"same-origin"}).then(function(r){'
+		. 'if(!r.ok)throw 0;return r.text()}).then(function(t){'
+		. 'var d=(new DOMParser()).parseFromString(t,"text/html"),n=d.querySelector(".ch-main");'
+		. 'if(!n)throw 0;main.innerHTML=n.innerHTML;main.removeAttribute("aria-busy");'
+		. 'history.pushState({chFilter:1},"",a.href)}).catch(function(){'
+		. 'main.removeAttribute("aria-busy");window.location.href=a.href})});'
+		// Back/forward has to re-render, and the swapped-in markup is not in any
+		// history entry — a reload is the honest way to restore the previous filter.
+		. 'window.addEventListener("popstate",function(){location.reload()})})();</script>';
 
 	/**
 	 * What a collection-backed section renders when its collection is empty.
@@ -245,17 +297,6 @@ final class Blueworx_Clubhouse_Sections {
 			. '<span class="ch-eyebrow">' . self::e( (string) ( $data['eyebrow'] ?? '' ) ) . '</span>'
 			. '<h2 class="ch-sec__title">' . self::e( (string) ( $data['heading'] ?? '' ) ) . '</h2>'
 			. '<p class="ch-empty">' . self::e( $text ) . '</p></div></section>';
-	}
-
-	/** @param array<int,array{value:string,label:string,featured?:bool}> $stats */
-	public static function stat_strip( array $stats ): string {
-		$items = '';
-		foreach ( $stats as $stat ) {
-			$feature = ! empty( $stat['featured'] ) ? ' ch-stats__item--feature' : '';
-			$items  .= '<div class="ch-stats__item' . $feature . '" role="listitem"><b class="ch-stats__value">' . self::e( $stat['value'] )
-				. '</b><span class="ch-stats__label">' . self::e( $stat['label'] ) . '</span></div>';
-		}
-		return '<section class="ch-stats"><div class="ch-wrap ch-stats__in" role="list">' . $items . '</div></section>';
 	}
 
 	/** @param array<int,array{label:string,href:string}> $tiles */
@@ -292,21 +333,71 @@ final class Blueworx_Clubhouse_Sections {
 	 *   cards:array<int,array{image:string,image_alt:string,tag:string,title:string,subtitle:string}>} $data
 	 */
 	public static function card_grid( array $data ): string {
-		$cards = '';
-		foreach ( $data['cards'] as $c ) {
-			$cards .= '<article class="ch-card" role="listitem">'
+		return '<section class="ch-sec"><div class="ch-wrap">'
+			. '<div class="ch-sec__head"><div>'
+			. '<span class="ch-eyebrow">' . self::e( $data['eyebrow'] ) . '</span>'
+			. '<h2 class="ch-sec__title">' . self::e( $data['heading'] ) . '</h2></div>'
+			. '<a class="ch-btn ch-btn--ghost" href="' . self::e( $data['link_href'] ) . '">' . self::e( $data['link_label'] ) . '</a></div>'
+			. self::card_list( $data['cards'] ) . '</div></section>';
+	}
+
+	/** One `ch-cards` list — the body shared by card_grid and card_grid_switch. */
+	private static function card_list( array $cards ): string {
+		$out = '';
+		foreach ( $cards as $c ) {
+			$out .= '<article class="ch-card" role="listitem">'
 				. self::media( $c['image'], $c['image_alt'], 'ch-card__media' )
 				. '<div class="ch-card__scrim"></div>'
 				. '<span class="ch-card__tag">' . self::e( $c['tag'] ) . '</span>'
 				. '<div class="ch-card__body"><h3 class="ch-card__title">' . self::e( $c['title'] ) . '</h3>'
 				. '<p class="ch-card__sub">' . self::e( $c['subtitle'] ) . '</p></div></article>';
 		}
+		return '<div class="ch-cards" role="list">' . $out . '</div>';
+	}
+
+	/**
+	 * The Home card grid with a Sports/Teams switch: same treatment as card_grid,
+	 * but the reader chooses which collection they are looking at instead of the
+	 * page committing to one. Switching is client-side, so no reload.
+	 *
+	 * A group with no cards is dropped rather than shown as an empty tab; if that
+	 * leaves one group, it renders as a plain card_grid with no switch, and if it
+	 * leaves none the section renders nothing at all.
+	 *
+	 * @param array{eyebrow:string,heading:string,
+	 *   groups:array<string,array{label:string,link_label:string,link_href:string,
+	 *     cards:array<int,array{image:string,image_alt:string,tag:string,title:string,subtitle:string}>}>} $data
+	 */
+	public static function card_grid_switch( array $data ): string {
+		$groups = array_filter( $data['groups'], static fn( array $g ): bool => array() !== $g['cards'] );
+		if ( array() === $groups ) {
+			return '';
+		}
+		if ( 1 === count( $groups ) ) {
+			$only = array_values( $groups )[0];
+			return self::card_grid( array(
+				'eyebrow'    => $data['eyebrow'],
+				'heading'    => $data['heading'],
+				'link_label' => $only['link_label'],
+				'link_href'  => $only['link_href'],
+				'cards'      => $only['cards'],
+			) );
+		}
+		$panels = array();
+		foreach ( $groups as $key => $group ) {
+			$panels[ $key ] = array(
+				'label' => $group['label'],
+				'body'  => self::card_list( $group['cards'] )
+					. '<a class="ch-btn ch-btn--ghost ch-cards__all" href="' . self::e( $group['link_href'] ) . '">'
+					. self::e( $group['link_label'] ) . '</a>',
+			);
+		}
 		return '<section class="ch-sec"><div class="ch-wrap">'
 			. '<div class="ch-sec__head"><div>'
 			. '<span class="ch-eyebrow">' . self::e( $data['eyebrow'] ) . '</span>'
-			. '<h2 class="ch-sec__title">' . self::e( $data['heading'] ) . '</h2></div>'
-			. '<a class="ch-btn ch-btn--ghost" href="' . self::e( $data['link_href'] ) . '">' . self::e( $data['link_label'] ) . '</a></div>'
-			. '<div class="ch-cards" role="list">' . $cards . '</div></div></section>';
+			. '<h2 class="ch-sec__title">' . self::e( $data['heading'] ) . '</h2></div></div>'
+			. self::tab_group( $panels )
+			. '</div>' . self::TAB_SCRIPT . '</section>';
 	}
 
 	/**
@@ -431,26 +522,52 @@ final class Blueworx_Clubhouse_Sections {
 				. '<h3 class="ch-evt__title">' . self::e( $e['title'] ) . '</h3>'
 				. '<p class="ch-evt__detail">' . self::e( $e['detail'] ) . '</p></div>';
 		}
-		$tabs = '';
-		foreach ( array( 'fixtures' => 'Fixtures', 'events' => 'Events' ) as $key => $label ) {
-			$on    = 'fixtures' === $key ? ' ch-tabs__btn--on' : '';
-			$tabs .= '<button type="button" class="ch-tabs__btn' . $on . '" data-ch-tabbtn="' . $key . '">' . self::e( $label ) . '</button>';
-		}
 		return '<section class="ch-sec ch-sec--alt"><div class="ch-wrap">'
 			. '<span class="ch-eyebrow">' . self::e( $data['eyebrow'] ) . '</span>'
 			. '<h2 class="ch-sec__title">' . self::e( $data['heading'] ) . '</h2>'
-			. '<div class="ch-tabs" data-ch-tabs>'
-			. '<div class="ch-tabs__bar">' . $tabs . '</div>'
-			. '<div data-ch-tab="fixtures"><div class="ch-fx-list" role="list">' . $fx . '</div></div>'
-			. '<div class="ch-tabs__panel--off" data-ch-tab="events"><div class="ch-evt-grid" role="list">' . $ev . '</div></div>'
-			. '</div></div>'
-			. '<script>(function(){var r=document.querySelector("[data-ch-tabs]");if(!r)return;'
-			. 'r.querySelectorAll("[data-ch-tabbtn]").forEach(function(b){b.addEventListener("click",function(){'
-			. 'var k=b.getAttribute("data-ch-tabbtn");'
-			. 'r.querySelectorAll("[data-ch-tabbtn]").forEach(function(x){x.classList.toggle("ch-tabs__btn--on",x===b)});'
-			. 'r.querySelectorAll("[data-ch-tab]").forEach(function(p){p.classList.toggle("ch-tabs__panel--off",p.getAttribute("data-ch-tab")!==k)});'
-			. '})})})();</script></section>';
+			. self::tab_group( array(
+				'fixtures' => array( 'label' => 'Fixtures', 'body' => '<div class="ch-fx-list" role="list">' . $fx . '</div>' ),
+				'events'   => array( 'label' => 'Events', 'body' => '<div class="ch-evt-grid" role="list">' . $ev . '</div>' ),
+			) )
+			. '</div>' . self::TAB_SCRIPT . '</section>';
 	}
+
+	/**
+	 * The site's one in-page tab treatment: a button bar plus one panel per key,
+	 * first key active. Switching is client-side — no navigation, no reload.
+	 *
+	 * Panels are hidden with a class rather than the `hidden` attribute so a
+	 * stylesheet-less page still shows every panel's content instead of none.
+	 *
+	 * @param array<string,array{label:string,body:string}> $panels ordered; first is active
+	 */
+	private static function tab_group( array $panels ): string {
+		$bar    = '';
+		$bodies = '';
+		$first  = true;
+		foreach ( $panels as $key => $panel ) {
+			$bar    .= '<button type="button" class="ch-tabs__btn' . ( $first ? ' ch-tabs__btn--on' : '' )
+				. '" data-ch-tabbtn="' . self::e( $key ) . '">' . self::e( $panel['label'] ) . '</button>';
+			$bodies .= '<div class="' . ( $first ? '' : 'ch-tabs__panel--off' ) . '" data-ch-tab="' . self::e( $key ) . '">'
+				. $panel['body'] . '</div>';
+			$first   = false;
+		}
+		return '<div class="ch-tabs" data-ch-tabs><div class="ch-tabs__bar">' . $bar . '</div>' . $bodies . '</div>';
+	}
+
+	/**
+	 * Binds every tab group on the page, not just the first — Home now carries two
+	 * (the activity tabs and the sports/teams switch), and a single querySelector
+	 * left the second one dead. Guarded so emitting it once per section is safe.
+	 */
+	private const TAB_SCRIPT = '<script>(function(){if(window.__chTabs)return;window.__chTabs=1;'
+		. 'document.addEventListener("click",function(e){'
+		. 'var b=e.target&&e.target.closest?e.target.closest("[data-ch-tabbtn]"):null;if(!b)return;'
+		. 'var r=b.closest("[data-ch-tabs]");if(!r)return;'
+		. 'var k=b.getAttribute("data-ch-tabbtn");'
+		. 'r.querySelectorAll("[data-ch-tabbtn]").forEach(function(x){x.classList.toggle("ch-tabs__btn--on",x===b)});'
+		. 'r.querySelectorAll("[data-ch-tab]").forEach(function(p){p.classList.toggle("ch-tabs__panel--off",p.getAttribute("data-ch-tab")!==k)});'
+		. '})})();</script>';
 
 	/**
 	 * @param array{eyebrow:string,heading:string,
@@ -831,6 +948,10 @@ final class Blueworx_Clubhouse_Sections {
 	private const LINKEDIN_ICON = '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true">'
 		. '<path d="M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.35V9h3.42v1.56h.05c.48-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28ZM5.34 7.43a2.07 2.07 0 1 1 0-4.14 2.07 2.07 0 0 1 0 4.14ZM7.12 20.45H3.55V9h3.57v11.45ZM22.22 0H1.77C.79 0 0 .77 0 1.73v20.54C0 23.22.79 24 1.77 24h20.45c.98 0 1.78-.78 1.78-1.73V1.73C24 .77 23.2 0 22.22 0Z"/></svg>';
 
+	/** Self-hosted brand mark, inherits colour via currentColor — no hex, no icon font. */
+	private const X_ICON = '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true">'
+		. '<path d="M18.24 2.25h3.31l-7.23 8.26 8.5 11.24h-6.65l-5.2-6.82-5.96 6.82H1.7l7.49-8.56L1.03 2.25h6.82l4.84 6.4 5.55-6.4Zm-1.16 17.52h1.83L7.01 4.13H5.05l12.03 15.64Z"/></svg>';
+
 	/**
 	 * The site's one social-link treatment: a branded pill per network the club
 	 * actually has a URL for. Used by the social band, the footer, and the contact
@@ -846,6 +967,7 @@ final class Blueworx_Clubhouse_Sections {
 			'Facebook'  => self::FACEBOOK_ICON,
 			'Instagram' => self::INSTAGRAM_ICON,
 			'LinkedIn'  => self::LINKEDIN_ICON,
+			'X'         => self::X_ICON,
 		);
 		$out = '';
 		foreach ( $urls as $name => $url ) {
@@ -870,7 +992,7 @@ final class Blueworx_Clubhouse_Sections {
 	 *
 	 * Either half may be empty (its section toggle is off) and the band still works.
 	 *
-	 * @param array{heading:string,lede:string,facebook_url:string,instagram_url:string,linkedin_url:string,columns:array<int,array{label:string,lines:array<int,string>,link_label:string,link_href:string}>} $data
+	 * @param array{heading:string,lede:string,facebook_url:string,instagram_url:string,linkedin_url:string,x_url:string,columns:array<int,array{label:string,lines:array<int,string>,link_label:string,link_href:string}>} $data
 	 */
 	public static function closing_band( array $data ): string {
 		$social = '';
@@ -879,6 +1001,7 @@ final class Blueworx_Clubhouse_Sections {
 				'Facebook'  => $data['facebook_url'],
 				'Instagram' => $data['instagram_url'],
 				'LinkedIn'  => $data['linkedin_url'],
+				'X'         => (string) ( $data['x_url'] ?? '' ),
 			) );
 			$social  = '<div class="ch-wrap ch-social__in">'
 				. '<div class="ch-social__text"><h2 class="ch-social__title">' . self::e( $data['heading'] ) . '</h2>'

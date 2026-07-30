@@ -138,9 +138,14 @@ final class Blueworx_Clubhouse_Content_Catalogue {
 	/** @return array<int,array<string,mixed>> */
 	public static function pages(): array {
 		return array(
+			// Two tabs, not one: the header and footer appear on every page, while
+			// everything else under the old combined tab was Home-only. Editing the
+			// Home hero from a tab labelled "Global" read as a sitewide change.
+			// Only the tab grouping moves — each section keeps its store_page, so
+			// stored content addresses are unchanged and nothing needs migrating.
 			array( 'tab' => 'global', 'label' => 'Global', 'sections' => array(
 				array( 'key' => 'header', 'label' => 'Header', 'type' => 'fields', 'store_page' => 'global',
-					'note' => 'Logo and club name come from Site setup → Branding.',
+					'note' => 'Shown on every page. Logo and club name come from Site setup → Branding.',
 					'fields' => array(
 						self::f_text( 'join', 'Menu CTA label', 'e.g. Join the Club' ),
 						self::f_url( 'join_href', 'Menu CTA link' ),
@@ -148,14 +153,17 @@ final class Blueworx_Clubhouse_Content_Catalogue {
 						self::f_text( 'banner', 'Announcement text' ),
 						self::f_url( 'banner_href', 'Announcement link' ),
 					) ),
+				array( 'key' => 'footer', 'label' => 'Footer', 'type' => 'fields', 'store_page' => 'global',
+					'note' => 'Shown on every page. Contact details and social links come from Site setup → Branding.',
+					'fields' => array( self::f_area( 'tagline', 'About blurb', 4 ) ) ),
+			) ),
+			array( 'tab' => 'home', 'label' => 'Home', 'sections' => array(
 				array( 'key' => 'hero', 'label' => 'Hero', 'type' => 'fields', 'store_page' => 'home', 'fields' => self::hero_fields() ),
 				array( 'key' => 'quick_tiles', 'label' => 'Quick tiles', 'type' => 'loop', 'store_page' => 'home',
 					'note' => 'These render as the icon cards at the foot of the Home hero.',
 					'loop' => array( 'name' => 'Tile', 'plural' => 'Tiles', 'fields' => array( self::f_text( 'label', 'Label' ), self::f_url( 'href', 'Link' ), self::f_select( 'icon', 'Icon', self::TILE_ICON_OPTIONS ) ) ) ),
 				array( 'key' => 'ticker', 'label' => 'Ticker', 'type' => 'loop', 'store_page' => 'home',
 					'loop' => array( 'name' => 'Message', 'plural' => 'Messages', 'fields' => array( self::f_text( 'text', 'Message' ) ) ) ),
-				array( 'key' => 'stats', 'label' => 'Stats', 'type' => 'loop', 'store_page' => 'home',
-					'loop' => array( 'name' => 'Stat', 'plural' => 'Stats', 'fields' => array( self::f_text( 'value', 'Value' ), self::f_text( 'label', 'Label' ), self::f_toggle( 'featured', 'Featured' ) ) ) ),
 				array( 'key' => 'sports', 'label' => 'Sports grid', 'type' => 'linkout', 'store_page' => 'home',
 					'fields' => array( self::f_text( 'heading', 'Heading' ), self::f_area( 'eyebrow', 'Intro' ) ),
 					'link' => array( 'kind' => 'cpt', 'cpt' => 'clubhouse_sport', 'label' => 'Manage sports', 'text' => 'The sports shown here are managed in one place — the Sports collection.' ) ),
@@ -176,9 +184,6 @@ final class Blueworx_Clubhouse_Content_Catalogue {
 				array( 'key' => 'social', 'label' => 'Social', 'type' => 'fields', 'store_page' => 'home',
 					'note' => 'Profile links come from Site setup → Branding.',
 					'fields' => array( self::f_text( 'heading', 'Heading' ), self::f_area( 'lede', 'Lede' ) ) ),
-				array( 'key' => 'footer', 'label' => 'Footer', 'type' => 'fields', 'store_page' => 'global',
-					'note' => 'Contact details and social links come from Site setup → Branding.',
-					'fields' => array( self::f_area( 'tagline', 'About blurb', 4 ) ) ),
 			) ),
 			array( 'tab' => 'about', 'label' => 'About', 'sections' => array(
 				array( 'key' => 'hero', 'label' => 'Hero', 'type' => 'fields', 'store_page' => 'about', 'fields' => self::hero_fields() ),

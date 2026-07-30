@@ -107,12 +107,13 @@ final class ImportSectionsTest extends TestCase {
 		$this->assertTrue( $visibility->is_section_visible( 'about', 'history' ) );
 	}
 
-	/** A section the file fills in is switched back on, even one that ships hidden. */
+	/** A section the file fills in is switched back on, even one the owner had hidden. */
 	public function test_apply_switches_a_hidden_section_back_on_when_the_file_fills_it(): void {
+		( new Blueworx_Clubhouse_Visibility( $this->storage ) )->set_section_visible( 'home', 'ticker', false );
 		$plan = new Blueworx_Clubhouse_Import_Plan();
-		$plan->add_items( 'home', 'stats', array( array( 'value' => '400', 'label' => 'Members' ) ) );
+		$plan->add_items( 'home', 'ticker', array( array( 'text' => 'Friday open session' ) ) );
 		Blueworx_Clubhouse_Import_Sections::apply( $plan, $this->storage );
-		$this->assertTrue( ( new Blueworx_Clubhouse_Visibility( $this->storage ) )->is_section_visible( 'home', 'stats' ) );
+		$this->assertTrue( ( new Blueworx_Clubhouse_Visibility( $this->storage ) )->is_section_visible( 'home', 'ticker' ) );
 	}
 
 	public function test_apply_counts_only_real_changes(): void {
@@ -133,7 +134,7 @@ final class ImportSectionsTest extends TestCase {
 		$plan->add_field( 'home', 'hero', 'eyebrow', 'Est. 1974' );
 
 		$off = Blueworx_Clubhouse_Import_Sections::switching_off( $plan, $this->storage );
-		$this->assertContains( 'Global · News', $off );
+		$this->assertContains( 'Home · News', $off );
 		$this->assertNotContains( 'Global · Ticker', $off );
 	}
 

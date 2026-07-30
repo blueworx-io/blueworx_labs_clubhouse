@@ -5,24 +5,40 @@ use PHPUnit\Framework\TestCase;
 
 final class ContentCatalogueTest extends TestCase {
 
-	public function test_returns_nine_pages_in_page_map_order(): void {
+	/**
+	 * Ten tabs over nine pages: the sitewide header and footer get their own
+	 * "Global" tab, so editing the Home hero is not presented as a sitewide change.
+	 * Both Global and Home map onto Visibility's single 'home' page.
+	 */
+	public function test_returns_tabs_in_page_map_order_with_global_split_from_home(): void {
 		$tabs = array_column( Blueworx_Clubhouse_Content_Catalogue::pages(), 'tab' );
 		$this->assertSame(
-			array( 'global', 'about', 'membership', 'contact', 'login', 'sports', 'teams', 'events', 'calendar' ),
+			array( 'global', 'home', 'about', 'membership', 'contact', 'login', 'sports', 'teams', 'events', 'calendar' ),
 			$tabs
 		);
 	}
 
-	/** Lockstep: every catalogue section key must exist in the visibility inventory for the same page, and vice-versa. */
+	/**
+	 * Lockstep: every catalogue section key must exist in the visibility inventory
+	 * for the same page, and vice-versa. Compared as a union per visibility page,
+	 * because Global and Home are two tabs over one page — between them they must
+	 * still account for exactly the inventory's keys, no more and no fewer.
+	 */
 	public function test_section_keys_match_visibility_inventory_exactly(): void {
 		$inv = array();
 		foreach ( Blueworx_Clubhouse_Setup_Sections::inventory() as $p ) {
 			$inv[ $p['page'] ] = array_column( $p['sections'], 'key' );
 			sort( $inv[ $p['page'] ] );
 		}
+		$seen = array();
 		foreach ( Blueworx_Clubhouse_Content_Catalogue::pages() as $page ) {
 			$vis_page = 'global' === $page['tab'] ? 'home' : $page['tab'];
-			$keys     = array_map( static fn( $s ) => $s['key'], $page['sections'] );
+			foreach ( $page['sections'] as $s ) {
+				$seen[ $vis_page ][] = $s['key'];
+			}
+		}
+		$this->assertSame( array_keys( $inv ), array_keys( $seen ), 'a visibility page has no catalogue tab, or vice-versa' );
+		foreach ( $seen as $vis_page => $keys ) {
 			sort( $keys );
 			$this->assertSame( $inv[ $vis_page ], $keys, "Section keys diverge for {$vis_page}" );
 		}
@@ -52,13 +68,36 @@ final class ContentCatalogueTest extends TestCase {
 	}
 
 	public function test_editable_divergences_are_loops_not_auto(): void {
-		$global = Blueworx_Clubhouse_Content_Catalogue::pages()[0]['sections'];
-		$byKey  = array();
-		foreach ( $global as $s ) { $byKey[ $s['key'] ] = $s['type']; }
+		$byKey = array();
+		foreach ( Blueworx_Clubhouse_Content_Catalogue::pages() as $page ) {
+			if ( 'home' !== $page['tab'] ) {
+				continue;
+			}
+			foreach ( $page['sections'] as $s ) { $byKey[ $s['key'] ] = $s['type']; }
+		}
 		$this->assertSame( 'loop', $byKey['ticker'] );
-		$this->assertSame( 'loop', $byKey['stats'] );
 		$this->assertSame( 'loop', $byKey['info'] );
 		$this->assertSame( 'auto', $byKey['activity'] ); // genuinely derived stays auto
+	}
+
+	/** The Global tab is the sitewide chrome only — every Home section moved to its own tab. */
+	public function test_global_tab_holds_only_sitewide_sections(): void {
+		$pages = Blueworx_Clubhouse_Content_Catalogue::pages();
+		$global = array_values( array_filter( $pages, static fn( $p ) => 'global' === $p['tab'] ) )[0];
+		$this->assertSame( array( 'header', 'footer' ), array_map( static fn( $s ) => $s['key'], $global['sections'] ) );
+		foreach ( $global['sections'] as $s ) {
+			$this->assertSame( 'global', $s['store_page'], $s['key'] );
+		}
+	}
+
+	/** Every section on the Home tab stores against the home page. */
+	public function test_home_tab_sections_all_store_against_home(): void {
+		$pages = Blueworx_Clubhouse_Content_Catalogue::pages();
+		$home  = array_values( array_filter( $pages, static fn( $p ) => 'home' === $p['tab'] ) )[0];
+		$this->assertNotSame( array(), $home['sections'] );
+		foreach ( $home['sections'] as $s ) {
+			$this->assertSame( 'home', $s['store_page'], $s['key'] );
+		}
 	}
 
 	/**
@@ -138,8 +177,9 @@ final class ContentCatalogueTest extends TestCase {
 	public function test_index_keys_by_store_page_and_section(): void {
 		$index = Blueworx_Clubhouse_Content_Catalogue::index();
 		$this->assertArrayHasKey( 'home/hero', $index );
-		$this->assertSame( 'global', $index['home/hero']['tab'] );
-		$this->assertSame( 'Global', $index['home/hero']['tab_label'] );
+		// The Home hero lives on the Home tab, not Global — Global is header/footer only.
+		$this->assertSame( 'home', $index['home/hero']['tab'] );
+		$this->assertSame( 'Home', $index['home/hero']['tab_label'] );
 		$this->assertSame( 'Hero', $index['home/hero']['section_label'] );
 	}
 
@@ -160,7 +200,8 @@ final class ContentCatalogueTest extends TestCase {
 	}
 
 	public function test_address_label_names_a_section_for_a_human(): void {
-		$this->assertSame( 'Global · Hero', Blueworx_Clubhouse_Content_Catalogue::address_label( 'home/hero' ) );
+		$this->assertSame( 'Home · Hero', Blueworx_Clubhouse_Content_Catalogue::address_label( 'home/hero' ) );
+		$this->assertSame( 'Global · Header', Blueworx_Clubhouse_Content_Catalogue::address_label( 'global/header' ) );
 		$this->assertSame( 'Membership · FAQ', Blueworx_Clubhouse_Content_Catalogue::address_label( 'membership/faq' ) );
 	}
 

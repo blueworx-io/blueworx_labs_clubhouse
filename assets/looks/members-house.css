@@ -13,7 +13,10 @@ a{color:inherit;text-decoration:none}
 @media(max-width:640px){:root{--flow-lg:56px;--flow-sm:20px}}
 .ch-main > *{margin-block:0}
 .ch-main > * + *{margin-top:var(--flow-lg)}
-.ch-tiles-sec,.ch-stats,.ch-tiers-sec{margin-top:var(--flow-sm)}
+.ch-tiles-sec,.ch-tiers-sec{margin-top:var(--flow-sm)}
+/* The filter pills belong to the list they filter, so the section they sit above
+   gets the tight rhythm — a full band gap read as two unrelated sections. */
+.ch-hero-filter + *{margin-top:var(--flow-sm)}
 /* Ticker butts straight onto the full-bleed home hero — no gap. */
 .ch-ticker{margin-top:0}
 
@@ -131,7 +134,10 @@ a{color:inherit;text-decoration:none}
 .ch-home-hero__bg{position:absolute;inset:0;z-index:-2;background:var(--color-accent-block)}
 .ch-home-hero__bg--empty{background:radial-gradient(88% 72% at 86% -10%,var(--color-accent-wash),transparent 60%),var(--color-accent-block)}
 .ch-home-hero__img{width:100%;height:100%;object-fit:cover;display:block}
-.ch-home-hero__scrim{position:absolute;inset:0;z-index:-1;background:linear-gradient(180deg,color-mix(in oklab,var(--color-ink) 22%,transparent),color-mix(in oklab,var(--color-ink) 74%,transparent))}
+/* Two layers, because one vertical wash was too thin at the top to carry the
+   heading over a bright photo: a left-weighted wash covering the text column,
+   over a vertical wash that deepens towards the quick tiles. */
+.ch-home-hero__scrim{position:absolute;inset:0;z-index:-1;background:linear-gradient(90deg,color-mix(in oklab,var(--color-ink) 55%,transparent),color-mix(in oklab,var(--color-ink) 18%,transparent) 72%,transparent),linear-gradient(180deg,color-mix(in oklab,var(--color-ink) 48%,transparent),color-mix(in oklab,var(--color-ink) 82%,transparent))}
 .ch-home-hero__in{width:100%;padding-top:var(--space-12);padding-bottom:var(--space-10);color:var(--color-bg)}
 .ch-home-hero .ch-eyebrow{color:color-mix(in oklab,var(--color-bg) 82%,transparent)}
 .ch-home-hero__title{font-family:var(--font-display);font-weight:500;font-size:clamp(38px,8vw,104px);letter-spacing:-.02em;line-height:1;color:var(--color-bg);overflow-wrap:break-word;hyphens:auto}
@@ -198,18 +204,6 @@ a{color:inherit;text-decoration:none}
 @keyframes ch-marquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
 @media(prefers-reduced-motion:reduce){.ch-ticker__track{animation:none}.ch-ticker__viewport{overflow-x:auto}.ch-ticker__track[aria-hidden="true"]{display:none}.ch-ticker__pause,.ch-ticker__pause-cb{display:none}}
 
-/* Stats — flat paper cards; the featured one is an ink field with a fine accent rule
-   (chosen by data, not DOM position). */
-.ch-stats{padding:0}
-.ch-stats__in{display:flex;gap:14px;flex-wrap:wrap}
-.ch-stats__item{flex:1 1 200px;background:var(--color-paper);border:1px solid var(--color-line);border-radius:var(--radius-lg);padding:26px 28px;transition:border-color .2s ease}
-.ch-stats__item:hover{border-color:color-mix(in oklab,var(--color-accent) 50%,var(--color-line))}
-.ch-stats__item--feature{background:var(--color-ink);color:var(--color-bg);border-color:transparent;border-top:3px solid var(--color-accent)}
-.ch-stats__item--feature:hover{border-color:transparent;border-top-color:var(--color-accent)}
-.ch-stats__item--feature .ch-stats__label{color:color-mix(in oklab,var(--color-bg) 72%,transparent)}
-.ch-stats__value{font-family:var(--font-display);font-weight:600;font-size:46px;display:block;letter-spacing:-.02em}
-.ch-stats__label{font-size:13px;font-weight:600;color:var(--color-ink-soft)}
-
 /* Footer — hairline top, body-token links, display-token nothing-loud. */
 .ch-footer{margin-top:var(--flow-lg);padding:66px 0 40px;border-top:1px solid var(--color-line)}
 .ch-footer__grid{display:grid;grid-template-columns:1.4fr 1fr 1fr 1.4fr;gap:40px}
@@ -233,6 +227,9 @@ a{color:inherit;text-decoration:none}
 .ch-sec__title{font-family:var(--font-display);font-weight:500;font-size:clamp(30px,5vw,58px);letter-spacing:-.02em;max-width:18ch;margin-top:14px;line-height:1.02;overflow-wrap:break-word}
 .ch-sec__title + *{margin-top:34px}
 .ch-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+/* The "see them all" link inside a switched card panel — card_grid puts it in the
+   section head, but a panel's link belongs to its own tab, so it sits below. */
+.ch-cards__all{margin-top:var(--space-8)}
 .ch-card{position:relative;border-radius:var(--radius-lg);overflow:hidden;aspect-ratio:3/4;background:var(--color-line);color:var(--color-bg);display:flex;flex-direction:column;justify-content:end;transition:transform .2s ease}
 .ch-card:hover{transform:translateY(-4px)}
 .ch-card__media{position:absolute;inset:0;border-radius:0}

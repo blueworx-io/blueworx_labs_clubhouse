@@ -13,7 +13,7 @@ final class MembersHouseStylesheetTest extends TestCase {
 
 	public function test_styles_the_shell_sections(): void {
 		$css = $this->css();
-		foreach ( array( '.ch-nav', '.ch-hero', '.ch-stats', '.ch-footer', '.ch-btn', '.ch-faq', '.ch-tiers', '.ch-auth' ) as $sel ) {
+		foreach ( array( '.ch-nav', '.ch-hero', '.ch-footer', '.ch-btn', '.ch-faq', '.ch-tiers', '.ch-auth' ) as $sel ) {
 			$this->assertStringContainsString( $sel, $css );
 		}
 	}
@@ -50,11 +50,26 @@ final class MembersHouseStylesheetTest extends TestCase {
 		$this->assertStringContainsString( 'transparent 60%),var(--color-accent-block)}', $css ); // __bg--empty
 	}
 
+	/**
+	 * The scrim darkens with neutral ink, never the club's accent — an accent-tinted
+	 * wash would recolour every club's hero photo. Asserted on the declaration's
+	 * content rather than its exact gradient, so the wash can be retuned for
+	 * legibility without the test having to be rewritten each time.
+	 */
 	public function test_hero_scrim_stays_neutral_ink(): void {
-		$this->assertStringContainsString(
-			'.ch-home-hero__scrim{position:absolute;inset:0;z-index:-1;background:linear-gradient(180deg,color-mix(in oklab,var(--color-ink) 22%,transparent)',
-			$this->css()
-		);
+		$decl = $this->declaration( '.ch-home-hero__scrim' );
+		$this->assertStringContainsString( 'var(--color-ink)', $decl );
+		$this->assertStringNotContainsString( '--color-accent', $decl );
+	}
+
+	/** The body of one rule, found by its exact selector. */
+	private function declaration( string $selector ): string {
+		$css   = $this->css();
+		$at    = strpos( $css, $selector . '{' );
+		$this->assertNotFalse( $at, "missing rule for {$selector}" );
+		$open  = (int) $at + strlen( $selector ) + 1;
+		$close = (int) strpos( $css, '}', $open );
+		return substr( $css, $open, $close - $open );
 	}
 
 	/**

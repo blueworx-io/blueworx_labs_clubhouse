@@ -38,7 +38,9 @@ final class Blueworx_Clubhouse_Setup_Progress {
 
 		$social = ( '' !== $branding->get_facebook_url()  && self::DEMO_FACEBOOK  !== $branding->get_facebook_url() )
 			|| ( '' !== $branding->get_instagram_url() && self::DEMO_INSTAGRAM !== $branding->get_instagram_url() )
-			|| ( '' !== $branding->get_linkedin_url()  && self::DEMO_LINKEDIN  !== $branding->get_linkedin_url() );
+			|| ( '' !== $branding->get_linkedin_url()  && self::DEMO_LINKEDIN  !== $branding->get_linkedin_url() )
+			// X has no demo default to differ from, so any value counts.
+			|| '' !== $branding->get_x_url();
 
 		$items = array(
 			'look'         => $look_chosen,

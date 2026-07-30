@@ -203,12 +203,11 @@ final class PageRendererContentOverrideTest extends TestCase {
 		$this->assertStringContainsString( 'Welcome back, custom.', $html );
 	}
 
-	public function test_home_stats_loop_override(): void {
+	public function test_home_ticker_loop_override(): void {
 		[ $b, $v, $c, $content ] = $this->ctx();
-		$v->set_section_visible( 'home', 'stats', true ); // ships hidden — opt in to render it.
-		$content->set_items( 'home', 'stats', array( array( 'value' => '1234', 'label' => 'Custom stat', 'featured' => true ) ) );
+		$content->set_items( 'home', 'ticker', array( array( 'text' => 'Custom ticker message' ) ) );
 		$html = Blueworx_Clubhouse_Page_Renderer::home( $b, $v, $c, '', $content );
-		$this->assertStringContainsString( 'Custom stat', $html );
+		$this->assertStringContainsString( 'Custom ticker message', $html );
 	}
 
 	/** Reconciliation with v0.23.0: Home's quick_tiles loop has no quick_tiles() call of

@@ -21,7 +21,7 @@ final class SetupSectionsTest extends TestCase {
 		$home = array_values( array_filter( $this->inventory(), static fn( $p ) => 'home' === $p['page'] ) )[0];
 		$keys = array_map( static fn( $s ) => $s['key'], $home['sections'] );
 		$this->assertSame(
-			array( 'header', 'hero', 'quick_tiles', 'ticker', 'stats', 'sports', 'clubhouse', 'membership', 'activity', 'news', 'info', 'sponsors', 'social', 'footer' ),
+			array( 'header', 'hero', 'quick_tiles', 'ticker', 'sports', 'clubhouse', 'membership', 'activity', 'news', 'info', 'sponsors', 'social', 'footer' ),
 			$keys
 		);
 	}
@@ -35,8 +35,9 @@ final class SetupSectionsTest extends TestCase {
 		}
 	}
 
-	public function test_total_section_count_is_46(): void {
+	/** 45 since the Home stat strip was withdrawn — was 46. */
+	public function test_total_section_count_is_45(): void {
 		$total = array_sum( array_map( static fn( $p ) => count( $p['sections'] ), $this->inventory() ) );
-		$this->assertSame( 46, $total );
+		$this->assertSame( 45, $total );
 	}
 }

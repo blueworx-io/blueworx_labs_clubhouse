@@ -12,7 +12,7 @@ final class ContentScreenTest extends TestCase {
 
 	public function test_renders_a_tab_per_page(): void {
 		$html = Blueworx_Clubhouse_Content_Screen::render( $this->model() );
-		foreach ( array( 'Global', 'About', 'Membership', 'Contact', 'Log in', 'Sports', 'Teams', 'Events', 'Calendar' ) as $name ) {
+		foreach ( array( 'Global', 'Home', 'About', 'Membership', 'Contact', 'Log in', 'Sports', 'Teams', 'Events', 'Calendar' ) as $name ) {
 			$this->assertStringContainsString( $name, $html );
 		}
 	}
@@ -74,9 +74,9 @@ final class ContentScreenTest extends TestCase {
 	public function test_every_page_form_posts_the_submit_key_as_a_hidden_input(): void {
 		$html = Blueworx_Clubhouse_Content_Screen::render( $this->model() );
 		$this->assertSame(
-			9,
+			count( Blueworx_Clubhouse_Content_Catalogue::pages() ),
 			preg_match_all( '/<input type="hidden" name="clubhouse_content_submit" value="1">/', $html ),
-			'each of the 9 page forms must post the submit key regardless of which button was activated'
+			'every page form must post the submit key regardless of which button was activated'
 		);
 	}
 
@@ -94,6 +94,33 @@ final class ContentScreenTest extends TestCase {
 	}
 
 	/**
+	 * The hidden inputs of the form belonging to one tab. The screen renders a form
+	 * per tab, and handle_save() scopes to the tab the POST names, so a round-trip
+	 * test has to post the form that actually owns the section under test.
+	 *
+	 * @return array<string,string>
+	 */
+	private function hidden_inputs_of_tab( string $html, string $tab ): array {
+		$offset = 0;
+		while ( false !== ( $start = strpos( $html, '<form', $offset ) ) ) {
+			$end  = (int) strpos( $html, '</form>', $start );
+			$form = substr( $html, $start, $end - $start );
+			// Parse the extracted form directly — hidden_inputs_of_first_form() would
+			// re-cut it at a '</form>' this substring no longer contains.
+			preg_match_all( '/<input type="hidden" name="([^"]+)" value="([^"]*)">/', $form, $m, PREG_SET_ORDER );
+			$post = array();
+			foreach ( $m as $hit ) {
+				$post[ html_entity_decode( $hit[1], ENT_QUOTES ) ] = html_entity_decode( $hit[2], ENT_QUOTES );
+			}
+			if ( ( $post['clubhouse_content_tab'] ?? '' ) === $tab ) {
+				return $post;
+			}
+			$offset = $end + 1;
+		}
+		$this->fail( 'no form found for tab ' . $tab );
+	}
+
+	/**
 	 * End-to-end guard for the defect this screen shipped with: render the real
 	 * screen, derive the $_POST an "Add item" click actually produces (the form's
 	 * hidden inputs + only the activated button, per the HTML spec), and feed it to
@@ -105,32 +132,32 @@ final class ContentScreenTest extends TestCase {
 		$model   = Blueworx_Clubhouse_Content_Controller::build_model( $storage, array(), '', 'http://x.test/admin.php?page=clubhouse-site-content' );
 		$html    = Blueworx_Clubhouse_Content_Screen::render( $model );
 
-		$post = $this->hidden_inputs_of_first_form( $html );
+		$post = $this->hidden_inputs_of_tab( $html, 'home' );
 		$this->assertArrayHasKey( 'clubhouse_content_submit', $post, 'an Add click must still post the save gate' );
-		$this->assertSame( 'global', $post['clubhouse_content_tab'] );
-		$post['clubhouse_content_add'] = array( 'home' => array( 'stats' => '1' ) );
+		$this->assertSame( 'home', $post['clubhouse_content_tab'] );
+		$post['clubhouse_content_add'] = array( 'home' => array( 'ticker' => '1' ) );
 
 		Blueworx_Clubhouse_Content_Controller::handle_save( $post, $storage );
-		$this->assertCount( 1, ( new Blueworx_Clubhouse_Content_Store( $storage ) )->get_items( 'home', 'stats' ) );
+		$this->assertCount( 1, ( new Blueworx_Clubhouse_Content_Store( $storage ) )->get_items( 'home', 'ticker' ) );
 	}
 
 	/** The mirror of the Add round-trip: a Remove click must also reach handle_save. */
 	public function test_remove_item_click_round_trips_through_handle_save(): void {
 		$storage = new Blueworx_Clubhouse_Fake_Storage();
-		( new Blueworx_Clubhouse_Content_Store( $storage ) )->set_items( 'home', 'stats', array(
-			array( 'value' => '900+', 'label' => 'Members' ),
-			array( 'value' => '9', 'label' => 'Sports' ),
+		( new Blueworx_Clubhouse_Content_Store( $storage ) )->set_items( 'home', 'ticker', array(
+			array( 'text' => 'First message' ),
+			array( 'text' => 'Second message' ),
 		) );
 		$model = Blueworx_Clubhouse_Content_Controller::build_model( $storage, array(), '', 'http://x.test/admin.php?page=clubhouse-site-content' );
 		$html  = Blueworx_Clubhouse_Content_Screen::render( $model );
 
-		$post = $this->hidden_inputs_of_first_form( $html );
-		$post['clubhouse_content_remove'] = array( 'home' => array( 'stats' => '0' ) );
+		$post = $this->hidden_inputs_of_tab( $html, 'home' );
+		$post['clubhouse_content_remove'] = array( 'home' => array( 'ticker' => '0' ) );
 
 		Blueworx_Clubhouse_Content_Controller::handle_save( $post, $storage );
-		$items = ( new Blueworx_Clubhouse_Content_Store( $storage ) )->get_items( 'home', 'stats' );
+		$items = ( new Blueworx_Clubhouse_Content_Store( $storage ) )->get_items( 'home', 'ticker' );
 		$this->assertCount( 1, $items );
-		$this->assertSame( '9', $items[0]['value'], 'item 0 removed, item 1 survives' );
+		$this->assertSame( 'Second message', $items[0]['text'], 'item 0 removed, item 1 survives' );
 	}
 
 	/** Regression guard: the 'select' field type must render a <select> with the option map, current value selected. */
@@ -156,14 +183,14 @@ final class ContentScreenTest extends TestCase {
 	/** Regression guard: a loop item's every declared field (incl. toggles) is rendered, so an unticked toggle still posts within a present group. */
 	public function test_loop_item_renders_every_field_including_its_toggle(): void {
 		$s = new Blueworx_Clubhouse_Fake_Storage();
-		( new Blueworx_Clubhouse_Content_Store( $s ) )->set_items( 'home', 'stats', array(
-			array( 'value' => '10', 'label' => 'Teams', 'featured' => false ),
+		( new Blueworx_Clubhouse_Content_Store( $s ) )->set_items( 'membership', 'tiers', array(
+			array( 'name' => 'Adult', 'price' => '£295', 'featured' => false ),
 		) );
 		$model = Blueworx_Clubhouse_Content_Controller::build_model( $s, array(), '', '' );
 		$html  = Blueworx_Clubhouse_Content_Screen::render( $model );
-		$this->assertStringContainsString( 'name="item[home][stats][0][value]"', $html );
-		$this->assertStringContainsString( 'name="item[home][stats][0][label]"', $html );
-		$this->assertStringContainsString( 'name="item[home][stats][0][featured]"', $html );
+		$this->assertStringContainsString( 'name="item[membership][tiers][0][name]"', $html );
+		$this->assertStringContainsString( 'name="item[membership][tiers][0][price]"', $html );
+		$this->assertStringContainsString( 'name="item[membership][tiers][0][featured]"', $html );
 	}
 
 	/** Auto sections are read-only: an explanatory note, no editable inputs for that section. */
@@ -239,11 +266,18 @@ final class ContentScreenTest extends TestCase {
 		// The $_POST a real "Save" click produces on the Global tab, with nothing edited:
 		// every rendered input posts its current (empty) value.
 		$model = Blueworx_Clubhouse_Content_Controller::build_model( $storage, array(), '', 'http://x.test/admin.php?page=clubhouse-site-content' );
-		$global = $model['catalogue'][0];
-		$this->assertSame( 'global', $global['tab'] );
+		// The Home tab, not Global: Global is header/footer only now, too few fields
+		// for this guard to prove anything.
+		$home = null;
+		foreach ( $model['catalogue'] as $page ) {
+			if ( 'home' === $page['tab'] ) {
+				$home = $page;
+			}
+		}
+		$this->assertNotNull( $home );
 		$posted = 0;
-		$post   = array( 'clubhouse_content_tab' => 'global', 'clubhouse_content_submit' => '1', 'field' => array(), 'hidden' => array() );
-		foreach ( $global['sections'] as $section ) {
+		$post   = array( 'clubhouse_content_tab' => 'home', 'clubhouse_content_submit' => '1', 'field' => array(), 'hidden' => array() );
+		foreach ( $home['sections'] as $section ) {
 			foreach ( (array) ( $section['fields'] ?? array() ) as $field ) {
 				$post['field'][ (string) $section['store_page'] ][ (string) $section['key'] ][ (string) $field['key'] ] = '';
 				++$posted;

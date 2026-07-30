@@ -15,18 +15,35 @@ final class VisibilityTest extends TestCase {
 		$this->assertTrue( $this->vis()->is_section_visible( 'home', 'hero' ) );
 	}
 
-	public function test_home_stats_is_hidden_by_default(): void {
-		$this->assertFalse( $this->vis()->is_section_visible( 'home', 'stats' ) );
-	}
-
-	public function test_a_default_hidden_section_can_be_switched_on(): void {
+	/**
+	 * No section ships hidden today — home.stats was the only one and the stat
+	 * strip has been withdrawn. Pinned so reintroducing an opt-in section is a
+	 * deliberate edit here rather than a silent default change.
+	 */
+	public function test_no_section_ships_hidden(): void {
 		$v = $this->vis();
-		$v->set_section_visible( 'home', 'stats', true );
-		$this->assertTrue( $v->is_section_visible( 'home', 'stats' ) );
+		foreach ( Blueworx_Clubhouse_Setup_Sections::inventory() as $page ) {
+			foreach ( $page['sections'] as $section ) {
+				$this->assertTrue(
+					$v->is_section_visible( $page['page'], $section['key'] ),
+					$page['page'] . '.' . $section['key']
+				);
+			}
+		}
 	}
 
-	public function test_default_hidden_is_keyed_per_page_not_per_section_name(): void {
-		$this->assertTrue( $this->vis()->is_section_visible( 'about', 'stats' ) );
+	public function test_a_section_can_be_switched_off_and_back_on(): void {
+		$v = $this->vis();
+		$v->set_section_visible( 'home', 'sponsors', false );
+		$this->assertFalse( $v->is_section_visible( 'home', 'sponsors' ) );
+		$v->set_section_visible( 'home', 'sponsors', true );
+		$this->assertTrue( $v->is_section_visible( 'home', 'sponsors' ) );
+	}
+
+	public function test_section_state_is_keyed_per_page_not_per_section_name(): void {
+		$v = $this->vis();
+		$v->set_section_visible( 'home', 'hero', false );
+		$this->assertTrue( $v->is_section_visible( 'about', 'hero' ) );
 	}
 
 	public function test_hiding_a_page_persists(): void {

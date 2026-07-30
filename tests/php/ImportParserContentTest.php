@@ -75,10 +75,10 @@ final class ImportParserContentTest extends TestCase {
 	}
 
 	public function test_loop_items_gain_every_declared_field(): void {
-		$out = $this->parse( array( 'home' => array( 'stats' => array( 'items' => array(
-			array( 'value' => '450', 'label' => 'Members' ),
+		$out = $this->parse( array( 'membership' => array( 'tiers' => array( 'items' => array(
+			array( 'name' => 'Adult', 'price' => '£295' ),
 		) ) ) ) );
-		$this->assertFalse( $out['plan']->items()['home']['stats'][0]['featured'] );
+		$this->assertFalse( $out['plan']->items()['membership']['tiers'][0]['featured'] );
 	}
 
 	public function test_items_on_a_non_loop_section_is_warned(): void {
@@ -118,24 +118,24 @@ final class ImportParserContentTest extends TestCase {
 	}
 
 	public function test_a_loop_item_toggle_explicit_false_is_read_as_false(): void {
-		$out = $this->parse( array( 'home' => array( 'stats' => array( 'items' => array(
-			array( 'value' => '450', 'label' => 'Members', 'featured' => false ),
+		$out = $this->parse( array( 'membership' => array( 'tiers' => array( 'items' => array(
+			array( 'name' => 'Adult', 'featured' => false ),
 		) ) ) ) );
-		$this->assertFalse( $out['plan']->items()['home']['stats'][0]['featured'] );
+		$this->assertFalse( $out['plan']->items()['membership']['tiers'][0]['featured'] );
 	}
 
 	public function test_a_loop_item_toggle_explicit_true_is_read_as_true(): void {
-		$out = $this->parse( array( 'home' => array( 'stats' => array( 'items' => array(
-			array( 'value' => '450', 'label' => 'Members', 'featured' => true ),
+		$out = $this->parse( array( 'membership' => array( 'tiers' => array( 'items' => array(
+			array( 'name' => 'Adult', 'featured' => true ),
 		) ) ) ) );
-		$this->assertTrue( $out['plan']->items()['home']['stats'][0]['featured'] );
+		$this->assertTrue( $out['plan']->items()['membership']['tiers'][0]['featured'] );
 	}
 
 	public function test_a_loop_item_toggle_absent_is_read_as_false(): void {
-		$out = $this->parse( array( 'home' => array( 'stats' => array( 'items' => array(
-			array( 'value' => '450', 'label' => 'Members' ),
+		$out = $this->parse( array( 'membership' => array( 'tiers' => array( 'items' => array(
+			array( 'name' => 'Adult' ),
 		) ) ) ) );
-		$this->assertFalse( $out['plan']->items()['home']['stats'][0]['featured'] );
+		$this->assertFalse( $out['plan']->items()['membership']['tiers'][0]['featured'] );
 	}
 
 	public function test_an_image_object_is_queued_not_stored(): void {
@@ -146,7 +146,7 @@ final class ImportParserContentTest extends TestCase {
 		$img = $out['plan']->images()[0];
 		$this->assertSame( 'https://e.test/a.jpg', $img['url'] );
 		$this->assertSame( 'Pavilion', $img['alt'] );
-		$this->assertSame( 'Global · Hero — Background image', $img['label'] );
+		$this->assertSame( 'Home · Hero — Background image', $img['label'] );
 		$this->assertSame( -1, $img['index'] );
 	}
 

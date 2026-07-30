@@ -26,6 +26,27 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 final class Blueworx_Clubhouse_Content_Screen {
 
+	/** Shared <datalist> every URL field points at — see links_datalist(). */
+	private const LINKS_DATALIST_ID = 'clubhouse-links';
+
+	/**
+	 * Every Clubhouse page as a URL suggestion, so a link field can be filled by
+	 * typing "member" instead of knowing the ?clubhouse_page=… form. Rendered once
+	 * per screen and shared by every url input via list=.
+	 *
+	 * Suggestions only: the input stays a free-text URL field, because plenty of
+	 * links point at pages this plugin does not own.
+	 */
+	private static function links_datalist(): string {
+		$out = '<datalist id="' . self::LINKS_DATALIST_ID . '">';
+		foreach ( Blueworx_Clubhouse_Page_Map::pages() as $page ) {
+			$url  = Blueworx_Clubhouse_Links::url( '' === $page['slug'] ? 'home' : $page['slug'] );
+			$out .= '<option value="' . self::esc( $url ) . '" label="' . self::esc( $page['label'] ) . '">'
+				. self::esc( $page['label'] ) . '</option>';
+		}
+		return $out . '</datalist>';
+	}
+
 	private static function esc( string $v ): string {
 		return htmlspecialchars( $v, ENT_QUOTES, 'UTF-8' );
 	}
@@ -88,6 +109,7 @@ final class Blueworx_Clubhouse_Content_Screen {
 		$out .= self::header();
 		$out .= self::notices( $model['notices'], $action_url );
 		$out .= self::page_tabs( $catalogue, $action_url );
+		$out .= self::links_datalist();
 
 		foreach ( $catalogue as $index => $page ) {
 			$out .= self::page_block( $page, 0 === $index, $action_url, (string) $model['nonce_field'] );
@@ -315,7 +337,11 @@ final class Blueworx_Clubhouse_Content_Screen {
 					. self::esc( (string) $value ) . '</textarea>';
 				break;
 			case 'url':
-				$out .= '<input type="url" id="' . self::esc( $id ) . '" name="' . self::esc( $name ) . '" value="' . self::esc( (string) $value ) . '" placeholder="' . self::esc( (string) ( $field_def['placeholder'] ?? '' ) ) . '" class="clubhouse-input">';
+				// list= offers every Clubhouse page as a type-to-search suggestion, so
+				// nobody has to know the ?clubhouse_page=… form by heart. It is a
+				// suggestion list, not a picker: the field still takes any URL, which
+				// external links and other plugins' pages need.
+				$out .= '<input type="url" id="' . self::esc( $id ) . '" name="' . self::esc( $name ) . '" value="' . self::esc( (string) $value ) . '" placeholder="' . self::esc( (string) ( $field_def['placeholder'] ?? '' ) ) . '" class="clubhouse-input" list="' . self::LINKS_DATALIST_ID . '">';
 				break;
 			case 'image':
 				$out .= '<div class="clubhouse-media" data-media="' . self::esc( $name ) . '">'
