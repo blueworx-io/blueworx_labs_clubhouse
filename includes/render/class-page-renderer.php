@@ -800,6 +800,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 			$out .= Blueworx_Clubhouse_Sections::contact_form( array(
 				'eyebrow'         => self::cget( $content, 'contact', 'form', 'eyebrow', 'Get in touch' ),
 				'heading'         => self::cget( $content, 'contact', 'form', 'heading', 'Send us a message' ),
+				'club_name'       => $branding->get_club_name(),
 				'name_label'      => 'Full name',
 				'email_label'     => 'Email',
 				'enquiry_label'   => 'Enquiry type',
@@ -807,10 +808,11 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'message_label'   => 'Message',
 				'submit_label'    => self::cget( $content, 'contact', 'form', 'submit_label', 'Send message' ),
 				'info'            => array(
-					'heading' => 'Find us',
-					'address' => array( '12 Riverside Lane', 'Marlow, SL7 1AA' ),
-					'email'   => 'hello@clubhouse.example',
-					'phone'   => '01628 000 000',
+					'heading' => self::cget( $content, 'contact', 'form', 'info_heading', 'Find us' ),
+					'address' => self::lines( self::cget( $content, 'contact', 'form', 'address', "12 Riverside Lane\nMarlow, SL7 1AA" ) ),
+					'email'   => self::cget( $content, 'contact', 'form', 'email', 'hello@clubhouse.example' ),
+					'phone'   => self::cget( $content, 'contact', 'form', 'phone', '01628 000 000' ),
+					'map'     => self::media_src( (string) self::cget( $content, 'contact', 'form', 'map_image', '' ) ),
 					'socials' => array(
 						'Facebook'  => $branding->get_facebook_url(),
 						'Instagram' => $branding->get_instagram_url(),
@@ -904,6 +906,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 			$out .= Blueworx_Clubhouse_Sections::stat_card_grid( array(
 				'eyebrow'    => 'All sections',
 				'heading'    => 'Pick your sport.',
+				'empty_text' => '' !== $filter ? 'No sections match that filter.' : '',
 				'link_label' => Blueworx_Clubhouse_Cta::JOIN . ' →',
 				'link_href'  => Blueworx_Clubhouse_Links::url( 'membership' ),
 				'cards'      => array_map(
@@ -967,6 +970,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 			$out .= Blueworx_Clubhouse_Sections::stat_card_grid( array(
 				'eyebrow'    => 'Squads',
 				'heading'    => 'Find your team.',
+				'empty_text' => '' !== $filter ? 'No teams match that filter.' : '',
 				'link_label' => '',
 				'link_href'  => '',
 				'cards'      => array_map(
@@ -1032,8 +1036,9 @@ final class Blueworx_Clubhouse_Page_Renderer {
 		if ( $visibility->is_section_visible( 'events', 'upcoming' ) ) {
 			$upcoming = array_values( array_filter( $filtered, static fn( $e ) => 'upcoming' === $e['status'] ) );
 			$out .= Blueworx_Clubhouse_Sections::event_grid( array(
-				'eyebrow' => 'Coming up',
-				'heading' => 'Upcoming events',
+				'eyebrow'    => 'Coming up',
+				'heading'    => 'Upcoming events',
+				'empty_text' => '' !== $filter ? 'No events match that filter.' : '',
 				'cards'   => array_map(
 					static function ( array $e ): array {
 						return array(
@@ -1104,9 +1109,10 @@ final class Blueworx_Clubhouse_Page_Renderer {
 		}
 		if ( $visibility->is_section_visible( 'calendar', 'schedule' ) ) {
 			$out .= Blueworx_Clubhouse_Sections::calendar_months( array(
-				'eyebrow' => self::cget( $content, 'calendar', 'schedule', 'eyebrow', 'The schedule' ),
-				'heading' => self::cget( $content, 'calendar', 'schedule', 'heading', 'Fixtures & results' ),
-				'months'  => Blueworx_Clubhouse_Fixture_Projection::calendar_months( self::filter_rows( $fixtures, $filter, $pick ) ),
+				'eyebrow'    => self::cget( $content, 'calendar', 'schedule', 'eyebrow', 'The schedule' ),
+				'heading'    => self::cget( $content, 'calendar', 'schedule', 'heading', 'Fixtures & results' ),
+				'empty_text' => '' !== $filter ? 'No fixtures match that filter.' : '',
+				'months'     => Blueworx_Clubhouse_Fixture_Projection::calendar_months( self::filter_rows( $fixtures, $filter, $pick ) ),
 			) );
 		}
 		if ( $visibility->is_section_visible( 'calendar', 'cta' ) ) {

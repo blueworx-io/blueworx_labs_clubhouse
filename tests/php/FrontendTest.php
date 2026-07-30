@@ -245,4 +245,37 @@ final class FrontendTest extends TestCase {
 		$this->assertSame( '', Blueworx_Clubhouse_Frontend::sanitize_filter( '' ) );
 		$this->assertSame( '', Blueworx_Clubhouse_Frontend::sanitize_filter( array( 'x' ) ) ); // non-string
 	}
+
+	/**
+	 * Every clubhouse page printed the club name alone, so a browser tab, a search
+	 * result and a shared link were identical across the whole site.
+	 */
+	public function test_document_title_names_the_page_then_the_club(): void {
+		$this->assertSame(
+			'Membership — Crewe Vagrants Squash',
+			Blueworx_Clubhouse_Frontend::document_title( 'Crewe Vagrants Squash', 'Membership' )
+		);
+		$this->assertSame(
+			'Teams — Crewe Vagrants Squash',
+			Blueworx_Clubhouse_Frontend::document_title( 'Crewe Vagrants Squash', 'Teams' )
+		);
+	}
+
+	/** The landing page keeps the bare club name — "Home — Club" reads worse. */
+	public function test_document_title_leaves_the_home_page_as_the_club_name(): void {
+		$this->assertSame(
+			'Crewe Vagrants Squash',
+			Blueworx_Clubhouse_Frontend::document_title( 'Crewe Vagrants Squash', 'Home' )
+		);
+		$this->assertSame(
+			'Crewe Vagrants Squash',
+			Blueworx_Clubhouse_Frontend::document_title( 'Crewe Vagrants Squash', '' )
+		);
+	}
+
+	/** Before the club sets a name there is nothing to append to. */
+	public function test_document_title_falls_back_to_the_page_label(): void {
+		$this->assertSame( 'Contact', Blueworx_Clubhouse_Frontend::document_title( '', 'Contact' ) );
+		$this->assertSame( '', Blueworx_Clubhouse_Frontend::document_title( '', '' ) );
+	}
 }

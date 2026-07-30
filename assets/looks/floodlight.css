@@ -100,7 +100,7 @@ a{color:inherit;text-decoration:none}
 
 /* Hero — dark canvas with an ambient accent glow; the highlighted word glows. */
 .ch-hero{padding:var(--space-16) 0 0;background:radial-gradient(82% 62% at 88% -12%,color-mix(in oklab,var(--color-accent) 16%,transparent),transparent 60%)}
-.ch-hero__title{font-family:var(--font-display);font-weight:700;font-size:clamp(40px,8.5vw,116px);letter-spacing:-.02em;line-height:.98;overflow-wrap:break-word;hyphens:auto}
+.ch-hero__title{font-family:var(--font-display);font-weight:700;font-size:clamp(40px,7.6vw,104px);letter-spacing:-.02em;line-height:.98;overflow-wrap:break-word;hyphens:auto}
 .ch-hero__hl{color:var(--color-accent-deep);text-shadow:0 0 26px color-mix(in oklab,var(--color-accent) 55%,transparent);display:inline;max-width:100%}
 .ch-hero__sub{display:flex;justify-content:space-between;align-items:end;gap:30px;margin-top:26px;flex-wrap:wrap}
 .ch-hero__lede{max-width:40ch;font-size:19px;color:var(--color-ink-soft)}
@@ -125,7 +125,7 @@ a{color:inherit;text-decoration:none}
 .ch-home-hero__scrim{position:absolute;inset:0;z-index:-1;background:linear-gradient(180deg,color-mix(in oklab,var(--color-bg) 34%,transparent),color-mix(in oklab,var(--color-bg) 84%,transparent))}
 .ch-home-hero__in{width:100%;padding-top:var(--space-12);padding-bottom:var(--space-8);color:var(--color-ink)}
 .ch-home-hero .ch-eyebrow{color:var(--color-accent-deep)}
-.ch-home-hero__title{font-family:var(--font-display);font-weight:700;font-size:clamp(40px,8.5vw,116px);letter-spacing:-.02em;line-height:.98;color:var(--color-ink);overflow-wrap:break-word;hyphens:auto}
+.ch-home-hero__title{font-family:var(--font-display);font-weight:700;font-size:clamp(40px,7.6vw,104px);letter-spacing:-.02em;line-height:.98;color:var(--color-ink);overflow-wrap:break-word;hyphens:auto}
 .ch-home-hero__hl{color:var(--color-accent-deep);text-shadow:0 0 30px color-mix(in oklab,var(--color-accent) 65%,transparent);display:inline;max-width:100%}
 .ch-home-hero__lede{max-width:44ch;font-size:19px;margin-top:22px;color:color-mix(in oklab,var(--color-ink) 88%,transparent)}
 .ch-home-hero__cta{display:flex;gap:12px;flex-wrap:wrap;margin-top:26px}

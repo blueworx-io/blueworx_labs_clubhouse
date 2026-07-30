@@ -638,6 +638,7 @@ final class SectionsTest extends TestCase {
 	public function test_contact_form_renders_fields_select_and_info(): void {
 		$html = Blueworx_Clubhouse_Sections::contact_form( array(
 			'eyebrow' => 'Get in touch', 'heading' => 'Send us a message',
+			'club_name' => 'Riverside Sports Club',
 			'name_label' => 'Full name', 'email_label' => 'Email',
 			'enquiry_label' => 'Enquiry type', 'enquiry_options' => array( 'General', 'Membership' ),
 			'message_label' => 'Message', 'submit_label' => 'Send message',
@@ -893,6 +894,7 @@ final class SectionsTest extends TestCase {
 		return array(
 			'eyebrow'         => 'Get in touch',
 			'heading'         => 'Send us a message',
+			'club_name'       => 'Riverside Sports Club',
 			'name_label'      => 'Full name',
 			'email_label'     => 'Email',
 			'enquiry_label'   => 'Enquiry type',
@@ -953,5 +955,88 @@ final class SectionsTest extends TestCase {
 		$html = Blueworx_Clubhouse_Sections::contact_form( $this->contactData() );
 		$this->assertStringContainsString( 'ch-social__link', $html );
 		$this->assertStringNotContainsString( 'ch-contact__social', $html );
+	}
+
+	/** A club that publishes no phone gets no empty link where the number would be. */
+	public function test_contact_omits_the_link_for_a_detail_the_club_left_blank(): void {
+		$data                  = $this->contactData();
+		$data['info']['phone'] = '';
+		$html                  = Blueworx_Clubhouse_Sections::contact_form( $data );
+		$this->assertStringNotContainsString( 'href="tel:"', $html );
+		$this->assertStringContainsString( 'mailto:hello@clubhouse.example', $html );
+
+		$data['info']['email'] = '';
+		$html                  = Blueworx_Clubhouse_Sections::contact_form( $data );
+		$this->assertStringNotContainsString( 'href="mailto:"', $html );
+	}
+
+	/** The map tile links out to Google Maps for the address it sits beside. */
+	public function test_contact_map_links_to_google_maps_for_the_address(): void {
+		$html = Blueworx_Clubhouse_Sections::contact_form( $this->contactData() );
+		$this->assertStringContainsString( 'class="ch-contact__map-link"', $html );
+		$this->assertStringContainsString( 'google.com/maps/search/', $html );
+		$this->assertStringContainsString( rawurlencode( '12 Riverside Lane, Marlow' ), $html );
+	}
+
+	/**
+	 * A club-supplied map image replaces the placeholder, and its alt names the
+	 * club. The alt used to be the literal "Map of ClubHouse" — every site shipped
+	 * the product's name to screen readers regardless of whose club it was.
+	 */
+	public function test_contact_map_uses_the_supplied_image_and_names_the_club(): void {
+		$data                = $this->contactData();
+		$data['info']['map'] = 'https://example.org/where-we-play.jpg';
+		$html                = Blueworx_Clubhouse_Sections::contact_form( $data );
+		$this->assertStringContainsString( 'https://example.org/where-we-play.jpg', $html );
+		$this->assertStringContainsString( 'alt="Map of Riverside Sports Club"', $html );
+		$this->assertStringNotContainsString( 'Map of ClubHouse', $html );
+	}
+
+	/**
+	 * A collection-backed section with nothing in it rendered its eyebrow and
+	 * heading over empty space — a bare "The committee" on About, a bare
+	 * "Upcoming events" on Events.
+	 */
+	public function test_empty_collection_sections_render_nothing(): void {
+		$this->assertSame( '', Blueworx_Clubhouse_Sections::people_grid( array(
+			'eyebrow' => 'Who runs the club', 'heading' => 'The committee', 'people' => array(),
+		) ) );
+		$this->assertSame( '', Blueworx_Clubhouse_Sections::event_grid( array(
+			'eyebrow' => 'Coming up', 'heading' => 'Upcoming events', 'cards' => array(),
+		) ) );
+		$this->assertSame( '', Blueworx_Clubhouse_Sections::stat_card_grid( array(
+			'eyebrow' => 'Squads', 'heading' => 'Find your team.', 'cards' => array(),
+			'link_label' => '', 'link_href' => '',
+		) ) );
+	}
+
+	/**
+	 * Behind a filter, vanishing entirely would read as a broken page rather than
+	 * an empty result, so a section given empty_text keeps its heading and says so.
+	 */
+	public function test_empty_section_with_empty_text_explains_the_filter(): void {
+		$html = Blueworx_Clubhouse_Sections::stat_card_grid( array(
+			'eyebrow' => 'Squads', 'heading' => 'Find your team.', 'cards' => array(),
+			'empty_text' => 'No teams match that filter.', 'link_label' => '', 'link_href' => '',
+		) );
+		$this->assertStringContainsString( 'Find your team.', $html );
+		$this->assertStringContainsString( 'class="ch-empty"', $html );
+		$this->assertStringContainsString( 'No teams match that filter.', $html );
+	}
+
+	/**
+	 * The highlight is an inline sibling of the lead, so with no separator the two
+	 * ran together — "Represent" + "Crewe Vagrants" printed "RepresentCrewe".
+	 */
+	public function test_hero_lead_gains_a_gap_before_the_highlight(): void {
+		$this->assertSame( 'Represent ', Blueworx_Clubhouse_Sections::lead_with_gap( 'Represent' ) );
+		$this->assertSame( 'Play at ', Blueworx_Clubhouse_Sections::lead_with_gap( 'Play at' ) );
+	}
+
+	/** A lead that already ends in a separator is left exactly as the author wrote it. */
+	public function test_hero_lead_gap_is_not_doubled_or_forced(): void {
+		$this->assertSame( 'We will point you to ', Blueworx_Clubhouse_Sections::lead_with_gap( 'We will point you to ' ) );
+		$this->assertSame( 'Squash-', Blueworx_Clubhouse_Sections::lead_with_gap( 'Squash-' ) );
+		$this->assertSame( '', Blueworx_Clubhouse_Sections::lead_with_gap( '' ) );
 	}
 }

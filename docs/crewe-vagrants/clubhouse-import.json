@@ -1,0 +1,486 @@
+{
+  "clubhouse_import": 1,
+  "generated_for": "0.39.0",
+  "content": {
+    "global": {
+      "header": {
+        "join": "Join the club",
+        "join_href": "https://wordpress-878924-5561053.cloudwaysapps.com/?clubhouse_page=membership",
+        "banner_show": false,
+        "banner": "",
+        "banner_href": ""
+      },
+      "footer": {
+        "tagline": "Crewe Vagrants Squash and Squash 57 play at Crewe Vagrants Sports Club in Willaston, near Nantwich. Three courts, around 120 members, and players from age 5 to 89."
+      }
+    },
+    "home": {
+      "hero": {
+        "eyebrow": "Squash and Squash 57 · Nantwich, Cheshire",
+        "title_lead": "Welcome to",
+        "title_highlight": "Crewe Vagrants Squash",
+        "lede": "A sociable, friendly club where players of all abilities and all ages can enjoy one of the best sports in the world for health and fitness.",
+        "cta_primary": "View membership",
+        "cta_primary_href": "https://wordpress-878924-5561053.cloudwaysapps.com/?clubhouse_page=membership",
+        "cta_secondary": "Book a court",
+        "cta_secondary_href": "https://wordpress-878924-5561053.cloudwaysapps.com/?clubhouse_page=calendar",
+        "image": {
+          "url": "https://wordpress-878924-5561053.cloudwaysapps.com/wp-content/uploads/2025/07/Ladies_5.jpeg",
+          "alt": "A Crewe Vagrants player stretching for a low forehand on court"
+        }
+      },
+      "quick_tiles": {
+        "items": [
+          { "label": "Membership", "href": "https://wordpress-878924-5561053.cloudwaysapps.com/?clubhouse_page=membership", "icon": "join" },
+          { "label": "Teams", "href": "https://wordpress-878924-5561053.cloudwaysapps.com/?clubhouse_page=teams", "icon": "fixtures" },
+          { "label": "Court bookings", "href": "https://wordpress-878924-5561053.cloudwaysapps.com/?clubhouse_page=calendar", "icon": "tour" },
+          { "label": "Contact", "href": "https://wordpress-878924-5561053.cloudwaysapps.com/?clubhouse_page=contact", "icon": "contact" }
+        ]
+      },
+      "ticker": {
+        "items": [
+          { "text": "Monday ladies session · 18:20–20:20" },
+          { "text": "Wednesday ladies session · 10:00–12:00" },
+          { "text": "Thursday team matches · 19:00–22:00" },
+          { "text": "Friday racketball open session · 17:15–18:10" },
+          { "text": "Saturday open session · 10:00–12:00" },
+          { "text": "Saturday junior team training · 14:00–16:00" },
+          { "text": "Sunday junior coaching · 10:00–12:00" },
+          { "text": "Sunday club night and fitness training · 16:00–17:20" }
+        ]
+      },
+      "stats": {
+        "items": [
+          { "value": "120", "label": "Members", "featured": true },
+          { "value": "3", "label": "Courts", "featured": false },
+          { "value": "5–89", "label": "Member ages", "featured": false }
+        ]
+      },
+      "sports": {
+        "heading": "Squash for every player",
+        "eyebrow": "Play squash or Squash 57 in a friendly club for all ages and all abilities."
+      },
+      "clubhouse": {
+        "eyebrow": "Our club",
+        "heading": "Three courts and a welcoming community",
+        "image": {
+          "url": "https://wordpress-878924-5561053.cloudwaysapps.com/wp-content/uploads/2025/07/Members_1-scaled.jpg",
+          "alt": "Members playing on one of the Crewe Vagrants courts"
+        },
+        "cta_label": "About the club",
+        "cta_href": "https://wordpress-878924-5561053.cloudwaysapps.com/?clubhouse_page=about"
+      },
+      "membership": {
+        "eyebrow": "Membership",
+        "heading": "Choose how and when you play",
+        "lede": "Full adult, junior and family memberships are available, and can be paid annually or monthly.",
+        "cta_label": "View membership",
+        "cta_href": "https://wordpress-878924-5561053.cloudwaysapps.com/?clubhouse_page=membership"
+      },
+      "news": {
+        "eyebrow": "Club news",
+        "heading": "Latest from Crewe Vagrants",
+        "items": [
+          {
+            "tag": "Club news",
+            "date": "18 July 2025",
+            "title": "Club Handicap Tournament 2025",
+            "image": {
+              "url": "https://wordpress-878924-5561053.cloudwaysapps.com/wp-content/uploads/2025/07/handicap.jpg",
+              "alt": "Handicap tournament finalists with the trophy"
+            }
+          },
+          {
+            "tag": "Club news",
+            "date": "14 December 2024",
+            "title": "Club Champions 2024/2025",
+            "image": {
+              "url": "https://wordpress-878924-5561053.cloudwaysapps.com/wp-content/uploads/2025/07/Team.jpg",
+              "alt": "The Crewe Vagrants squad in club colours"
+            }
+          },
+          {
+            "tag": "Club news",
+            "date": "18 July 2025",
+            "title": "Charity Event",
+            "image": {
+              "url": "https://wordpress-878924-5561053.cloudwaysapps.com/wp-content/uploads/2026/07/db9418fe-edf4-4409-b2f2-aebaceee4840-1.jpeg",
+              "alt": "Members taking part in the club charity event"
+            }
+          }
+        ]
+      },
+      "info": {
+        "items": [
+          {
+            "label": "Where we play",
+            "lines": "Crewe Vagrants Sports Club\nThe Vagrants Ground, Newcastle Road\nWillaston, Nantwich, Cheshire CW5 7EP",
+            "link_label": "Open in Maps",
+            "link_href": "https://www.google.com/maps/search/?api=1&query=Crewe%20Vagrants%20Sports%20Club%2C%20Newcastle%20Road%2C%20Willaston%2C%20Nantwich%2C%20CW5%207EP"
+          },
+          {
+            "label": "Bar opening hours",
+            "lines": "Mon–Fri 18:00–23:00\nSat 12:00–23:00\nSun 11:00–18:00",
+            "link_label": "",
+            "link_href": ""
+          },
+          {
+            "label": "Contact",
+            "lines": "enquiries@crewevagrantssquash.co.uk",
+            "link_label": "Contact us",
+            "link_href": "https://wordpress-878924-5561053.cloudwaysapps.com/?clubhouse_page=contact"
+          }
+        ]
+      },
+      "social": {
+        "heading": "Follow Crewe Vagrants Squash",
+        "lede": "Keep up with club news, competitions and community updates."
+      }
+    },
+    "about": {
+      "hero": {
+        "eyebrow": "Squash and Squash 57 · Nantwich",
+        "title_lead": "A club for",
+        "title_highlight": "every age and ability",
+        "lede": "Crewe Vagrants provides a sociable and friendly atmosphere where players can enjoy squash and Squash 57 for health, fitness and competition.",
+        "cta_primary": "View membership",
+        "cta_primary_href": "https://wordpress-878924-5561053.cloudwaysapps.com/?clubhouse_page=membership",
+        "cta_secondary": "Contact us",
+        "cta_secondary_href": "https://wordpress-878924-5561053.cloudwaysapps.com/?clubhouse_page=contact",
+        "image": {
+          "url": "https://wordpress-878924-5561053.cloudwaysapps.com/wp-content/uploads/2025/07/Exhibition_Juniors_1-1.jpg",
+          "alt": "Juniors and coaches gathered on court after a club exhibition"
+        }
+      },
+      "history": {
+        "heading": "Our history",
+        "items": [
+          {
+            "year": "1932",
+            "title": "Crewe Vagrants established",
+            "desc": "Crewe Vagrants Sports Club was founded in 1932 and plays from its ground on the outskirts of Nantwich, Cheshire."
+          }
+        ]
+      },
+      "values": {
+        "items": [
+          { "title": "Friendly", "description": "A sociable and welcoming environment for members and visitors." },
+          { "title": "Inclusive", "description": "Players range from age 5 to 89, with sessions for juniors, ladies and adults of every standard." },
+          { "title": "Active", "description": "Squash and Squash 57 are among the best sports in the world for health and fitness." }
+        ]
+      },
+      "facilities": {
+        "eyebrow": "Facilities",
+        "heading": "Two glass-back courts and one standard court",
+        "image": {
+          "url": "https://wordpress-878924-5561053.cloudwaysapps.com/wp-content/uploads/2025/07/Court_2-scaled.jpg",
+          "alt": "One of the Crewe Vagrants squash courts"
+        },
+        "cta_label": "Book a court",
+        "cta_href": "https://wordpress-878924-5561053.cloudwaysapps.com/?clubhouse_page=calendar"
+      },
+      "get_involved": {
+        "items": [
+          { "title": "Club sessions", "description": "Join the regular open, ladies, junior and club training sessions that run through the week." },
+          { "title": "Team squash", "description": "Eligible members can represent Crewe Vagrants in the North West Counties leagues on Thursday evenings." },
+          { "title": "Coaching", "description": "Develop your game through adult and junior coaching led by an England Squash qualified coach." }
+        ]
+      },
+      "cta": {
+        "heading": "Ready to play?",
+        "lede": "Explore the membership options or contact the club with any questions.",
+        "cta_label": "View membership",
+        "cta_href": "https://wordpress-878924-5561053.cloudwaysapps.com/?clubhouse_page=membership"
+      }
+    },
+    "membership": {
+      "hero": {
+        "eyebrow": "Annual and monthly membership",
+        "title_lead": "Find the right",
+        "title_highlight": "membership",
+        "lede": "Full adult, junior and family membership, paid annually or monthly.",
+        "cta_primary": "Choose membership",
+        "cta_primary_href": "https://wordpress-878924-5561053.cloudwaysapps.com/?clubhouse_page=membership",
+        "cta_secondary": "Contact us",
+        "cta_secondary_href": "https://wordpress-878924-5561053.cloudwaysapps.com/?clubhouse_page=contact",
+        "image": {
+          "url": "https://wordpress-878924-5561053.cloudwaysapps.com/wp-content/uploads/2025/07/Ladies_2-scaled.jpg",
+          "alt": "Members warming up together on court before a session"
+        }
+      },
+      "why": {
+        "heading": "Everything you need to play",
+        "eyebrow": "Membership gives you access to the club's three courts, its sessions and the online booking system.",
+        "items": [
+          { "title": "Court access", "description": "Book any of the three courts through the online booking system." },
+          { "title": "Court fees included", "description": "Court booking and lighting fees are included in your membership." },
+          { "title": "Club community", "description": "Play with members across a wide range of ages and standards." },
+          { "title": "Competitive play", "description": "Enter the club leagues and play for the club teams in the North West Counties leagues." }
+        ]
+      },
+      "tiers": {
+        "items": [
+          {
+            "name": "Full",
+            "price": "£295",
+            "period": "per year",
+            "features": "Or £28 per month\nFull adult membership\nCourt booking and lighting included\nClub leagues and teams",
+            "featured": true,
+            "cta_label": "Join"
+          },
+          {
+            "name": "Junior",
+            "price": "£50",
+            "period": "per year",
+            "features": "Or £5 per month\nFor members under the age of 18\nJunior coaching and team training\nCourt booking and lighting included",
+            "featured": false,
+            "cta_label": "Join"
+          },
+          {
+            "name": "Family",
+            "price": "50% off",
+            "period": "per extra adult",
+            "features": "Up to 3 additional adults at the same address\n50% discount on the full adult price\nEach adult holds their own membership\nAsk the club to set this up",
+            "featured": false,
+            "cta_label": "Enquire"
+          }
+        ]
+      },
+      "detail": {
+        "items": [
+          { "text": "Court booking fees", "included": true },
+          { "text": "Court lighting fees", "included": true },
+          { "text": "Online court booking", "included": true },
+          { "text": "Club leagues and club teams", "included": true },
+          { "text": "Pay-as-you-play court rental for non-members", "included": false }
+        ]
+      },
+      "steps": {
+        "items": [
+          { "title": "Choose your membership", "description": "Pick full adult, junior or family membership, and decide whether to pay annually or monthly." },
+          { "title": "Complete your application", "description": "Complete the club application with your membership and contact details." },
+          { "title": "Receive your account", "description": "Once your membership is active you will receive access to the online court booking system." }
+        ]
+      },
+      "faq": {
+        "items": [
+          { "question": "Can non-members play?", "answer": "Contact the club to ask about playing as a guest or renting a court as a non-member." },
+          { "question": "How do I book a court?", "answer": "Members book online through the club's booking system." },
+          { "question": "Can I pay monthly?", "answer": "Yes. Full membership is £28 a month and junior membership is £5 a month, as an alternative to paying for the year." },
+          { "question": "Is there a family rate?", "answer": "Yes. Up to three additional adults living at the same address receive a 50% discount on the adult price. Contact the club to arrange it." }
+        ]
+      },
+      "cta": {
+        "heading": "Join Crewe Vagrants Squash",
+        "lede": "Choose your membership or contact the club if you need help deciding.",
+        "cta_label": "Contact us",
+        "cta_href": "https://wordpress-878924-5561053.cloudwaysapps.com/?clubhouse_page=contact"
+      }
+    },
+    "contact": {
+      "hero": {
+        "eyebrow": "Contact Crewe Vagrants Squash",
+        "title_lead": "How can we",
+        "title_highlight": "help?",
+        "lede": "Get in touch about membership, coaching, facilities, bookings, your account or another club enquiry.",
+        "cta_primary": "Email the club",
+        "cta_primary_href": "mailto:enquiries@crewevagrantssquash.co.uk",
+        "cta_secondary": "View membership",
+        "cta_secondary_href": "https://wordpress-878924-5561053.cloudwaysapps.com/?clubhouse_page=membership",
+        "image": {
+          "url": "https://wordpress-878924-5561053.cloudwaysapps.com/wp-content/uploads/2026/07/IMG_0035-2.jpg",
+          "alt": "Two players during a match on a Crewe Vagrants court"
+        }
+      },
+      "form": {
+        "eyebrow": "Send an enquiry",
+        "heading": "Contact the club",
+        "submit_label": "Send message",
+        "info_heading": "Find us",
+        "address": "Crewe Vagrants Sports Club\nThe Vagrants Ground, Newcastle Road\nWillaston, Nantwich\nCheshire CW5 7EP",
+        "email": "enquiries@crewevagrantssquash.co.uk",
+        "phone": "",
+        "map_image": {
+          "url": "https://wordpress-878924-5561053.cloudwaysapps.com/wp-content/uploads/2025/07/Court_2-scaled.jpg",
+          "alt": "The courts at Crewe Vagrants Sports Club"
+        }
+      },
+      "social": {
+        "heading": "Follow the club"
+      }
+    },
+    "sports": {
+      "hero": {
+        "eyebrow": "Squash and Squash 57",
+        "title_lead": "Play at",
+        "title_highlight": "Crewe Vagrants",
+        "lede": "Enjoy social, coached and competitive play across a regular weekly programme."
+      },
+      "cta": {
+        "heading": "Start playing",
+        "lede": "View the membership options or contact the club to find the right session.",
+        "cta_label": "View membership",
+        "cta_href": "https://wordpress-878924-5561053.cloudwaysapps.com/?clubhouse_page=membership"
+      }
+    },
+    "teams": {
+      "hero": {
+        "eyebrow": "North West Counties",
+        "title_lead": "Represent",
+        "title_highlight": "Crewe Vagrants",
+        "lede": "The club has four teams playing on Thursday evenings in the North West Counties leagues."
+      },
+      "cta": {
+        "heading": "Interested in team squash?",
+        "lede": "Team players must be England Squash members and have a SquashLevels ranking. Contact the committee to register your interest.",
+        "cta_label": "Contact us",
+        "cta_href": "https://wordpress-878924-5561053.cloudwaysapps.com/?clubhouse_page=contact"
+      }
+    },
+    "events": {
+      "hero": {
+        "eyebrow": "Club competitions and events",
+        "title_lead": "Get involved",
+        "title_highlight": "at the club",
+        "lede": "Follow club tournaments, social events and community activities."
+      },
+      "cta": {
+        "heading": "Keep up with club activity",
+        "lede": "Visit the news page for the latest competition and event updates.",
+        "cta_label": "Contact us",
+        "cta_href": "https://wordpress-878924-5561053.cloudwaysapps.com/?clubhouse_page=contact"
+      }
+    },
+    "calendar": {
+      "hero": {
+        "eyebrow": "Court bookings and club activity",
+        "title_lead": "Plan your",
+        "title_highlight": "time on court",
+        "lede": "Check court availability and keep track of the regular club sessions."
+      },
+      "schedule": {
+        "heading": "Club calendar",
+        "eyebrow": "Courts are generally available from 08:00 to 22:00, with Thursday availability ending at 19:00 for team matches."
+      },
+      "cta": {
+        "heading": "Manage your bookings",
+        "lede": "Members can access their account and court bookings through the member dashboard.",
+        "cta_label": "Member dashboard",
+        "cta_href": "https://wordpress-878924-5561053.cloudwaysapps.com/?page_id=1449"
+      }
+    },
+    "login": {
+      "form": {
+        "heading": "Member log in",
+        "lede": "Log in to manage your membership and book a court."
+      }
+    }
+  },
+  "collections": {
+    "clubhouse_sport": [
+      {
+        "title": "Squash",
+        "label": "Squash",
+        "subtitle": "Social, coached and competitive play",
+        "description": "Play squash in a friendly club for all ages and abilities, with open sessions, coaching, internal competitions and North West Counties teams.",
+        "stat1_value": "3",
+        "stat1_label": "Courts",
+        "stat2_value": "4",
+        "stat2_label": "Teams",
+        "image": {
+          "url": "https://wordpress-878924-5561053.cloudwaysapps.com/wp-content/uploads/2026/07/IMG_0035.jpg",
+          "alt": "A squash rally on a glass-back court at Crewe Vagrants"
+        }
+      },
+      {
+        "title": "Squash 57",
+        "label": "Squash 57",
+        "subtitle": "Friendly and accessible racket sport",
+        "description": "Join regular Squash 57 activity, including the Friday open session and club competitions. Squash 57 is the sport previously known as racketball.",
+        "stat1_value": "Friday",
+        "stat1_label": "Open session",
+        "stat2_value": "17:15",
+        "stat2_label": "Start time",
+        "image": {
+          "url": "https://wordpress-878924-5561053.cloudwaysapps.com/wp-content/uploads/2025/07/Junior_1-scaled.jpg",
+          "alt": "A young player about to strike the ball on court"
+        }
+      }
+    ],
+    "clubhouse_team": [
+      {
+        "title": "First Team",
+        "sport": "Squash",
+        "description": "Crewe Vagrants First Team competes in the North West Counties leagues.",
+        "match_day": "Thursday evening",
+        "league": "North West Counties",
+        "image": {
+          "url": "https://wordpress-878924-5561053.cloudwaysapps.com/wp-content/uploads/2025/07/Team.jpg",
+          "alt": "The Crewe Vagrants squad in club colours"
+        }
+      },
+      {
+        "title": "Second Team",
+        "sport": "Squash",
+        "description": "Crewe Vagrants Second Team competes in the North West Counties leagues.",
+        "match_day": "Thursday evening",
+        "league": "North West Counties",
+        "image": {
+          "url": "https://wordpress-878924-5561053.cloudwaysapps.com/wp-content/uploads/2025/07/First_team_1-scaled.jpg",
+          "alt": "A Crewe Vagrants match in progress on the glass-back court"
+        }
+      },
+      {
+        "title": "Third Team",
+        "sport": "Squash",
+        "description": "Crewe Vagrants Third Team competes in the North West Counties leagues.",
+        "match_day": "Thursday evening",
+        "league": "North West Counties",
+        "image": {
+          "url": "https://wordpress-878924-5561053.cloudwaysapps.com/wp-content/uploads/2025/07/Members_2-scaled.jpg",
+          "alt": "Members playing a club match at Crewe Vagrants"
+        }
+      },
+      {
+        "title": "Fourth Team",
+        "sport": "Squash",
+        "description": "Crewe Vagrants Fourth Team competes in the North West Counties leagues.",
+        "match_day": "Thursday evening",
+        "league": "North West Counties",
+        "image": {
+          "url": "https://wordpress-878924-5561053.cloudwaysapps.com/wp-content/uploads/2025/07/Junior_coaching_2.jpg",
+          "alt": "A coached session on court at Crewe Vagrants"
+        }
+      }
+    ],
+    "clubhouse_event": [
+      {
+        "title": "Club Handicap Tournament 2025",
+        "tag": "Club competition",
+        "date": "18 July 2025",
+        "detail": "The club handicap tournament, open to members across every standard.",
+        "cta_label": "",
+        "cta_href": "",
+        "status": "past"
+      },
+      {
+        "title": "Club Champions 2024/2025",
+        "tag": "Club competition",
+        "date": "14 December 2024",
+        "detail": "The 2024/2025 club championships.",
+        "cta_label": "",
+        "cta_href": "",
+        "status": "past"
+      },
+      {
+        "title": "Charity Event",
+        "tag": "Community",
+        "date": "18 July 2025",
+        "detail": "A club charity event supported by members.",
+        "cta_label": "",
+        "cta_href": "",
+        "status": "past"
+      }
+    ]
+  }
+}
