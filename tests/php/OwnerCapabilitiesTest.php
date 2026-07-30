@@ -12,7 +12,7 @@ final class OwnerCapabilitiesTest extends TestCase {
 
 	public function test_grants_the_essential_capabilities(): void {
 		$caps = Blueworx_Clubhouse_Owner_Capabilities::capabilities();
-		foreach ( array( 'read', 'manage_clubhouse', 'upload_files', 'list_users', 'moderate_comments', 'edit_posts', 'edit_others_posts', 'publish_posts', 'delete_posts', 'read_private_posts' ) as $cap ) {
+		foreach ( array( 'read', 'manage_clubhouse', 'upload_files', 'list_users', 'edit_posts', 'edit_others_posts', 'publish_posts', 'delete_posts', 'read_private_posts' ) as $cap ) {
 			$this->assertArrayHasKey( $cap, $caps );
 			$this->assertTrue( $caps[ $cap ] );
 		}
@@ -38,8 +38,51 @@ final class OwnerCapabilitiesTest extends TestCase {
 
 	public function test_menu_allowlist_is_exactly_the_owner_surfaces(): void {
 		$this->assertSame(
-			array( 'index.php', 'clubhouse-content', 'clubhouse-site-content', 'upload.php', 'edit.php', 'edit-comments.php', 'users.php', 'profile.php' ),
+			array(
+				'index.php',
+				'clubhouse-setup',
+				'clubhouse-site-content',
+				'clubhouse-content',
+				'sc-dashboard',
+				'latepoint',
+				'edit.php',
+				'upload.php',
+				'users.php',
+				'profile.php',
+			),
 			Blueworx_Clubhouse_Owner_Capabilities::menu_allowlist()
 		);
+	}
+
+	public function test_comments_are_no_longer_an_owner_surface(): void {
+		$this->assertNotContains( 'edit-comments.php', Blueworx_Clubhouse_Owner_Capabilities::menu_allowlist() );
+		$this->assertArrayNotHasKey( 'moderate_comments', Blueworx_Clubhouse_Owner_Capabilities::capabilities() );
+	}
+
+	public function test_integration_caps_are_plugin_scoped_only(): void {
+		$caps = Blueworx_Clubhouse_Owner_Capabilities::integration_caps();
+		$this->assertContains( 'manage_sc_shop_settings', $caps );
+		$this->assertContains( 'manage_latepoint', $caps );
+		foreach ( $caps as $cap ) {
+			$this->assertNotContains( $cap, Blueworx_Clubhouse_Owner_Capabilities::denied(), "{$cap} must not be a denied cap" );
+		}
+	}
+
+	public function test_manage_options_is_lent_never_held(): void {
+		$this->assertContains( 'manage_options', Blueworx_Clubhouse_Owner_Capabilities::lent_caps() );
+		$this->assertContains( 'manage_options', Blueworx_Clubhouse_Owner_Capabilities::denied() );
+		$this->assertArrayNotHasKey( 'manage_options', Blueworx_Clubhouse_Owner_Capabilities::capabilities() );
+	}
+
+	public function test_lending_is_refused_on_the_core_screens_it_protects(): void {
+		foreach ( array( 'options-general.php', 'options.php', 'plugins.php', 'themes.php', 'update-core.php', 'tools.php' ) as $screen ) {
+			$this->assertFalse( Blueworx_Clubhouse_Owner_Capabilities::may_lend( $screen ), "{$screen} must refuse the lent caps" );
+		}
+	}
+
+	public function test_lending_is_allowed_on_the_screens_the_owner_works_in(): void {
+		foreach ( array( 'admin.php', 'index.php', 'edit.php', 'upload.php', 'admin-ajax.php' ) as $screen ) {
+			$this->assertTrue( Blueworx_Clubhouse_Owner_Capabilities::may_lend( $screen ), "{$screen} must allow the lent caps" );
+		}
 	}
 }

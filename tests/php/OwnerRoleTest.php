@@ -111,6 +111,55 @@ final class OwnerRoleTest extends TestCase {
 		$this->assertSame( 'clubhouse_setup_dashboard', $added[0]['args'][0] );
 	}
 
+	/**
+	 * The two integrations are the owner's to run, so their own caps are handed over
+	 * outright — on the front end as well, since SureCart reads caps outside wp-admin.
+	 */
+	public function test_lend_caps_hands_owners_the_integration_caps(): void {
+		$owner = (object) array( 'roles' => array( 'clubhouse_owner' ) );
+		$caps  = Blueworx_Clubhouse_Owner_Role::lend_caps( array( 'read' => true ), array(), array(), $owner );
+		$this->assertTrue( $caps['manage_sc_shop_settings'] );
+		$this->assertTrue( $caps['manage_latepoint'] );
+		$this->assertArrayNotHasKey( 'manage_options', $caps, 'not lent outside wp-admin' );
+	}
+
+	public function test_lend_caps_leaves_everyone_else_alone(): void {
+		$admin = (object) array( 'roles' => array( 'administrator' ) );
+		$this->assertSame( array( 'read' => true ), Blueworx_Clubhouse_Owner_Role::lend_caps( array( 'read' => true ), array(), array(), $admin ) );
+		$this->assertSame( array( 'read' => true ), Blueworx_Clubhouse_Owner_Role::lend_caps( array( 'read' => true ), array(), array(), null ) );
+	}
+
+	public function test_manage_options_is_lent_on_an_integration_screen(): void {
+		$GLOBALS['wp_stub_is_admin'] = true;
+		$GLOBALS['pagenow']          = 'admin.php';
+		$owner                       = (object) array( 'roles' => array( 'clubhouse_owner' ) );
+		$caps                        = Blueworx_Clubhouse_Owner_Role::lend_caps( array( 'read' => true ), array(), array(), $owner );
+		$this->assertTrue( $caps['manage_options'] );
+		unset( $GLOBALS['pagenow'] );
+	}
+
+	public function test_manage_options_is_refused_on_the_core_settings_screens(): void {
+		$GLOBALS['wp_stub_is_admin'] = true;
+		$owner                       = (object) array( 'roles' => array( 'clubhouse_owner' ) );
+		foreach ( array( 'options-general.php', 'plugins.php', 'themes.php', 'update-core.php' ) as $screen ) {
+			$GLOBALS['pagenow'] = $screen;
+			$caps               = Blueworx_Clubhouse_Owner_Role::lend_caps( array( 'read' => true ), array(), array(), $owner );
+			$this->assertArrayNotHasKey( 'manage_options', $caps, "manage_options must not be lent on {$screen}" );
+		}
+		unset( $GLOBALS['pagenow'] );
+	}
+
+	public function test_lend_caps_never_grants_the_user_management_caps(): void {
+		$GLOBALS['wp_stub_is_admin'] = true;
+		$GLOBALS['pagenow']          = 'admin.php';
+		$owner                       = (object) array( 'roles' => array( 'clubhouse_owner' ) );
+		$caps                        = Blueworx_Clubhouse_Owner_Role::lend_caps( array( 'read' => true ), array(), array(), $owner );
+		foreach ( array( 'edit_users', 'promote_users', 'delete_users', 'create_users', 'activate_plugins', 'edit_theme_options', 'edit_pages' ) as $cap ) {
+			$this->assertArrayNotHasKey( $cap, $caps, "{$cap} must never be lent" );
+		}
+		unset( $GLOBALS['pagenow'] );
+	}
+
 	public function test_maybe_upgrade_resyncs_when_version_differs(): void {
 		update_option( 'clubhouse_role_version', '0.0.0' );
 		Blueworx_Clubhouse_Owner_Role::maybe_upgrade();

@@ -48,6 +48,7 @@ final class Blueworx_Clubhouse_Owner_Role {
 	}
 
 	public static function register(): void {
+		add_filter( 'user_has_cap', array( self::class, 'lend_caps' ), 10, 4 );
 		add_action( 'admin_menu', array( self::class, 'lock_menu' ), 999 );
 		add_action( 'wp_dashboard_setup', array( self::class, 'takeover_dashboard' ), 999 );
 		add_action( 'admin_init', array( self::class, 'maybe_upgrade' ) );
@@ -65,6 +66,40 @@ final class Blueworx_Clubhouse_Owner_Role {
 			self::activate();
 			update_option( 'clubhouse_role_version', $current );
 		}
+	}
+
+	/**
+	 * Hand the owner the caps SureCart and LatePoint gate their own screens on, so
+	 * both plugins are fully theirs to run. The integration caps are held outright;
+	 * manage_options is only ever lent, on admin screens that are not the core
+	 * settings/plugins/themes screens it exists to protect. Nothing is written to
+	 * the role itself, so a plugin reading the role map still sees no manage_options.
+	 *
+	 * @param array<string,bool> $allcaps
+	 * @param array<int,string>  $caps
+	 * @param array<int,mixed>   $args
+	 * @param mixed              $user
+	 * @return array<string,bool>
+	 */
+	public static function lend_caps( $allcaps, $caps, $args, $user ) {
+		if ( ! is_array( $allcaps ) || ! self::is_owner( $user ) ) {
+			return $allcaps;
+		}
+		foreach ( Blueworx_Clubhouse_Owner_Capabilities::integration_caps() as $cap ) {
+			$allcaps[ $cap ] = true;
+		}
+		if ( is_admin() && Blueworx_Clubhouse_Owner_Capabilities::may_lend( self::current_admin_script() ) ) {
+			foreach ( Blueworx_Clubhouse_Owner_Capabilities::lent_caps() as $cap ) {
+				$allcaps[ $cap ] = true;
+			}
+		}
+		return $allcaps;
+	}
+
+	/** The wp-admin script handling this request, e.g. 'options-general.php'. */
+	public static function current_admin_script(): string {
+		$self = isset( $GLOBALS['pagenow'] ) ? (string) $GLOBALS['pagenow'] : '';
+		return '' !== $self ? $self : basename( (string) ( $_SERVER['SCRIPT_NAME'] ?? '' ) ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput -- basename of a server-set path, compared against a fixed list.
 	}
 
 	/** Remove every top-level menu the owner is not allowed. Gated on the owner role. */

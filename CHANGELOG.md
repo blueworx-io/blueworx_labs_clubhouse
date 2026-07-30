@@ -5,6 +5,14 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.45.0
+
+- **Club owners now get the shop and the diary.** SureCart and LatePoint have joined the owner's menu, and both are theirs to run in full — products, orders and shop settings on one side, bookings, agents and availability on the other. Neither plugin was reachable before: their menus are locked to capabilities the owner did not hold, so they simply were not there.
+- **The Clubhouse menu is back on the menu.** Site setup was only reachable as a dashboard widget for owners; it is now a top-level Clubhouse item as well, sitting between the Dashboard and Club Content. The dashboard widget stays exactly as it was.
+- The owner's menu now reads: Dashboard, Clubhouse, Club Content, Collections, SureCart, LatePoint, Posts, Media, Users, and their own profile.
+- **Comments have gone from the owner's menu**, along with the comment-moderation capability behind it.
+- **Nothing about the ceiling has changed.** The owner still cannot reach WordPress settings, plugins, themes, updates, tools, page editing, or any user management — the two plugins are unlocked, the screens that lock the site down are not, and the extra reach lasts only for the length of a request rather than being written onto the role.
+
 ## 0.44.0
 
 - **SureCart's customer dashboard now looks like the rest of the site.** Pages another plugin owns — SureCart's account and customer dashboard — were being rendered by the bare theme underneath the Clubhouse, so they arrived with no header, no menu, no footer, no page width and none of the club's fonts or colours. They now open inside the same header and footer as every other page, and in the club's own type and colour. Nothing to switch on.

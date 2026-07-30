@@ -13,6 +13,7 @@ $GLOBALS['wp_stub_postmeta']    = array();
 $GLOBALS['wp_stub_roles']       = array( 'administrator' => array( 'display' => 'Administrator', 'caps' => array() ) );
 $GLOBALS['wp_stub_current_user'] = (object) array( 'roles' => array() );
 $GLOBALS['wp_stub_is_front_page'] = false;
+$GLOBALS['wp_stub_is_admin']      = false;
 $GLOBALS['wp_stub_query_vars']    = array();
 $GLOBALS['wp_stub_transients']    = array();
 $GLOBALS['wp_stub_sideload_next'] = 500;
@@ -29,6 +30,7 @@ function wp_stub_reset(): void {
 	$GLOBALS['wp_stub_roles']       = array( 'administrator' => array( 'display' => 'Administrator', 'caps' => array() ) );
 	$GLOBALS['wp_stub_current_user'] = (object) array( 'roles' => array() );
 	$GLOBALS['wp_stub_is_front_page'] = false;
+	$GLOBALS['wp_stub_is_admin']      = false;
 	$GLOBALS['wp_stub_query_vars']    = array();
 	$GLOBALS['wp_stub_transients']    = array();
 	$GLOBALS['wp_stub_sideload_next'] = 500;
@@ -50,6 +52,7 @@ function wp_stub_on_clubhouse_page( string $slug = '' ): void {
 /** Put the request somewhere the plugin does not render: a blog post, WooCommerce, etc. */
 function wp_stub_off_clubhouse_page(): void {
 	$GLOBALS['wp_stub_is_front_page'] = false;
+	$GLOBALS['wp_stub_is_admin']      = false;
 	$GLOBALS['wp_stub_query_vars']    = array();
 }
 function wp_stub_calls( string $fn ): array {
@@ -194,6 +197,9 @@ if ( ! function_exists( 'wp_get_current_user' ) ) {
 }
 if ( ! function_exists( 'remove_menu_page' ) ) {
 	function remove_menu_page( $slug ) { wp_stub_record( 'remove_menu_page', array( $slug ) ); return false; }
+}
+if ( ! function_exists( 'is_admin' ) ) {
+	function is_admin() { return (bool) $GLOBALS['wp_stub_is_admin']; }
 }
 if ( ! function_exists( 'current_user_can' ) ) {
 	function current_user_can( ...$a ) { wp_stub_record( 'current_user_can', $a ); return true; }
