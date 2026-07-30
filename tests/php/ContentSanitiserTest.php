@@ -10,6 +10,34 @@ final class ContentSanitiserTest extends TestCase {
 		$this->assertSame( 'One club', Blueworx_Clubhouse_Content_Sanitiser::field( $def, '  One club <script>  ', true ) );
 	}
 
+	/**
+	 * A shortcode's brackets, attributes and quotes must all survive sanitising —
+	 * strip any of them and the shortcode silently stops matching.
+	 */
+	public function test_shortcode_keeps_brackets_attributes_and_quotes(): void {
+		$def = array( 'key' => 'a', 'label' => 'A', 'type' => 'shortcode' );
+		$this->assertSame(
+			'[surecart_checkout id="123" mode="live"]',
+			Blueworx_Clubhouse_Content_Sanitiser::field( $def, '[surecart_checkout id="123" mode="live"]', true )
+		);
+	}
+
+	/**
+	 * The field is rendered unescaped, so this is the layer that has to stop raw
+	 * HTML being smuggled in alongside the shortcode.
+	 */
+	public function test_shortcode_still_strips_html_tags(): void {
+		$def = array( 'key' => 'a', 'label' => 'A', 'type' => 'shortcode' );
+		$out = Blueworx_Clubhouse_Content_Sanitiser::field( $def, '[x]<script>alert(1)</script>', true );
+		$this->assertStringNotContainsString( '<script>', $out );
+		$this->assertStringContainsString( '[x]', $out );
+	}
+
+	public function test_absent_shortcode_becomes_empty_string(): void {
+		$def = array( 'key' => 'a', 'label' => 'A', 'type' => 'shortcode' );
+		$this->assertSame( '', Blueworx_Clubhouse_Content_Sanitiser::field( $def, null, false ) );
+	}
+
 	public function test_absent_field_becomes_empty_string(): void {
 		$def = array( 'key' => 'a', 'label' => 'A', 'type' => 'text' );
 		$this->assertSame( '', Blueworx_Clubhouse_Content_Sanitiser::field( $def, null, false ) );

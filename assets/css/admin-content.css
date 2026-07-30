@@ -121,6 +121,9 @@ body.toplevel_page_clubhouse-site-content #wpfooter { display: none; }
 .clubhouse-input { font-family: var(--font-body); font-size: 14px; color: var(--color-ink); background: var(--color-bg); border: 1px solid var(--color-line); border-radius: var(--radius-md); padding: 9px 12px; width: 100%; }
 .clubhouse-input:focus-visible { outline: 2px solid var(--color-accent-deep); outline-offset: 1px; }
 textarea.clubhouse-input { resize: vertical; }
+/* Shortcode fields hold code, not prose: monospace makes brackets and quotes
+   legible, and stops a proportional font disguising a typo in an attribute. */
+.clubhouse-input--code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 13px; }
 
 /* Image field (per-field "Choose image" / "Remove") */
 .clubhouse-media { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
