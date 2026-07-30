@@ -11,6 +11,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Every editable section now carries a stable anchor id, so a menu item can link straight to it.
 - The suggestion list behind every URL field in Club Content now offers section anchors and filtered collection views, not just the top-level pages.
 
+## 0.47.0
+
+- **Club owners now get LatePoint, with nothing to set up.** LatePoint never used WordPress permissions: its Role Manager matches on role *names*, and its stock entry names the administrator role, so an owner was invisible to it however much access they were given. Owners are now presented to LatePoint under the name it already recognises, so the booking diary is fully theirs — no custom LatePoint role to create, on this site or any other.
+- **Only the name, never the powers.** WordPress works out what an account can do when it loads, so a name added afterwards unlocks nothing by itself. Every limit is unchanged: an owner still cannot reach settings, plugins, themes, updates, tools, page editing or user management. The name is also only in place while the admin menu is built and while LatePoint itself is being used — never on the public site, and never anywhere else in wp-admin.
+
 ## 0.46.0
 
 - **A second Clubhouse role: ClubHouse - Content Editor.** For the person who runs the club's words and its members, but not its money. They get Club Content, Collections, Posts, Media and Users — and nothing else. No Clubhouse Setup, no SureCart, no LatePoint, no plugins, themes, settings, tools or import/export.

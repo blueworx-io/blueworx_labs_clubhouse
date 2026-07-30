@@ -247,6 +247,9 @@ if ( ! function_exists( 'check_admin_referer' ) ) {
 if ( ! function_exists( 'wp_unslash' ) ) {
 	function wp_unslash( $v ) { return $v; }
 }
+if ( ! function_exists( 'sanitize_key' ) ) {
+	function sanitize_key( $key ) { return strtolower( preg_replace( '/[^a-zA-Z0-9_\-]/', '', (string) $key ) ); }
+}
 if ( ! function_exists( 'update_post_meta' ) ) {
 	function update_post_meta( int $id, string $key, $value ) {
 		$GLOBALS['wp_stub_postmeta'][ $id ][ $key ] = $value;

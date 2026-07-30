@@ -245,6 +245,28 @@ final class Blueworx_Clubhouse_Owner_Capabilities {
 		);
 	}
 
+	/**
+	 * LatePoint does not use capabilities. Its Role Manager maps LatePoint roles
+	 * onto *named* WordPress roles — its stock entry binds wp_role=administrator —
+	 * so an owner is invisible to it however many caps they hold, which is why
+	 * lending manage_options never produced a menu.
+	 *
+	 * Rather than require a custom LatePoint role on every site, the Owner is
+	 * presented to LatePoint under the role name it already recognises. Only the
+	 * role *name* is added, never the capabilities: WordPress computes allcaps when
+	 * the user object is built, so a name appended afterwards unlocks nothing on its
+	 * own. The core ceiling is enforced by caps and is unaffected.
+	 */
+	public const LATEPOINT_MASK_ROLE = 'administrator';
+
+	/**
+	 * True when this request is one where the Owner must be recognisable to
+	 * LatePoint: any of its own admin screens, or one of its AJAX routes.
+	 */
+	public static function is_latepoint_request( string $page, string $action ): bool {
+		return 0 === strpos( $page, self::LATEPOINT_MENU ) || 0 === strpos( $action, self::LATEPOINT_MENU );
+	}
+
 	/** Name fragments marking a capability as one of the integrations'. @return array<int,string> */
 	public static function integration_cap_patterns(): array {
 		return array( '/latepoint/i', '/surecart/i', '/(^|_)sc_/i' );

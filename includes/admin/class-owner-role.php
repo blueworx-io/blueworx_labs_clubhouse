@@ -106,6 +106,12 @@ final class Blueworx_Clubhouse_Owner_Role {
 		add_filter( 'user_has_cap', array( self::class, 'lend_caps' ), 10, 4 );
 		add_filter( 'map_meta_cap', array( self::class, 'guard_user_management' ), 10, 4 );
 		add_filter( 'editable_roles', array( self::class, 'limit_editable_roles' ) );
+		// The mask is on while the admin menu is built — LatePoint registers its menu
+		// there, and a menu it never registers cannot be clicked — and for the whole
+		// of a request aimed at LatePoint itself. It is off everywhere else.
+		add_action( 'admin_menu', array( self::class, 'mask_role' ), -1 );
+		add_action( 'admin_menu', array( self::class, 'unmask_role' ), 998 );
+		add_action( 'admin_init', array( self::class, 'mask_role_for_latepoint' ), -1 );
 		add_action( 'admin_menu', array( self::class, 'lock_menu' ), 999 );
 		add_action( 'wp_dashboard_setup', array( self::class, 'takeover_dashboard' ), 999 );
 		add_action( 'admin_init', array( self::class, 'maybe_upgrade' ) );
@@ -213,6 +219,64 @@ final class Blueworx_Clubhouse_Owner_Role {
 			}
 		}
 		return $roles;
+	}
+
+	/** True while this request is presenting the owner under LatePoint's role name. */
+	private static bool $masked = false;
+
+	/**
+	 * Present an owner to LatePoint under the role name its Role Manager recognises.
+	 *
+	 * Only the role *name* is appended. WordPress resolves a user's capabilities when
+	 * the user object is built, so nothing is granted by this — every ceiling in the
+	 * plugin is enforced by capability and stays exactly where it was. What changes is
+	 * that code asking "what role is this?" by name, as LatePoint does, gets an answer
+	 * it understands.
+	 *
+	 * Kept as narrow as it can usefully be: on while the admin menu is built, and for
+	 * requests aimed at LatePoint. Off on the front end, off outside those windows.
+	 */
+	public static function mask_role(): void {
+		if ( self::$masked || ! self::is_owner( wp_get_current_user() ) ) {
+			return;
+		}
+		$user = wp_get_current_user();
+		if ( ! isset( $user->roles ) || ! is_array( $user->roles ) ) {
+			return;
+		}
+		$mask = Blueworx_Clubhouse_Owner_Capabilities::LATEPOINT_MASK_ROLE;
+		if ( in_array( $mask, $user->roles, true ) ) {
+			return; // Already carries it for real — leave the account untouched.
+		}
+		$user->roles[] = $mask;
+		self::$masked  = true;
+	}
+
+	/** Take the mask back off, so it never outlives the window it was needed for. */
+	public static function unmask_role(): void {
+		if ( ! self::$masked ) {
+			return;
+		}
+		$user = wp_get_current_user();
+		if ( isset( $user->roles ) && is_array( $user->roles ) ) {
+			$mask        = Blueworx_Clubhouse_Owner_Capabilities::LATEPOINT_MASK_ROLE;
+			$user->roles = array_values( array_diff( $user->roles, array( $mask ) ) );
+		}
+		self::$masked = false;
+	}
+
+	/**
+	 * Put the mask on for the whole of a LatePoint request — its own screens and its
+	 * AJAX routes — where it has to outlast the menu-building window.
+	 */
+	public static function mask_role_for_latepoint(): void {
+		// phpcs:disable WordPress.Security.NonceVerification.Recommended -- reading which screen is being viewed, changing nothing.
+		$page   = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : '';
+		$action = isset( $_REQUEST['action'] ) ? sanitize_key( wp_unslash( $_REQUEST['action'] ) ) : '';
+		// phpcs:enable WordPress.Security.NonceVerification.Recommended
+		if ( Blueworx_Clubhouse_Owner_Capabilities::is_latepoint_request( $page, $action ) ) {
+			self::mask_role();
+		}
 	}
 
 	/** A WP_User-like object for an id, or null. Wrapped so tests can stand in one user store. */

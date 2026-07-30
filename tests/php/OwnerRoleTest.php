@@ -293,6 +293,56 @@ final class OwnerRoleTest extends TestCase {
 		$this->assertNotContains( 'edit.php', $removed );
 	}
 
+	/**
+	 * LatePoint maps its roles onto named WordPress roles, so an owner is invisible
+	 * to it whatever caps they hold. The mask makes them recognisable by name only.
+	 */
+	public function test_the_mask_adds_the_role_name_for_owners_and_takes_it_off_again(): void {
+		$owner                           = (object) array( 'roles' => array( 'clubhouse_owner' ) );
+		$GLOBALS['wp_stub_current_user'] = $owner;
+
+		Blueworx_Clubhouse_Owner_Role::mask_role();
+		$this->assertContains( 'administrator', $owner->roles );
+		$this->assertTrue( Blueworx_Clubhouse_Owner_Role::is_owner( $owner ), 'still an owner while masked' );
+
+		Blueworx_Clubhouse_Owner_Role::unmask_role();
+		$this->assertSame( array( 'clubhouse_owner' ), $owner->roles );
+	}
+
+	public function test_the_mask_never_touches_anybody_else(): void {
+		foreach ( array( 'clubhouse_content_editor', 'editor', 'subscriber' ) as $role ) {
+			$user                            = (object) array( 'roles' => array( $role ) );
+			$GLOBALS['wp_stub_current_user'] = $user;
+			Blueworx_Clubhouse_Owner_Role::mask_role();
+			$this->assertSame( array( $role ), $user->roles, "{$role} must not be masked" );
+			Blueworx_Clubhouse_Owner_Role::unmask_role();
+		}
+	}
+
+	public function test_a_real_administrator_is_left_exactly_as_it_is(): void {
+		$user                            = (object) array( 'roles' => array( 'clubhouse_owner', 'administrator' ) );
+		$GLOBALS['wp_stub_current_user'] = $user;
+		Blueworx_Clubhouse_Owner_Role::mask_role();
+		Blueworx_Clubhouse_Owner_Role::unmask_role();
+		$this->assertSame( array( 'clubhouse_owner', 'administrator' ), $user->roles, 'a genuine role is never stripped' );
+	}
+
+	public function test_only_latepoint_requests_are_masked_for_the_whole_request(): void {
+		$owner                           = (object) array( 'roles' => array( 'clubhouse_owner' ) );
+		$GLOBALS['wp_stub_current_user'] = $owner;
+
+		$_GET['page'] = 'options-general';
+		Blueworx_Clubhouse_Owner_Role::mask_role_for_latepoint();
+		$this->assertNotContains( 'administrator', $owner->roles );
+
+		$_GET['page'] = 'latepoint';
+		Blueworx_Clubhouse_Owner_Role::mask_role_for_latepoint();
+		$this->assertContains( 'administrator', $owner->roles );
+
+		Blueworx_Clubhouse_Owner_Role::unmask_role();
+		unset( $_GET['page'] );
+	}
+
 	public function test_the_dashboard_takeover_is_owner_only(): void {
 		$GLOBALS['wp_meta_boxes']        = array( 'dashboard' => array( 'normal' => array( 'core' => array( 'x' => array() ) ) ) );
 		$GLOBALS['wp_stub_current_user'] = (object) array( 'roles' => array( 'clubhouse_content_editor' ) );
