@@ -21,6 +21,7 @@ require_once __DIR__ . '/content/class-content-store.php';
 require_once __DIR__ . '/content/class-content-sanitiser.php';
 require_once __DIR__ . '/content/class-visibility.php';
 require_once __DIR__ . '/content/class-link-catalogue.php';
+require_once __DIR__ . '/content/class-menu.php';
 require_once __DIR__ . '/content/class-shortcodes.php';
 require_once __DIR__ . '/content/class-integrations.php';
 
