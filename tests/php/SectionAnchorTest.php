@@ -32,15 +32,24 @@ final class SectionAnchorTest extends TestCase {
 	/**
 	 * The catalogue must not offer an anchor the markup does not emit — and,
 	 * just as importantly, it must not withhold an anchor the markup DOES
-	 * emit (an over-broad exclusion in Link_Catalogue::anchors() would make
-	 * this loop shrink and stay green, hiding the very regression it exists
-	 * to catch). So this walks every Content_Catalogue section — the brief's
-	 * original, unfiltered source — and separately asserts that the ids
-	 * missing from the rendered markup are EXACTLY the ones this test
-	 * explicitly names as deliberately excluded (today: none — see
-	 * Link_Catalogue::has_no_anchor()). If that named list ever needs an
-	 * entry, it must be added here at the same time, in the open, not left to
-	 * an exclusion elsewhere that this test can't see.
+	 * emit. Two directions, both load-bearing:
+	 *
+	 *  1. Every catalogued section (Content_Catalogue::pages(), the brief's
+	 *     original unfiltered source) either carries its id in the rendered
+	 *     markup, or is named in $expected_missing — no silent third option.
+	 *  2. What Link_Catalogue::targets() actually OFFERS as an anchor must be
+	 *     exactly "every catalogued id minus $expected_missing" — a single
+	 *     assertSame on two sorted arrays, not a one-directional
+	 *     assertNotContains. A one-directional check only proves the excluded
+	 *     ids stayed out; it says nothing about ids that should have stayed
+	 *     IN but got dropped too (e.g. a resurrected type-based exclusion in
+	 *     Link_Catalogue::has_no_anchor() that wrongly drops a rendering
+	 *     section — loop 1 would not notice, since anchored() calls are
+	 *     unconditional in Page_Renderer regardless of what the catalogue
+	 *     offers, and a one-directional loop 2 would iterate zero times over
+	 *     an empty $expected_missing and pass vacuously). assertSame on the
+	 *     full sets catches that: the wrongly-dropped id would be present in
+	 *     "catalogued minus excluded" but absent from $offered.
 	 */
 	public function test_rendered_pages_carry_the_ids_the_catalogue_advertises(): void {
 		// Sections deliberately excluded from Link_Catalogue::anchors() because
@@ -52,7 +61,8 @@ final class SectionAnchorTest extends TestCase {
 		$visibility  = new Blueworx_Clubhouse_Visibility( new Blueworx_Clubhouse_Fake_Storage() );
 		$collections = new Blueworx_Clubhouse_Demo_Collections();
 
-		$missing = array();
+		$missing    = array();
+		$catalogued = array();
 		foreach ( Blueworx_Clubhouse_Content_Catalogue::pages() as $page ) {
 			$tab = (string) $page['tab'];
 			if ( 'global' === $tab ) {
@@ -64,7 +74,8 @@ final class SectionAnchorTest extends TestCase {
 			}
 			$html = Blueworx_Clubhouse_Page_Map::render( $slug, $branding, $visibility, $collections );
 			foreach ( $page['sections'] as $section ) {
-				$id = Blueworx_Clubhouse_Link_Catalogue::anchor_id( $tab, (string) $section['key'] );
+				$id           = Blueworx_Clubhouse_Link_Catalogue::anchor_id( $tab, (string) $section['key'] );
+				$catalogued[] = $id;
 				if ( false === strpos( $html, 'id="' . $id . '"' ) ) {
 					$missing[] = $id;
 				}
@@ -74,9 +85,11 @@ final class SectionAnchorTest extends TestCase {
 		sort( $expected_missing );
 		$this->assertSame( $expected_missing, $missing, 'ids missing from the markup must be exactly the sections named as deliberately excluded' );
 
-		// The other direction: the catalogue must not offer an anchor the
-		// markup does not emit either — confirms has_no_anchor() actually
-		// excludes every id that's missing above, nothing more, nothing less.
+		// The converse: what the catalogue actually offers must equal every
+		// catalogued id minus the ones named above — not merely disjoint from
+		// them. Two full sets, compared with assertSame, not a one-directional
+		// assertNotContains that a vacuously-empty $expected_missing would let
+		// pass regardless of what got dropped.
 		$offered = array();
 		foreach ( Blueworx_Clubhouse_Link_Catalogue::targets( $collections ) as $entry ) {
 			if ( 'Sections' === $entry['group'] && 0 === strpos( $entry['target'], 'anchor:' ) ) {
@@ -84,8 +97,9 @@ final class SectionAnchorTest extends TestCase {
 				$offered[]     = Blueworx_Clubhouse_Link_Catalogue::anchor_id( $tab, $key );
 			}
 		}
-		foreach ( $expected_missing as $id ) {
-			$this->assertNotContains( $id, $offered, "catalogue must not offer anchor '$id', which the markup does not emit" );
-		}
+		$expected_offered = array_values( array_diff( array_unique( $catalogued ), $expected_missing ) );
+		sort( $offered );
+		sort( $expected_offered );
+		$this->assertSame( $expected_offered, $offered, 'the catalogue must offer exactly every catalogued anchor minus the ones named as deliberately excluded' );
 	}
 }
