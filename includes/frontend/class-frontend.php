@@ -95,6 +95,9 @@ final class Blueworx_Clubhouse_Frontend {
 			static fn( string $tag ): bool => (bool) shortcode_exists( $tag )
 		);
 		add_action( 'init', array( self::class, 'register_rewrites' ) );
+		// Priority 11: after register_rewrites() above, so a flush writes the rules
+		// this version actually declares.
+		add_action( 'init', array( self::class, 'maybe_flush_rewrites' ), 11 );
 		add_action( 'init', array( Blueworx_Clubhouse_Collection_Types::class, 'register' ) );
 		// Priority 20, not the default 10: the look stylesheet has to print after
 		// the active theme's. Our body rule is an element selector, so it ties on
@@ -106,6 +109,48 @@ final class Blueworx_Clubhouse_Frontend {
 		add_action( 'wp_enqueue_scripts', array( self::class, 'enqueue_assets' ), 20 );
 		add_action( 'wp_head', array( self::class, 'render_favicon' ) );
 		add_filter( 'template_include', array( self::class, 'filter_template' ) );
+	}
+
+	/** Stores the plugin version whose rewrite rules are currently in the cache. */
+	public const REWRITE_VERSION_OPTION = 'blueworx_clubhouse_rewrite_version';
+
+	/**
+	 * Whether the cached rewrite rules predate the running plugin.
+	 *
+	 * Pure, so the decision is unit-testable without a WordPress runtime.
+	 *
+	 * @param mixed $stored Whatever is in the option — absent, or any old junk.
+	 */
+	public static function rewrites_need_flush( string $running_version, mixed $stored ): bool {
+		return ! is_string( $stored ) || $stored !== $running_version;
+	}
+
+	/**
+	 * Flush rewrite rules once after an upgrade that added a page.
+	 *
+	 * The activation hook flushes, but activation does NOT re-run when a plugin is
+	 * updated by uploading a new zip over a live one — which is how this plugin is
+	 * deployed. So a release that adds a slug (v0.42.0 added /booking/) registered
+	 * the rule while WordPress went on serving its cached rules, and the pretty
+	 * permalink 404ed until someone re-saved permalinks by hand. Nothing in the
+	 * plugin said so, which made it look like the new page had not shipped.
+	 *
+	 * Stamped with the version rather than a boolean flag, so every future release
+	 * that changes the page map is covered without anyone remembering to do this.
+	 * Runs after register_rewrites() on the same hook, so the rules being flushed
+	 * into the cache are the current ones.
+	 */
+	public static function maybe_flush_rewrites(): void {
+		$running = defined( 'BLUEWORX_LABS_CLUBHOUSE_VERSION' ) ? (string) BLUEWORX_LABS_CLUBHOUSE_VERSION : '';
+		if ( '' === $running ) {
+			return;
+		}
+		if ( ! self::rewrites_need_flush( $running, get_option( self::REWRITE_VERSION_OPTION, null ) ) ) {
+			return;
+		}
+		flush_rewrite_rules();
+		// Autoload off: read once per upgrade, never on a normal request.
+		update_option( self::REWRITE_VERSION_OPTION, $running, false );
 	}
 
 	public static function register_rewrites(): void {
