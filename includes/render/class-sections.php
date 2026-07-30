@@ -147,17 +147,26 @@ final class Blueworx_Clubhouse_Sections {
 	 */
 	private static function nav_item( array $item, string $active ): string {
 		$children = isset( $item['children'] ) && is_array( $item['children'] ) ? $item['children'] : array();
-		$is_here  = '' !== $item['href'] && $item['href'] === $active;
-		$cls      = 'ch-nav__link' . ( $is_here ? ' ch-nav__link--active' : '' );
 
 		if ( array() === $children ) {
-			return '<a class="' . $cls . '" href="' . self::e( $item['href'] ) . '">' . self::e( $item['label'] ) . '</a>';
+			// Flat branch: matches the pre-existing inline loop byte-for-byte,
+			// including its no-emptiness-guard quirk (both '' matches active as '').
+			$flat_cls = 'ch-nav__link' . ( $item['href'] === $active ? ' ch-nav__link--active' : '' );
+			return '<a class="' . $flat_cls . '" href="' . self::e( $item['href'] ) . '">' . self::e( $item['label'] ) . '</a>';
 		}
 
+		// A parent with children only counts as "here" when its own href is a
+		// real, matching target — two empty strings should not read as active.
+		$is_here = '' !== $item['href'] && $item['href'] === $active;
+		$cls     = 'ch-nav__link' . ( $is_here ? ' ch-nav__link--active' : '' );
+
 		// A parent whose own target has gone still heads its children, but must
-		// not be a link to nowhere — Menu::items() hands it an empty href.
+		// not be a link to nowhere — Menu::items() hands it an empty href. It
+		// still needs to be reachable by Tab (tabindex="0") so :focus-within can
+		// reveal its children with no JavaScript; a bare <span> is never in the
+		// tab order on its own.
 		$head = '' === $item['href']
-			? '<span class="' . $cls . ' ch-nav__link--static" aria-haspopup="true">' . self::e( $item['label'] ) . '</span>'
+			? '<span class="' . $cls . ' ch-nav__link--static" tabindex="0" aria-haspopup="true">' . self::e( $item['label'] ) . '</span>'
 			: '<a class="' . $cls . '" href="' . self::e( $item['href'] ) . '" aria-haspopup="true">' . self::e( $item['label'] ) . '</a>';
 
 		$sub = '';

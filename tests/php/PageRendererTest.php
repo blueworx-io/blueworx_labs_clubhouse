@@ -352,6 +352,46 @@ final class PageRendererTest extends TestCase {
 		$this->assertStringNotContainsString( '<a class="ch-nav__link" href="">', $html );
 	}
 
+	public function test_header_static_parent_head_is_keyboard_focusable(): void {
+		$html = Blueworx_Clubhouse_Sections::header( array(
+			'club_name'   => 'ClubHouse',
+			'banner'      => '',
+			'banner_href' => '#',
+			'nav'         => array(
+				array( 'label' => 'Club', 'href' => '', 'children' => array(
+					array( 'label' => 'About', 'href' => '/about' ),
+				) ),
+			),
+			'active'      => '',
+			'login'       => 'Log in',
+			'login_href'  => '/login',
+			'join'        => 'Join',
+			'join_href'   => '/membership',
+		) );
+		// A bare <span> is never in the tab order on its own; the static head
+		// needs tabindex="0" so :focus-within can still reveal its children
+		// with no JavaScript.
+		$this->assertStringContainsString( 'ch-nav__link--static" tabindex="0"', $html );
+	}
+
+	public function test_header_flat_item_with_empty_href_matches_empty_active(): void {
+		// Pins the pre-existing inline loop's no-emptiness-guard quirk on the
+		// FLAT (no-children) branch: an empty href was marked active whenever
+		// $data['active'] was also '', and that must not change.
+		$html = Blueworx_Clubhouse_Sections::header( array(
+			'club_name'   => 'ClubHouse',
+			'banner'      => '',
+			'banner_href' => '#',
+			'nav'         => array( array( 'label' => 'Home', 'href' => '' ) ),
+			'active'      => '',
+			'login'       => 'Log in',
+			'login_href'  => '/login',
+			'join'        => 'Join',
+			'join_href'   => '/membership',
+		) );
+		$this->assertStringContainsString( '<a class="ch-nav__link ch-nav__link--active" href="">', $html );
+	}
+
 	public function test_header_still_renders_a_flat_nav_unchanged(): void {
 		$html = Blueworx_Clubhouse_Sections::header( array(
 			'club_name'   => 'ClubHouse',
