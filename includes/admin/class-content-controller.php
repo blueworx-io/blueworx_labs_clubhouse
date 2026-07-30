@@ -221,6 +221,8 @@ final class Blueworx_Clubhouse_Content_Controller {
 			'active_slug'   => null !== $active_look ? $active_look->slug() : '',
 			'look_tokens'   => $theming['tokens'],
 			'font_face_css' => $theming['faces'],
+			'menu_tree'     => ( new Blueworx_Clubhouse_Menu( $storage ) )->tree(),
+			'menu_targets'  => Blueworx_Clubhouse_Link_Catalogue::targets( new Blueworx_Clubhouse_WP_Collections() ),
 		);
 	}
 

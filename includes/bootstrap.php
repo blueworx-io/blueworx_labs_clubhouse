@@ -53,6 +53,7 @@ require_once __DIR__ . '/admin/class-setup-screen.php';
 require_once __DIR__ . '/admin/class-owner-capabilities.php';
 require_once __DIR__ . '/admin/class-content-catalogue.php';
 require_once __DIR__ . '/admin/class-content-screen.php';
+require_once __DIR__ . '/admin/class-menu-panel.php';
 
 // Collections (pure)
 require_once __DIR__ . '/collections/interface-collections.php';
