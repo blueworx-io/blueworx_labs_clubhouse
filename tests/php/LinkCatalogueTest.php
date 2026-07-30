@@ -72,6 +72,14 @@ final class LinkCatalogueTest extends TestCase {
 		$this->assertSame( '', Blueworx_Clubhouse_Link_Catalogue::resolve( 'url:javascript:alert(1)', $this->collections() ) );
 	}
 
+	public function test_resolve_rejects_a_protocol_relative_url(): void {
+		$this->assertSame( '', Blueworx_Clubhouse_Link_Catalogue::resolve( 'url://evil.com', $this->collections() ) );
+	}
+
+	public function test_resolve_passes_a_genuine_site_relative_url_through(): void {
+		$this->assertSame( '/about', Blueworx_Clubhouse_Link_Catalogue::resolve( 'url:/about', $this->collections() ) );
+	}
+
 	public function test_resolve_returns_empty_for_a_malformed_target(): void {
 		$this->assertSame( '', Blueworx_Clubhouse_Link_Catalogue::resolve( 'nonsense', $this->collections() ) );
 		$this->assertSame( '', Blueworx_Clubhouse_Link_Catalogue::resolve( '', $this->collections() ) );

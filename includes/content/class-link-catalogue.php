@@ -112,6 +112,9 @@ final class Blueworx_Clubhouse_Link_Catalogue {
 		if ( '' === $url ) {
 			return '';
 		}
+		if ( 0 === strpos( $url, '//' ) ) {
+			return '';
+		}
 		if ( '/' === $url[0] || '#' === $url[0] || '?' === $url[0] ) {
 			return $url;
 		}
