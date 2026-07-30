@@ -69,6 +69,31 @@ final class OwnerRoleTest extends TestCase {
 		$this->assertNotContains( 'upload.php', $removed );
 	}
 
+	/**
+	 * WordPress's own Pages menu is no longer hidden from everyone — administrators
+	 * need it to reach pages other plugins own (SureCart's customer dashboard, and
+	 * the like), which the Clubhouse routing never served and never will.
+	 *
+	 * Owners are a different matter: they stay inside the Clubhouse screens, and
+	 * the allowlist is the single thing keeping them there. This pins both halves,
+	 * because the two are now enforced by one mechanism instead of two.
+	 */
+	public function test_pages_menu_is_hidden_from_owners_but_left_for_administrators(): void {
+		$GLOBALS['menu'] = array(
+			array( '', 'read', 'index.php' ),
+			array( '', 'edit_pages', 'edit.php?post_type=page' ),
+		);
+
+		$GLOBALS['wp_stub_current_user'] = (object) array( 'roles' => array( 'administrator' ) );
+		Blueworx_Clubhouse_Owner_Role::lock_menu();
+		$this->assertSame( array(), wp_stub_calls( 'remove_menu_page' ), 'administrators keep the Pages menu' );
+
+		$GLOBALS['wp_stub_current_user'] = (object) array( 'roles' => array( 'clubhouse_owner' ) );
+		Blueworx_Clubhouse_Owner_Role::lock_menu();
+		$removed = array_map( static fn( $c ) => $c['args'][0], wp_stub_calls( 'remove_menu_page' ) );
+		$this->assertContains( 'edit.php?post_type=page', $removed, 'owners still do not get raw page editing' );
+	}
+
 	public function test_takeover_dashboard_replaces_widgets_only_for_owners(): void {
 		$GLOBALS['wp_meta_boxes'] = array( 'dashboard' => array( 'normal' => array( 'core' => array( 'dashboard_activity' => array() ) ) ) );
 
