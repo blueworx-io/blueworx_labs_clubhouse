@@ -20,6 +20,8 @@ require_once __DIR__ . '/core/class-registry.php';
 require_once __DIR__ . '/content/class-content-store.php';
 require_once __DIR__ . '/content/class-content-sanitiser.php';
 require_once __DIR__ . '/content/class-visibility.php';
+require_once __DIR__ . '/content/class-shortcodes.php';
+require_once __DIR__ . '/content/class-integrations.php';
 
 // Theme
 require_once __DIR__ . '/theme/interface-base-look.php';

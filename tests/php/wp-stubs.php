@@ -141,6 +141,19 @@ if ( ! function_exists( '__' ) ) {
 if ( ! function_exists( 'get_the_title' ) ) {
 	function get_the_title( $post = 0 ) { return is_object( $post ) ? ( $post->post_title ?? '' ) : ''; }
 }
+if ( ! function_exists( 'shortcode_exists' ) ) {
+	/**
+	 * Registry-backed so a test can declare a shortcode present. Frontend installs
+	 * this as the integration detector, and Page_Map::is_available() calls it on
+	 * nearly every render, so it has to exist here even when no test cares.
+	 */
+	function shortcode_exists( $tag ) {
+		return isset( $GLOBALS['wp_stub_shortcodes'] ) && in_array( $tag, (array) $GLOBALS['wp_stub_shortcodes'], true );
+	}
+}
+if ( ! function_exists( 'do_shortcode' ) ) {
+	function do_shortcode( $content ) { return $content; }
+}
 if ( ! function_exists( 'sanitize_text_field' ) ) {
 	function sanitize_text_field( $str ) { return is_string( $str ) ? trim( preg_replace( '/[\r\n\t ]+/', ' ', preg_replace( '/<[^>]*>/', '', $str ) ) ) : ''; }
 }

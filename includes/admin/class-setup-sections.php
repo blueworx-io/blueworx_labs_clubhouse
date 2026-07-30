@@ -79,6 +79,13 @@ final class Blueworx_Clubhouse_Setup_Sections {
 			'schedule' => 'Schedule',
 			'cta'      => 'Call to action',
 		),
+		'booking' => array(
+			'hero'      => 'Hero',
+			'services'  => 'Sessions and services',
+			'locations' => 'Courts and locations',
+			'agents'    => 'Coaches and staff',
+			'calendar'  => 'Availability calendar',
+		),
 	);
 
 	/**
@@ -93,6 +100,13 @@ final class Blueworx_Clubhouse_Setup_Sections {
 
 		$out = array();
 		foreach ( self::MAP as $page => $sections ) {
+			// A page whose integration is absent is not offered here at all — an
+			// owner should not be given show/hide switches for sections that cannot
+			// render. Their stored state is left alone, so installing the plugin
+			// later brings the page back exactly as it was configured.
+			if ( ! Blueworx_Clubhouse_Page_Map::is_available( 'home' === $page ? '' : $page ) ) {
+				continue;
+			}
 			$section_list = array();
 			foreach ( $sections as $key => $label ) {
 				$section_list[] = array( 'key' => $key, 'label' => $label );

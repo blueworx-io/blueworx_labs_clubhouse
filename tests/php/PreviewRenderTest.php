@@ -5,6 +5,16 @@ use PHPUnit\Framework\TestCase;
 
 final class PreviewRenderTest extends TestCase {
 
+	/**
+	 * The preview reports every integration present so its pages stay designable
+	 * without WordPress. That is right for a preview request, which is the whole
+	 * of its process — but in the test run the process continues, and a detector
+	 * left installed would decide which pages exist for every test after this one.
+	 */
+	protected function tearDown(): void {
+		Blueworx_Clubhouse_Integrations::set_detector( null );
+	}
+
 	public function test_preview_builds_a_full_court_side_home_document(): void {
 		require_once dirname( __DIR__, 2 ) . '/preview/index.php';
 		$html = blueworx_clubhouse_preview_document();

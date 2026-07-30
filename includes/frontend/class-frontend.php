@@ -46,6 +46,12 @@ final class Blueworx_Clubhouse_Frontend {
 		if ( null === $slug ) {
 			return null;
 		}
+		// A page whose integration is missing is not served at all — the rewrite
+		// rule still exists (see Page_Map::pages()), so without this the URL would
+		// render a page of shortcodes nothing can expand.
+		if ( ! Blueworx_Clubhouse_Page_Map::is_available( $slug ) ) {
+			return null;
+		}
 		$page = '' === $slug ? 'home' : $slug;
 		if ( null !== $visibility && ! $visibility->is_page_visible( $page ) ) {
 			return null;
@@ -81,6 +87,12 @@ final class Blueworx_Clubhouse_Frontend {
 		// callable naming a not-yet-loaded function is not callable yet.
 		Blueworx_Clubhouse_Shortcodes::set_expander(
 			static fn( string $text ): string => (string) do_shortcode( $text )
+		);
+		// Likewise for integration detection: shortcode_exists() answers the question
+		// that actually matters — is this shortcode registered right now — where a
+		// file or class check would also pass for an installed-but-inactive plugin.
+		Blueworx_Clubhouse_Integrations::set_detector(
+			static fn( string $tag ): bool => (bool) shortcode_exists( $tag )
 		);
 		add_action( 'init', array( self::class, 'register_rewrites' ) );
 		add_action( 'init', array( Blueworx_Clubhouse_Collection_Types::class, 'register' ) );

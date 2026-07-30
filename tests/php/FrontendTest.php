@@ -16,6 +16,10 @@ final class FrontendTest extends TestCase {
 		// against a do_shortcode() that does not exist in this harness — and which
 		// tests broke would depend on the order they happened to run in.
 		Blueworx_Clubhouse_Shortcodes::set_expander( null );
+		// Same reason: register() also installs the integration detector, and
+		// Page_Map::is_available() consults it on effectively every render. Left
+		// installed it decides which pages exist for every later test.
+		Blueworx_Clubhouse_Integrations::set_detector( null );
 	}
 
 	public function test_link_url_home_is_site_root(): void {

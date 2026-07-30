@@ -267,6 +267,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				array( 'label' => 'Membership', 'key' => 'membership' ),
 				array( 'label' => 'Events', 'key' => 'events' ),
 				array( 'label' => 'Calendar', 'key' => 'calendar' ),
+				array( 'label' => 'Book a court', 'key' => 'booking' ),
 				array( 'label' => 'Contact', 'key' => 'contact' ),
 			), $visibility ),
 			'active'      => $active,
@@ -298,6 +299,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				array( 'title' => 'Get involved', 'links' => self::nav_links( array(
 					array( 'label' => 'Membership', 'key' => 'membership' ),
 					array( 'label' => 'Calendar', 'key' => 'calendar' ),
+					array( 'label' => 'Book a court', 'key' => 'booking' ),
 					array( 'label' => 'Volunteer', 'key' => 'contact' ),
 					array( 'label' => 'Contact', 'key' => 'contact' ),
 				), $visibility ) ),
@@ -324,6 +326,14 @@ final class Blueworx_Clubhouse_Page_Renderer {
 	private static function nav_links( array $items, Blueworx_Clubhouse_Visibility $visibility ): array {
 		$out = array();
 		foreach ( $items as $item ) {
+			// Availability first, then the owner's own show/hide. A page whose
+			// integration is missing is never linked, however the toggles are set —
+			// this is the one place both the header nav and the footer columns pass
+			// through, so neither can link a page that cannot render.
+			$slug = 'home' === $item['key'] ? '' : $item['key'];
+			if ( ! Blueworx_Clubhouse_Page_Map::is_available( $slug ) ) {
+				continue;
+			}
 			if ( ! $visibility->is_page_visible( $item['key'] ) ) {
 				continue;
 			}
@@ -1144,6 +1154,87 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'lede'      => self::cget( $content, 'calendar', 'cta', 'lede', 'Fixtures, results and club news — one email a month.' ),
 				'cta_label' => self::cget( $content, 'calendar', 'cta', 'cta_label', 'Join the mailing list →' ),
 				'cta_href'  => self::cget( $content, 'calendar', 'cta', 'cta_href', Blueworx_Clubhouse_Links::url( 'contact' ) ),
+			) );
+		}
+		$out .= '</main>' . self::shell_footer( $club, $visibility, $branding, $content );
+		return $out;
+	}
+
+	/**
+	 * The booking journey, rendered entirely from LatePoint's own shortcodes:
+	 * what you can book, where, who with, and when. This page is only reachable
+	 * when LatePoint is live (Page_Map::available), so the shortcodes here always
+	 * have something to expand against.
+	 *
+	 * Each slot's shortcode is ordinary editable content with the standard
+	 * LatePoint call as its default, so a club can retune columns or the calendar
+	 * view without a release.
+	 *
+	 * Clearing the field does NOT drop the slot: '' is the unset sentinel every
+	 * content field uses, so cget() reads it as "no override" and the default
+	 * comes back. Dropping a slot is the visibility toggle's job, exactly as for
+	 * every other section — one mechanism, not two that look alike and differ.
+	 */
+	public static function booking(
+		Blueworx_Clubhouse_Branding $branding,
+		Blueworx_Clubhouse_Visibility $visibility,
+		Blueworx_Clubhouse_Collections $collections,
+		string $logo_url = '',
+		?Blueworx_Clubhouse_Content_Store $content = null,
+		string $filter = ''
+	): string {
+		$club = $branding->get_club_name();
+		$out  = self::shell_header( $club, Blueworx_Clubhouse_Links::url( 'booking' ), $visibility, $logo_url, $content )
+			. '<main class="ch-main" id="ch-main" tabindex="-1">';
+
+		if ( $visibility->is_section_visible( 'booking', 'hero' ) ) {
+			$out .= Blueworx_Clubhouse_Sections::hero( array(
+				'eyebrow'            => self::cget( $content, 'booking', 'hero', 'eyebrow', 'Court bookings' ),
+				'title_lead'         => self::cget( $content, 'booking', 'hero', 'title_lead', 'Book your ' ),
+				'title_highlight'    => self::cget( $content, 'booking', 'hero', 'title_highlight', 'time on court.' ),
+				'lede'               => self::cget( $content, 'booking', 'hero', 'lede', 'Pick a session, a court and a time — members book online in a couple of taps.' ),
+				'cta_primary'        => self::cget( $content, 'booking', 'hero', 'cta_primary', Blueworx_Clubhouse_Cta::JOIN ),
+				'cta_primary_href'   => self::cget( $content, 'booking', 'hero', 'cta_primary_href', Blueworx_Clubhouse_Links::url( 'membership' ) ),
+				'cta_secondary'      => self::cget( $content, 'booking', 'hero', 'cta_secondary', 'Contact the club' ),
+				'cta_secondary_href' => self::cget( $content, 'booking', 'hero', 'cta_secondary_href', Blueworx_Clubhouse_Links::url( 'contact' ) ),
+				'image'              => self::media_src( (string) self::cget( $content, 'booking', 'hero', 'image', '' ) ),
+				'image_alt'          => $club,
+				'image_caption'      => '',
+			) );
+		}
+		// Ordered as the reader decides: what, where, who, then when. The calendar
+		// sits last because it is the commitment, and the three resource lists are
+		// what tell someone which slot they are looking for.
+		$slots = array(
+			'services'  => array(
+				'eyebrow'   => 'What you can book',
+				'heading'   => 'Sessions and services',
+				'shortcode' => '[latepoint_resources items="services" columns="3"]',
+			),
+			'locations' => array(
+				'eyebrow'   => 'Where you play',
+				'heading'   => 'Courts and locations',
+				'shortcode' => '[latepoint_resources items="locations" columns="3"]',
+			),
+			'agents'    => array(
+				'eyebrow'   => 'Who you book with',
+				'heading'   => 'Coaches and staff',
+				'shortcode' => '[latepoint_resources items="agents" columns="3"]',
+			),
+			'calendar'  => array(
+				'eyebrow'   => 'When you can play',
+				'heading'   => 'Availability',
+				'shortcode' => '[latepoint_calendar view="month"]',
+			),
+		);
+		foreach ( $slots as $key => $slot ) {
+			if ( ! $visibility->is_section_visible( 'booking', $key ) ) {
+				continue;
+			}
+			$out .= Blueworx_Clubhouse_Sections::shortcode_block( array(
+				'eyebrow'   => self::cget( $content, 'booking', $key, 'eyebrow', $slot['eyebrow'] ),
+				'heading'   => self::cget( $content, 'booking', $key, 'heading', $slot['heading'] ),
+				'shortcode' => self::cget( $content, 'booking', $key, 'shortcode', $slot['shortcode'] ),
 			) );
 		}
 		$out .= '</main>' . self::shell_footer( $club, $visibility, $branding, $content );

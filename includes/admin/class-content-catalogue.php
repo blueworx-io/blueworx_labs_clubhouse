@@ -146,7 +146,7 @@ final class Blueworx_Clubhouse_Content_Catalogue {
 
 	/** @return array<int,array<string,mixed>> */
 	public static function pages(): array {
-		return array(
+		$pages = array(
 			// Two tabs, not one: the header and footer appear on every page, while
 			// everything else under the old combined tab was Home-only. Editing the
 			// Home hero from a tab labelled "Global" read as a sitewide change.
@@ -283,6 +283,42 @@ final class Blueworx_Clubhouse_Content_Catalogue {
 					'auto' => array( 'text' => 'Built from each sport’s fixtures and results.', 'cpt' => 'clubhouse_fixture' ) ),
 				array( 'key' => 'cta', 'label' => 'Call to action', 'type' => 'fields', 'store_page' => 'calendar', 'fields' => self::cta_fields() ),
 			) ),
+			// Booking is LatePoint's page. It is dropped entirely — here and from the
+			// visibility inventory — when LatePoint is not live, so an owner is never
+			// shown fields for a page that cannot render. See Page_Map::available().
+			array( 'tab' => 'booking', 'label' => 'Book a court', 'sections' => array(
+				array( 'key' => 'hero', 'label' => 'Hero', 'type' => 'fields', 'store_page' => 'booking', 'fields' => self::hero_fields() ),
+				array( 'key' => 'services', 'label' => 'Sessions and services', 'type' => 'fields', 'store_page' => 'booking',
+					'note' => 'Ships with LatePoint’s services list. Switch the section off under Site setup → Visibility to drop it.',
+					'fields' => self::booking_slot_fields() ),
+				array( 'key' => 'locations', 'label' => 'Courts and locations', 'type' => 'fields', 'store_page' => 'booking',
+					'note' => 'Ships with LatePoint’s locations list. Switch the section off under Site setup → Visibility to drop it.',
+					'fields' => self::booking_slot_fields() ),
+				array( 'key' => 'agents', 'label' => 'Coaches and staff', 'type' => 'fields', 'store_page' => 'booking',
+					'note' => 'Ships with LatePoint’s agents list. Switch the section off under Site setup → Visibility to drop it.',
+					'fields' => self::booking_slot_fields() ),
+				array( 'key' => 'calendar', 'label' => 'Availability calendar', 'type' => 'fields', 'store_page' => 'booking',
+					'note' => 'Ships with LatePoint’s booking calendar. Switch the section off under Site setup → Visibility to drop it.',
+					'fields' => self::booking_slot_fields() ),
+			) ),
+		);
+
+		return array_values(
+			array_filter(
+				$pages,
+				static fn( array $page ): bool => Blueworx_Clubhouse_Page_Map::is_available(
+					'global' === $page['tab'] || 'home' === $page['tab'] ? '' : $page['tab']
+				)
+			)
+		);
+	}
+
+	/** A booking slot: its own heading, plus the LatePoint shortcode that fills it. */
+	private static function booking_slot_fields(): array {
+		return array(
+			self::f_text( 'eyebrow', 'Eyebrow' ),
+			self::f_text( 'heading', 'Heading' ),
+			self::f_shortcode( 'shortcode', 'Shortcode' ),
 		);
 	}
 }
