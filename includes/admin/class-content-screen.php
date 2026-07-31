@@ -30,19 +30,25 @@ final class Blueworx_Clubhouse_Content_Screen {
 	private const LINKS_DATALIST_ID = 'clubhouse-links';
 
 	/**
-	 * Every Clubhouse page as a URL suggestion, so a link field can be filled by
-	 * typing "member" instead of knowing the ?clubhouse_page=… form. Rendered once
-	 * per screen and shared by every url input via list=.
+	 * The suggestion list every URL field points at, drawn from the same
+	 * Link_Catalogue the menu editor uses — so a link an owner can pick in the
+	 * menu is a link they can pick anywhere.
 	 *
 	 * Suggestions only: the input stays a free-text URL field, because plenty of
 	 * links point at pages this plugin does not own.
+	 *
+	 * @param array<int,array{target:string,label:string,group:string,url:string}> $targets
 	 */
-	private static function links_datalist(): string {
-		$out = '<datalist id="' . self::LINKS_DATALIST_ID . '">';
-		foreach ( Blueworx_Clubhouse_Page_Map::pages() as $page ) {
-			$url  = Blueworx_Clubhouse_Links::url( '' === $page['slug'] ? 'home' : $page['slug'] );
-			$out .= '<option value="' . self::esc( $url ) . '" label="' . self::esc( $page['label'] ) . '">'
-				. self::esc( $page['label'] ) . '</option>';
+	private static function links_datalist( array $targets ): string {
+		$out  = '<datalist id="' . self::LINKS_DATALIST_ID . '">';
+		$seen = array();
+		foreach ( $targets as $entry ) {
+			if ( '' === $entry['url'] || in_array( $entry['url'], $seen, true ) ) {
+				continue;
+			}
+			$seen[] = $entry['url'];
+			$out   .= '<option value="' . self::esc( $entry['url'] ) . '" label="' . self::esc( $entry['label'] ) . '">'
+				. self::esc( $entry['label'] ) . '</option>';
 		}
 		return $out . '</datalist>';
 	}
@@ -109,10 +115,20 @@ final class Blueworx_Clubhouse_Content_Screen {
 		$out .= self::header();
 		$out .= self::notices( $model['notices'], $action_url );
 		$out .= self::page_tabs( $catalogue, $action_url );
-		$out .= self::links_datalist();
+		$out .= self::links_datalist( $model['menu_targets'] );
 
-		foreach ( $catalogue as $index => $page ) {
-			$out .= self::page_block( $page, 0 === $index, $action_url, (string) $model['nonce_field'] );
+		// The Menu tab is not a catalogue page — it edits the nav tree, not
+		// section content — so it renders through its own panel rather than
+		// page_block(). It still posts through the same form plumbing.
+		$out .= Blueworx_Clubhouse_Menu_Panel::render( array(
+			'tree'        => $model['menu_tree'],
+			'targets'     => $model['menu_targets'],
+			'action_url'  => $action_url,
+			'nonce_field' => (string) $model['nonce_field'],
+		) );
+
+		foreach ( $catalogue as $page ) {
+			$out .= self::page_block( $page, false, $action_url, (string) $model['nonce_field'] );
 		}
 
 		$out .= '</div></div>';
@@ -149,17 +165,15 @@ final class Blueworx_Clubhouse_Content_Screen {
 
 	/** @param array<int,array{tab:string,label:string,vis_page:string,sections:array<int,array<string,mixed>>}> $catalogue */
 	private static function page_tabs( array $catalogue, string $action_url ): string {
-		$out = '<nav class="clubhouse-pagetabs" role="tablist">';
-		foreach ( $catalogue as $index => $page ) {
-			$tab      = (string) $page['tab'];
-			$cls      = 0 === $index ? ' is-active' : '';
-			$selected = 0 === $index ? 'true' : 'false';
-			$href     = self::tab_href( $action_url, $tab );
-			$out     .= '<a class="clubhouse-pagetab' . $cls . '" href="' . self::esc_url( $href ) . '" data-tab="' . self::esc( $tab ) . '" role="tab" aria-selected="' . $selected . '">'
+		$out  = '<nav class="clubhouse-pagetabs" role="tablist">';
+		$out .= '<a class="clubhouse-pagetab is-active" href="' . self::esc_url( self::tab_href( $action_url, 'menu' ) ) . '" data-tab="menu" role="tab" aria-selected="true">Menu</a>';
+		foreach ( $catalogue as $page ) {
+			$tab  = (string) $page['tab'];
+			$href = self::tab_href( $action_url, $tab );
+			$out .= '<a class="clubhouse-pagetab" href="' . self::esc_url( $href ) . '" data-tab="' . self::esc( $tab ) . '" role="tab" aria-selected="false">'
 				. self::esc( (string) $page['label'] ) . '</a>';
 		}
-		$out .= '</nav>';
-		return $out;
+		return $out . '</nav>';
 	}
 
 	private static function tab_href( string $action_url, string $tab ): string {

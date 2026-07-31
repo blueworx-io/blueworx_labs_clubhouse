@@ -28,13 +28,36 @@ module.exports = async () => {
     return;
   }
 
+  // Also seeds a page standing in for SureCart's customer dashboard: a page this
+  // plugin does not own, carrying the page template slug External_Chrome keys
+  // off. CI has no SureCart, and installing it to assert our own wrapper would
+  // be testing SureCart. The template slug IS the contract, so a page that
+  // declares it is the honest fixture.
   const php = join(tmpdir(), 'clubhouse-global-setup.php');
   writeFileSync(
     php,
     `<?php
 require_once ${JSON.stringify(WP_LOAD)};
 update_option( 'clubhouse_demo_active', true, true );
-echo get_option( 'clubhouse_demo_active' ) ? "on" : "off";
+
+// menu-editor.spec.js edits the stored header menu — reset it before the run
+// so every run starts from Menu::current()'s defaults, the same way demo mode
+// above is seeded fresh each time rather than trusting a prior run's option.
+delete_option( 'clubhouse_menu' );
+
+$existing = get_page_by_path( 'external-chrome-fixture' );
+$id = $existing instanceof WP_Post ? $existing->ID : wp_insert_post( array(
+	'post_type'    => 'page',
+	'post_status'  => 'publish',
+	'post_name'    => 'external-chrome-fixture',
+	'post_title'   => 'External chrome fixture',
+	'post_content' => '<p id="foreign-content">FOREIGN CONTENT</p>',
+) );
+if ( is_int( $id ) && $id > 0 ) {
+	update_post_meta( $id, '_wp_page_template', 'pages/template-surecart-dashboard.php' );
+}
+
+echo ( get_option( 'clubhouse_demo_active' ) && is_int( $id ) && $id > 0 ) ? "on" : "off";
 `
   );
   const res = spawnSync('php', [php], { encoding: 'utf8' });
@@ -44,9 +67,9 @@ echo get_option( 'clubhouse_demo_active' ) ? "on" : "off";
     // Fail loudly. Continuing would produce a wall of demo-spec failures whose
     // cause is this, not the plugin.
     throw new Error(
-      `global-setup: could not enable demo mode (exit ${res.status}). ` +
+      `global-setup: could not seed demo mode and the external-page fixture (exit ${res.status}). ` +
         `stdout=${res.stdout?.trim()} stderr=${res.stderr?.trim()}`
     );
   }
-  console.log('global-setup: demo mode on.');
+  console.log('global-setup: demo mode on, external-page fixture seeded.');
 };

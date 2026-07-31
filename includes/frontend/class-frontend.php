@@ -200,7 +200,8 @@ final class Blueworx_Clubhouse_Frontend {
 		return $registry;
 	}
 
-	private static function context(): Blueworx_Clubhouse_Clubhouse_Context {
+	/** Public so External_Chrome dresses foreign pages from the same branding, look and content. */
+	public static function context(): Blueworx_Clubhouse_Clubhouse_Context {
 		$storage    = new Blueworx_Clubhouse_Options_Storage();
 		$registry   = self::registry( $storage );
 		$demo_slug  = Blueworx_Clubhouse_Demo_Controller::look_slug( $registry );
@@ -226,9 +227,33 @@ final class Blueworx_Clubhouse_Frontend {
 		if ( null === self::current_slug() ) {
 			return;
 		}
+		if ( ! self::enqueue_look_styles() ) {
+			return;
+		}
+		wp_enqueue_script(
+			'clubhouse-reveal',
+			BLUEWORX_LABS_CLUBHOUSE_URL . 'assets/js/reveal.js',
+			array(),
+			BLUEWORX_LABS_CLUBHOUSE_VERSION,
+			true
+		);
+	}
+
+	/**
+	 * Enqueue the look's stylesheets, webfonts and derived :root variables —
+	 * everything that makes a page look like this club, and nothing that
+	 * animates or rearranges markup.
+	 *
+	 * Split out of enqueue_assets() so External_Chrome can dress a page another
+	 * plugin owns in the site's type and colour without also loading the scroll
+	 * reveal, which would hide that plugin's UI until it scrolled into view.
+	 *
+	 * @return bool False when there is no active look, so callers can bail too.
+	 */
+	public static function enqueue_look_styles(): bool {
 		$ctx = self::context();
 		if ( null === $ctx->look ) {
-			return;
+			return false;
 		}
 		$specs = self::enqueue_specs(
 			$ctx->look,
@@ -239,7 +264,7 @@ final class Blueworx_Clubhouse_Frontend {
 		wp_enqueue_style( 'clubhouse-look', $specs['stylesheet_url'], array( 'clubhouse-base' ), BLUEWORX_LABS_CLUBHOUSE_VERSION );
 		wp_add_inline_style( 'clubhouse-look', $specs['font_face_css'], 'before' );
 		wp_add_inline_style( 'clubhouse-look', $specs['inline_css'] );
-		wp_enqueue_script( 'clubhouse-reveal', $specs['reveal_url'], array(), BLUEWORX_LABS_CLUBHOUSE_VERSION, true );
+		return true;
 	}
 
 	/** Turn a stored logo (attachment ID or legacy URL) into a URL string for the header. */
@@ -277,6 +302,9 @@ final class Blueworx_Clubhouse_Frontend {
 			return '';
 		}
 		Blueworx_Clubhouse_Links::set_resolver( array( self::class, 'link_url' ) );
+		Blueworx_Clubhouse_Menu::set_provider(
+			static fn(): Blueworx_Clubhouse_Menu => new Blueworx_Clubhouse_Menu( new Blueworx_Clubhouse_Options_Storage() )
+		);
 		$ctx      = self::context();
 		$logo_url = self::resolve_logo( $ctx->branding->get_logo() );
 		return Blueworx_Clubhouse_Page_Map::render( $slug, $ctx->branding, $ctx->visibility, $ctx->collections, $logo_url, $ctx->content, self::current_filter() );

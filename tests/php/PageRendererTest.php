@@ -309,4 +309,137 @@ final class PageRendererTest extends TestCase {
 		$this->assertStringContainsString( 'ch-brand__logo', $body );
 		$this->assertStringContainsString( 'src="https://club.test/logo.png"', $body );
 	}
+
+	public function test_header_renders_a_child_list_under_a_parent(): void {
+		$html = Blueworx_Clubhouse_Sections::header( array(
+			'club_name'   => 'ClubHouse',
+			'banner'      => '',
+			'banner_href' => '#',
+			'nav'         => array(
+				array( 'label' => 'About', 'href' => '/about', 'children' => array(
+					array( 'label' => 'History', 'href' => '/about#ch-about-history' ),
+				) ),
+			),
+			'active'      => '/about',
+			'login'       => 'Log in',
+			'login_href'  => '/login',
+			'join'        => 'Join',
+			'join_href'   => '/membership',
+		) );
+		$this->assertStringContainsString( 'ch-nav__item--has-children', $html );
+		$this->assertStringContainsString( 'aria-haspopup="true"', $html );
+		$this->assertStringContainsString( 'ch-nav__sub', $html );
+		$this->assertStringContainsString( '/about#ch-about-history', $html );
+	}
+
+	public function test_header_renders_a_hrefless_parent_as_a_non_link(): void {
+		$html = Blueworx_Clubhouse_Sections::header( array(
+			'club_name'   => 'ClubHouse',
+			'banner'      => '',
+			'banner_href' => '#',
+			'nav'         => array(
+				array( 'label' => 'Club', 'href' => '', 'children' => array(
+					array( 'label' => 'About', 'href' => '/about' ),
+				) ),
+			),
+			'active'      => '',
+			'login'       => 'Log in',
+			'login_href'  => '/login',
+			'join'        => 'Join',
+			'join_href'   => '/membership',
+		) );
+		$this->assertStringContainsString( 'ch-nav__link--static', $html );
+		$this->assertStringNotContainsString( '<a class="ch-nav__link" href="">', $html );
+	}
+
+	public function test_header_static_parent_head_is_keyboard_focusable(): void {
+		$html = Blueworx_Clubhouse_Sections::header( array(
+			'club_name'   => 'ClubHouse',
+			'banner'      => '',
+			'banner_href' => '#',
+			'nav'         => array(
+				array( 'label' => 'Club', 'href' => '', 'children' => array(
+					array( 'label' => 'About', 'href' => '/about' ),
+				) ),
+			),
+			'active'      => '',
+			'login'       => 'Log in',
+			'login_href'  => '/login',
+			'join'        => 'Join',
+			'join_href'   => '/membership',
+		) );
+		// A bare <span> is never in the tab order on its own; the static head
+		// needs tabindex="0" so :focus-within can still reveal its children
+		// with no JavaScript.
+		$this->assertStringContainsString( 'ch-nav__link--static" tabindex="0"', $html );
+	}
+
+	public function test_header_flat_item_with_empty_href_matches_empty_active(): void {
+		// Pins the pre-existing inline loop's no-emptiness-guard quirk on the
+		// FLAT (no-children) branch: an empty href was marked active whenever
+		// $data['active'] was also '', and that must not change.
+		$html = Blueworx_Clubhouse_Sections::header( array(
+			'club_name'   => 'ClubHouse',
+			'banner'      => '',
+			'banner_href' => '#',
+			'nav'         => array( array( 'label' => 'Home', 'href' => '' ) ),
+			'active'      => '',
+			'login'       => 'Log in',
+			'login_href'  => '/login',
+			'join'        => 'Join',
+			'join_href'   => '/membership',
+		) );
+		$this->assertStringContainsString( '<a class="ch-nav__link ch-nav__link--active" href="">', $html );
+	}
+
+	public function test_header_still_renders_a_flat_nav_unchanged(): void {
+		$html = Blueworx_Clubhouse_Sections::header( array(
+			'club_name'   => 'ClubHouse',
+			'banner'      => '',
+			'banner_href' => '#',
+			'nav'         => array( array( 'label' => 'About', 'href' => '/about' ) ),
+			'active'      => '/about',
+			'login'       => 'Log in',
+			'login_href'  => '/login',
+			'join'        => 'Join',
+			'join_href'   => '/membership',
+		) );
+		$this->assertStringContainsString( 'ch-nav__link--active', $html );
+		$this->assertStringNotContainsString( 'ch-nav__sub', $html );
+	}
+
+	public function test_home_nav_comes_from_the_stored_menu(): void {
+		$storage = new Blueworx_Clubhouse_Fake_Storage();
+		$menu    = new Blueworx_Clubhouse_Menu( $storage );
+		$menu->save( array(
+			array( 'label' => 'Say hello', 'target' => 'page:contact', 'children' => array() ),
+		) );
+		Blueworx_Clubhouse_Menu::set_provider( static fn(): Blueworx_Clubhouse_Menu => $menu );
+		try {
+			$html = Blueworx_Clubhouse_Page_Renderer::home(
+				$this->branding(),
+				new Blueworx_Clubhouse_Visibility( $storage ),
+				$this->collections()
+			);
+		} finally {
+			Blueworx_Clubhouse_Menu::set_provider( null );
+		}
+		// Scoped to the header: shell_footer() still hardcodes its own columns
+		// (out of scope for this task, see nav_links()), and those columns
+		// legitimately contain the literal string '>Membership</a>' too.
+		$header_html = substr( $html, 0, strpos( $html, '<main' ) );
+		$this->assertStringContainsString( '>Say hello<', $header_html );
+		$this->assertStringNotContainsString( '>Membership</a>', $header_html );
+	}
+
+	public function test_home_nav_falls_back_to_the_defaults_with_no_provider(): void {
+		Blueworx_Clubhouse_Menu::set_provider( null );
+		$html = Blueworx_Clubhouse_Page_Renderer::home(
+			$this->branding(),
+			new Blueworx_Clubhouse_Visibility( new Blueworx_Clubhouse_Fake_Storage() ),
+			$this->collections()
+		);
+		$this->assertStringContainsString( '>Membership<', $html );
+		$this->assertStringContainsString( '>Contact<', $html );
+	}
 }

@@ -38,6 +38,7 @@ final class LookCoverageTest extends TestCase {
 		'ch-footer__col',
 		'ch-footer__nl',
 		'ch-milestone__body',
+		'ch-nav__item', // Bare wrapper; only its --has-children variant carries a rule.
 		'ch-policy',
 		'ch-social__col',
 		'ch-social__col-line',

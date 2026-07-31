@@ -14,12 +14,15 @@ if ( ! defined( 'ABSPATH' ) ) {
 // Core primitives. Interface must load before its implementor.
 require_once __DIR__ . '/core/interface-storage.php';
 require_once __DIR__ . '/core/class-options-storage.php';
+require_once __DIR__ . '/core/class-null-storage.php';
 require_once __DIR__ . '/core/class-registry.php';
 
 // Content
 require_once __DIR__ . '/content/class-content-store.php';
 require_once __DIR__ . '/content/class-content-sanitiser.php';
 require_once __DIR__ . '/content/class-visibility.php';
+require_once __DIR__ . '/content/class-link-catalogue.php';
+require_once __DIR__ . '/content/class-menu.php';
 require_once __DIR__ . '/content/class-shortcodes.php';
 require_once __DIR__ . '/content/class-integrations.php';
 
@@ -50,6 +53,7 @@ require_once __DIR__ . '/admin/class-setup-screen.php';
 require_once __DIR__ . '/admin/class-owner-capabilities.php';
 require_once __DIR__ . '/admin/class-content-catalogue.php';
 require_once __DIR__ . '/admin/class-content-screen.php';
+require_once __DIR__ . '/admin/class-menu-panel.php';
 
 // Collections (pure)
 require_once __DIR__ . '/collections/interface-collections.php';

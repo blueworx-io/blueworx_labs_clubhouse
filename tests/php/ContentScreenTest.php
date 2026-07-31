@@ -73,10 +73,12 @@ final class ContentScreenTest extends TestCase {
 	 */
 	public function test_every_page_form_posts_the_submit_key_as_a_hidden_input(): void {
 		$html = Blueworx_Clubhouse_Content_Screen::render( $this->model() );
+		// +1: the Menu tab's own form (Blueworx_Clubhouse_Menu_Panel) carries the
+		// same hidden submit-gate input as every catalogue page's form.
 		$this->assertSame(
-			count( Blueworx_Clubhouse_Content_Catalogue::pages() ),
+			count( Blueworx_Clubhouse_Content_Catalogue::pages() ) + 1,
 			preg_match_all( '/<input type="hidden" name="clubhouse_content_submit" value="1">/', $html ),
-			'every page form must post the submit key regardless of which button was activated'
+			'every page form (including the Menu tab) must post the submit key regardless of which button was activated'
 		);
 	}
 

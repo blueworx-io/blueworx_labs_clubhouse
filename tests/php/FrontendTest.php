@@ -20,6 +20,11 @@ final class FrontendTest extends TestCase {
 		// Page_Map::is_available() consults it on effectively every render. Left
 		// installed it decides which pages exist for every later test.
 		Blueworx_Clubhouse_Integrations::set_detector( null );
+		// render_body() installs a Menu provider backed by real options — global
+		// state that would otherwise leak into every test that runs afterwards in
+		// this same PHPUnit process, including PreviewRenderTest, whose entire
+		// premise is "no provider installed, so Menu::current() is DEFAULTS".
+		Blueworx_Clubhouse_Menu::set_provider( null );
 	}
 
 	/**
@@ -333,5 +338,37 @@ final class FrontendTest extends TestCase {
 	public function test_document_title_falls_back_to_the_page_label(): void {
 		$this->assertSame( 'Contact', Blueworx_Clubhouse_Frontend::document_title( '', 'Contact' ) );
 		$this->assertSame( '', Blueworx_Clubhouse_Frontend::document_title( '', '' ) );
+	}
+
+	/**
+	 * render_body() installs Blueworx_Clubhouse_Menu::set_provider() so a saved
+	 * menu actually renders — but that provider is process-global, and PHPUnit
+	 * runs single-process. Left installed, it would make every later render in
+	 * this run (including PreviewRenderTest, and any bare Page_Renderer call in
+	 * this very test class) silently read this test's stored menu instead of
+	 * Menu::DEFAULTS. First half proves the leak is real; calling tearDown()
+	 * mid-test simulates PHPUnit's between-test call and proves it is cleared.
+	 */
+	public function test_render_body_installs_a_menu_provider_that_tear_down_clears(): void {
+		wp_stub_on_clubhouse_page();
+		update_option( 'clubhouse_menu', array(
+			array( 'label' => 'Say hello', 'target' => 'page:contact', 'children' => array() ),
+		) );
+
+		Blueworx_Clubhouse_Frontend::render_body();
+
+		$this->assertSame(
+			array( array( 'label' => 'Say hello', 'target' => 'page:contact', 'children' => array() ) ),
+			Blueworx_Clubhouse_Menu::current()->tree(),
+			'the provider installed by render_body() is still live immediately afterwards'
+		);
+
+		$this->tearDown();
+
+		$this->assertSame(
+			Blueworx_Clubhouse_Menu::DEFAULTS,
+			Blueworx_Clubhouse_Menu::current()->tree(),
+			'once tearDown() runs, a bare render is back to the defaults, as PreviewRenderTest requires'
+		);
 	}
 }

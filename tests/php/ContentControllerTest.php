@@ -483,4 +483,165 @@ final class ContentControllerTest extends TestCase {
 		$left = $s->get( Blueworx_Clubhouse_Import_Controller::IMAGES_NEEDED_KEY, array() );
 		$this->assertSame( array(), $left );
 	}
+
+	/** @return array<int,array<string,mixed>> */
+	private function menu_tree( Blueworx_Clubhouse_Fake_Storage $storage ): array {
+		return ( new Blueworx_Clubhouse_Menu( $storage ) )->tree();
+	}
+
+	private function menu_post( array $rows, array $extra = array() ): array {
+		return array_merge( array( 'clubhouse_content_tab' => 'menu', 'menu' => $rows ), $extra );
+	}
+
+	public function test_saving_the_menu_tab_stores_labels_and_targets(): void {
+		$storage = new Blueworx_Clubhouse_Fake_Storage();
+		Blueworx_Clubhouse_Content_Controller::handle_save( $this->menu_post( array(
+			array( 'label' => 'Say hello', 'target' => 'page:contact', 'custom' => '' ),
+		) ), $storage );
+		$tree = $this->menu_tree( $storage );
+		$this->assertSame( 'Say hello', $tree[0]['label'] );
+		$this->assertSame( 'page:contact', $tree[0]['target'] );
+	}
+
+	public function test_a_custom_url_row_stores_the_url_target(): void {
+		$storage = new Blueworx_Clubhouse_Fake_Storage();
+		Blueworx_Clubhouse_Content_Controller::handle_save( $this->menu_post( array(
+			array( 'label' => 'Shop', 'target' => 'url:', 'custom' => 'https://shop.test' ),
+		) ), $storage );
+		$this->assertSame( 'url:https://shop.test', $this->menu_tree( $storage )[0]['target'] );
+	}
+
+	public function test_move_down_swaps_two_rows(): void {
+		$storage = new Blueworx_Clubhouse_Fake_Storage();
+		Blueworx_Clubhouse_Content_Controller::handle_save( $this->menu_post(
+			array(
+				array( 'label' => 'A', 'target' => 'page:home',  'custom' => '' ),
+				array( 'label' => 'B', 'target' => 'page:about', 'custom' => '' ),
+			),
+			array( 'clubhouse_menu_down' => array( '0' => '1' ) )
+		), $storage );
+		$tree = $this->menu_tree( $storage );
+		$this->assertSame( array( 'B', 'A' ), array( $tree[0]['label'], $tree[1]['label'] ) );
+	}
+
+	public function test_indent_hangs_a_row_under_the_one_above(): void {
+		$storage = new Blueworx_Clubhouse_Fake_Storage();
+		Blueworx_Clubhouse_Content_Controller::handle_save( $this->menu_post(
+			array(
+				array( 'label' => 'About',   'target' => 'page:about',           'custom' => '' ),
+				array( 'label' => 'History', 'target' => 'anchor:about.history', 'custom' => '' ),
+			),
+			array( 'clubhouse_menu_indent' => array( '1' => '1' ) )
+		), $storage );
+		$tree = $this->menu_tree( $storage );
+		$this->assertCount( 1, $tree );
+		$this->assertSame( 'History', $tree[0]['children'][0]['label'] );
+	}
+
+	public function test_outdent_promotes_a_child_to_just_after_its_parent(): void {
+		$storage = new Blueworx_Clubhouse_Fake_Storage();
+		Blueworx_Clubhouse_Content_Controller::handle_save( $this->menu_post(
+			array(
+				array( 'label' => 'About', 'target' => 'page:about', 'custom' => '', 'children' => array(
+					array( 'label' => 'History', 'target' => 'anchor:about.history', 'custom' => '' ),
+				) ),
+				array( 'label' => 'Contact', 'target' => 'page:contact', 'custom' => '' ),
+			),
+			array( 'clubhouse_menu_outdent' => array( '0-0' => '1' ) )
+		), $storage );
+		$tree = $this->menu_tree( $storage );
+		$this->assertSame( array( 'About', 'History', 'Contact' ), array_column( $tree, 'label' ) );
+		$this->assertSame( array(), $tree[0]['children'] );
+	}
+
+	public function test_remove_deletes_a_child(): void {
+		$storage = new Blueworx_Clubhouse_Fake_Storage();
+		Blueworx_Clubhouse_Content_Controller::handle_save( $this->menu_post(
+			array(
+				array( 'label' => 'About', 'target' => 'page:about', 'custom' => '', 'children' => array(
+					array( 'label' => 'History', 'target' => 'anchor:about.history', 'custom' => '' ),
+				) ),
+			),
+			array( 'clubhouse_menu_remove' => array( '0-0' => '1' ) )
+		), $storage );
+		$this->assertSame( array(), $this->menu_tree( $storage )[0]['children'] );
+	}
+
+	public function test_add_appends_a_blank_row(): void {
+		$storage = new Blueworx_Clubhouse_Fake_Storage();
+		Blueworx_Clubhouse_Content_Controller::handle_save( $this->menu_post(
+			array( array( 'label' => 'A', 'target' => 'page:home', 'custom' => '' ) ),
+			array( 'clubhouse_menu_add' => '1' )
+		), $storage );
+		$tree = $this->menu_tree( $storage );
+		$this->assertCount( 2, $tree );
+		$this->assertSame( 'New item', $tree[1]['label'] );
+	}
+
+	public function test_a_menu_post_does_not_touch_section_content(): void {
+		$storage = new Blueworx_Clubhouse_Fake_Storage();
+		$store   = new Blueworx_Clubhouse_Content_Store( $storage );
+		$store->set( 'global', 'header', 'banner', 'Keep me' );
+		Blueworx_Clubhouse_Content_Controller::handle_save( $this->menu_post( array(
+			array( 'label' => 'A', 'target' => 'page:home', 'custom' => '' ),
+		) ), $storage );
+		$this->assertSame( 'Keep me', $store->get( 'global', 'header', 'banner', '' ) );
+	}
+
+	/**
+	 * PHP's max_input_vars can truncate a large POST before the 'menu' key ever
+	 * arrives; a wholly-absent 'menu' must not be read as "every row was
+	 * deleted" — Menu::tree() treats a stored empty array as exactly that.
+	 */
+	public function test_a_menu_post_with_no_menu_key_leaves_the_stored_tree_untouched(): void {
+		$storage = new Blueworx_Clubhouse_Fake_Storage();
+		( new Blueworx_Clubhouse_Menu( $storage ) )->save( array(
+			array( 'label' => 'Kept', 'target' => 'page:home', 'children' => array() ),
+		) );
+		Blueworx_Clubhouse_Content_Controller::handle_save( array(
+			'clubhouse_content_tab' => 'menu',
+		), $storage );
+		$this->assertSame( 'Kept', $this->menu_tree( $storage )[0]['label'] );
+	}
+
+	/** An explicitly submitted empty 'menu' array still means "the owner emptied it". */
+	public function test_a_menu_post_with_an_empty_menu_array_stores_an_empty_tree(): void {
+		$storage = new Blueworx_Clubhouse_Fake_Storage();
+		( new Blueworx_Clubhouse_Menu( $storage ) )->save( array(
+			array( 'label' => 'Kept', 'target' => 'page:home', 'children' => array() ),
+		) );
+		Blueworx_Clubhouse_Content_Controller::handle_save( $this->menu_post( array() ), $storage );
+		$this->assertSame( array(), $this->menu_tree( $storage ) );
+	}
+
+	/**
+	 * The picker marks no option selected for a stored target the catalogue no
+	 * longer knows, so the browser would preselect its first option — and
+	 * saving that form again would silently overwrite the real target. The
+	 * panel must emit the unknown target as its own selected option so a
+	 * round trip through render() and handle_save() preserves it.
+	 */
+	public function test_an_unknown_target_survives_a_render_and_save_round_trip(): void {
+		$storage = new Blueworx_Clubhouse_Fake_Storage();
+		( new Blueworx_Clubhouse_Menu( $storage ) )->save( array(
+			array( 'label' => 'Ghost', 'target' => 'filter:sports:ghost', 'children' => array() ),
+		) );
+
+		$html = Blueworx_Clubhouse_Menu_Panel::render( array(
+			'tree'        => $this->menu_tree( $storage ),
+			'targets'     => Blueworx_Clubhouse_Link_Catalogue::targets( new Blueworx_Clubhouse_Demo_Collections() ),
+			'action_url'  => 'http://x.test/',
+			'nonce_field' => '',
+		) );
+
+		$this->assertMatchesRegularExpression( '/name="menu\[0\]\[target\]"/', $html );
+		preg_match( '/name="menu\[0\]\[target\]".*?<option value="([^"]*)" selected>/s', $html, $matches );
+		$this->assertSame( 'filter:sports:ghost', $matches[1] ?? null );
+
+		Blueworx_Clubhouse_Content_Controller::handle_save( $this->menu_post( array(
+			array( 'label' => 'Ghost', 'target' => $matches[1], 'custom' => '' ),
+		) ), $storage );
+
+		$this->assertSame( 'filter:sports:ghost', $this->menu_tree( $storage )[0]['target'] );
+	}
 }

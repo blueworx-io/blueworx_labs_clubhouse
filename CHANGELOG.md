@@ -5,6 +5,52 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.48.0
+
+- Added a Menu tab to Club Content: reorder, rename and nest header nav items, and point each one at a page, a section of a page, a filtered sport/team/event view, or a custom URL.
+- Every editable section now carries a stable anchor id, so a menu item can link straight to it.
+- The suggestion list behind every URL field in Club Content now offers section anchors and filtered collection views, not just the top-level pages.
+
+## 0.47.2
+
+- **Removed the attempt to give club owners LatePoint automatically.** Two releases tried to make an owner look like an administrator to LatePoint, and neither worked: LatePoint settles the question earlier than anything this plugin can reach. While it was in place it gave owners a stand-in administrator permission that bought nothing, so it has been taken out entirely. Owners are ordinary owners again, exactly as in 0.46.0.
+- **To give owners LatePoint, add them in LatePoint itself:** LatePoint → Settings → Roles → Create Custom Role, tied to the ClubHouse - Owner role. That is LatePoint's own supported way of doing it, it takes a moment, and it survives LatePoint updates. The Clubhouse side is already in place and correct — the LatePoint menu appears for owners as soon as that role exists.
+- Nothing else changed. The owner and content editor roles, their menus, SureCart access and every limit on both are exactly as they were.
+
+## 0.47.1
+
+- **Fixed: LatePoint still did not appear for club owners in 0.47.0.** The previous release told WordPress the owner answered to the administrator name, but not in the one place LatePoint actually looks. WordPress keeps a second copy of a user's role names alongside their permissions, and that copy is what a plugin reads when it asks "is this an administrator?" — it was left untouched, so LatePoint carried on saying no. Both are now kept in step. Proved on a live site: an account holding every administrator permission but a different role name was refused entry, and a real administrator was not, which is what pinned down the check being made.
+- The recognition also now lasts for the whole of a LatePoint page load rather than only while the menu is built, because WordPress re-checks whether you may view a page after the menu has finished being assembled.
+
+## 0.47.0
+
+- **Club owners now get LatePoint, with nothing to set up.** LatePoint never used WordPress permissions: its Role Manager matches on role *names*, and its stock entry names the administrator role, so an owner was invisible to it however much access they were given. Owners are now presented to LatePoint under the name it already recognises, so the booking diary is fully theirs — no custom LatePoint role to create, on this site or any other.
+- **Only the name, never the powers.** WordPress works out what an account can do when it loads, so a name added afterwards unlocks nothing by itself. Every limit is unchanged: an owner still cannot reach settings, plugins, themes, updates, tools, page editing or user management. The name is also only in place while the admin menu is built and while LatePoint itself is being used — never on the public site, and never anywhere else in wp-admin.
+
+## 0.46.0
+
+- **A second Clubhouse role: ClubHouse - Content Editor.** For the person who runs the club's words and its members, but not its money. They get Club Content, Collections, Posts, Media and Users — and nothing else. No Clubhouse Setup, no SureCart, no LatePoint, no plugins, themes, settings, tools or import/export.
+- **The Owner is now everything the Content Editor is, plus the shop and the diary.** Both roles are built from the same capability map; the Owner simply also holds the key to Clubhouse Setup, SureCart and LatePoint. There is no longer any job the junior role can do that the senior cannot.
+- **Both roles can manage members' accounts, and neither can touch a senior one.** They can view and edit ordinary users, and they can never create, delete, remove or promote anybody. Any attempt to edit an administrator, an Owner, or a BlueWorx role is refused outright — so no one can reset an administrator's password and take over the site. The refusal is enforced at the capability layer, which means it holds on every screen, every REST route, and inside any other plugin that asks.
+- **Both roles are now cloned from the site's live editor role** rather than a hard-coded list, so a club that has adjusted its editor keeps that adjustment. Anything dangerous is then stripped back off, so an over-powered editor cannot leak into a Clubhouse role.
+- **Fixed: LatePoint never appeared for the Owner.** LatePoint locks its menu with a capability of its own rather than the usual WordPress one, so no amount of general permission reached it. The Owner is now given whatever LatePoint and SureCart grant an administrator, read from the site at the moment the role is built — so it keeps working when either plugin renames something.
+- Both roles are relabelled to read **ClubHouse - Owner** and **ClubHouse - Content Editor** in the roles list. Existing owners keep their role and their access; only the label changed.
+- Comments are no longer a Clubhouse surface for either role, and neither is the raw Pages editor — pages are served by Clubhouse's own routing and edited under Club Content.
+
+## 0.45.0
+
+- **Club owners now get the shop and the diary.** SureCart and LatePoint have joined the owner's menu, and both are theirs to run in full — products, orders and shop settings on one side, bookings, agents and availability on the other. Neither plugin was reachable before: their menus are locked to capabilities the owner did not hold, so they simply were not there.
+- **The Clubhouse menu is back on the menu.** Site setup was only reachable as a dashboard widget for owners; it is now a top-level Clubhouse item as well, sitting between the Dashboard and Club Content. The dashboard widget stays exactly as it was.
+- The owner's menu now reads: Dashboard, Clubhouse, Club Content, Collections, SureCart, LatePoint, Posts, Media, Users, and their own profile.
+- **Comments have gone from the owner's menu**, along with the comment-moderation capability behind it.
+- **Nothing about the ceiling has changed.** The owner still cannot reach WordPress settings, plugins, themes, updates, tools, page editing, or any user management — the two plugins are unlocked, the screens that lock the site down are not, and the extra reach lasts only for the length of a request rather than being written onto the role.
+
+## 0.44.0
+
+- **SureCart's customer dashboard now looks like the rest of the site.** Pages another plugin owns — SureCart's account and customer dashboard — were being rendered by the bare theme underneath the Clubhouse, so they arrived with no header, no menu, no footer, no page width and none of the club's fonts or colours. They now open inside the same header and footer as every other page, and in the club's own type and colour. Nothing to switch on.
+- **SureCart still styles SureCart.** The Clubhouse only frames the page: it adds the chrome around the outside and the club's fonts and colours, and applies nothing at all to SureCart's own buttons, forms and panels. The scroll animation used on Clubhouse pages is deliberately left off here, so nothing of SureCart's is ever hidden waiting to animate in.
+- Pages that carry no clue they belong to another plugin — SureCart's checkout, for one — can be brought in with the `blueworx_clubhouse_dress_external_page` filter.
+
 ## 0.43.0
 
 - **The booking calendar has moved to the Calendar page.** LatePoint's availability calendar now sits on Calendar, above the fixtures and results — a member looking at that page is working out when to play, and booking is what follows. Book a court keeps the three lists that tell you what you are booking: sessions and services, courts and locations, coaches and staff. Both the new section and its editable shortcode appear under Club content → Calendar → Book a court, and it has its own switch under Site setup → Visibility.
