@@ -156,6 +156,13 @@ final class Blueworx_Clubhouse_Owner_Role {
 				$allcaps[ $cap ] = true;
 			}
 		}
+		// WordPress publishes a user's role names as pseudo-capabilities, which is how
+		// current_user_can( 'administrator' ) works — and how LatePoint asks. Adding the
+		// name to the roles array alone is invisible to that check, so the pseudo-cap
+		// has to travel with it, for exactly the same window.
+		if ( self::$masked ) {
+			$allcaps[ Blueworx_Clubhouse_Owner_Capabilities::LATEPOINT_MASK_ROLE ] = true;
+		}
 		return $allcaps;
 	}
 
@@ -252,9 +259,14 @@ final class Blueworx_Clubhouse_Owner_Role {
 		self::$masked  = true;
 	}
 
-	/** Take the mask back off, so it never outlives the window it was needed for. */
+	/**
+	 * Take the mask back off, so it never outlives the window it was needed for —
+	 * unless this whole request belongs to LatePoint, where it has to stay on past
+	 * the menu being built: WordPress checks whether the account may view the page
+	 * after every admin_menu callback has run.
+	 */
 	public static function unmask_role(): void {
-		if ( ! self::$masked ) {
+		if ( ! self::$masked || self::is_latepoint_request() ) {
 			return;
 		}
 		$user = wp_get_current_user();
@@ -270,13 +282,18 @@ final class Blueworx_Clubhouse_Owner_Role {
 	 * AJAX routes — where it has to outlast the menu-building window.
 	 */
 	public static function mask_role_for_latepoint(): void {
+		if ( self::is_latepoint_request() ) {
+			self::mask_role();
+		}
+	}
+
+	/** True when this request is aimed at LatePoint — one of its screens or its AJAX routes. */
+	public static function is_latepoint_request(): bool {
 		// phpcs:disable WordPress.Security.NonceVerification.Recommended -- reading which screen is being viewed, changing nothing.
 		$page   = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : '';
 		$action = isset( $_REQUEST['action'] ) ? sanitize_key( wp_unslash( $_REQUEST['action'] ) ) : '';
 		// phpcs:enable WordPress.Security.NonceVerification.Recommended
-		if ( Blueworx_Clubhouse_Owner_Capabilities::is_latepoint_request( $page, $action ) ) {
-			self::mask_role();
-		}
+		return Blueworx_Clubhouse_Owner_Capabilities::is_latepoint_request( $page, $action );
 	}
 
 	/** A WP_User-like object for an id, or null. Wrapped so tests can stand in one user store. */

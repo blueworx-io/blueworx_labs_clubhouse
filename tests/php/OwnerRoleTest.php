@@ -6,6 +6,9 @@ final class OwnerRoleTest extends TestCase {
 
 	protected function setUp(): void {
 		wp_stub_reset();
+		// The mask is request-scoped state; clear the request first so it comes off.
+		unset( $_GET['page'], $_REQUEST['action'] );
+		Blueworx_Clubhouse_Owner_Role::unmask_role();
 	}
 
 	public function test_activate_registers_the_role_with_the_capability_map(): void {
@@ -341,6 +344,51 @@ final class OwnerRoleTest extends TestCase {
 
 		Blueworx_Clubhouse_Owner_Role::unmask_role();
 		unset( $_GET['page'] );
+	}
+
+	/**
+	 * WordPress publishes role names as pseudo-caps, which is how
+	 * current_user_can( 'administrator' ) works — and how LatePoint asks. Proved on a
+	 * live site: an account holding every core capability but named something else
+	 * was refused, a real administrator was not.
+	 */
+	public function test_the_mask_grants_the_role_name_as_a_capability(): void {
+		$owner                           = (object) array( 'roles' => array( 'clubhouse_owner' ) );
+		$GLOBALS['wp_stub_current_user'] = $owner;
+
+		$unmasked = Blueworx_Clubhouse_Owner_Role::lend_caps( array( 'read' => true ), array(), array(), $owner );
+		$this->assertArrayNotHasKey( 'administrator', $unmasked );
+
+		Blueworx_Clubhouse_Owner_Role::mask_role();
+		$masked = Blueworx_Clubhouse_Owner_Role::lend_caps( array( 'read' => true ), array(), array(), $owner );
+		$this->assertTrue( $masked['administrator'] );
+
+		Blueworx_Clubhouse_Owner_Role::unmask_role();
+		$after = Blueworx_Clubhouse_Owner_Role::lend_caps( array( 'read' => true ), array(), array(), $owner );
+		$this->assertArrayNotHasKey( 'administrator', $after );
+	}
+
+	public function test_the_pseudo_cap_is_never_granted_to_anybody_else(): void {
+		$editor                          = (object) array( 'roles' => array( 'clubhouse_content_editor' ) );
+		$GLOBALS['wp_stub_current_user'] = $editor;
+		Blueworx_Clubhouse_Owner_Role::mask_role();
+		$caps = Blueworx_Clubhouse_Owner_Role::lend_caps( array( 'read' => true ), array(), array(), $editor );
+		$this->assertArrayNotHasKey( 'administrator', $caps );
+	}
+
+	/** The page check runs after every admin_menu callback, so the mask must outlast it. */
+	public function test_the_mask_survives_unmasking_on_a_latepoint_request(): void {
+		$owner                           = (object) array( 'roles' => array( 'clubhouse_owner' ) );
+		$GLOBALS['wp_stub_current_user'] = $owner;
+		$_GET['page']                    = 'latepoint';
+
+		Blueworx_Clubhouse_Owner_Role::mask_role();
+		Blueworx_Clubhouse_Owner_Role::unmask_role();
+		$caps = Blueworx_Clubhouse_Owner_Role::lend_caps( array( 'read' => true ), array(), array(), $owner );
+		$this->assertTrue( $caps['administrator'], 'still masked for the rest of a LatePoint request' );
+
+		unset( $_GET['page'] );
+		Blueworx_Clubhouse_Owner_Role::unmask_role();
 	}
 
 	public function test_the_dashboard_takeover_is_owner_only(): void {

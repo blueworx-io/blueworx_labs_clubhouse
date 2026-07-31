@@ -11,6 +11,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Every editable section now carries a stable anchor id, so a menu item can link straight to it.
 - The suggestion list behind every URL field in Club Content now offers section anchors and filtered collection views, not just the top-level pages.
 
+## 0.47.1
+
+- **Fixed: LatePoint still did not appear for club owners in 0.47.0.** The previous release told WordPress the owner answered to the administrator name, but not in the one place LatePoint actually looks. WordPress keeps a second copy of a user's role names alongside their permissions, and that copy is what a plugin reads when it asks "is this an administrator?" — it was left untouched, so LatePoint carried on saying no. Both are now kept in step. Proved on a live site: an account holding every administrator permission but a different role name was refused entry, and a real administrator was not, which is what pinned down the check being made.
+- The recognition also now lasts for the whole of a LatePoint page load rather than only while the menu is built, because WordPress re-checks whether you may view a page after the menu has finished being assembled.
+
 ## 0.47.0
 
 - **Club owners now get LatePoint, with nothing to set up.** LatePoint never used WordPress permissions: its Role Manager matches on role *names*, and its stock entry names the administrator role, so an owner was invisible to it however much access they were given. Owners are now presented to LatePoint under the name it already recognises, so the booking diary is fully theirs — no custom LatePoint role to create, on this site or any other.
