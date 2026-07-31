@@ -246,28 +246,21 @@ final class Blueworx_Clubhouse_Owner_Capabilities {
 	}
 
 	/**
-	 * LatePoint does not use capabilities. Its Role Manager maps LatePoint roles
-	 * onto *named* WordPress roles — its stock entry binds wp_role=administrator —
-	 * so an owner is invisible to it however many caps they hold, which is why
-	 * lending manage_options never produced a menu.
+	 * LatePoint does not use capabilities at all. Its Role Manager maps LatePoint
+	 * roles onto *named* WordPress roles, and its stock entry names the administrator
+	 * role, so an owner is invisible to it however many capabilities they hold.
 	 *
-	 * Rather than require a custom LatePoint role on every site, the Owner is
-	 * presented to LatePoint under the role name it already recognises. Only the
-	 * role *name* is added, never the capabilities: WordPress computes allcaps when
-	 * the user object is built, so a name appended afterwards unlocks nothing on its
-	 * own. The core ceiling is enforced by caps and is unaffected.
+	 * Two attempts to satisfy that check from here — lending manage_options, then
+	 * presenting the owner under the administrator name — both failed against a real
+	 * site, because LatePoint decides earlier or elsewhere than any hook available to
+	 * us. The supported route is a custom LatePoint role bound to clubhouse_owner,
+	 * created once per site under LatePoint → Settings → Roles.
+	 *
+	 * LATEPOINT_MENU stays in the owner's menu allowlist: the slug is correct, and
+	 * the menu appears the moment that custom role exists.
+	 *
+	 * @return array<int,string> Name fragments marking a capability as an integration's.
 	 */
-	public const LATEPOINT_MASK_ROLE = 'administrator';
-
-	/**
-	 * True when this request is one where the Owner must be recognisable to
-	 * LatePoint: any of its own admin screens, or one of its AJAX routes.
-	 */
-	public static function is_latepoint_request( string $page, string $action ): bool {
-		return 0 === strpos( $page, self::LATEPOINT_MENU ) || 0 === strpos( $action, self::LATEPOINT_MENU );
-	}
-
-	/** Name fragments marking a capability as one of the integrations'. @return array<int,string> */
 	public static function integration_cap_patterns(): array {
 		return array( '/latepoint/i', '/surecart/i', '/(^|_)sc_/i' );
 	}

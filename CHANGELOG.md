@@ -11,6 +11,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Every editable section now carries a stable anchor id, so a menu item can link straight to it.
 - The suggestion list behind every URL field in Club Content now offers section anchors and filtered collection views, not just the top-level pages.
 
+## 0.47.2
+
+- **Removed the attempt to give club owners LatePoint automatically.** Two releases tried to make an owner look like an administrator to LatePoint, and neither worked: LatePoint settles the question earlier than anything this plugin can reach. While it was in place it gave owners a stand-in administrator permission that bought nothing, so it has been taken out entirely. Owners are ordinary owners again, exactly as in 0.46.0.
+- **To give owners LatePoint, add them in LatePoint itself:** LatePoint → Settings → Roles → Create Custom Role, tied to the ClubHouse - Owner role. That is LatePoint's own supported way of doing it, it takes a moment, and it survives LatePoint updates. The Clubhouse side is already in place and correct — the LatePoint menu appears for owners as soon as that role exists.
+- Nothing else changed. The owner and content editor roles, their menus, SureCart access and every limit on both are exactly as they were.
+
 ## 0.47.1
 
 - **Fixed: LatePoint still did not appear for club owners in 0.47.0.** The previous release told WordPress the owner answered to the administrator name, but not in the one place LatePoint actually looks. WordPress keeps a second copy of a user's role names alongside their permissions, and that copy is what a plugin reads when it asks "is this an administrator?" — it was left untouched, so LatePoint carried on saying no. Both are now kept in step. Proved on a live site: an account holding every administrator permission but a different role name was refused entry, and a real administrator was not, which is what pinned down the check being made.

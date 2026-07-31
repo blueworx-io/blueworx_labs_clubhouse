@@ -6,9 +6,7 @@ final class OwnerRoleTest extends TestCase {
 
 	protected function setUp(): void {
 		wp_stub_reset();
-		// The mask is request-scoped state; clear the request first so it comes off.
-		unset( $_GET['page'], $_REQUEST['action'] );
-		Blueworx_Clubhouse_Owner_Role::unmask_role();
+		unset( $_GET['page'], $_REQUEST['action'], $GLOBALS['pagenow'] );
 	}
 
 	public function test_activate_registers_the_role_with_the_capability_map(): void {
@@ -297,98 +295,27 @@ final class OwnerRoleTest extends TestCase {
 	}
 
 	/**
-	 * LatePoint maps its roles onto named WordPress roles, so an owner is invisible
-	 * to it whatever caps they hold. The mask makes them recognisable by name only.
+	 * The role-name mask that shipped in 0.47.0–0.47.1 is gone. It never satisfied
+	 * LatePoint — which decides earlier than any hook available here — and until it
+	 * was removed it handed owners a pseudo-administrator capability for nothing.
+	 * This pins the removal: no owner is ever an administrator by any measure.
 	 */
-	public function test_the_mask_adds_the_role_name_for_owners_and_takes_it_off_again(): void {
+	public function test_owners_are_never_given_the_administrator_role_or_its_pseudo_cap(): void {
 		$owner                           = (object) array( 'roles' => array( 'clubhouse_owner' ) );
 		$GLOBALS['wp_stub_current_user'] = $owner;
+		$GLOBALS['wp_stub_is_admin']     = true;
 
-		Blueworx_Clubhouse_Owner_Role::mask_role();
-		$this->assertContains( 'administrator', $owner->roles );
-		$this->assertTrue( Blueworx_Clubhouse_Owner_Role::is_owner( $owner ), 'still an owner while masked' );
-
-		Blueworx_Clubhouse_Owner_Role::unmask_role();
-		$this->assertSame( array( 'clubhouse_owner' ), $owner->roles );
-	}
-
-	public function test_the_mask_never_touches_anybody_else(): void {
-		foreach ( array( 'clubhouse_content_editor', 'editor', 'subscriber' ) as $role ) {
-			$user                            = (object) array( 'roles' => array( $role ) );
-			$GLOBALS['wp_stub_current_user'] = $user;
-			Blueworx_Clubhouse_Owner_Role::mask_role();
-			$this->assertSame( array( $role ), $user->roles, "{$role} must not be masked" );
-			Blueworx_Clubhouse_Owner_Role::unmask_role();
+		foreach ( array( 'admin.php', 'index.php', 'edit.php' ) as $screen ) {
+			$GLOBALS['pagenow'] = $screen;
+			$caps               = Blueworx_Clubhouse_Owner_Role::lend_caps( array( 'read' => true ), array(), array(), $owner );
+			$this->assertArrayNotHasKey( 'administrator', $caps, "no pseudo-cap on {$screen}" );
 		}
-	}
-
-	public function test_a_real_administrator_is_left_exactly_as_it_is(): void {
-		$user                            = (object) array( 'roles' => array( 'clubhouse_owner', 'administrator' ) );
-		$GLOBALS['wp_stub_current_user'] = $user;
-		Blueworx_Clubhouse_Owner_Role::mask_role();
-		Blueworx_Clubhouse_Owner_Role::unmask_role();
-		$this->assertSame( array( 'clubhouse_owner', 'administrator' ), $user->roles, 'a genuine role is never stripped' );
-	}
-
-	public function test_only_latepoint_requests_are_masked_for_the_whole_request(): void {
-		$owner                           = (object) array( 'roles' => array( 'clubhouse_owner' ) );
-		$GLOBALS['wp_stub_current_user'] = $owner;
-
-		$_GET['page'] = 'options-general';
-		Blueworx_Clubhouse_Owner_Role::mask_role_for_latepoint();
-		$this->assertNotContains( 'administrator', $owner->roles );
-
 		$_GET['page'] = 'latepoint';
-		Blueworx_Clubhouse_Owner_Role::mask_role_for_latepoint();
-		$this->assertContains( 'administrator', $owner->roles );
+		$caps         = Blueworx_Clubhouse_Owner_Role::lend_caps( array( 'read' => true ), array(), array(), $owner );
+		$this->assertArrayNotHasKey( 'administrator', $caps, 'not even on a LatePoint request' );
+		$this->assertSame( array( 'clubhouse_owner' ), $owner->roles, 'the roles array is left alone' );
 
-		Blueworx_Clubhouse_Owner_Role::unmask_role();
-		unset( $_GET['page'] );
-	}
-
-	/**
-	 * WordPress publishes role names as pseudo-caps, which is how
-	 * current_user_can( 'administrator' ) works — and how LatePoint asks. Proved on a
-	 * live site: an account holding every core capability but named something else
-	 * was refused, a real administrator was not.
-	 */
-	public function test_the_mask_grants_the_role_name_as_a_capability(): void {
-		$owner                           = (object) array( 'roles' => array( 'clubhouse_owner' ) );
-		$GLOBALS['wp_stub_current_user'] = $owner;
-
-		$unmasked = Blueworx_Clubhouse_Owner_Role::lend_caps( array( 'read' => true ), array(), array(), $owner );
-		$this->assertArrayNotHasKey( 'administrator', $unmasked );
-
-		Blueworx_Clubhouse_Owner_Role::mask_role();
-		$masked = Blueworx_Clubhouse_Owner_Role::lend_caps( array( 'read' => true ), array(), array(), $owner );
-		$this->assertTrue( $masked['administrator'] );
-
-		Blueworx_Clubhouse_Owner_Role::unmask_role();
-		$after = Blueworx_Clubhouse_Owner_Role::lend_caps( array( 'read' => true ), array(), array(), $owner );
-		$this->assertArrayNotHasKey( 'administrator', $after );
-	}
-
-	public function test_the_pseudo_cap_is_never_granted_to_anybody_else(): void {
-		$editor                          = (object) array( 'roles' => array( 'clubhouse_content_editor' ) );
-		$GLOBALS['wp_stub_current_user'] = $editor;
-		Blueworx_Clubhouse_Owner_Role::mask_role();
-		$caps = Blueworx_Clubhouse_Owner_Role::lend_caps( array( 'read' => true ), array(), array(), $editor );
-		$this->assertArrayNotHasKey( 'administrator', $caps );
-	}
-
-	/** The page check runs after every admin_menu callback, so the mask must outlast it. */
-	public function test_the_mask_survives_unmasking_on_a_latepoint_request(): void {
-		$owner                           = (object) array( 'roles' => array( 'clubhouse_owner' ) );
-		$GLOBALS['wp_stub_current_user'] = $owner;
-		$_GET['page']                    = 'latepoint';
-
-		Blueworx_Clubhouse_Owner_Role::mask_role();
-		Blueworx_Clubhouse_Owner_Role::unmask_role();
-		$caps = Blueworx_Clubhouse_Owner_Role::lend_caps( array( 'read' => true ), array(), array(), $owner );
-		$this->assertTrue( $caps['administrator'], 'still masked for the rest of a LatePoint request' );
-
-		unset( $_GET['page'] );
-		Blueworx_Clubhouse_Owner_Role::unmask_role();
+		unset( $_GET['page'], $GLOBALS['pagenow'] );
 	}
 
 	public function test_the_dashboard_takeover_is_owner_only(): void {
