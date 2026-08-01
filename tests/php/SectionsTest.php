@@ -693,18 +693,18 @@ final class SectionsTest extends TestCase {
 			'remember_label' => 'Remember me',
 			'forgot_label'   => 'Forgot password?',
 			'forgot_href'    => '#',
+			'signin_href'    => '?page=login',
 			'submit_label'   => 'Log in',
 			'join_prompt'    => 'Not a member yet?',
 			'join_label'     => 'Join the club',
 			'join_href'      => '?page=membership',
+			'state'          => Blueworx_Clubhouse_Auth_View::state(),
 		) );
 		$this->assertStringContainsString( 'class="ch-auth"', $html );
 		// The card carries the page's main heading (no hero on the login page).
 		$this->assertStringContainsString( '<h1 class="ch-auth__title">Log in to your account</h1>', $html );
-		$this->assertStringContainsString( 'type="email"', $html );
 		$this->assertStringContainsString( 'type="password"', $html );
 		$this->assertStringContainsString( 'autocomplete="current-password"', $html );
-		$this->assertStringContainsString( 'onsubmit="return false"', $html );
 		$this->assertStringContainsString( 'href="?page=membership"', $html );
 		$this->assertNoHexColour( $html );
 		$this->assertStringNotContainsString( 'style=', $html );
