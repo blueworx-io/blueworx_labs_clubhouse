@@ -211,3 +211,131 @@ button,input,select,textarea{font-family:inherit}
 .ch-external{padding-block:var(--space-16)}
 .ch-external__in{max-width:1200px;margin-inline:auto;padding-inline:28px}
 @media(max-width:520px){.ch-external__in{padding-inline:20px}}
+
+/*
+ * Club news — the index and the article.
+ *
+ * Tokens only, like everything else here, so the news pages re-skin with the
+ * chosen look rather than carrying a look of their own. The design they were
+ * drawn from used its own typeface and palette; what is taken from it is the
+ * structure — a dark head, a lead story straddling the join beneath it, a card
+ * grid, and a single narrow column for the article itself.
+ */
+.ch-newshead{background:var(--color-ink);color:var(--color-bg);padding-block:var(--space-14) calc(var(--space-16) + 40px)}
+.ch-newshead__in{display:flex;justify-content:space-between;align-items:flex-end;gap:32px;flex-wrap:wrap}
+.ch-newshead__titles{flex:1 1 480px;min-width:0}
+.ch-newshead__title{max-width:14ch;font-family:var(--font-display);font-weight:800;font-size:clamp(38px,7vw,88px);letter-spacing:-.03em;line-height:.95;margin-top:16px;overflow-wrap:break-word}
+.ch-newshead__lead{display:block}
+.ch-newshead__hl{color:var(--color-accent)}
+.ch-newshead__lede{flex:0 1 340px;max-width:38ch;font-size:17px;line-height:1.55;color:color-mix(in oklab,var(--color-bg) 78%,var(--color-ink))}
+
+/* Pulled up so the card overlaps the dark head above it — the join the design
+   is built around. On the section rather than the card, so the section below
+   still starts where it should. */
+.ch-featured{margin-top:-40px;position:relative;z-index:2}
+.ch-featured__card{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,360px),1fr));background:var(--color-paper);border:1px solid var(--color-line);border-radius:var(--radius-xl);overflow:hidden;color:var(--color-ink);transition:transform .22s ease}
+.ch-featured__card:hover{transform:translateY(-4px)}
+.ch-featured__media{min-height:320px;border-radius:0}
+.ch-featured__body{padding:clamp(24px,4vw,44px);display:flex;flex-direction:column;justify-content:center}
+.ch-featured__meta{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:12px;letter-spacing:.1em;text-transform:uppercase;font-weight:700}
+.ch-featured__flag{background:var(--color-accent);color:var(--color-accent-ink);padding:6px 14px;border-radius:999px}
+.ch-featured__cat{color:var(--color-secondary-deep)}
+.ch-featured__date{color:var(--color-ink-soft);letter-spacing:normal;text-transform:none;font-weight:500}
+.ch-featured__title{font-family:var(--font-display);font-weight:800;font-size:clamp(26px,3.4vw,42px);line-height:1.03;letter-spacing:-.02em;margin:16px 0 14px;overflow-wrap:break-word}
+.ch-featured__excerpt{font-size:16px;line-height:1.6;color:var(--color-ink-soft);max-width:52ch}
+.ch-featured__cta{margin-top:22px;font-size:13px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--color-accent-deep)}
+
+.ch-newsgrid__bar{display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap;border-bottom:1px solid var(--color-line);padding-bottom:22px;margin-bottom:32px}
+.ch-newsgrid__bar .ch-filters{margin-top:0}
+.ch-newsgrid__count{font-size:12px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;color:var(--color-ink-soft)}
+.ch-posts{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:clamp(24px,3vw,36px)}
+.ch-postcard__link{display:flex;flex-direction:column;color:var(--color-ink);transition:transform .22s ease}
+.ch-postcard__link:hover{transform:translateY(-4px)}
+.ch-postcard__media{height:210px;margin-bottom:16px}
+.ch-postcard__meta{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:12px;margin-bottom:8px}
+.ch-postcard__cat{letter-spacing:.1em;text-transform:uppercase;font-weight:700;color:var(--color-secondary-deep)}
+.ch-postcard__date{color:var(--color-ink-soft)}
+.ch-postcard__title{font-family:var(--font-display);font-weight:800;font-size:22px;line-height:1.08;letter-spacing:-.01em;overflow-wrap:break-word}
+.ch-postcard__excerpt{margin-top:10px;font-size:15px;line-height:1.6;color:var(--color-ink-soft)}
+
+.ch-pager{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-top:var(--space-10);padding-top:26px;border-top:1px solid var(--color-line)}
+.ch-pager__nos{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
+.ch-pager__no{display:inline-flex;align-items:center;justify-content:center;min-width:44px;min-height:44px;padding:0 12px;border:1px solid var(--color-line);border-radius:999px;font-weight:600;color:var(--color-ink)}
+.ch-pager__no:hover{border-color:var(--color-secondary-deep)}
+.ch-pager__no--on{background:var(--color-accent);color:var(--color-accent-ink);border-color:var(--color-accent)}
+.ch-pager__step{display:inline-flex;align-items:center;min-height:44px;padding:0 22px;border:1px solid var(--color-line);border-radius:999px;font-size:13px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--color-ink)}
+.ch-pager__step--next{background:var(--color-accent);color:var(--color-accent-ink);border-color:var(--color-accent)}
+.ch-pager__step--off{opacity:.4}
+
+/* The article. One narrow column, because a measure of about 68 characters is
+   what makes a match report readable — the widths below are the whole design. */
+.ch-posthead{padding-block:var(--space-12) var(--space-6)}
+.ch-posthead__in{max-width:760px;margin-inline:auto}
+.ch-posthead__back{display:inline-block;font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--color-ink-soft);margin-bottom:26px}
+.ch-posthead__back:hover{color:var(--color-ink)}
+.ch-posthead__meta{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+.ch-posthead__cat{background:var(--color-accent);color:var(--color-accent-ink);padding:6px 14px;border-radius:999px;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase}
+.ch-posthead__date{font-size:13px;color:var(--color-ink-soft)}
+.ch-posthead__title{font-family:var(--font-display);font-weight:800;font-size:clamp(34px,5.4vw,62px);line-height:1;letter-spacing:-.03em;overflow-wrap:break-word}
+.ch-posthead__standfirst{margin-top:22px;font-size:19px;line-height:1.55;color:var(--color-ink-soft)}
+.ch-byline{display:flex;align-items:center;gap:14px;margin-top:28px;padding-top:24px;border-top:1px solid var(--color-line)}
+.ch-byline__avatar{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:999px;background:var(--color-ink);color:var(--color-bg);font-weight:700;font-size:14px;flex:none}
+.ch-byline__who{display:flex;flex-direction:column}
+.ch-byline__name{font-weight:700;font-size:15px}
+.ch-byline__role{font-size:13px;color:var(--color-ink-soft)}
+
+.ch-postmedia{margin-block:var(--space-8)}
+.ch-postmedia__media{border-radius:var(--radius-xl);min-height:clamp(240px,42vw,460px)}
+.ch-postmedia__caption{max-width:760px;margin:14px auto 0;padding-inline:0;font-size:13px;line-height:1.5;color:var(--color-ink-soft)}
+.ch-postbody__in{max-width:760px;margin-inline:auto}
+
+/* The one place stored markup renders, so every element the WordPress editor
+   can produce needs a rule — an unstyled list or quote in the middle of an
+   article is the difference between a published page and a draft. */
+.ch-prose{max-width:680px;font-size:17px;line-height:1.7;color:var(--color-ink)}
+.ch-prose > * + *{margin-top:1.15em}
+.ch-prose h2{font-family:var(--font-display);font-weight:800;font-size:clamp(24px,3vw,32px);line-height:1.1;letter-spacing:-.02em;margin-top:1.8em}
+.ch-prose h3{font-family:var(--font-display);font-weight:700;font-size:20px;line-height:1.2;margin-top:1.6em}
+.ch-prose a{color:var(--color-accent-deep);text-decoration:underline;text-underline-offset:3px}
+.ch-prose a:hover{color:var(--color-ink)}
+.ch-prose ul,.ch-prose ol{padding-left:1.4em}
+.ch-prose li + li{margin-top:.4em}
+.ch-prose img{max-width:100%;height:auto;border-radius:var(--radius-lg)}
+.ch-prose figcaption{font-size:13px;color:var(--color-ink-soft);margin-top:10px}
+.ch-prose blockquote{background:var(--color-ink);color:var(--color-bg);border-radius:var(--radius-xl);padding:clamp(24px,4vw,38px);margin-block:1.8em}
+.ch-prose blockquote p{font-family:var(--font-display);font-weight:700;font-size:clamp(19px,2.4vw,26px);line-height:1.25}
+.ch-prose blockquote cite{display:block;margin-top:16px;font-style:normal;font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--color-accent)}
+.ch-prose code{font-size:.92em;background:var(--color-paper);border:1px solid var(--color-line);border-radius:6px;padding:2px 6px}
+.ch-prose table{width:100%;border-collapse:collapse}
+.ch-prose th,.ch-prose td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--color-line)}
+
+.ch-posttags{display:flex;flex-wrap:wrap;gap:8px;margin-top:var(--space-8);padding-top:24px;border-top:1px solid var(--color-line)}
+.ch-posttag{display:inline-flex;align-items:center;padding:7px 16px;border:1px solid var(--color-line);border-radius:999px;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--color-ink-soft)}
+
+.ch-postauthor__in{max-width:760px;margin-inline:auto;display:flex;gap:20px;align-items:flex-start;background:var(--color-paper);border:1px solid var(--color-line);border-radius:var(--radius-xl);padding:clamp(20px,3vw,32px)}
+.ch-postauthor__avatar{display:inline-flex;align-items:center;justify-content:center;width:56px;height:56px;border-radius:999px;background:var(--color-ink);color:var(--color-bg);font-weight:700;flex:none}
+.ch-postauthor__body{min-width:0}
+.ch-postauthor__name{font-family:var(--font-display);font-weight:800;font-size:22px;letter-spacing:-.01em;margin-top:12px}
+.ch-postauthor__bio{margin-top:8px;font-size:15px;line-height:1.6;color:var(--color-ink-soft)}
+
+.ch-related__bar{display:flex;justify-content:space-between;align-items:baseline;gap:20px;flex-wrap:wrap;margin-bottom:28px}
+.ch-related__all{font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--color-accent-deep)}
+.ch-related__all:hover{color:var(--color-ink)}
+.ch-posts--sm .ch-postcard__media{height:180px}
+.ch-posts--sm .ch-postcard__title{font-size:19px}
+.ch-main--article{display:block}
+
+@media(max-width:640px){
+.ch-featured{margin-top:-24px}
+.ch-newshead{padding-block:var(--space-10) calc(var(--space-12) + 24px)}
+}
+
+/* Section roots. Their children carry the detail, but each still owns its own
+   rhythm — without these the news pages would inherit whatever vertical
+   spacing the neighbouring section happened to set. */
+.ch-newsgrid{padding-block:var(--space-12)}
+.ch-postbody{padding-block:var(--space-4)}
+.ch-postauthor{padding-block:var(--space-8)}
+.ch-related{padding-block:var(--space-12)}
+.ch-postcard{display:flex;min-width:0}
+.ch-postcard--sm .ch-postcard__excerpt{display:none}

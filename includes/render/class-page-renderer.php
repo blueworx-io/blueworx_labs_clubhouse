@@ -1294,4 +1294,197 @@ final class Blueworx_Clubhouse_Page_Renderer {
 		$out .= '</main>' . self::shell_footer( $club, $visibility, $branding, $content );
 		return $out;
 	}
+
+	/**
+	 * Club news — the index.
+	 *
+	 * The posts come through the News seam rather than being passed in: the page
+	 * map's render signature is shared by every page, and eight pages that never
+	 * touch a post would all have had to carry a post source they ignore. A caller
+	 * that installs no source (the SEO report, which renders every page in-process)
+	 * gets the empty state, which is the truthful answer for a site with no news.
+	 *
+	 * $filter carries the category slug, so the category pills work through the
+	 * same query param and the same swap-in-place script as the sports and events
+	 * filters.
+	 */
+	public static function blog(
+		Blueworx_Clubhouse_Branding $branding,
+		Blueworx_Clubhouse_Visibility $visibility,
+		Blueworx_Clubhouse_Collections $collections,
+		string $logo_url = '',
+		?Blueworx_Clubhouse_Content_Store $content = null,
+		string $filter = ''
+	): string {
+		$club = $branding->get_club_name();
+		$out  = self::shell_header( $club, Blueworx_Clubhouse_Links::url( 'news' ), $visibility, $collections, $logo_url, $content )
+			. '<main class="ch-main" id="ch-main" tabindex="-1">';
+
+		$source     = Blueworx_Clubhouse_News::source();
+		$categories = null !== $source ? $source->categories() : array();
+		// An unknown category is not an error — it is a stale bookmark or a
+		// category that has been renamed. Fall back to everything.
+		$known  = array_column( $categories, 'slug' );
+		$filter = in_array( $filter, $known, true ) ? $filter : '';
+
+		if ( $visibility->is_section_visible( 'news', 'head' ) ) {
+			$out .= self::anchored( 'news', 'head', Blueworx_Clubhouse_Sections::news_head( array(
+				'eyebrow'         => self::cget( $content, 'news', 'head', 'eyebrow', 'The clubhouse journal' ),
+				'title_lead'      => self::cget( $content, 'news', 'head', 'title_lead', 'News from ' ),
+				'title_highlight' => self::cget( $content, 'news', 'head', 'title_highlight', 'the club.' ),
+				'lede'            => self::cget( $content, 'news', 'head', 'lede', 'Match reports, section updates, coaching notes and everything else happening on and off the pitch.' ),
+			) ) );
+		}
+
+		$total  = null !== $source ? $source->count( $filter ) : 0;
+		$paging = Blueworx_Clubhouse_News::paging( $total, Blueworx_Clubhouse_News::requested_page() );
+		$posts  = null !== $source ? $source->recent( Blueworx_Clubhouse_News::PER_PAGE, $paging['offset'], $filter ) : array();
+
+		// The lead story is only lifted out on the unfiltered first page. On page
+		// two, or inside a category, "featured" would just mean "whichever post
+		// happens to be first", and the same post would appear twice.
+		$featured = null;
+		if ( '' === $filter && 1 === $paging['page'] && array() !== $posts
+			&& $visibility->is_section_visible( 'news', 'featured' ) ) {
+			$featured = array_shift( $posts );
+		}
+
+		if ( null !== $featured ) {
+			$out .= self::anchored( 'news', 'featured', Blueworx_Clubhouse_Sections::news_featured( array(
+				'post'  => $featured,
+				'label' => 'Featured',
+				'cta'   => 'Read the story',
+			) ) );
+		}
+
+		if ( $visibility->is_section_visible( 'news', 'posts' ) ) {
+			$out .= self::anchored( 'news', 'posts', Blueworx_Clubhouse_Sections::news_grid( array(
+				'filter_label' => 'Filter news by category',
+				'filters'      => self::news_filters( $categories, $filter ),
+				'count_label'  => self::count_label( $total ),
+				'posts'        => $posts,
+				'empty_text'   => '' === $filter
+					? 'There is no club news yet. Anything the club publishes will appear here.'
+					: 'No news in this category yet.',
+				'pager'        => self::pager_model( $paging, $filter ),
+			) ) );
+		}
+
+		$out .= '</main>' . self::shell_footer( $club, $visibility, $branding, $content );
+		return $out;
+	}
+
+	/** "12 stories" — the count beside the category pills. */
+	private static function count_label( int $total ): string {
+		return 1 === $total ? '1 story' : $total . ' stories';
+	}
+
+	/**
+	 * The category pills, "All" first and always present — without it a reader who
+	 * filters has no way back to everything short of editing the address.
+	 *
+	 * @param array<int,array{label:string,slug:string}> $categories
+	 * @return array<int,array{label:string,href:string,active:bool}>
+	 */
+	private static function news_filters( array $categories, string $current ): array {
+		if ( array() === $categories ) {
+			return array();
+		}
+		$pills = array(
+			array( 'label' => 'All', 'href' => Blueworx_Clubhouse_News::url(), 'active' => '' === $current ),
+		);
+		foreach ( $categories as $category ) {
+			$pills[] = array(
+				'label'  => (string) $category['label'],
+				'href'   => Blueworx_Clubhouse_News::url( (string) $category['slug'] ),
+				'active' => $current === (string) $category['slug'],
+			);
+		}
+		return $pills;
+	}
+
+	/**
+	 * @param array{page:int,pages:int,offset:int} $paging
+	 * @return array{page:int,pages:int,prev_href:string,next_href:string,pages_list:array<int,array{label:string,href:string,active:bool}>}
+	 */
+	private static function pager_model( array $paging, string $filter ): array {
+		$list = array();
+		for ( $i = 1; $i <= $paging['pages']; $i++ ) {
+			$list[] = array(
+				'label'  => (string) $i,
+				'href'   => Blueworx_Clubhouse_News::url( $filter, $i ),
+				'active' => $i === $paging['page'],
+			);
+		}
+		return array(
+			'page'       => $paging['page'],
+			'pages'      => $paging['pages'],
+			'prev_href'  => $paging['page'] > 1 ? Blueworx_Clubhouse_News::url( $filter, $paging['page'] - 1 ) : '',
+			'next_href'  => $paging['page'] < $paging['pages'] ? Blueworx_Clubhouse_News::url( $filter, $paging['page'] + 1 ) : '',
+			'pages_list' => $list,
+		);
+	}
+
+	/**
+	 * A single article.
+	 *
+	 * Not reached through the page map: an article lives at whatever permalink
+	 * WordPress gives it, so the front end routes to this directly. It takes the
+	 * same arguments as every other page renderer so the shell either side of it
+	 * is composed identically — the header and footer here are the same header and
+	 * footer as everywhere else on the site.
+	 */
+	public static function post(
+		Blueworx_Clubhouse_Branding $branding,
+		Blueworx_Clubhouse_Visibility $visibility,
+		Blueworx_Clubhouse_Collections $collections,
+		string $logo_url = '',
+		?Blueworx_Clubhouse_Content_Store $content = null,
+		string $filter = ''
+	): string {
+		$club   = $branding->get_club_name();
+		$source = Blueworx_Clubhouse_News::source();
+		$post   = null !== $source ? $source->current() : null;
+
+		$out = self::shell_header( $club, Blueworx_Clubhouse_Links::url( 'news' ), $visibility, $collections, $logo_url, $content )
+			. '<main class="ch-main ch-main--article" id="ch-main" tabindex="-1">';
+
+		if ( null === $post ) {
+			// Routed here without a post to show. Say so in the club's own look
+			// rather than falling through to a blank article shell.
+			$out .= '<section class="ch-sec"><div class="ch-wrap"><p class="ch-empty">'
+				. 'That story is no longer here. Everything the club has published is on the news page.'
+				. '</p></div></section>';
+			$out .= '</main>' . self::shell_footer( $club, $visibility, $branding, $content );
+			return $out;
+		}
+
+		$out .= Blueworx_Clubhouse_Sections::post_head( array(
+			'back_label' => 'All news',
+			'back_href'  => Blueworx_Clubhouse_Links::url( 'news' ),
+			'post'       => $post,
+		) );
+		$out .= Blueworx_Clubhouse_Sections::post_media( array(
+			'image'     => (string) $post['image'],
+			'image_alt' => (string) $post['image_alt'],
+			'caption'   => (string) $post['image_caption'],
+		) );
+		$out .= Blueworx_Clubhouse_Sections::post_body( array(
+			'html' => (string) $post['html'],
+			'tags' => (array) $post['tags'],
+		) );
+		$out .= Blueworx_Clubhouse_Sections::post_author( array(
+			'label'  => 'Written by',
+			'author' => (array) $post['author'],
+		) );
+		$out .= Blueworx_Clubhouse_Sections::post_related( array(
+			'heading'    => 'Keep reading',
+			'link_label' => 'All news',
+			'link_href'  => Blueworx_Clubhouse_Links::url( 'news' ),
+			'posts'      => null !== $source ? $source->related( Blueworx_Clubhouse_News::RELATED ) : array(),
+		) );
+
+		$out .= '</main>' . self::shell_footer( $club, $visibility, $branding, $content );
+		return $out;
+	}
 }

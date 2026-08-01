@@ -48,6 +48,7 @@ require_once dirname( __DIR__, 2 ) . '/includes/import/class-import-controller.p
 require_once dirname( __DIR__, 2 ) . '/includes/collections/class-collection-mappers.php';
 require_once dirname( __DIR__, 2 ) . '/includes/collections/class-media.php';
 require_once dirname( __DIR__, 2 ) . '/includes/collections/class-wp-collections.php';
+require_once dirname( __DIR__, 2 ) . '/includes/collections/class-wp-posts.php';
 require_once dirname( __DIR__, 2 ) . '/includes/collections/class-collection-types.php';
 require_once dirname( __DIR__, 2 ) . '/includes/collections/class-collection-seeder.php';
 require_once dirname( __DIR__, 2 ) . '/includes/collections/class-collection-meta-boxes.php';

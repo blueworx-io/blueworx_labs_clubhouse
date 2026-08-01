@@ -5,6 +5,13 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.55.0
+
+- **The club has a news section.** A News page listing everything the club has published — newest story given the top spot, the rest in a grid, filtered by category and paged when there is enough to page.
+- **Stories themselves now look like part of the site.** A match report reads as a proper article: headline, standfirst, byline, full-width photo, pull quotes, tags, an author note and three more stories to read at the end. Before this, a post fell through to the bare theme with no header, no menu and no footer.
+- **You write them as ordinary WordPress posts** — nothing new to learn, and everything the club has already written keeps working.
+- Both screens use your chosen look, your colours and your typefaces, with the same header and footer as every other page. The page head wording is yours to edit under Club Content → News, and the whole section can be switched off under Visibility like any other.
+
 ## 0.51.3
 
 - **CI no longer builds and verifies the zip here; the shared guardrails do it for every plugin project.** This repo carried its own `package` job because nothing shared checked what reached the deployment artifact — the risk being `preview/index.php`, which defines its own ABSPATH and would render a full page, unauthenticated, on a live club site. The foundation now stages the tree every release would zip and fails the pull request if anything that must never ship survives, so the rule is enforced for every plugin rather than for this one.

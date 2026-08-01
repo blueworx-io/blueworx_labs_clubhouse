@@ -94,7 +94,15 @@ function blueworx_clubhouse_preview_document(): string {
 	// an unknown value falls back to "All". Mirrors Frontend::sanitize_filter.
 	$raw_filter = $_GET[ Blueworx_Clubhouse_Links::FILTER_PARAM ] ?? '';
 	$filter     = is_string( $raw_filter ) ? trim( (string) preg_replace( '/[^a-z0-9]+/', '-', strtolower( $raw_filter ) ), '-' ) : '';
-	$body       = Blueworx_Clubhouse_Page_Map::render( $slug, $branding, $visibility, new Blueworx_Clubhouse_Demo_Collections(), '', null, $filter );
+	// Club news, without a database behind it. 'post' is not a page-map slug —
+	// an article lives at a WordPress permalink — so the preview routes to the
+	// article renderer directly, which is what the front end does too.
+	Blueworx_Clubhouse_News::set_source( new Blueworx_Clubhouse_Demo_Posts() );
+	Blueworx_Clubhouse_News::set_page( $_GET[ Blueworx_Clubhouse_News::PAGE_PARAM ] ?? 1 );
+	$collections = new Blueworx_Clubhouse_Demo_Collections();
+	$body        = 'post' === $page
+		? Blueworx_Clubhouse_Page_Renderer::post( $branding, $visibility, $collections, '', null, $filter )
+		: Blueworx_Clubhouse_Page_Map::render( $slug, $branding, $visibility, $collections, '', null, $filter );
 	$palettes  = blueworx_clubhouse_preview_palettes( $registry->active() );
 	$switcher   = '<div class="ch-switcher" data-ch-palettes=\''
 		. htmlspecialchars( json_encode( $palettes ), ENT_QUOTES, 'UTF-8' ) . '\'></div>'

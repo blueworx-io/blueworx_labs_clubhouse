@@ -1093,6 +1093,247 @@ final class Blueworx_Clubhouse_Sections {
 	}
 
 	/**
+	 * The news index head: eyebrow, big highlighted title, and a standfirst set
+	 * beside it rather than under it.
+	 *
+	 * @param array{eyebrow:string,title_lead:string,title_highlight:string,lede:string} $data
+	 */
+	public static function news_head( array $data ): string {
+		return '<section class="ch-newshead"><div class="ch-wrap ch-newshead__in">'
+			. '<div class="ch-newshead__titles">' . self::hero_head( 'ch-newshead', $data ) . '</div>'
+			. '<p class="ch-newshead__lede">' . self::e( $data['lede'] ) . '</p>'
+			. '</div></section>';
+	}
+
+	/**
+	 * The lead story, as a single wide card that sits across the join between the
+	 * head above it and the grid below.
+	 *
+	 * @param array{post:array{title:string,href:string,excerpt:string,category:string,date:string,read:string,image:string,image_alt:string},label:string,cta:string} $data
+	 */
+	public static function news_featured( array $data ): string {
+		$p = $data['post'];
+		return '<section class="ch-featured"><div class="ch-wrap">'
+			. '<a class="ch-featured__card" href="' . self::e( $p['href'] ) . '">'
+			. self::media( $p['image'], $p['image_alt'], 'ch-featured__media' )
+			. '<div class="ch-featured__body">'
+			. '<div class="ch-featured__meta">'
+			. '<span class="ch-featured__flag">' . self::e( $data['label'] ) . '</span>'
+			. '<span class="ch-featured__cat">' . self::e( $p['category'] ) . '</span>'
+			. '<span class="ch-featured__date">' . self::e( self::dateline( $p ) ) . '</span></div>'
+			. '<h2 class="ch-featured__title">' . self::e( $p['title'] ) . '</h2>'
+			. '<p class="ch-featured__excerpt">' . self::e( $p['excerpt'] ) . '</p>'
+			. '<span class="ch-featured__cta">' . self::e( $data['cta'] ) . '</span>'
+			. '</div></a></div></section>';
+	}
+
+	/**
+	 * The archive: category pills, a count, the grid, and a pager.
+	 *
+	 * Pills reuse the .ch-filter markup the sports and events pages already use,
+	 * so a club's chosen look styles them once and they match everywhere.
+	 *
+	 * @param array{filter_label:string,filters:array<int,array{label:string,href:string,active:bool}>,
+	 *   count_label:string,posts:array<int,array<string,mixed>>,empty_text:string,
+	 *   pager:array{page:int,pages:int,prev_href:string,next_href:string,pages_list:array<int,array{label:string,href:string,active:bool}>}} $data
+	 */
+	public static function news_grid( array $data ): string {
+		$pills = '';
+		foreach ( $data['filters'] as $f ) {
+			$on     = ! empty( $f['active'] ) ? ' ch-filter--on' : '';
+			$pills .= '<a class="ch-filter' . $on . '" href="' . self::e( $f['href'] ) . '">' . self::e( $f['label'] ) . '</a>';
+		}
+
+		$cards = '';
+		foreach ( $data['posts'] as $p ) {
+			$cards .= '<article class="ch-postcard" role="listitem">'
+				. '<a class="ch-postcard__link" href="' . self::e( (string) $p['href'] ) . '">'
+				. self::media( (string) $p['image'], (string) $p['image_alt'], 'ch-postcard__media' )
+				. '<div class="ch-postcard__meta">'
+				. '<span class="ch-postcard__cat">' . self::e( (string) $p['category'] ) . '</span>'
+				. '<span class="ch-postcard__date">' . self::e( self::dateline( $p ) ) . '</span></div>'
+				. '<h3 class="ch-postcard__title">' . self::e( (string) $p['title'] ) . '</h3>'
+				. '<p class="ch-postcard__excerpt">' . self::e( (string) $p['excerpt'] ) . '</p>'
+				. '</a></article>';
+		}
+
+		$body = '' !== $cards
+			? '<div class="ch-posts" role="list">' . $cards . '</div>'
+			: '<p class="ch-empty">' . self::e( $data['empty_text'] ) . '</p>';
+
+		return '<section class="ch-sec ch-newsgrid"><div class="ch-wrap">'
+			. '<div class="ch-newsgrid__bar">'
+			. '<nav class="ch-filters" aria-label="' . self::e( $data['filter_label'] ) . '">' . $pills . '</nav>'
+			. '<span class="ch-newsgrid__count">' . self::e( $data['count_label'] ) . '</span>'
+			. '</div>'
+			. $body
+			. self::pager( $data['pager'] )
+			. '</div></section>';
+	}
+
+	/**
+	 * Numbered paging, as real links.
+	 *
+	 * Nothing renders on a one-page archive: a pager showing a single disabled
+	 * "1" tells the reader there is more and then refuses to give it to them.
+	 *
+	 * @param array{page:int,pages:int,prev_href:string,next_href:string,pages_list:array<int,array{label:string,href:string,active:bool}>} $pager
+	 */
+	private static function pager( array $pager ): string {
+		if ( (int) $pager['pages'] < 2 ) {
+			return '';
+		}
+		$numbers = '';
+		foreach ( $pager['pages_list'] as $p ) {
+			$on       = ! empty( $p['active'] ) ? ' ch-pager__no--on' : '';
+			$numbers .= '<a class="ch-pager__no' . $on . '" href="' . self::e( $p['href'] ) . '"'
+				. ( ! empty( $p['active'] ) ? ' aria-current="page"' : '' ) . '>' . self::e( $p['label'] ) . '</a>';
+		}
+		// A disabled button at either end is emitted as a span, not a dead link:
+		// a link to the page you are already on is a trap for keyboard and screen
+		// reader users, who cannot see that it is greyed out.
+		$prev = '' !== $pager['prev_href']
+			? '<a class="ch-pager__step" href="' . self::e( $pager['prev_href'] ) . '" rel="prev">← Previous</a>'
+			: '<span class="ch-pager__step ch-pager__step--off">← Previous</span>';
+		$next = '' !== $pager['next_href']
+			? '<a class="ch-pager__step ch-pager__step--next" href="' . self::e( $pager['next_href'] ) . '" rel="next">Next →</a>'
+			: '<span class="ch-pager__step ch-pager__step--off">Next →</span>';
+
+		return '<nav class="ch-pager" aria-label="Pagination">' . $prev
+			. '<div class="ch-pager__nos">' . $numbers . '</div>' . $next . '</nav>';
+	}
+
+	/** "24 July 2026 · 4 min read" — either half alone when the other is missing. */
+	private static function dateline( array $post ): string {
+		$parts = array_filter( array( (string) ( $post['date'] ?? '' ), (string) ( $post['read'] ?? '' ) ) );
+		return implode( ' · ', $parts );
+	}
+
+	/**
+	 * The head of an article: the way back, the category and dateline, the
+	 * headline, the standfirst and the byline.
+	 *
+	 * @param array{back_label:string,back_href:string,post:array<string,mixed>} $data
+	 */
+	public static function post_head( array $data ): string {
+		$p      = $data['post'];
+		$author = (array) $p['author'];
+		$avatar = '' !== (string) $author['initials']
+			? '<span class="ch-byline__avatar" aria-hidden="true">' . self::e( (string) $author['initials'] ) . '</span>'
+			: '';
+		$byline = '' !== (string) $author['name']
+			? '<div class="ch-byline">' . $avatar
+				. '<span class="ch-byline__who"><span class="ch-byline__name">' . self::e( (string) $author['name'] ) . '</span>'
+				. ( '' !== (string) $author['role'] ? '<span class="ch-byline__role">' . self::e( (string) $author['role'] ) . '</span>' : '' )
+				. '</span></div>'
+			: '';
+
+		return '<section class="ch-posthead"><div class="ch-wrap"><div class="ch-posthead__in">'
+			. '<a class="ch-posthead__back" href="' . self::e( $data['back_href'] ) . '">← ' . self::e( $data['back_label'] ) . '</a>'
+			. '<div class="ch-posthead__meta">'
+			. '<span class="ch-posthead__cat">' . self::e( (string) $p['category'] ) . '</span>'
+			. '<span class="ch-posthead__date">' . self::e( self::dateline( $p ) ) . '</span></div>'
+			. '<h1 class="ch-posthead__title">' . self::e( (string) $p['title'] ) . '</h1>'
+			. ( '' !== (string) $p['standfirst'] ? '<p class="ch-posthead__standfirst">' . self::e( (string) $p['standfirst'] ) . '</p>' : '' )
+			. $byline
+			. '</div></div></section>';
+	}
+
+	/**
+	 * The article's lead image and its caption. Nothing at all when there is no
+	 * image — a caption under an empty box reads as a broken photo.
+	 *
+	 * @param array{image:string,image_alt:string,caption:string} $data
+	 */
+	public static function post_media( array $data ): string {
+		if ( '' === $data['image'] ) {
+			return '';
+		}
+		$caption = '' !== $data['caption']
+			? '<figcaption class="ch-postmedia__caption">' . self::e( $data['caption'] ) . '</figcaption>'
+			: '';
+		return '<figure class="ch-postmedia"><div class="ch-wrap">'
+			. self::media( $data['image'], $data['image_alt'], 'ch-postmedia__media' )
+			. $caption . '</div></figure>';
+	}
+
+	/**
+	 * The article body.
+	 *
+	 * This is the ONE section that emits stored markup unescaped, and it has to:
+	 * a post is written in the WordPress editor and its paragraphs, headings,
+	 * lists, quotes and images are the content. What keeps it contained is that
+	 * the markup has already been through WordPress's own filters and its author
+	 * needed the capability to publish a post in the first place — the same trust
+	 * boundary every WordPress theme works inside.
+	 *
+	 * @param array{html:string,tags:array<int,string>} $data
+	 */
+	public static function post_body( array $data ): string {
+		$tags = '';
+		foreach ( $data['tags'] as $tag ) {
+			$tags .= '<span class="ch-posttag">' . self::e( (string) $tag ) . '</span>';
+		}
+		$tag_row = '' !== $tags ? '<div class="ch-posttags">' . $tags . '</div>' : '';
+
+		return '<section class="ch-postbody"><div class="ch-wrap"><div class="ch-postbody__in">'
+			// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- post content; see the docblock above.
+			. '<div class="ch-prose">' . $data['html'] . '</div>'
+			. $tag_row
+			. '</div></div></section>';
+	}
+
+	/**
+	 * The author card under an article. Skipped entirely when nobody has written
+	 * a biography, since a card holding only a name repeats the byline above it.
+	 *
+	 * @param array{label:string,author:array{name:string,role:string,initials:string,bio:string}} $data
+	 */
+	public static function post_author( array $data ): string {
+		$a = $data['author'];
+		if ( '' === trim( (string) $a['bio'] ) ) {
+			return '';
+		}
+		return '<section class="ch-sec ch-postauthor"><div class="ch-wrap"><div class="ch-postauthor__in">'
+			. '<span class="ch-postauthor__avatar" aria-hidden="true">' . self::e( (string) $a['initials'] ) . '</span>'
+			. '<div class="ch-postauthor__body">'
+			. '<span class="ch-eyebrow">' . self::e( $data['label'] ) . '</span>'
+			. '<p class="ch-postauthor__name">' . self::e( (string) $a['name'] ) . '</p>'
+			. '<p class="ch-postauthor__bio">' . self::e( (string) $a['bio'] ) . '</p>'
+			. '</div></div></div></section>';
+	}
+
+	/**
+	 * "Keep reading" — three more posts, or nothing at all on a site with only
+	 * one article, where an empty band would say the club has nothing else.
+	 *
+	 * @param array{heading:string,link_label:string,link_href:string,posts:array<int,array<string,mixed>>} $data
+	 */
+	public static function post_related( array $data ): string {
+		if ( array() === $data['posts'] ) {
+			return '';
+		}
+		$cards = '';
+		foreach ( $data['posts'] as $p ) {
+			$cards .= '<article class="ch-postcard ch-postcard--sm" role="listitem">'
+				. '<a class="ch-postcard__link" href="' . self::e( (string) $p['href'] ) . '">'
+				. self::media( (string) $p['image'], (string) $p['image_alt'], 'ch-postcard__media' )
+				. '<div class="ch-postcard__meta">'
+				. '<span class="ch-postcard__cat">' . self::e( (string) $p['category'] ) . '</span>'
+				. '<span class="ch-postcard__date">' . self::e( (string) $p['date'] ) . '</span></div>'
+				. '<h3 class="ch-postcard__title">' . self::e( (string) $p['title'] ) . '</h3>'
+				. '</a></article>';
+		}
+		return '<section class="ch-sec ch-sec--alt ch-related"><div class="ch-wrap">'
+			. '<div class="ch-related__bar">'
+			. '<h2 class="ch-sec__title ch-sec__title--sm">' . self::e( $data['heading'] ) . '</h2>'
+			. '<a class="ch-related__all" href="' . self::e( $data['link_href'] ) . '">' . self::e( $data['link_label'] ) . ' →</a>'
+			. '</div>'
+			. '<div class="ch-posts ch-posts--sm" role="list">' . $cards . '</div>'
+			. '</div></section>';
+	}
+
+	/**
 	 * The page's closing band: "follow us" links (not a live/embedded feed) and the
 	 * find-us details in one light section flush against the footer. They were two
 	 * stacked sections — a light social band above a dark info strip — which read as

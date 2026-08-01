@@ -180,10 +180,32 @@ final class Blueworx_Clubhouse_Frontend {
 	 * modify are not on the page to modify.
 	 */
 	public static function is_clubhouse_page(): bool {
-		return null !== self::current_slug();
+		return null !== self::current_slug() || self::is_article();
+	}
+
+	/**
+	 * True when this request is a single WordPress post that the plugin should
+	 * render as a club news article.
+	 *
+	 * Posts are taken over rather than left to the theme because the plugin is
+	 * designed to run alongside a style-free theme: left alone, a match report
+	 * would render as unstyled text with no header, no nav and no footer, on a
+	 * site where every other page is dressed.
+	 */
+	public static function is_article(): bool {
+		if ( ! function_exists( 'is_singular' ) || ! is_singular( 'post' ) ) {
+			return false;
+		}
+		// The news page's own visibility governs the articles too: a club that has
+		// switched news off has said it does not want a news section, and leaving
+		// the articles reachable and clubhouse-dressed would contradict that.
+		return self::context()->visibility->is_page_visible( 'news' );
 	}
 
 	public static function filter_template( string $template ): string {
+		if ( self::is_article() ) {
+			return dirname( __DIR__, 2 ) . '/templates/clubhouse.php';
+		}
 		$slug = self::current_slug();
 		if ( null === $slug ) {
 			return $template;
@@ -224,7 +246,7 @@ final class Blueworx_Clubhouse_Frontend {
 	}
 
 	public static function enqueue_assets(): void {
-		if ( null === self::current_slug() ) {
+		if ( ! self::is_clubhouse_page() ) {
 			return;
 		}
 		if ( ! self::enqueue_look_styles() ) {
@@ -297,16 +319,25 @@ final class Blueworx_Clubhouse_Frontend {
 
 	/** Render the current page body (used by the canvas template). */
 	public static function render_body(): string {
-		$slug = self::current_slug();
-		if ( null === $slug ) {
+		$is_article = self::is_article();
+		$slug       = self::current_slug();
+		if ( ! $is_article && null === $slug ) {
 			return '';
 		}
 		Blueworx_Clubhouse_Links::set_resolver( array( self::class, 'link_url' ) );
 		Blueworx_Clubhouse_Menu::set_provider(
 			static fn(): Blueworx_Clubhouse_Menu => new Blueworx_Clubhouse_Menu( new Blueworx_Clubhouse_Options_Storage() )
 		);
+		Blueworx_Clubhouse_News::set_source( new Blueworx_Clubhouse_WP_Posts() );
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only paging, no state change.
+		Blueworx_Clubhouse_News::set_page( $_GET[ Blueworx_Clubhouse_News::PAGE_PARAM ] ?? 1 );
+
 		$ctx      = self::context();
 		$logo_url = self::resolve_logo( $ctx->branding->get_logo() );
+
+		if ( $is_article ) {
+			return Blueworx_Clubhouse_Page_Renderer::post( $ctx->branding, $ctx->visibility, $ctx->collections, $logo_url, $ctx->content );
+		}
 		return Blueworx_Clubhouse_Page_Map::render( $slug, $ctx->branding, $ctx->visibility, $ctx->collections, $logo_url, $ctx->content, self::current_filter() );
 	}
 
@@ -352,6 +383,11 @@ final class Blueworx_Clubhouse_Frontend {
 
 	/** The document title for the page this request renders. */
 	public static function page_title(): string {
+		if ( self::is_article() ) {
+			// The headline, not "News" — an article's title is the one thing that
+			// distinguishes it in a tab, a search result and a shared link.
+			return self::document_title( self::club_name(), (string) get_the_title() );
+		}
 		$slug  = self::current_slug();
 		$label = null === $slug ? '' : Blueworx_Clubhouse_Page_Map::label( $slug );
 		return self::document_title( self::club_name(), $label );

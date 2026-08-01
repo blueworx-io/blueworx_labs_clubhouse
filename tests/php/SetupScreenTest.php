@@ -103,7 +103,7 @@ final class SetupScreenTest extends TestCase {
 			Blueworx_Clubhouse_Setup_Sections::inventory()
 		) );
 		$this->assertSame( $expected, substr_count( $html, 'name="clubhouse_section[' ) );
-		$this->assertSame( 9, substr_count( $html, 'name="clubhouse_page[' ) );
+		$this->assertSame( 10, substr_count( $html, 'name="clubhouse_page[' ) );
 		$this->assertStringContainsString( 'name="clubhouse_section[home.hero]" value="1" checked', $html );
 		$this->assertStringContainsString( 'name="clubhouse_section[home.ticker]" value="1">', $html );
 	}
