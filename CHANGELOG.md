@@ -5,6 +5,12 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.58.0
+
+- **A User guide screen, under Club Content.** Plain-English explanations of everything ClubHouse does — what each screen is for, what each page is made of, how to change the words and pictures, what the lists of teams and fixtures are, and how the look and colours work.
+- **It describes your site, not a generic one, and it keeps itself right.** It is built from the site as it stands each time you open it, so a page you switch off is reported as switched off, a section you hide is named as hidden, an empty list says it is empty, and anything added to ClubHouse later appears in the guide on its own. Nothing to keep up to date by hand.
+- It only covers ClubHouse. Other plugins are theirs to explain.
+
 ## 0.57.0
 
 - **Your pages now describe themselves properly to Google and to anything they get shared into.** Each page carries a description, its own web address, and a preview card with your club name and logo, so a link posted to Facebook or WhatsApp shows the club rather than a bare URL.

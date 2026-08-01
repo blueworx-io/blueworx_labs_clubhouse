@@ -103,6 +103,24 @@ final class AdminPagesTest extends TestCase {
 	}
 
 	/**
+	 * The guide hangs off Club Content rather than Setup, and this is why: the
+	 * Content Editor holds the capability it is locked with, but Setup is stripped
+	 * from that role's menu — parented there, the guide would be invisible to the
+	 * role most likely to need it.
+	 */
+	public function test_the_content_editor_can_open_the_user_guide(): void {
+		$guide = Blueworx_Clubhouse_Admin_Pages::find( Blueworx_Clubhouse_Guide_Controller::PAGE_SLUG );
+		$this->assertNotNull( $guide );
+		$this->assertSame( Blueworx_Clubhouse_Content_Controller::PAGE_SLUG, $guide['menu'] );
+		$this->assertTrue(
+			Blueworx_Clubhouse_Admin_Pages::role_can(
+				Blueworx_Clubhouse_Owner_Capabilities::EDITOR_ROLE,
+				Blueworx_Clubhouse_Guide_Controller::PAGE_SLUG
+			)
+		);
+	}
+
+	/**
 	 * The two roles still differ by exactly one capability, and it is still
 	 * manage_clubhouse. Splitting content editing out of it must not have widened
 	 * the gap or narrowed it to nothing.

@@ -168,3 +168,13 @@ body.toplevel_page_clubhouse-setup #wpfooter { display: none; }
 .clubhouse-table__name { display: block; }
 .clubhouse-table__sub { display: block; font-weight: 400; font-size: 12px; color: var(--color-ink-soft); margin-top: 2px; }
 .clubhouse-table__none { color: var(--color-ink-soft); font-size: 13px; }
+
+/* User guide — chapters of disclosures, open by default so browser find-in-page
+   can reach every answer. */
+.clubhouse-guide-entry { border-top: 1px solid var(--color-line); padding: 14px 0; }
+.clubhouse-guide-entry:first-of-type { border-top: 0; }
+.clubhouse-guide-entry__head { display: flex; align-items: center; gap: 10px; cursor: pointer; font-weight: 600; }
+.clubhouse-guide-entry__head::-webkit-details-marker { display: none; }
+.clubhouse-guide-entry[open] .clubhouse-guide-entry__head { margin-bottom: 8px; }
+.clubhouse-guide-steps { margin: 10px 0 10px 20px; padding: 0; list-style: decimal; color: var(--color-ink-soft); }
+.clubhouse-guide-steps li { margin: 4px 0; }

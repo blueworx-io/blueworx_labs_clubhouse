@@ -75,6 +75,13 @@ final class Blueworx_Clubhouse_Admin_Pages {
 				'description' => 'How each page reads in search results and when it is shared.',
 			),
 			array(
+				'slug'        => Blueworx_Clubhouse_Guide_Controller::PAGE_SLUG,
+				'label'       => 'User guide',
+				'cap'         => Blueworx_Clubhouse_Guide_Controller::CAPABILITY,
+				'menu'        => Blueworx_Clubhouse_Content_Controller::PAGE_SLUG,
+				'description' => 'How ClubHouse works, built from this site as it stands.',
+			),
+			array(
 				'slug'        => Blueworx_Clubhouse_Collection_Types::CONTENT_SLUG,
 				'label'       => 'Collections',
 				'cap'         => Blueworx_Clubhouse_Collection_Types::CONTENT_CAP,
