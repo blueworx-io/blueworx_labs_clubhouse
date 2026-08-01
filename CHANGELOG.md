@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **The club has a news section.** A News page listing everything the club has published — newest story given the top spot, the rest in a grid, filtered by category and paged when there is enough to page.
 - **Stories themselves now look like part of the site.** A match report reads as a proper article: headline, standfirst, byline, full-width photo, pull quotes, tags, an author note and three more stories to read at the end. Before this, a post fell through to the bare theme with no header, no menu and no footer.
 - **You write them as ordinary WordPress posts** — nothing new to learn, and everything the club has already written keeps working.
+- The article sets its own spacing rather than inheriting the gaps between the bands of a landing page, so a byline sits with the paragraph it belongs to instead of a screen away from it.
 - Both screens use your chosen look, your colours and your typefaces, with the same header and footer as every other page. The page head wording is yours to edit under Club Content → News, and the whole section can be switched off under Visibility like any other.
 
 ## 0.51.3

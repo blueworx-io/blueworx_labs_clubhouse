@@ -1459,6 +1459,13 @@ final class Blueworx_Clubhouse_Page_Renderer {
 			return $out;
 		}
 
+		// One <article> element holding the whole story, rather than five sections
+		// sitting directly in <main>. The looks put a 96px flow margin between
+		// main's children, which is the right rhythm between the bands of a landing
+		// page and far too much between a byline and the first paragraph of the
+		// piece it belongs to. Nesting takes the article out of that flow and lets
+		// its own spacing govern, without a look having to know about news.
+		$out .= '<article class="ch-article">';
 		$out .= Blueworx_Clubhouse_Sections::post_head( array(
 			'back_label' => 'All news',
 			'back_href'  => Blueworx_Clubhouse_Links::url( 'news' ),
@@ -1477,6 +1484,8 @@ final class Blueworx_Clubhouse_Page_Renderer {
 			'label'  => 'Written by',
 			'author' => (array) $post['author'],
 		) );
+		$out .= '</article>';
+		// Outside the article: what to read next is not part of this story.
 		$out .= Blueworx_Clubhouse_Sections::post_related( array(
 			'heading'    => 'Keep reading',
 			'link_label' => 'All news',

@@ -269,7 +269,10 @@ button,input,select,textarea{font-family:inherit}
 
 /* The article. One narrow column, because a measure of about 68 characters is
    what makes a match report readable — the widths below are the whole design. */
-.ch-posthead{padding-block:var(--space-12) var(--space-6)}
+/* The article sets its own rhythm — see Page_Renderer::post for why it is one
+   element rather than five sections in the main flow. */
+.ch-article > * + *{margin-top:var(--space-8)}
+.ch-posthead{padding-block:var(--space-12) 0}
 .ch-posthead__in{max-width:760px;margin-inline:auto}
 .ch-posthead__back{display:inline-block;font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--color-ink-soft);margin-bottom:26px}
 .ch-posthead__back:hover{color:var(--color-ink)}
@@ -309,7 +312,7 @@ button,input,select,textarea{font-family:inherit}
 .ch-prose table{width:100%;border-collapse:collapse}
 .ch-prose th,.ch-prose td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--color-line)}
 
-.ch-posttags{display:flex;flex-wrap:wrap;gap:8px;margin-top:var(--space-8);padding-top:24px;border-top:1px solid var(--color-line)}
+.ch-posttags{display:flex;flex-wrap:wrap;gap:8px;margin-top:var(--space-10);padding-top:24px;border-top:1px solid var(--color-line)}
 .ch-posttag{display:inline-flex;align-items:center;padding:7px 16px;border:1px solid var(--color-line);border-radius:999px;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--color-ink-soft)}
 
 .ch-postauthor__in{max-width:760px;margin-inline:auto;display:flex;gap:20px;align-items:flex-start;background:var(--color-paper);border:1px solid var(--color-line);border-radius:var(--radius-xl);padding:clamp(20px,3vw,32px)}
@@ -334,8 +337,8 @@ button,input,select,textarea{font-family:inherit}
    rhythm — without these the news pages would inherit whatever vertical
    spacing the neighbouring section happened to set. */
 .ch-newsgrid{padding-block:var(--space-12)}
-.ch-postbody{padding-block:var(--space-4)}
-.ch-postauthor{padding-block:var(--space-8)}
+.ch-postbody{padding-block:0}
+.ch-postauthor{padding-block:0}
 .ch-related{padding-block:var(--space-12)}
 .ch-postcard{display:flex;min-width:0}
 .ch-postcard--sm .ch-postcard__excerpt{display:none}
