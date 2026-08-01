@@ -23,7 +23,7 @@ final class SetupSectionsTest extends TestCase {
 	public function test_covers_the_always_available_pages_in_page_map_order(): void {
 		$pages = array_map( static fn( $p ) => $p['page'], $this->inventory() );
 		$this->assertSame(
-			array( 'home', 'about', 'membership', 'contact', 'login', 'sports', 'teams', 'events', 'calendar' ),
+			array( 'home', 'about', 'membership', 'contact', 'login', 'news', 'sports', 'teams', 'events', 'calendar' ),
 			$pages
 		);
 	}
@@ -68,12 +68,12 @@ final class SetupSectionsTest extends TestCase {
 		}
 	}
 
-	/** 45 since the Home stat strip was withdrawn — was 46. Booking adds 5 more. */
-	public function test_total_section_count_is_45_without_latepoint_and_50_with_it(): void {
+	/** 48 since the News page added three. Booking adds 5 more. */
+	public function test_total_section_count_is_48_without_latepoint_and_53_with_it(): void {
 		$count = fn(): int => array_sum( array_map( static fn( $p ) => count( $p['sections'] ), $this->inventory() ) );
-		$this->assertSame( 45, $count() );
+		$this->assertSame( 48, $count() );
 
 		$this->withLatePoint();
-		$this->assertSame( 50, $count() );
+		$this->assertSame( 53, $count() );
 	}
 }

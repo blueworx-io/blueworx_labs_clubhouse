@@ -60,12 +60,15 @@ require_once __DIR__ . '/admin/class-access-screen.php';
 
 // Collections (pure)
 require_once __DIR__ . '/collections/interface-collections.php';
+require_once __DIR__ . '/collections/interface-post-source.php';
 require_once __DIR__ . '/collections/class-demo-content.php';
 require_once __DIR__ . '/collections/class-demo-collections.php';
+require_once __DIR__ . '/collections/class-demo-posts.php';
 require_once __DIR__ . '/collections/class-collection-meta.php';
 
 // Frontend (pure)
 require_once __DIR__ . '/frontend/class-links.php';
+require_once __DIR__ . '/frontend/class-news.php';
 require_once __DIR__ . '/frontend/class-cta.php';
 require_once __DIR__ . '/frontend/class-demo-mode.php';
 

@@ -256,6 +256,20 @@ final class Blueworx_Clubhouse_Content_Catalogue {
 				array( 'key' => 'form', 'label' => 'Login form', 'type' => 'fields', 'store_page' => 'login',
 					'fields' => array( self::f_text( 'heading', 'Heading' ), self::f_area( 'lede', 'Helper text' ) ) ),
 			) ),
+			array( 'tab' => 'news', 'label' => 'News', 'sections' => array(
+				array( 'key' => 'head', 'label' => 'Page head', 'type' => 'fields', 'store_page' => 'news',
+					'note' => 'The stories themselves are ordinary WordPress posts — write them under Posts.',
+					'fields' => array(
+						self::f_text( 'eyebrow', 'Eyebrow' ),
+						self::f_text( 'title_lead', 'Heading, first part' ),
+						self::f_text( 'title_highlight', 'Heading, highlighted part' ),
+						self::f_area( 'lede', 'Standfirst' ),
+					) ),
+				array( 'key' => 'featured', 'label' => 'Featured story', 'type' => 'linkout', 'store_page' => 'news',
+					'link' => array( 'kind' => 'cpt', 'cpt' => 'post', 'label' => 'Write a story', 'text' => 'The featured story is whichever post is newest. Publish a post and it takes the top spot.' ) ),
+				array( 'key' => 'posts', 'label' => 'Stories', 'type' => 'linkout', 'store_page' => 'news',
+					'link' => array( 'kind' => 'cpt', 'cpt' => 'post', 'label' => 'Write a story', 'text' => 'Club news is written as ordinary WordPress posts, under Posts.' ) ),
+			) ),
 			array( 'tab' => 'sports', 'label' => 'Sports', 'sections' => array(
 				array( 'key' => 'hero', 'label' => 'Hero', 'type' => 'fields', 'store_page' => 'sports', 'fields' => self::hero_filter_fields() ),
 				array( 'key' => 'directory', 'label' => 'Sports directory', 'type' => 'linkout', 'store_page' => 'sports',

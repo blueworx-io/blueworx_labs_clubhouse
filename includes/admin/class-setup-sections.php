@@ -58,6 +58,11 @@ final class Blueworx_Clubhouse_Setup_Sections {
 		'login' => array(
 			'form' => 'Login form',
 		),
+		'news' => array(
+			'head'     => 'Page head',
+			'featured' => 'Featured story',
+			'posts'    => 'All stories',
+		),
 		'sports' => array(
 			'hero'      => 'Hero',
 			'directory' => 'Sports directory',

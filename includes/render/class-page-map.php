@@ -33,6 +33,10 @@ final class Blueworx_Clubhouse_Page_Map {
 			array( 'slug' => 'membership', 'label' => 'Membership', 'method' => 'membership' ),
 			array( 'slug' => 'contact',    'label' => 'Contact',    'method' => 'contact' ),
 			array( 'slug' => 'login',      'label' => 'Log in',     'method' => 'login' ),
+			// 'blog' is the internal key; the URL and the label say News, which is
+			// what a club calls it. Renamed here would break stored content and
+			// visibility addresses for no gain.
+			array( 'slug' => 'news',       'label' => 'News',       'method' => 'blog' ),
 			array( 'slug' => 'sports',     'label' => 'Sports',     'method' => 'sports' ),
 			array( 'slug' => 'teams',      'label' => 'Teams',      'method' => 'teams' ),
 			array( 'slug' => 'events',     'label' => 'Events',     'method' => 'events' ),

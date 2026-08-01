@@ -13,7 +13,7 @@ final class ContentCatalogueTest extends TestCase {
 	public function test_returns_tabs_in_page_map_order_with_global_split_from_home(): void {
 		$tabs = array_column( Blueworx_Clubhouse_Content_Catalogue::pages(), 'tab' );
 		$this->assertSame(
-			array( 'global', 'home', 'about', 'membership', 'contact', 'login', 'sports', 'teams', 'events', 'calendar' ),
+			array( 'global', 'home', 'about', 'membership', 'contact', 'login', 'news', 'sports', 'teams', 'events', 'calendar' ),
 			$tabs
 		);
 	}
@@ -61,7 +61,11 @@ final class ContentCatalogueTest extends TestCase {
 		foreach ( Blueworx_Clubhouse_Content_Catalogue::pages() as $page ) {
 			foreach ( $page['sections'] as $s ) {
 				if ( 'linkout' === $s['type'] && 'cpt' === $s['link']['kind'] ) {
-					$this->assertContains( $s['link']['cpt'], Blueworx_Clubhouse_Collection_Types::POST_TYPES, $s['key'] );
+					// 'post' is WordPress's own type rather than a clubhouse collection:
+					// club news is written as ordinary posts, so a linkout to it is a
+					// real destination and not a typo.
+					$types = array_merge( Blueworx_Clubhouse_Collection_Types::POST_TYPES, array( 'post' ) );
+					$this->assertContains( $s['link']['cpt'], $types, $s['key'] );
 				}
 			}
 		}
