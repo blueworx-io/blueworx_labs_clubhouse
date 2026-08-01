@@ -47,8 +47,15 @@ a{color:inherit;text-decoration:none}
 .ch-btn--accent:hover{background:color-mix(in oklab,var(--color-accent) 20%,transparent);box-shadow:0 0 32px -6px color-mix(in oklab,var(--color-accent) 90%,transparent)}
 .ch-btn--ink{background:var(--color-ink);color:var(--color-bg)}
 .ch-btn--ink:hover{background:color-mix(in oklab,var(--color-ink) 88%,var(--color-accent-deep));box-shadow:0 12px 30px -14px rgba(0,0,0,.6)}
-.ch-btn--ghost{border:1.5px solid var(--color-line);color:var(--color-ink)}
-.ch-btn--ghost:hover{border-color:var(--color-ink);background:color-mix(in oklab,var(--color-ink) 8%,transparent)}
+/* The secondary action, in the club's SECOND colour. This look spends colour as
+   light rather than as fill, so the secondary glows here instead of filling —
+   the same token set, the look's own idiom. Disabled recedes toward the page,
+   which on a dark shell means darker, not lighter; the engine's -disabled is
+   derived against the shell, so that comes out right without a special case. */
+.ch-btn--ghost{border:1.5px solid var(--color-secondary-deep);color:var(--color-secondary-deep)}
+.ch-btn--ghost:hover{border-color:var(--color-secondary);background:color-mix(in oklab,var(--color-secondary) 14%,transparent);box-shadow:0 0 24px -10px color-mix(in oklab,var(--color-secondary) 80%,transparent)}
+.ch-btn--ghost:active{border-color:var(--color-secondary-active);background:color-mix(in oklab,var(--color-secondary) 22%,transparent)}
+.ch-btn--ghost:disabled,.ch-btn--ghost[aria-disabled="true"]{border-color:var(--color-secondary-disabled);color:var(--color-secondary-disabled);box-shadow:none;pointer-events:none}
 @media(prefers-reduced-motion:reduce){.ch-btn:hover,.ch-btn:active{transform:none}}
 
 /* Nav — dark translucent, hairline foot; glowing brand mark. */
@@ -240,7 +247,9 @@ a{color:inherit;text-decoration:none}
 @media(max-width:520px){.ch-band{padding:40px 22px}}
 .ch-band--accent{background:radial-gradient(120% 140% at 15% 0%,color-mix(in oklab,var(--color-accent) 18%,var(--color-bg)),var(--color-bg) 62%);color:var(--color-ink);border-color:color-mix(in oklab,var(--color-accent) 40%,var(--color-line));box-shadow:0 0 90px -34px color-mix(in oklab,var(--color-accent) 70%,transparent) inset}
 .ch-band--ink{background:linear-gradient(150deg,var(--color-paper),var(--color-bg));color:var(--color-ink);border-color:var(--color-line)}
-.ch-eyebrow--band::before{background:var(--color-accent-deep)}
+/* The section marker inside a call-to-action band — the club's SECOND colour,
+   so the band's rule is not the same light as the accent glow around it. */
+.ch-eyebrow--band::before{background:var(--color-secondary-deep);box-shadow:0 0 10px color-mix(in oklab,var(--color-secondary) 60%,transparent)}
 .ch-band__title{font-family:var(--font-display);font-weight:700;font-size:clamp(32px,6vw,80px);letter-spacing:-.02em;margin-top:16px;line-height:.98;overflow-wrap:break-word}
 .ch-band__lede{max-width:46ch;margin:18px auto 0;opacity:.85;font-size:19px}
 .ch-band .ch-btn{margin-top:28px}

@@ -89,6 +89,23 @@ final class Blueworx_Clubhouse_Setup_Screen {
 		$json = json_encode( $model['look_tokens'], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT );
 		$out .= '<script type="application/json" id="clubhouse-look-tokens">' . $json . '</script>';
 
+		// A second island for the colour pickers: the preset swatches Iris offers,
+		// and the active look's background and ink so the live contrast check can
+		// judge a colour against the surfaces it will actually sit on. Same
+		// mechanism as the token island above rather than wp_localize_script, so
+		// this class stays WordPress-free and the whole screen remains one string.
+		$picker = json_encode(
+			array(
+				'palette' => $model['color_palette'] ?? array(),
+				'shell'   => array(
+					'bg'  => $active_tokens['--color-bg'] ?? '#ffffff',
+					'ink' => $active_tokens['--color-ink'] ?? '#000000',
+				),
+			),
+			JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT
+		);
+		$out .= '<script type="application/json" id="clubhouse-color-picker">' . $picker . '</script>';
+
 		$out .= '</div></div>';
 		return $out;
 	}
@@ -149,10 +166,21 @@ final class Blueworx_Clubhouse_Setup_Screen {
 	private static function branding_area( array $b ): string {
 		$out  = '<div class="clubhouse-step"><p class="clubhouse-step__k">Branding</p><h2 class="clubhouse-step__h">Make it yours</h2>';
 		$out .= '<div class="clubhouse-fields">';
-		$out .= '<div class="clubhouse-field"><label class="clubhouse-label" for="clubhouse_accent">Accent colour</label>'
-			. '<div class="clubhouse-accent"><span class="clubhouse-accent__swatch" id="clubhouse-accent-swatch" style="background:' . self::esc( (string) $b['accent'] ) . '"></span>'
-			. '<input type="text" id="clubhouse_accent" name="clubhouse_accent" value="' . self::esc( (string) $b['accent'] ) . '" class="clubhouse-input"></div>'
-			. '<p class="clubhouse-help">Used for buttons, links and highlights. Must be legible on the chosen look.</p></div>';
+		$out .= self::color_field(
+			'clubhouse_accent',
+			'Primary colour',
+			(string) $b['accent'],
+			(string) ( $b['accent_default'] ?? '' ),
+			'Used for buttons, links and highlights. Must be legible on the chosen look.'
+		);
+		$out .= self::color_field(
+			'clubhouse_secondary',
+			'Secondary colour',
+			(string) ( $b['secondary'] ?? '' ),
+			(string) ( $b['secondary_default'] ?? '' ),
+			'Used for secondary buttons, section markers and hover states. Clear it to go back to a shade derived from your primary.',
+			(string) ( $b['secondary_effective'] ?? '' )
+		);
 		$out .= self::text_field( 'clubhouse_club_name', 'Club name', (string) $b['club_name'] );
 		$out .= self::media_field( 'clubhouse_logo', 'Logo', (string) $b['logo'], (string) $b['logo_preview'], 'No logo set — SVG or PNG, up to 2 MB' );
 		$out .= self::media_field( 'clubhouse_favicon', 'Favicon', (string) $b['favicon'], (string) $b['favicon_preview'], 'No favicon set — square PNG, ICO or SVG' );
@@ -162,6 +190,64 @@ final class Blueworx_Clubhouse_Setup_Screen {
 		$out .= self::text_field( 'clubhouse_x', 'X (Twitter) URL', (string) $b['x'], 'url' );
 		$out .= '</div></div>';
 		return $out;
+	}
+
+	/**
+	 * A colour setting. The markup is a plain text input carrying the current hex
+	 * — which is what posts, and what somebody who knows their brand hex can type
+	 * straight in — plus the data WordPress's own colour picker (Iris, shipped as
+	 * wp-color-picker) needs to upgrade it in place: a default to reset to, and a
+	 * palette of on-brand presets.
+	 *
+	 * Progressive enhancement, deliberately: with JavaScript off or the picker
+	 * unavailable, this is still a working, labelled, editable field rather than a
+	 * dead swatch. The static swatch beside it is the no-JS preview and is
+	 * replaced by the picker's own button when Iris initialises.
+	 *
+	 * $effective is shown only when it differs from $value — i.e. when the field
+	 * is empty and a colour is being derived — so an owner can see what "unset"
+	 * currently resolves to instead of guessing.
+	 */
+	private static function color_field(
+		string $name,
+		string $label,
+		string $value,
+		string $default,
+		string $help,
+		string $effective = ''
+	): string {
+		$swatch = '' !== $value ? $value : $effective;
+		$out    = '<div class="clubhouse-field clubhouse-field--color">'
+			. '<label class="clubhouse-label" for="' . self::esc( $name ) . '">' . self::esc( $label ) . '</label>'
+			. '<div class="clubhouse-accent">'
+			. '<span class="clubhouse-accent__swatch" data-color-swatch="' . self::esc( $name ) . '" style="background:' . self::esc( $swatch ) . '"></span>'
+			. '<input type="text" id="' . self::esc( $name ) . '" name="' . self::esc( $name ) . '"'
+			. ' value="' . self::esc( $value ) . '" class="clubhouse-input clubhouse-color"'
+			. ' data-default-color="' . self::esc( $default ) . '"'
+			. ' data-token="' . self::esc( self::token_for( $name ) ) . '"'
+			. ' autocomplete="off" spellcheck="false"></div>';
+
+		if ( '' === $value && '' !== $effective ) {
+			$out .= '<p class="clubhouse-help">Not set — currently using <code>' . self::esc( $effective )
+				. '</code>, derived from your primary colour.</p>';
+		}
+
+		// Filled by the client-side contrast check; empty and hidden until there is
+		// something to say. role="status" so a screen reader is told when a chosen
+		// pair stops clearing AA, rather than only sighted users seeing it.
+		$out .= '<p class="clubhouse-contrast" data-contrast-for="' . self::esc( $name ) . '" role="status" hidden></p>';
+		$out .= '<p class="clubhouse-help">' . self::esc( $help ) . '</p></div>';
+		return $out;
+	}
+
+	/**
+	 * The CSS custom property a colour field drives, so the live preview can
+	 * repaint the panel as the picker moves. Mapped here rather than in the
+	 * JavaScript: the field names and the token names are both this class's
+	 * business, and a mismatch would silently preview nothing.
+	 */
+	private static function token_for( string $name ): string {
+		return 'clubhouse_secondary' === $name ? '--color-secondary' : '--color-accent';
 	}
 
 	private static function text_field( string $name, string $label, string $value, string $type = 'text' ): string {

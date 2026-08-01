@@ -5,6 +5,16 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.51.0
+
+- **A second club colour.** Clubhouse theming now takes a secondary colour alongside the primary, and it reaches the whole site: secondary buttons, the markers inside call-to-action bands, filter hover states, and the Clubhouse admin screens themselves. The primary keeps every job it already had, so the two read as a hierarchy rather than competing.
+- **You only pick the colour; everything that follows from it is worked out.** Hover, pressed, disabled, a subtle background tint and a readable text colour to sit on it are all derived — and derived against the look you are using, so "darker on hover" comes out lighter on the dark look instead of disappearing.
+- **Leave it blank and you still get one.** An unset secondary is derived from your primary — a turn around the colour wheel at your own intensity, nudged only as far as it must go to stay readable. The setup screen shows you exactly which colour that is rather than leaving you guessing.
+- **Real colour pickers, everywhere a colour is set.** Both colour settings now open WordPress's own picker: a swatch, a full spectrum, ten on-brand presets, a live preview as you drag, and a clear button. The hex box is still there and still editable for anyone who knows their brand code, and the fields keep working with JavaScript switched off.
+- **You are warned about contrast as you choose, not after you save.** The setup screen checks your colour against the surfaces it will actually sit on and says so, live. A low-contrast secondary is saved with a warning rather than refused — it is spent on second actions, and a club that insists on its real brand colour should be told, not overruled. A low-contrast primary is still refused, as before.
+- Every preset swatch offered is now guaranteed to be one the screen accepts. One of the first choices was a green that no text colour reads on, which would have been offered and then rejected.
+- Fixed as part of the same audit: one hardcoded white in the Court Side band gradient now follows the look.
+
 ## 0.50.0
 
 - **A new Settings → ClubHouse access page, for administrators only.** It lists everyone on the site holding a ClubHouse role, the role each of them holds, and every part of the Clubhouse they can actually open — plus the same read out per role and per section, so a question about access can be answered without logging in as somebody.

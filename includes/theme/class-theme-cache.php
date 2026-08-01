@@ -66,8 +66,20 @@ final class Blueworx_Clubhouse_Theme_Cache {
 		// accent, and the plugin version. Hashing the token contents + version means
 		// an upgrade that changes a look's tokens (same slug/accent) still busts the
 		// cache. The version constant is absent under PHPUnit, so guard it.
+		// The secondary is in the signature because it is in the composed output:
+		// without it, changing the secondary alone would leave the cached :root in
+		// place and the new colour would simply never appear.
+		//
+		// The RAW secondary is enough, not the effective one. A club that has not
+		// set one gets a value derived from the accent and the look's shell, and
+		// both of those are already hashed here — so the derived colour is fully
+		// determined by what is in the signature, and hashing it again would only
+		// re-run the derivation on every request the cache exists to avoid.
 		$version = defined( 'BLUEWORX_LABS_CLUBHOUSE_VERSION' ) ? BLUEWORX_LABS_CLUBHOUSE_VERSION : 'dev';
 		$tokens  = self::serialize_tokens( $look->tokens() );
-		return md5( $look->slug() . '|' . $branding->get_accent() . '|' . $tokens . '|' . $version );
+		return md5(
+			$look->slug() . '|' . $branding->get_accent() . '|' . $branding->get_secondary()
+			. '|' . $tokens . '|' . $version
+		);
 	}
 }

@@ -132,9 +132,12 @@ textarea.clubhouse-input { resize: vertical; }
 .clubhouse-media__hint { font-size: 12px; color: var(--color-ink-soft); flex: 1 1 auto; }
 
 /* Buttons */
-.clubhouse-btn { font-family: var(--font-body); font-size: 13px; border-radius: 999px; padding: 8px 16px; border: 1px solid var(--color-ink); background: transparent; color: var(--color-ink); cursor: pointer; }
+/* Secondary actions take the club's SECOND colour, matching the Setup screen.
+   The primary action stays ink. */
+.clubhouse-btn { font-family: var(--font-body); font-size: 13px; border-radius: 999px; padding: 8px 16px; border: 1px solid var(--color-secondary-deep); background: transparent; color: var(--color-secondary-deep); cursor: pointer; }
+.clubhouse-btn:hover { background: var(--color-secondary); border-color: var(--color-secondary); color: var(--color-secondary-ink); }
 .clubhouse-btn--sm { padding: 6px 12px; font-size: 12px; }
-.clubhouse-btn--primary { background: var(--color-ink); color: var(--color-bg); border-color: var(--color-ink); }
+.clubhouse-btn--primary, .clubhouse-btn--primary:hover { background: var(--color-ink); color: var(--color-bg); border-color: var(--color-ink); }
 .clubhouse-btn:focus-visible { outline: 2px solid var(--color-accent-deep); outline-offset: 2px; }
 .clubhouse-btn-link { background: transparent; border: 0; color: var(--color-ink-soft); text-decoration: underline; cursor: pointer; font-size: 12px; padding: 0; }
 .clubhouse-btn-link--danger { color: var(--color-accent-deep); }
