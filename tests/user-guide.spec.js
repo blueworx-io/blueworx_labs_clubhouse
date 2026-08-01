@@ -35,13 +35,13 @@ async function setPageVisible(page, slug, visible) {
   await page.goto('/wp-admin/admin.php?page=clubhouse-setup', { waitUntil: 'domcontentloaded' });
   await page.getByRole('tab', { name: 'Visibility' }).click();
 
+  // The checkbox itself is opacity:0 and 0×0 — the visible control is the
+  // styled track beside it — so it can never satisfy an actionability check.
+  // force skips that, which is right here: the input is the real control, and
+  // clicking the switch is what setting it does.
   const toggle = page.locator(`input[name="clubhouse_page[${slug}]"]`);
-  await expect(toggle).toBeVisible();
-  if (visible) {
-    await toggle.check();
-  } else {
-    await toggle.uncheck();
-  }
+  await expect(toggle).toBeAttached();
+  await toggle.setChecked(visible, { force: true });
   await page.getByRole('button', { name: /save/i }).first().click({ force: true });
   await expect(page.locator('.notice-success')).toBeVisible();
 }
