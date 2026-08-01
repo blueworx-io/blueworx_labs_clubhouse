@@ -5,6 +5,12 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.51.3
+
+- **CI no longer builds and verifies the zip here; the shared guardrails do it for every plugin project.** This repo carried its own `package` job because nothing shared checked what reached the deployment artifact — the risk being `preview/index.php`, which defines its own ABSPATH and would render a full page, unauthenticated, on a live club site. The foundation now stages the tree every release would zip and fails the pull request if anything that must never ship survives, so the rule is enforced for every plugin rather than for this one.
+- `bin/build-zip.sh` stays for building a zip by hand locally, but its allowlist is now a convenience rather than a second source of truth. Where the two disagree, the foundation's list is the one that decides.
+- Nothing about what the plugin ships has changed.
+
 ## 0.51.2
 
 - **CI now pins the shared foundation workflow to `@v1` instead of tracking its
