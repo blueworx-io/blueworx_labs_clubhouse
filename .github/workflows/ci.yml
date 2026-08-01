@@ -2,7 +2,7 @@ name: CI
 on: pull_request
 jobs:
   guardrails:
-    uses: blueworx-io/bluegroup_core_foundation/.github/workflows/ci-wordpress.yml@main
+    uses: blueworx-io/bluegroup_core_foundation/.github/workflows/ci-wordpress.yml@v1
     with:
       # Tests run against a disposable real WordPress the run provisions itself
       # (PHP + SQLite, no Docker). The DB-free PHP preview is still exercised:
@@ -11,6 +11,10 @@ jobs:
       # single run covers both harnesses, each with the specs it can actually serve.
       use_local_wordpress: true
       plugin_slug: blueworx-labs-clubhouse
+      # Pin the check scripts to the same major as the workflow above. This
+      # input defaults to `main`, so without it the v1 workflow would run
+      # against whatever is on the foundation's main branch today.
+      foundation_ref: v1
 
   # Builds the real deployment artifact and fails if anything outside the
   # allowlist reaches it — chiefly preview/index.php, which defines its own
