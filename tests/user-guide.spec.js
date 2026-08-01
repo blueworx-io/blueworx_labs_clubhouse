@@ -33,15 +33,25 @@ test('the user guide describes this site, not a generic one @wordpress', async (
 // clicked — its inputs are genuinely not on screen until then.
 async function setPageVisible(page, slug, visible) {
   await page.goto('/wp-admin/admin.php?page=clubhouse-setup', { waitUntil: 'domcontentloaded' });
-  await page.getByRole('tab', { name: 'Visibility' }).click();
+  // Two levels of tab: the Visibility panel, then the sub-tab for this page.
+  // Only Home's sub-panel is open to begin with, so everything else is off
+  // screen until its tab is clicked.
+  // force, for the reason menu-editor.spec.js documents: wp-admin's own chrome
+  // keeps reflowing after this screen loads, so Playwright's 'stable' wait never
+  // converges even though the control is provably where it says it is.
+  await page.getByRole('tab', { name: 'Visibility' }).click({ force: true });
+  await page.locator(`button.clubhouse-vistab[data-vistab="${slug}"]`).click({ force: true });
 
-  // The checkbox itself is opacity:0 and 0×0 — the visible control is the
-  // styled track beside it — so it can never satisfy an actionability check.
-  // force skips that, which is right here: the input is the real control, and
-  // clicking the switch is what setting it does.
+  // The checkbox is opacity:0 and 0×0; the switch beside it is what a person
+  // sees and clicks, and clicking the label is what flips the input. Playwright
+  // cannot check() an invisible input even with force, so drive the label —
+  // which is the real control anyway.
   const toggle = page.locator(`input[name="clubhouse_page[${slug}]"]`);
   await expect(toggle).toBeAttached();
-  await toggle.setChecked(visible, { force: true });
+  if ((await toggle.isChecked()) !== visible) {
+    await page.locator('label.clubhouse-toggle', { has: toggle }).click({ force: true });
+  }
+  expect(await toggle.isChecked()).toBe(visible);
   await page.getByRole('button', { name: /save/i }).first().click({ force: true });
   await expect(page.locator('.notice-success')).toBeVisible();
 }
