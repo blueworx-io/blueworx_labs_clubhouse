@@ -105,12 +105,9 @@ final class Blueworx_Clubhouse_Seo_Head {
 		$page     = '' === $slug ? 'home' : $slug;
 		$club     = $ctx->branding->get_club_name();
 		$logo     = Blueworx_Clubhouse_Frontend::resolve_logo( $ctx->branding->get_logo() );
-		$lede     = (string) $ctx->content->get( $page, 'hero', 'lede', '' );
-		$fallback = $ctx->content->get( $page, 'hero', 'title_lead', '' ) . $ctx->content->get( $page, 'hero', 'title_highlight', '' );
-
 		return array(
 			'title'        => Blueworx_Clubhouse_Frontend::page_title(),
-			'description'  => '' !== trim( $lede ) ? $lede : (string) $fallback,
+			'description'  => self::description( $ctx, $page, $club ),
 			'url'          => Blueworx_Clubhouse_Frontend::link_url( $page ),
 			'site_name'    => $club,
 			'type'         => 'website',
@@ -120,6 +117,35 @@ final class Blueworx_Clubhouse_Seo_Head {
 			'image_alt'    => '' !== $logo ? $club : '',
 			'locale'       => str_replace( '-', '_', (string) get_bloginfo( 'language' ) ),
 		);
+	}
+
+	/**
+	 * The best description this page can offer, in order of how specific it is.
+	 *
+	 * A club that has not written its own copy yet still has pages, and a page
+	 * with no description at all is the one case a search engine handles worst —
+	 * it invents one from whatever text it finds first. So the chain ends
+	 * somewhere real rather than empty: the page's own opening sentence, then its
+	 * heading, then the site's tagline, then the club's name. The report says when
+	 * what came out is too thin to work as a description, which is the honest way
+	 * to ask an owner for better copy.
+	 */
+	public static function description( Blueworx_Clubhouse_Clubhouse_Context $ctx, string $page, string $club ): string {
+		$candidates = array(
+			(string) $ctx->content->get( $page, 'hero', 'lede', '' ),
+			trim(
+				(string) $ctx->content->get( $page, 'hero', 'title_lead', '' ) . ' '
+				. (string) $ctx->content->get( $page, 'hero', 'title_highlight', '' )
+			),
+			(string) get_bloginfo( 'description' ),
+			$club,
+		);
+		foreach ( $candidates as $candidate ) {
+			if ( '' !== trim( $candidate ) ) {
+				return $candidate;
+			}
+		}
+		return '';
 	}
 
 	private static function slug(): string {

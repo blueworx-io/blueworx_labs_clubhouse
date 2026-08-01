@@ -84,7 +84,9 @@ final class Blueworx_Clubhouse_Seo_Controller {
 			);
 
 			$url  = Blueworx_Clubhouse_Frontend::link_url( $key );
-			$lede = (string) $ctx->content->get( $key, 'hero', 'lede', '' );
+			// The same chain the head emits, so the report judges what is actually
+			// on the page rather than making a second guess at it.
+			$lede = Blueworx_Clubhouse_Seo_Head::description( $ctx, $key, $ctx->branding->get_club_name() );
 			$doc  = Blueworx_Clubhouse_Seo::inspect( $body );
 			// The title, description and canonical live in <head>, which Page_Map does
 			// not render — the template and Seo_Head own those. Fill them in from the
