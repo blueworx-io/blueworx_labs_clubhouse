@@ -10,8 +10,16 @@
 # the obvious way to build one — zip up the repo — ships preview/index.php, which
 # defines its own ABSPATH and therefore renders a full page without WordPress
 # bootstrapping it. That would be reachable unauthenticated on a live club site.
-# The allowlist below is the single source of truth for what ships; CI runs this
-# script so the rule is enforced rather than remembered.
+# WHAT ENFORCES THIS NOW
+# CI no longer runs this script. The foundation checks what would ship on every
+# pull request and again against the built artifact at release time, from
+# scripts/plugin-zip-excludes.txt plus a separate forbidden-content list — see
+# blueworx-io/bluegroup_core_foundation#10. That is the enforcing copy.
+#
+# This script stays for building a zip by hand locally (a plugin's first install
+# on a site, before the release workflow has ever run for it). Its allowlist is
+# therefore a convenience, NOT a second source of truth: if the two ever
+# disagree, the foundation's list is right and this one is stale.
 #
 # WHY NOT Compress-Archive / GNU tar
 # PowerShell's Compress-Archive writes backslash entry paths on Windows, and

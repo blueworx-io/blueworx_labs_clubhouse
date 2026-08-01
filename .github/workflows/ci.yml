@@ -16,15 +16,3 @@ jobs:
       # against whatever is on the foundation's main branch today.
       foundation_ref: v1
 
-  # Builds the real deployment artifact and fails if anything outside the
-  # allowlist reaches it — chiefly preview/index.php, which defines its own
-  # ABSPATH and would be reachable unauthenticated on a live club site. The zip
-  # is assembled by hand at release time; this is what stops the allowlist being
-  # a thing someone has to remember.
-  package:
-    name: package
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Build and verify the deployable zip
-        run: bash bin/build-zip.sh "$RUNNER_TEMP/dist"
