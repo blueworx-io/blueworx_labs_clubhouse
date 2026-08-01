@@ -5,6 +5,11 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.48.1
+
+- **Fixed: the highlighted phrase in a heading now always starts on the second line.** It used to break wherever the words happened to run out — "A club for every age and / ability" — which split the underline into two disconnected pieces and left one line running the full width and the next barely started. The highlight now gets a line of its own, so its underline or fill reads as one continuous mark.
+- This is a rule of the heading itself, not a fix to one page's wording: it applies to every hero on the site, at every screen size, and holds however long or short the club's own heading is. Where a highlight is long enough to need two lines of its own, the words are now shared evenly between them rather than dropping a single word onto the last line.
+
 ## 0.48.0
 
 - Added a Menu tab to Club Content: reorder, rename and nest header nav items, and point each one at a page, a section of a page, a filtered sport/team/event view, or a custom URL.

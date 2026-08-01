@@ -209,11 +209,23 @@ final class Blueworx_Clubhouse_Sections {
 	 * only the structure is unified. The lede stays per-variant because hero()
 	 * nests it in a __sub row with its CTA, unlike the other two.
 	 *
+	 * The lead is wrapped in its own __lead span so the stylesheet can make it a
+	 * block: the highlight then always opens line two, whatever the lead's length,
+	 * and its underline/fill is one continuous run instead of two disconnected
+	 * segments where the text happened to wrap. Structural rather than per-page
+	 * content, so the rule holds for every heading built from this head.
+	 *
+	 * An empty lead emits no span at all — a block-level empty span would print a
+	 * blank first line above the highlight.
+	 *
 	 * @param array{eyebrow:string,title_lead:string,title_highlight:string} $data
 	 */
 	private static function hero_head( string $block, array $data ): string {
+		$lead = '' !== $data['title_lead']
+			? '<span class="' . $block . '__lead">' . self::e( self::lead_with_gap( $data['title_lead'] ) ) . '</span>'
+			: '';
 		return '<span class="ch-eyebrow">' . self::e( $data['eyebrow'] ) . '</span>'
-			. '<h1 class="' . $block . '__title">' . self::e( self::lead_with_gap( $data['title_lead'] ) )
+			. '<h1 class="' . $block . '__title">' . $lead
 			. '<span class="' . $block . '__hl">' . self::e( $data['title_highlight'] ) . '</span></h1>';
 	}
 
