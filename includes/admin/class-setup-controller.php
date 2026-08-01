@@ -23,6 +23,35 @@ final class Blueworx_Clubhouse_Setup_Controller {
 	public const VIS_SAVED_KEY = 'setup_visibility_saved';
 
 	/**
+	 * The preset swatches offered by every colour picker on this screen.
+	 *
+	 * Saturated across the hue wheel on purpose. A desaturated mid-luminance
+	 * colour has no legible text colour at all on either polarity of shell (see
+	 * Color_Engine::derive), so it would be refused on save — offering one as a
+	 * preset would invite a club to pick a colour the screen then rejects.
+	 *
+	 * A starting point, not a limit: the spectrum and the hex field both remain,
+	 * so any colour a club actually uses is still reachable.
+	 *
+	 * @var array<int,string>
+	 */
+	public const PALETTE = array(
+		'#c6f24e', // Volt lime — the shipped default.
+		// Pitch green. Deeper than the obvious mid-green: a mid-luminance green
+		// (#1f8a5c, the first choice here) clears neither black nor white at AA, so
+		// the screen would have offered a swatch it then refused on save.
+		'#166534',
+		'#0b6fd1', // Club blue.
+		'#123a8c', // Navy.
+		'#7b2ff2', // Violet.
+		'#c2185b', // Magenta.
+		'#d62828', // Club red.
+		'#e2711d', // Orange.
+		'#f2b705', // Gold.
+		'#0f766e', // Teal.
+	);
+
+	/**
 	 * Apply a setup POST to storage. Returns notices (error/warning/success).
 	 *
 	 * @param array<string,mixed> $post
@@ -52,6 +81,33 @@ final class Blueworx_Clubhouse_Setup_Controller {
 				$notices[] = array( 'type' => 'error', 'text' => 'That accent is too low in contrast for the chosen look and was not saved. Pick a stronger colour.' );
 			} else {
 				$branding->set_accent( $accent );
+			}
+		}
+
+		// 2b. Secondary. Empty clears it, which returns the club to a shade derived
+		// from the primary — that is a legitimate choice, not a mistake, so it is
+		// never treated as an error.
+		//
+		// An illegible secondary WARNS where an illegible primary is REFUSED. The
+		// primary carries the site's main calls to action and its refusal has been
+		// in place since the colour engine shipped; the secondary is spent on second
+		// actions and section marks, where a club that insists on its real brand
+		// colour should be told, not overruled. Every derived token is legibility-
+		// clamped either way, so a warned secondary is still a readable page.
+		if ( isset( $post['clubhouse_secondary'] ) ) {
+			$raw = trim( (string) $post['clubhouse_secondary'] );
+			if ( '' === $raw ) {
+				$branding->set_secondary( '' );
+			} else {
+				$secondary = sanitize_hex_color( $raw );
+				if ( '' === (string) $secondary ) {
+					$notices[] = array( 'type' => 'error', 'text' => 'The secondary colour must be a 6-digit hex value like #1f8a5c, or empty to derive it from your primary.' );
+				} else {
+					$branding->set_secondary( (string) $secondary );
+					if ( ! Blueworx_Clubhouse_Color_Engine::accent_is_legible_for( $active, (string) $secondary ) ) {
+						$notices[] = array( 'type' => 'warning', 'text' => 'That secondary colour is low in contrast on the chosen look. It has been saved, but text on it may be hard to read — a stronger colour will look better.' );
+					}
+				}
 			}
 		}
 
@@ -136,8 +192,15 @@ final class Blueworx_Clubhouse_Setup_Controller {
 			return;
 		}
 		wp_enqueue_media();
-		wp_enqueue_style( 'clubhouse-admin-setup', BLUEWORX_LABS_CLUBHOUSE_URL . 'assets/css/admin-setup.css', array(), BLUEWORX_LABS_CLUBHOUSE_VERSION );
-		wp_enqueue_script( 'clubhouse-admin-setup', BLUEWORX_LABS_CLUBHOUSE_URL . 'assets/js/admin-setup.js', array(), BLUEWORX_LABS_CLUBHOUSE_VERSION, true );
+		// wp-color-picker is WordPress core's own Iris picker — spectrum, swatch,
+		// palette and hex field in one control, already loaded everywhere else in
+		// wp-admin. Preferred over a bespoke picker so the screen behaves the way
+		// an admin already expects, with no new dependency. It brings its own
+		// stylesheet, and depends on jQuery, which is declared here rather than
+		// assumed.
+		wp_enqueue_style( 'wp-color-picker' );
+		wp_enqueue_style( 'clubhouse-admin-setup', BLUEWORX_LABS_CLUBHOUSE_URL . 'assets/css/admin-setup.css', array( 'wp-color-picker' ), BLUEWORX_LABS_CLUBHOUSE_VERSION );
+		wp_enqueue_script( 'clubhouse-admin-setup', BLUEWORX_LABS_CLUBHOUSE_URL . 'assets/js/admin-setup.js', array( 'jquery', 'wp-color-picker' ), BLUEWORX_LABS_CLUBHOUSE_VERSION, true );
 	}
 
 	public static function render_page(): void {
@@ -211,17 +274,25 @@ final class Blueworx_Clubhouse_Setup_Controller {
 			'notices'       => $notices,
 			'progress'      => Blueworx_Clubhouse_Setup_Progress::compute( $branding, $active_look ?? new Blueworx_Clubhouse_Court_Side(), '' !== $active_slug, (bool) $storage->get( self::VIS_SAVED_KEY, false ) ),
 			'looks'         => $looks,
+			'color_palette' => self::PALETTE,
 			'branding'      => array(
-				'accent'          => $branding->get_accent(),
-				'club_name'       => $branding->get_club_name(),
-				'logo'            => $logo,
-				'logo_preview'    => $logo_preview,
-				'favicon'         => $favicon,
-				'favicon_preview' => $favicon_preview,
-				'facebook'        => $branding->get_facebook_url(),
-				'instagram'       => $branding->get_instagram_url(),
-				'linkedin'        => $branding->get_linkedin_url(),
-				'x'               => $branding->get_x_url(),
+				'accent'              => $branding->get_accent(),
+				'accent_default'      => Blueworx_Clubhouse_Branding::default_accent(),
+				'secondary'           => $branding->get_secondary(),
+				// The reset target for the secondary picker is empty, not a colour:
+				// clearing the field is what puts a club back on the derived default,
+				// so offering a fixed hex as "the default" would be a lie.
+				'secondary_default'   => '',
+				'secondary_effective' => $branding->effective_secondary( $active_look ?? new Blueworx_Clubhouse_Court_Side() ),
+				'club_name'           => $branding->get_club_name(),
+				'logo'                => $logo,
+				'logo_preview'        => $logo_preview,
+				'favicon'             => $favicon,
+				'favicon_preview'     => $favicon_preview,
+				'facebook'            => $branding->get_facebook_url(),
+				'instagram'           => $branding->get_instagram_url(),
+				'linkedin'            => $branding->get_linkedin_url(),
+				'x'                   => $branding->get_x_url(),
 			),
 			'inventory'     => Blueworx_Clubhouse_Setup_Sections::inventory(),
 			'visibility'    => array( 'pages' => $pages_state, 'sections' => $sections_state ),

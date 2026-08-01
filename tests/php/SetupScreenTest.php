@@ -30,7 +30,9 @@ final class SetupScreenTest extends TestCase {
 			'look_tokens'   => $tokens,
 			'font_face_css' => "@font-face{font-family:'Syne';src:url(x)}",
 			'branding'      => array(
-				'accent' => '#c6f24e', 'club_name' => 'Riverside & Sons', 'logo' => '42',
+				'accent' => '#c6f24e', 'accent_default' => '#c6f24e',
+				'secondary' => '', 'secondary_default' => '', 'secondary_effective' => '#4ec6f2',
+				'club_name' => 'Riverside & Sons', 'logo' => '42',
 				'logo_preview' => 'https://club.test/logo.png',
 				'favicon' => '', 'favicon_preview' => '',
 				'facebook' => 'https://facebook.com/riverside', 'instagram' => '',
@@ -151,5 +153,67 @@ final class SetupScreenTest extends TestCase {
 		// Absent entirely, not merely empty — an older caller's model must not fatal.
 		unset( $model['role_tags'] );
 		$this->assertStringNotContainsString( 'clubhouse-roletag', Blueworx_Clubhouse_Setup_Screen::render( $model ) );
+	}
+
+	/**
+	 * Both colour settings are pickers, and neither is a bare text box. The markup
+	 * stays a labelled text input carrying the hex — that is what posts, what
+	 * somebody who knows their brand hex can type, and what still works with
+	 * JavaScript off — plus the data Iris needs to upgrade it in place.
+	 */
+	public function test_both_colour_settings_are_pickers_with_a_reset_target(): void {
+		$html = Blueworx_Clubhouse_Setup_Screen::render( $this->model() );
+
+		foreach ( array( 'clubhouse_accent', 'clubhouse_secondary' ) as $name ) {
+			$this->assertMatchesRegularExpression(
+				'/<input type="text" id="' . $name . '" name="' . $name . '"[^>]*class="clubhouse-input clubhouse-color"/',
+				$html,
+				$name
+			);
+			$this->assertMatchesRegularExpression( '/id="' . $name . '"[^>]*data-default-color="/', $html, $name );
+			$this->assertStringContainsString( 'data-contrast-for="' . $name . '"', $html, $name );
+		}
+
+		// Each field drives its own custom property, or the live preview repaints
+		// the wrong thing.
+		$this->assertMatchesRegularExpression( '/id="clubhouse_accent"[^>]*data-token="--color-accent"/', $html );
+		$this->assertMatchesRegularExpression( '/id="clubhouse_secondary"[^>]*data-token="--color-secondary"/', $html );
+	}
+
+	/** No colour setting is left as a bare text box — the issue's explicit ask. */
+	public function test_no_colour_field_is_a_plain_text_box(): void {
+		$html = Blueworx_Clubhouse_Setup_Screen::render( $this->model() );
+		$this->assertSame( 2, substr_count( $html, 'clubhouse-input clubhouse-color' ) );
+		$this->assertStringNotContainsString( 'id="clubhouse-accent-swatch"', $html, 'the old mirror-only swatch is gone' );
+	}
+
+	/** The preset swatches and the look's own surfaces reach the picker as JSON. */
+	public function test_the_picker_island_carries_presets_and_the_shell_to_judge_against(): void {
+		$model                  = $this->model();
+		$model['color_palette'] = array( '#c6f24e', '#1d4ed8' );
+		$html                   = Blueworx_Clubhouse_Setup_Screen::render( $model );
+
+		$this->assertStringContainsString( 'id="clubhouse-color-picker"', $html );
+		$this->assertMatchesRegularExpression( '/clubhouse-color-picker"[^>]*>\{.*#1d4ed8/s', $html );
+		// The contrast check needs the surfaces the colour will actually sit on.
+		$this->assertMatchesRegularExpression( '/clubhouse-color-picker"[^>]*>\{.*"shell"/s', $html );
+	}
+
+	/**
+	 * An unset secondary says what it is currently resolving to. "Not set" alone
+	 * leaves an owner guessing what colour their site is actually using.
+	 */
+	public function test_an_unset_secondary_shows_the_colour_being_derived(): void {
+		$html = Blueworx_Clubhouse_Setup_Screen::render( $this->model() );
+		$this->assertStringContainsString( '#4ec6f2', $html );
+		$this->assertStringContainsString( 'derived from your primary colour', $html );
+	}
+
+	/** A chosen secondary needs no such note — the field shows the answer. */
+	public function test_a_chosen_secondary_shows_no_derived_note(): void {
+		$model                          = $this->model();
+		$model['branding']['secondary'] = '#1d4ed8';
+		$html                           = Blueworx_Clubhouse_Setup_Screen::render( $model );
+		$this->assertStringNotContainsString( 'derived from your primary colour', $html );
 	}
 }

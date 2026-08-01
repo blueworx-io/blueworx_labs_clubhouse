@@ -187,4 +187,82 @@ final class SetupControllerTest extends TestCase {
 		$this->assertIsString( $model['font_face_css'] );
 		$this->assertStringContainsString( '@font-face', $model['font_face_css'] );
 	}
+
+	/** The secondary reaches every look's token map, beside the accent. */
+	public function test_the_model_carries_the_secondary_tokens_for_every_look(): void {
+		$model = Blueworx_Clubhouse_Setup_Controller::build_model( $this->storage(), array(), '', '' );
+		foreach ( array( 'court-side', 'members-house', 'floodlight' ) as $slug ) {
+			foreach ( array( '', '-ink', '-deep', '-wash', '-block', '-hover', '-active', '-disabled' ) as $suffix ) {
+				$this->assertArrayHasKey( '--color-secondary' . $suffix, $model['look_tokens'][ $slug ], $slug . $suffix );
+			}
+		}
+		$this->assertArrayHasKey( 'secondary', $model['branding'] );
+		$this->assertArrayHasKey( 'secondary_effective', $model['branding'] );
+		$this->assertSame( Blueworx_Clubhouse_Setup_Controller::PALETTE, $model['color_palette'] );
+	}
+
+	public function test_a_secondary_is_saved_and_can_be_cleared(): void {
+		$storage = $this->storage();
+		Blueworx_Clubhouse_Setup_Controller::handle_save( array( 'clubhouse_secondary' => '#1d4ed8' ), $storage );
+		$this->assertSame( '#1d4ed8', ( new Blueworx_Clubhouse_Branding( $storage ) )->get_secondary() );
+
+		// Empty is a choice, not an error: it puts the club back on the derived default.
+		$notices = Blueworx_Clubhouse_Setup_Controller::handle_save( array( 'clubhouse_secondary' => '' ), $storage );
+		$this->assertSame( '', ( new Blueworx_Clubhouse_Branding( $storage ) )->get_secondary() );
+		$this->assertSame( array(), array_filter( $notices, static fn ( array $n ): bool => 'error' === $n['type'] ) );
+	}
+
+	/**
+	 * An illegible secondary WARNS and is kept; an illegible primary is REFUSED.
+	 * The primary carries the site's main calls to action; the secondary is spent
+	 * on second actions and marks, where a club insisting on its real brand colour
+	 * should be told rather than overruled.
+	 */
+	public function test_a_low_contrast_secondary_warns_but_is_saved(): void {
+		$storage = $this->storage();
+		$notices = Blueworx_Clubhouse_Setup_Controller::handle_save(
+			// A mid-luminance green: neither black nor white clears AA on it, so no
+			// text colour reads. (This was the first pick for the preset palette,
+			// which is how it was caught.)
+			array( 'clubhouse_look' => 'court-side', 'clubhouse_secondary' => '#1f8a5c' ),
+			$storage
+		);
+		$this->assertSame( '#1f8a5c', ( new Blueworx_Clubhouse_Branding( $storage ) )->get_secondary(), 'kept' );
+		$warnings = array_filter( $notices, static fn ( array $n ): bool => 'warning' === $n['type'] );
+		$this->assertNotEmpty( $warnings );
+		$this->assertStringContainsString( 'secondary', strtolower( implode( ' ', array_column( $warnings, 'text' ) ) ) );
+	}
+
+	public function test_a_malformed_secondary_is_refused(): void {
+		$storage = $this->storage();
+		$notices = Blueworx_Clubhouse_Setup_Controller::handle_save( array( 'clubhouse_secondary' => 'not-a-colour' ), $storage );
+		$this->assertSame( '', ( new Blueworx_Clubhouse_Branding( $storage ) )->get_secondary() );
+		$this->assertNotEmpty( array_filter( $notices, static fn ( array $n ): bool => 'error' === $n['type'] ) );
+	}
+
+	/**
+	 * Every preset the picker offers must be one the save accepts on every look —
+	 * a swatch the screen then rejects is worse than no swatch at all.
+	 */
+	public function test_no_preset_swatch_is_rejected_as_a_primary(): void {
+		foreach ( Blueworx_Clubhouse_Setup_Controller::PALETTE as $hex ) {
+			foreach ( array( 'court-side', 'members-house', 'floodlight' ) as $slug ) {
+				$storage = $this->storage();
+				$notices = Blueworx_Clubhouse_Setup_Controller::handle_save(
+					array( 'clubhouse_look' => $slug, 'clubhouse_accent' => $hex ),
+					$storage
+				);
+				$this->assertSame(
+					$hex,
+					( new Blueworx_Clubhouse_Branding( $storage ) )->get_accent(),
+					$hex . ' on ' . $slug
+				);
+				$this->assertSame(
+					array(),
+					array_filter( $notices, static fn ( array $n ): bool => 'error' === $n['type'] ),
+					$hex . ' on ' . $slug
+				);
+			}
+		}
+	}
 }

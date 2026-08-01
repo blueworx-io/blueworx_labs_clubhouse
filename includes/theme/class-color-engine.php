@@ -71,11 +71,94 @@ class Blueworx_Clubhouse_Color_Engine {
 	}
 
 	/**
+	 * @return array{0:float,1:float,2:float} h in [0,360), s and l in [0,1]
+	 */
+	protected static function to_hsl( string $hex ): array {
+		[ $r, $g, $b ] = array_map( static fn ( int $c ): float => $c / 255, self::to_rgb( $hex ) );
+		$max           = max( $r, $g, $b );
+		$min           = min( $r, $g, $b );
+		$l             = ( $max + $min ) / 2;
+		$d             = $max - $min;
+
+		if ( 0.0 === $d ) {
+			return array( 0.0, 0.0, $l ); // Grey: hue is undefined, and 0 is as good as any.
+		}
+
+		$s = $d / ( 1 - abs( 2 * $l - 1 ) );
+		if ( $max === $r ) {
+			$h = fmod( ( $g - $b ) / $d, 6.0 );
+		} elseif ( $max === $g ) {
+			$h = ( $b - $r ) / $d + 2;
+		} else {
+			$h = ( $r - $g ) / $d + 4;
+		}
+		$h = fmod( $h * 60 + 360, 360 );
+		return array( $h, $s, $l );
+	}
+
+	protected static function from_hsl( float $h, float $s, float $l ): string {
+		$h = fmod( fmod( $h, 360 ) + 360, 360 );
+		$s = max( 0.0, min( 1.0, $s ) );
+		$l = max( 0.0, min( 1.0, $l ) );
+
+		$c = ( 1 - abs( 2 * $l - 1 ) ) * $s;
+		$x = $c * ( 1 - abs( fmod( $h / 60, 2.0 ) - 1 ) );
+		$m = $l - $c / 2;
+
+		if ( $h < 60 ) {
+			[ $r, $g, $b ] = array( $c, $x, 0.0 );
+		} elseif ( $h < 120 ) {
+			[ $r, $g, $b ] = array( $x, $c, 0.0 );
+		} elseif ( $h < 180 ) {
+			[ $r, $g, $b ] = array( 0.0, $c, $x );
+		} elseif ( $h < 240 ) {
+			[ $r, $g, $b ] = array( 0.0, $x, $c );
+		} elseif ( $h < 300 ) {
+			[ $r, $g, $b ] = array( $x, 0.0, $c );
+		} else {
+			[ $r, $g, $b ] = array( $c, 0.0, $x );
+		}
+
+		return self::to_hex(
+			(int) round( ( $r + $m ) * 255 ),
+			(int) round( ( $g + $m ) * 255 ),
+			(int) round( ( $b + $m ) * 255 )
+		);
+	}
+
+	/**
+	 * The pole — black or white — that contrasts MORE with a shell background.
+	 * Blending toward it is how a brand colour is pulled into legibility without
+	 * abandoning its hue, and it is the direction "darker" means on a light shell
+	 * and "lighter" means on a dark one.
+	 */
+	protected static function pole_for( string $shell_bg ): string {
+		return self::contrast_ratio( '#000000', $shell_bg ) >= self::contrast_ratio( '#ffffff', $shell_bg )
+			? '#000000'
+			: '#ffffff';
+	}
+
+	/**
 	 * Derive the legible accent token set for a look's shell.
 	 *
 	 * @return array{'--color-accent':string,'--color-accent-ink':string,'--color-accent-deep':string,'--color-accent-wash':string,'--color-accent-block':string}
 	 */
 	public static function derive( string $accent, string $shell_bg, string $shell_ink ): array {
+		return self::derive_named( '--color-accent', $accent, $shell_bg, $shell_ink );
+	}
+
+	/**
+	 * The same derivation under a caller-chosen prefix, so the primary and the
+	 * secondary get an identical token set and identical legibility guarantees
+	 * from one piece of maths. derive() is this with '--color-accent'.
+	 *
+	 * Extracted rather than duplicated deliberately: a second copy of this for the
+	 * secondary is how the two would drift, and the guarantees below are exactly
+	 * what must NOT hold for only one of them.
+	 *
+	 * @return array<string,string>
+	 */
+	public static function derive_named( string $prefix, string $accent, string $shell_bg, string $shell_ink ): array {
 		$accent = self::normalize_hex( $accent );
 
 		// Ink ON the accent fill: the better-contrasting of the look ink vs
@@ -95,9 +178,7 @@ class Blueworx_Clubhouse_Color_Engine {
 		// stepping guarantees the pure pole (i = 0) is actually evaluated, and we
 		// break on the first pass to keep the deep colour as close to the brand
 		// accent as legibility allows.
-		$pole = self::contrast_ratio( '#000000', $shell_bg ) >= self::contrast_ratio( '#ffffff', $shell_bg )
-			? '#000000'
-			: '#ffffff';
+		$pole = self::pole_for( $shell_bg );
 		$deep = $pole;
 		for ( $i = 20; $i >= 0; $i-- ) {
 			$candidate = self::mix( $accent, $pole, $i / 20 );
@@ -132,12 +213,102 @@ class Blueworx_Clubhouse_Color_Engine {
 		}
 
 		return array(
-			'--color-accent'       => $accent,
-			'--color-accent-ink'   => $ink,
-			'--color-accent-deep'  => $deep,
-			'--color-accent-wash'  => self::mix( $accent, self::normalize_hex( $shell_bg ), 0.12 ),
-			'--color-accent-block' => $block,
+			$prefix            => $accent,
+			$prefix . '-ink'   => $ink,
+			$prefix . '-deep'  => $deep,
+			$prefix . '-wash'  => self::mix( $accent, self::normalize_hex( $shell_bg ), 0.12 ),
+			$prefix . '-block' => $block,
 		);
+	}
+
+	/**
+	 * The secondary colour's full token set: the same five tokens the accent gets,
+	 * plus the interaction states a second action colour needs in order to be
+	 * usable without every club setting five colours by hand.
+	 *
+	 * Hover and active blend toward the shell's contrast pole — darker on a light
+	 * look, lighter on a dark one — so a single rule reads correctly on all three
+	 * looks rather than "darken on hover" inverting on Floodlight. Disabled goes
+	 * the other way, toward the background, which is what "receded" means whatever
+	 * the polarity.
+	 *
+	 * The tint (-wash) and the on-colour foreground (-ink) come from the shared
+	 * derivation, so the secondary carries the same AA guarantee as the accent.
+	 *
+	 * @return array<string,string>
+	 */
+	public static function derive_secondary( string $secondary, string $shell_bg, string $shell_ink ): array {
+		$secondary = self::normalize_hex( $secondary );
+		$tokens    = self::derive_named( '--color-secondary', $secondary, $shell_bg, $shell_ink );
+		$pole      = self::pole_for( $shell_bg );
+
+		$tokens['--color-secondary-hover']    = self::mix( $secondary, $pole, 0.86 );
+		$tokens['--color-secondary-active']   = self::mix( $secondary, $pole, 0.72 );
+		$tokens['--color-secondary-disabled'] = self::mix( $secondary, self::normalize_hex( $shell_bg ), 0.35 );
+
+		return $tokens;
+	}
+
+	/**
+	 * The secondary a club gets when it has not chosen one: derived from its
+	 * primary rather than hardcoded, so it is in the same family and at the same
+	 * intensity instead of being a fixed colour that clashes with somebody's brand.
+	 *
+	 * A 150° hue turn at the primary's own saturation and lightness. Not the 180°
+	 * complement, which is the one relationship that reliably reads as a clash;
+	 * 150° is a split-complement — clearly a different colour, still harmonious,
+	 * and far enough round that no primary lands on its own hue.
+	 *
+	 * Saturation is carried across untouched, which is what keeps the pair looking
+	 * chosen: a muted primary gets a muted partner, a loud one gets a loud one. A
+	 * grey primary (saturation 0) turns into itself, which is the honest answer —
+	 * there is no hue to rotate.
+	 *
+	 * Lightness is carried across TOO, but only where it is legible. Equal HSL
+	 * lightness does not mean equal luminance — the shipped lime and its 150° turn
+	 * into blue sit at the same L and nowhere near the same brightness — so a
+	 * straight rotation can land in the mid-luminance band where no text colour
+	 * clears AA, which is the same band derive() rejects a chosen accent for. The
+	 * lightness is therefore nudged the shortest distance out of that band, so the
+	 * partner is as close to the primary's intensity as legibility allows and
+	 * never inside it.
+	 *
+	 * Judged against the LOOK's own shell rather than against pure black and
+	 * white. The two are not interchangeable: Court Side's near-black ink
+	 * (#1c1b18) scores about 18% below pure black on the same fill, so a colour
+	 * that clears AA against the pole can miss it against the ink actually
+	 * painted. Taking the shell is what makes accent_is_legible() — the engine's
+	 * existing contract — the bar here too, instead of a hand-tuned margin
+	 * standing in for it.
+	 */
+	public static function default_secondary( string $accent, string $shell_bg, string $shell_ink ): string {
+		[ $h, $s, $l ] = self::to_hsl( $accent );
+		$h            += 150;
+
+		$candidate = self::from_hsl( $h, $s, $l );
+		if ( self::accent_is_legible( $candidate, $shell_bg, $shell_ink ) ) {
+			return $candidate;
+		}
+
+		// Search outward in both directions at once and stop at the first legible
+		// lightness — by construction the nearest one, in whichever direction it
+		// happens to lie.
+		for ( $step = 0.02; $step <= 1.0; $step += 0.02 ) {
+			foreach ( array( $l - $step, $l + $step ) as $try ) {
+				if ( $try < 0.0 || $try > 1.0 ) {
+					continue;
+				}
+				$candidate = self::from_hsl( $h, $s, $try );
+				if ( self::accent_is_legible( $candidate, $shell_bg, $shell_ink ) ) {
+					return $candidate;
+				}
+			}
+		}
+
+		// Only reachable on a shell whose own ink cannot clear AA against anything,
+		// where no colour would satisfy the loop. Returning the straight rotation
+		// beats returning nothing: every derived token is legibility-clamped anyway.
+		return self::from_hsl( $h, $s, $l );
 	}
 
 	/**

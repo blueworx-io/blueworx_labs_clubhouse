@@ -86,7 +86,12 @@ button,input,select,textarea{font-family:inherit}
 .ch-hero-filter__lede{max-width:52ch;font-size:18px;color:var(--color-ink-soft);margin-top:16px}
 .ch-filters{display:flex;flex-wrap:wrap;gap:10px;margin-top:var(--space-6)}
 .ch-filter{display:inline-flex;align-items:center;min-height:44px;padding:0 20px;border:1.5px solid var(--color-line);border-radius:999px;color:var(--color-ink);font-weight:600;font-size:15px;transition:border-color .18s ease,background-color .18s ease,color .18s ease}
-.ch-filter:hover{border-color:var(--color-accent)}
+/* Hover is the club's SECOND colour, the chosen state its first: the accent
+   means "this is where you are", so the two states never read as the same
+   signal at different strengths. -deep rather than the raw secondary because
+   this is a mark on the page background, where -deep is the AA-guaranteed
+   token. */
+.ch-filter:hover{border-color:var(--color-secondary-deep)}
 .ch-filter--on{background:var(--color-accent);color:var(--color-accent-ink);border-color:var(--color-accent)}
 
 /* ---- Shortcode slot (SureCart / SureDash / LatePoint / SureForms) ----

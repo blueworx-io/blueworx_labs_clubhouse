@@ -64,8 +64,15 @@ a{color:inherit;text-decoration:none}
 .ch-btn--accent:hover{background:color-mix(in oklab,var(--color-accent) 80%,var(--color-ink));box-shadow:0 12px 26px -14px color-mix(in oklab,var(--color-accent-deep) 85%,transparent)}
 .ch-btn--ink{background:var(--color-ink);color:var(--color-bg)}
 .ch-btn--ink:hover{background:color-mix(in oklab,var(--color-ink) 84%,var(--color-accent-deep));box-shadow:0 12px 26px -14px rgba(0,0,0,.4)}
-.ch-btn--ghost{border:1.5px solid var(--color-ink);color:var(--color-ink)}
-.ch-btn--ghost:hover{background:var(--color-ink);color:var(--color-bg)}
+/* The secondary action beside every primary CTA — the club's SECOND colour.
+   Outlined at rest in -deep (AA-guaranteed as a mark on this shell) and filling
+   with the raw secondary on hover, where -ink is the AA-guaranteed pairing.
+   Hover/active/disabled come from the engine, so they follow the club's own
+   colour instead of a fixed darken that would invert on a dark look. */
+.ch-btn--ghost{border:1.5px solid var(--color-secondary-deep);color:var(--color-secondary-deep)}
+.ch-btn--ghost:hover{background:var(--color-secondary);border-color:var(--color-secondary);color:var(--color-secondary-ink)}
+.ch-btn--ghost:active{background:var(--color-secondary-active);border-color:var(--color-secondary-active);color:var(--color-secondary-ink)}
+.ch-btn--ghost:disabled,.ch-btn--ghost[aria-disabled="true"]{border-color:var(--color-secondary-disabled);color:var(--color-secondary-disabled);pointer-events:none}
 /* The tile's hover lift follows the same rule as the buttons'. The border and
    ring stay — they carry the state without moving anything. */
 @media(prefers-reduced-motion:reduce){.ch-btn:hover,.ch-btn:active,.ch-home-hero__tile:hover{transform:none}}
@@ -281,10 +288,17 @@ a{color:inherit;text-decoration:none}
 .ch-band-wrap{padding-top:0}
 .ch-band{border-radius:var(--radius-xl);padding:64px 52px;text-align:center}
 @media(max-width:520px){.ch-band{padding:40px 22px}}
-.ch-band--accent{background:radial-gradient(120% 140% at 15% 0%,color-mix(in oklab,var(--color-accent) 82%,#fff),var(--color-accent) 60%);color:var(--color-accent-ink)}
+/* The gradient's highlight is the look's own paper, not a literal #fff — same
+   value on this look, but it now follows the look rather than assuming a light
+   one. (The remaining literals in these stylesheets are all rgba(0,0,0,.x)
+   shadow alphas, still awaiting a shadow token — see base.css's header.) */
+.ch-band--accent{background:radial-gradient(120% 140% at 15% 0%,color-mix(in oklab,var(--color-accent) 82%,var(--color-paper)),var(--color-accent) 60%);color:var(--color-accent-ink)}
 .ch-band--ink{background:linear-gradient(150deg,var(--color-ink),color-mix(in oklab,var(--color-ink) 80%,var(--color-accent-deep)));color:var(--color-bg)}
-.ch-eyebrow--band{background:var(--color-ink);color:var(--color-accent)}
-.ch-band--ink .ch-eyebrow--band{background:var(--color-accent);color:var(--color-accent-ink)}
+/* The section marker inside a call-to-action band — the club's SECOND colour.
+   On the accent band it must not repeat the accent it is sitting on, which is
+   precisely the job a second colour exists for. */
+.ch-eyebrow--band{background:var(--color-ink);color:var(--color-secondary)}
+.ch-band--ink .ch-eyebrow--band{background:var(--color-secondary);color:var(--color-secondary-ink)}
 .ch-band__title{font-family:var(--font-display);font-weight:800;font-size:clamp(32px,6vw,80px);letter-spacing:-.03em;margin-top:16px;line-height:.98;overflow-wrap:break-word}
 .ch-band__lede{max-width:46ch;margin:18px auto 0;opacity:.85;font-size:19px}
 .ch-band .ch-btn{margin-top:28px}
