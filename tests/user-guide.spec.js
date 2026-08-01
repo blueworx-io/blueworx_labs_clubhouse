@@ -28,22 +28,35 @@ test('the user guide describes this site, not a generic one @wordpress', async (
   }
 });
 
+// The visibility toggles live in a tab panel that is not the one the Setup
+// screen opens on, so the tab has to be opened before anything in it can be
+// clicked — its inputs are genuinely not on screen until then.
+async function setPageVisible(page, slug, visible) {
+  await page.goto('/wp-admin/admin.php?page=clubhouse-setup', { waitUntil: 'domcontentloaded' });
+  await page.getByRole('tab', { name: 'Visibility' }).click();
+
+  const toggle = page.locator(`input[name="clubhouse_page[${slug}]"]`);
+  await expect(toggle).toBeVisible();
+  if (visible) {
+    await toggle.check();
+  } else {
+    await toggle.uncheck();
+  }
+  await page.getByRole('button', { name: /save/i }).first().click({ force: true });
+  await expect(page.locator('.notice-success')).toBeVisible();
+}
+
 test('switching a page off changes what the guide says about it @wordpress', async ({ page }) => {
   await loginAsAdmin(page);
 
-  await page.goto('/wp-admin/admin.php?page=clubhouse-setup', { waitUntil: 'domcontentloaded' });
-  const toggle = page.locator('input[name="clubhouse_page[contact]"]');
-  await toggle.uncheck();
-  await page.getByRole('button', { name: /save/i }).first().click({ force: true });
+  await setPageVisible(page, 'contact', false);
 
   await page.goto('/wp-admin/admin.php?page=clubhouse-guide', { waitUntil: 'domcontentloaded' });
   const entry = page.locator('#guide-pages details', { hasText: 'Contact' }).first();
   await expect(entry).toContainText('Switched off');
 
   // Put it back so the rest of the suite sees the site it expects.
-  await page.goto('/wp-admin/admin.php?page=clubhouse-setup', { waitUntil: 'domcontentloaded' });
-  await page.locator('input[name="clubhouse_page[contact]"]').check();
-  await page.getByRole('button', { name: /save/i }).first().click({ force: true });
+  await setPageVisible(page, 'contact', true);
 });
 
 test('the guide opens every chapter so find-in-page can reach it @wordpress', async ({ page }) => {
