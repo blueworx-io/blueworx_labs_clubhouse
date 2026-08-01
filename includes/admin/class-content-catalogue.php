@@ -279,7 +279,7 @@ final class Blueworx_Clubhouse_Content_Catalogue {
 			array( 'tab' => 'calendar', 'label' => 'Calendar', 'sections' => array(
 				array( 'key' => 'hero', 'label' => 'Hero', 'type' => 'fields', 'store_page' => 'calendar', 'fields' => self::hero_filter_fields() ),
 				array( 'key' => 'booking', 'label' => 'Book a court', 'type' => 'fields', 'store_page' => 'calendar',
-					'note' => 'LatePoint’s booking calendar, above the fixtures. Switch the section off under Site setup → Visibility to drop it.',
+					'note' => 'The Bookings calendar, above the fixtures. Switch the section off under Site setup → Visibility to drop it.',
 					'fields' => self::booking_slot_fields() ),
 				array( 'key' => 'schedule', 'label' => 'Schedule', 'type' => 'fields', 'store_page' => 'calendar',
 					'fields' => array( self::f_text( 'heading', 'Heading' ), self::f_area( 'eyebrow', 'Intro' ) ),
@@ -292,13 +292,13 @@ final class Blueworx_Clubhouse_Content_Catalogue {
 			array( 'tab' => 'booking', 'label' => 'Book a court', 'sections' => array(
 				array( 'key' => 'hero', 'label' => 'Hero', 'type' => 'fields', 'store_page' => 'booking', 'fields' => self::hero_fields() ),
 				array( 'key' => 'services', 'label' => 'Sessions and services', 'type' => 'fields', 'store_page' => 'booking',
-					'note' => 'Ships with LatePoint’s services list. Switch the section off under Site setup → Visibility to drop it.',
+					'note' => 'Ships with the Bookings services list. Switch the section off under Site setup → Visibility to drop it.',
 					'fields' => self::booking_slot_fields() ),
 				array( 'key' => 'locations', 'label' => 'Courts and locations', 'type' => 'fields', 'store_page' => 'booking',
-					'note' => 'Ships with LatePoint’s locations list. Switch the section off under Site setup → Visibility to drop it.',
+					'note' => 'Ships with the Bookings locations list. Switch the section off under Site setup → Visibility to drop it.',
 					'fields' => self::booking_slot_fields() ),
 				array( 'key' => 'agents', 'label' => 'Coaches and staff', 'type' => 'fields', 'store_page' => 'booking',
-					'note' => 'Ships with LatePoint’s agents list. Switch the section off under Site setup → Visibility to drop it.',
+					'note' => 'Ships with the Bookings agents list. Switch the section off under Site setup → Visibility to drop it.',
 					'fields' => self::booking_slot_fields() ),
 			) ),
 		);
