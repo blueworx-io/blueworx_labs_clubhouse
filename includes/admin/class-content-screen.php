@@ -356,7 +356,7 @@ final class Blueworx_Clubhouse_Content_Screen {
 				// owner is not left guessing what a "shortcode" is.
 				$out .= '<textarea id="' . self::esc( $id ) . '" name="' . self::esc( $name ) . '" rows="3" class="clubhouse-input clubhouse-input--code" placeholder="[surecart_checkout]" spellcheck="false">'
 					. self::esc( (string) $value ) . '</textarea>'
-					. '<p class="clubhouse-help">Paste a shortcode from another plugin — SureCart, SureDash, LatePoint or SureForms. '
+					. '<p class="clubhouse-help">Paste a shortcode from another plugin — eCommerce, Bookings, Form Builder or SureDash. '
 					. 'Leave it empty and nothing is shown here.</p>';
 				break;
 			case 'url':

@@ -5,6 +5,12 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.49.0
+
+- **The bundled plugins now read as what they do.** SureCart is **eCommerce**, SureForms is **Form Builder**, LatePoint is **Bookings**, SureRank is **SEO Rank**, SureDonation is **Donations**, SureContact is **CRM Management** and SureMail is **Mail Reports** — in the plugins list, down the admin menu, in submenu items and page titles, and anywhere a Clubhouse screen names one of them.
+- **The name is all that changes.** Nothing about any plugin's own workings, screens, branding or licensing links has been touched, and no vendor file has been edited. Updates, licences and activation all work exactly as before, and the new names survive a plugin update — they are reapplied every time the screen is drawn rather than written into anything.
+- The list is held in one place, so adding a plugin or changing a name is a one-line change.
+
 ## 0.48.1
 
 - **Fixed: the highlighted phrase in a heading now always starts on the second line.** It used to break wherever the words happened to run out — "A club for every age and / ability" — which split the underline into two disconnected pieces and left one line running the full width and the next barely started. The highlight now gets a line of its own, so its underline or fill reads as one continuous mark.
