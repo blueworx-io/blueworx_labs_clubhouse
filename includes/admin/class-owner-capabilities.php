@@ -32,6 +32,19 @@ final class Blueworx_Clubhouse_Owner_Capabilities {
 	public const DISPLAY   = 'ClubHouse - Owner';
 	public const SETUP_CAP = 'manage_clubhouse';
 
+	/**
+	 * The key to Club Content — the club's own words and images, and the header
+	 * menu. Held by BOTH Clubhouse roles.
+	 *
+	 * A capability of its own rather than manage_clubhouse, which is what Club
+	 * Content used to be locked with. That was the one capability separating the
+	 * two roles, so gating content editing on it made the Content Editor unable to
+	 * edit content — the whole job the role exists for. Splitting the two means
+	 * "may configure the site" and "may edit its content" can differ, which is
+	 * exactly the distinction the two roles are meant to draw.
+	 */
+	public const CONTENT_CAP = 'edit_clubhouse_content';
+
 	public const EDITOR_ROLE    = 'clubhouse_content_editor';
 	public const EDITOR_DISPLAY = 'ClubHouse - Content Editor';
 
@@ -110,10 +123,14 @@ final class Blueworx_Clubhouse_Owner_Capabilities {
 	 * account that outranks the holder — without that guard it is a way to reset an
 	 * administrator's password and take the site.
 	 *
+	 * CONTENT_CAP is here — in the SHARED additions — rather than beside
+	 * SETUP_CAP, because editing the club's content is the one thing both roles
+	 * are for. It is what makes the Content Editor able to do its job.
+	 *
 	 * @return array<int,string>
 	 */
 	public static function added_caps(): array {
-		return array( 'read', 'list_users', 'edit_users' );
+		return array( 'read', 'list_users', 'edit_users', self::CONTENT_CAP );
 	}
 
 	/**
@@ -338,7 +355,7 @@ final class Blueworx_Clubhouse_Owner_Capabilities {
 
 	/** Caps added to the administrator role on activation (removed on uninstall). @return array<int,string> */
 	public static function admin_cap_grants(): array {
-		return array( self::SETUP_CAP );
+		return array( self::SETUP_CAP, self::CONTENT_CAP );
 	}
 
 	/**

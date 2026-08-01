@@ -16,7 +16,11 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 final class Blueworx_Clubhouse_Content_Controller {
 
-	public const CAPABILITY = Blueworx_Clubhouse_Owner_Capabilities::SETUP_CAP; // manage_clubhouse — owner + admin.
+	// edit_clubhouse_content — owner, content editor + admin. NOT manage_clubhouse:
+	// that is the one capability separating the two Clubhouse roles, so locking
+	// Club Content with it shut the Content Editor out of the only job the role
+	// exists for.
+	public const CAPABILITY = Blueworx_Clubhouse_Owner_Capabilities::CONTENT_CAP;
 	public const PAGE_SLUG  = 'clubhouse-site-content';
 	public const NONCE      = 'clubhouse_content_save';
 
