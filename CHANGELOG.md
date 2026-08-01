@@ -5,6 +5,12 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.57.0
+
+- **Your pages now describe themselves properly to Google and to anything they get shared into.** Each page carries a description, its own web address, and a preview card with your club name and logo, so a link posted to Facebook or WhatsApp shows the club rather than a bare URL.
+- **A new Search & sharing screen, under Clubhouse, tells you how each page reads.** Titles that are too long to fit in a search result, descriptions that are too short to be useful, images with no description, more than one main heading — in plain sentences, with nothing to score or chase.
+- **If you already run Yoast, Rank Math or similar, ClubHouse stays out of the way** and adds no tags of its own, so nothing is written twice. The report still works either way.
+
 ## 0.56.0
 
 - **The member login page is a real login now.** Signing in goes through WordPress itself, so anything else the site has installed still applies — two-factor, login limiters, security plugins — and when one of them refuses a sign-in, its own explanation is what the member reads.

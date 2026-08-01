@@ -57,6 +57,7 @@ require_once __DIR__ . '/admin/class-menu-panel.php';
 require_once __DIR__ . '/admin/class-plugin-labels.php';
 require_once __DIR__ . '/admin/class-admin-pages.php';
 require_once __DIR__ . '/admin/class-access-screen.php';
+require_once __DIR__ . '/admin/class-seo-screen.php';
 
 // Collections (pure)
 require_once __DIR__ . '/collections/interface-collections.php';
@@ -69,6 +70,7 @@ require_once __DIR__ . '/collections/class-collection-meta.php';
 // Frontend (pure)
 require_once __DIR__ . '/frontend/class-auth-view.php';
 require_once __DIR__ . '/frontend/class-auth-settings.php';
+require_once __DIR__ . '/frontend/class-seo.php';
 require_once __DIR__ . '/frontend/class-links.php';
 require_once __DIR__ . '/frontend/class-news.php';
 require_once __DIR__ . '/frontend/class-cta.php';
