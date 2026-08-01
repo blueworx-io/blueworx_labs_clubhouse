@@ -167,11 +167,53 @@ final class ContentControllerTest extends TestCase {
 	public function test_constants(): void {
 		$this->assertSame( 'clubhouse-site-content', Blueworx_Clubhouse_Content_Controller::PAGE_SLUG );
 		$this->assertSame( 'clubhouse_content_save', Blueworx_Clubhouse_Content_Controller::NONCE );
-		$this->assertSame( Blueworx_Clubhouse_Owner_Capabilities::SETUP_CAP, Blueworx_Clubhouse_Content_Controller::CAPABILITY );
+		// The content key, NOT manage_clubhouse. Locking this page with the one
+		// capability that separates the two Clubhouse roles is what shut the
+		// Content Editor out of the only job it exists for.
+		$this->assertSame( Blueworx_Clubhouse_Owner_Capabilities::CONTENT_CAP, Blueworx_Clubhouse_Content_Controller::CAPABILITY );
+		$this->assertNotSame( Blueworx_Clubhouse_Owner_Capabilities::SETUP_CAP, Blueworx_Clubhouse_Content_Controller::CAPABILITY );
 	}
 
 	public function test_owner_menu_allowlist_includes_site_content(): void {
 		$this->assertContains( 'clubhouse-site-content', Blueworx_Clubhouse_Owner_Capabilities::menu_allowlist() );
+	}
+
+	/** Both roles carry the menu AND the capability — a menu entry alone opens nothing. */
+	public function test_both_clubhouse_roles_can_reach_club_content(): void {
+		foreach ( Blueworx_Clubhouse_Owner_Capabilities::roles() as $role ) {
+			$this->assertContains(
+				Blueworx_Clubhouse_Content_Controller::PAGE_SLUG,
+				Blueworx_Clubhouse_Owner_Capabilities::menu_allowlist_for( $role ),
+				$role . ' menu'
+			);
+			$this->assertTrue(
+				Blueworx_Clubhouse_Owner_Capabilities::capabilities_for( $role )[ Blueworx_Clubhouse_Content_Controller::CAPABILITY ] ?? false,
+				$role . ' capability'
+			);
+		}
+	}
+
+	/**
+	 * Administrators are granted the content key on activation, or the page they
+	 * own would be locked to the two Clubhouse roles alone.
+	 */
+	public function test_administrators_are_granted_the_content_key(): void {
+		$this->assertContains(
+			Blueworx_Clubhouse_Owner_Capabilities::CONTENT_CAP,
+			Blueworx_Clubhouse_Owner_Capabilities::admin_cap_grants()
+		);
+	}
+
+	/**
+	 * The new capability must not be reachable by accident. It is not on any
+	 * stock WordPress role, so an ordinary editor or author still cannot open
+	 * Club Content.
+	 */
+	public function test_the_content_key_is_not_a_stock_wordpress_capability(): void {
+		$this->assertArrayNotHasKey(
+			Blueworx_Clubhouse_Owner_Capabilities::CONTENT_CAP,
+			Blueworx_Clubhouse_Owner_Capabilities::stock_editor_caps()
+		);
 	}
 
 	public function test_add_menu_registers_the_page(): void {

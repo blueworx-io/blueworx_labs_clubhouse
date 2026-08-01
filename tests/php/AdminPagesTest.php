@@ -79,19 +79,47 @@ final class AdminPagesTest extends TestCase {
 	}
 
 	/**
-	 * The Content Editor is the whole reason both gates are checked. It holds
-	 * edit_posts and has Collections on its menu, so Collections is open to it;
-	 * it does NOT hold manage_clubhouse, which is what Setup, Club Content and
-	 * Import are each registered with, so all three are shut — regardless of Club
-	 * Content sitting on its menu allowlist.
+	 * The Content Editor can edit content — Club Content and Collections — and
+	 * nothing that configures the site.
+	 *
+	 * Club Content used to be shut to it, because the page was locked with
+	 * manage_clubhouse, the single capability separating the two roles. That made
+	 * the Content Editor unable to edit content, which is the only job the role
+	 * exists for. It is now locked with edit_clubhouse_content, which both roles
+	 * hold.
+	 *
+	 * Setup stays shut: it configures the site. Import stays shut too — it
+	 * replaces every page's content wholesale AND can switch sections off, which
+	 * is a Visibility change this role is not allowed to make by hand.
 	 */
-	public function test_the_content_editor_reaches_only_what_its_capabilities_allow(): void {
+	public function test_the_content_editor_can_edit_content_but_not_configure_the_site(): void {
 		$editor = Blueworx_Clubhouse_Owner_Capabilities::EDITOR_ROLE;
 
-		$this->assertTrue( Blueworx_Clubhouse_Admin_Pages::role_can( $editor, Blueworx_Clubhouse_Collection_Types::CONTENT_SLUG ) );
-		$this->assertFalse( Blueworx_Clubhouse_Admin_Pages::role_can( $editor, Blueworx_Clubhouse_Setup_Controller::PAGE_SLUG ) );
-		$this->assertFalse( Blueworx_Clubhouse_Admin_Pages::role_can( $editor, Blueworx_Clubhouse_Content_Controller::PAGE_SLUG ) );
-		$this->assertFalse( Blueworx_Clubhouse_Admin_Pages::role_can( $editor, Blueworx_Clubhouse_Import_Controller::PAGE_SLUG ) );
+		$this->assertTrue( Blueworx_Clubhouse_Admin_Pages::role_can( $editor, Blueworx_Clubhouse_Content_Controller::PAGE_SLUG ), 'Club Content' );
+		$this->assertTrue( Blueworx_Clubhouse_Admin_Pages::role_can( $editor, Blueworx_Clubhouse_Collection_Types::CONTENT_SLUG ), 'Collections' );
+
+		$this->assertFalse( Blueworx_Clubhouse_Admin_Pages::role_can( $editor, Blueworx_Clubhouse_Setup_Controller::PAGE_SLUG ), 'Setup' );
+		$this->assertFalse( Blueworx_Clubhouse_Admin_Pages::role_can( $editor, Blueworx_Clubhouse_Import_Controller::PAGE_SLUG ), 'Import' );
+	}
+
+	/**
+	 * The two roles still differ by exactly one capability, and it is still
+	 * manage_clubhouse. Splitting content editing out of it must not have widened
+	 * the gap or narrowed it to nothing.
+	 */
+	public function test_the_two_roles_still_differ_by_manage_clubhouse_alone(): void {
+		$owner  = Blueworx_Clubhouse_Owner_Capabilities::capabilities();
+		$editor = Blueworx_Clubhouse_Owner_Capabilities::editor_capabilities();
+
+		$this->assertSame(
+			array( Blueworx_Clubhouse_Owner_Capabilities::SETUP_CAP ),
+			array_keys( array_diff_key( $owner, $editor ) )
+		);
+		$this->assertSame( array(), array_keys( array_diff_key( $editor, $owner ) ) );
+
+		// And both hold the content key.
+		$this->assertTrue( $owner[ Blueworx_Clubhouse_Owner_Capabilities::CONTENT_CAP ] ?? false );
+		$this->assertTrue( $editor[ Blueworx_Clubhouse_Owner_Capabilities::CONTENT_CAP ] ?? false );
 	}
 
 	/**

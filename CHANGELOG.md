@@ -5,6 +5,14 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.51.1
+
+- **Fixed: the ClubHouse - Content Editor could not edit content.** Club Content was locked with the one permission that separates the two Clubhouse roles, so the page the role exists to use was missing from its menu entirely. Content editors now get Club Content — the words, images and header menu on every page — as they were always meant to.
+- **Nothing else changed for either role.** Club Content now has a key of its own, held by content editors, owners and administrators alike, so "may set the site up" and "may edit its words" are finally separate questions. The two roles still differ by exactly that one permission, and every other limit is untouched.
+- **Import stays with owners and administrators.** It replaces every page's content in one go and can switch sections off — a setup change, not an edit — so it is deliberately not part of this.
+- Existing sites pick the change up on update; there is nothing to do.
+- Also fixed: five tests that check how another plugin's pages get the club header and footer were being run against the wrong test setup, so they failed on every local run. They now run only where they can work.
+
 ## 0.51.0
 
 - **A second club colour.** Clubhouse theming now takes a secondary colour alongside the primary, and it reaches the whole site: secondary buttons, the markers inside call-to-action bands, filter hover states, and the Clubhouse admin screens themselves. The primary keeps every job it already had, so the two read as a hierarchy rather than competing.
