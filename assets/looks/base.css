@@ -166,6 +166,10 @@ button,input,select,textarea{font-family:inherit}
    via :has() because .ch-footer's --flow-lg top margin must survive on every other
    page, where a different section is the last block. */
 .ch-main:has(> .ch-social:last-child) + .ch-footer{margin-top:0}
+/* Same reasoning for an article: "Keep reading" is a toned full-width band and
+   it closes the page, so the footer's flow margin would leave a strip of empty
+   paper between two blocks that should meet. */
+.ch-main:has(> .ch-related:last-child) + .ch-footer{margin-top:0}
 .ch-social__in{display:flex;align-items:center;justify-content:space-between;gap:var(--space-8);flex-wrap:wrap}
 .ch-social__title{font-family:var(--font-display);font-weight:800;font-size:clamp(26px,3.6vw,38px);letter-spacing:-.03em;line-height:1.05}
 .ch-social__lede{margin-top:10px;max-width:52ch;color:var(--color-ink-soft);font-size:16px}
