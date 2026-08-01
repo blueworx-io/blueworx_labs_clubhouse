@@ -126,4 +126,30 @@ final class SetupScreenTest extends TestCase {
 		// look-card preview `style="…"` attributes legitimately contain the escaped form.
 		$this->assertMatchesRegularExpression( '/\.clubhouse-setup\{[^}]*--font-display:\x27Syne\x27/', $html );
 	}
+
+	/**
+	 * Role tags sit in the top bar, under the page title. Passed in as prebuilt
+	 * markup rather than decided here: the screen is WordPress-free and has no way
+	 * to ask who is looking, so the controller hands it '' for anyone but an
+	 * administrator — and an owner's Setup screen must not leak the access map.
+	 */
+	public function test_role_tags_render_in_the_top_bar_when_supplied(): void {
+		$model              = $this->model();
+		$model['role_tags'] = Blueworx_Clubhouse_Access_Screen::role_tags( array( 'Administrator', 'ClubHouse - Owner' ) );
+		$html               = Blueworx_Clubhouse_Setup_Screen::render( $model );
+
+		$this->assertStringContainsString( 'class="clubhouse-roletags"', $html );
+		// Inside the head's title block, not floating elsewhere on the page.
+		$this->assertMatchesRegularExpression( '/clubhouse-head__titles.*clubhouse-roletags.*<\/div>/s', $html );
+	}
+
+	public function test_no_role_tags_for_anyone_but_an_administrator(): void {
+		$model              = $this->model();
+		$model['role_tags'] = '';
+		$this->assertStringNotContainsString( 'clubhouse-roletag', Blueworx_Clubhouse_Setup_Screen::render( $model ) );
+
+		// Absent entirely, not merely empty — an older caller's model must not fatal.
+		unset( $model['role_tags'] );
+		$this->assertStringNotContainsString( 'clubhouse-roletag', Blueworx_Clubhouse_Setup_Screen::render( $model ) );
+	}
 }

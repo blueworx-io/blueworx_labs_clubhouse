@@ -5,6 +5,14 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.50.0
+
+- **A new Settings → ClubHouse access page, for administrators only.** It lists everyone on the site holding a ClubHouse role, the role each of them holds, and every part of the Clubhouse they can actually open — plus the same read out per role and per section, so a question about access can be answered without logging in as somebody.
+- **Read-only, deliberately.** Nothing on the page can change anybody's access; roles are still set on the Users screen. A page that both reported access and edited it would be a way to grant it by accident.
+- **Every ClubHouse admin page now shows, in its top bar, which roles can open it.** Administrators only — an owner never sees the access map, on their own screens or anywhere else.
+- Access is judged on both of the things that actually decide it: the permission the page is registered with **and** whether the page survives that role's menu. A page a role has permission for but which is not on its menu is not a page that role can reach, and is now reported that way rather than being overstated.
+- The page reports what the site grants rather than a second copy of the rules, so it cannot drift from what is enforced.
+
 ## 0.49.0
 
 - **The bundled plugins now read as what they do.** SureCart is **eCommerce**, SureForms is **Form Builder**, LatePoint is **Bookings**, SureRank is **SEO Rank**, SureDonation is **Donations**, SureContact is **CRM Management** and SureMail is **Mail Reports** — in the plugins list, down the admin menu, in submenu items and page titles, and anywhere a Clubhouse screen names one of them.

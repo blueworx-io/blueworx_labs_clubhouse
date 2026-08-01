@@ -40,9 +40,12 @@ final class Blueworx_Clubhouse_Import_Screen {
 
 		$out  = '<div class="wrap clubhouse-wrap">';
 		$out .= '<div class="clubhouse-import">';
+		// Prebuilt tag markup from Access_Screen, empty for anyone but an
+		// administrator — the controller decides that, so this class stays WP-free.
 		$out .= '<div class="clubhouse-head"><div class="clubhouse-head__titles">'
 			. '<p class="clubhouse-eyebrow">Clubhouse · Import</p>'
-			. '<h1 class="clubhouse-head__h1">Import your content</h1></div></div>';
+			. '<h1 class="clubhouse-head__h1">Import your content</h1>'
+			. (string) ( $model['role_tags'] ?? '' ) . '</div></div>';
 
 		if ( '' !== $error ) {
 			$out .= '<div class="notice notice-error"><p>' . self::esc( $error ) . '</p></div>';

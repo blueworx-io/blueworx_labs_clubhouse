@@ -279,6 +279,7 @@ final class Blueworx_Clubhouse_Import_Controller {
 			'warnings'      => array(),
 			'images_needed' => array(),
 			'sections_off'  => array(),
+			'role_tags'     => Blueworx_Clubhouse_Access_Controller::role_tags_for( self::PAGE_SLUG ),
 		), $overrides );
 	}
 }

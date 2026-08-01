@@ -209,3 +209,9 @@ textarea.clubhouse-input { resize: vertical; }
 	color: var(--color-ink-soft);
 	list-style: disc;
 }
+
+/* Role access tags in the top bar (admins only). Mirrors admin-setup.css — the
+   two screens share .clubhouse-head but not a stylesheet. */
+.clubhouse-roletags { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 10px; }
+.clubhouse-roletags__k { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--color-ink-soft); margin-right: 2px; }
+.clubhouse-roletag { display: inline-flex; align-items: center; padding: 3px 10px; border: 1px solid var(--color-line); border-radius: 999px; font-size: 12px; line-height: 1.4; color: var(--color-ink); background: var(--color-accent-wash); white-space: nowrap; }

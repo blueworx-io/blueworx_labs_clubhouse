@@ -112,7 +112,7 @@ final class Blueworx_Clubhouse_Content_Screen {
 		$out .= '<style>' . (string) $model['font_face_css']
 			. '.clubhouse-content{' . self::css_tokens( $active_tokens ) . '}</style>';
 		$out .= '<div class="clubhouse-content">';
-		$out .= self::header();
+		$out .= self::header( (string) ( $model['role_tags'] ?? '' ) );
 		$out .= self::notices( $model['notices'], $action_url );
 		$out .= self::page_tabs( $catalogue, $action_url );
 		$out .= self::links_datalist( $model['menu_targets'] );
@@ -135,10 +135,14 @@ final class Blueworx_Clubhouse_Content_Screen {
 		return $out;
 	}
 
-	private static function header(): string {
+	/**
+	 * $role_tags is prebuilt markup from Access_Screen, empty for anyone but an
+	 * administrator — the controller decides that, so this class stays WP-free.
+	 */
+	private static function header( string $role_tags = '' ): string {
 		return '<header class="clubhouse-head">'
 			. '<div class="clubhouse-head__titles"><p class="clubhouse-eyebrow">Clubhouse · Club content</p>'
-			. '<h1 class="clubhouse-head__h1">Clubhouse Content</h1></div>'
+			. '<h1 class="clubhouse-head__h1">Clubhouse Content</h1>' . $role_tags . '</div>'
 			. '<a class="clubhouse-btn-link" href="admin.php?page=clubhouse-setup">Site setup →</a>'
 			. '</header>';
 	}

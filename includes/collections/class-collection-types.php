@@ -17,6 +17,13 @@ final class Blueworx_Clubhouse_Collection_Types {
 
 	public const CONTENT_SLUG = 'clubhouse-content';
 
+	/**
+	 * The capability the Collections menu is registered with. Named so the access
+	 * registry can report on this page from the same value that gates it, rather
+	 * than a second copy that could drift.
+	 */
+	public const CONTENT_CAP = 'edit_posts';
+
 	public const POST_TYPES = array(
 		'clubhouse_sport',
 		'clubhouse_team',
@@ -75,7 +82,7 @@ final class Blueworx_Clubhouse_Collection_Types {
 	 * Hooked on admin_menu.
 	 */
 	public static function register_content_menu(): void {
-		add_menu_page( 'Collections', 'Collections', 'edit_posts', self::CONTENT_SLUG, '', Blueworx_Clubhouse_Admin_Menu_Icons::data_uri( self::CONTENT_SLUG ), 4 );
+		add_menu_page( 'Collections', 'Collections', self::CONTENT_CAP, self::CONTENT_SLUG, '', Blueworx_Clubhouse_Admin_Menu_Icons::data_uri( self::CONTENT_SLUG ), 4 );
 		remove_submenu_page( self::CONTENT_SLUG, self::CONTENT_SLUG );
 	}
 }
