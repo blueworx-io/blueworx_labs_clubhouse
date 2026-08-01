@@ -331,4 +331,23 @@ final class ContentScreenTest extends TestCase {
 		$html = Blueworx_Clubhouse_Content_Screen::render( $model );
 		$this->assertStringContainsString( 'Your changes have been saved.', $html );
 	}
+
+	/**
+	 * Club Content carries the same top-bar role tags as every other ClubHouse
+	 * page, and the same rule: prebuilt markup from the controller, so an owner's
+	 * screen never shows the access map.
+	 */
+	public function test_role_tags_render_in_the_top_bar_when_supplied(): void {
+		$model              = $this->model();
+		$model['role_tags'] = Blueworx_Clubhouse_Access_Screen::role_tags( array( 'Administrator' ) );
+		$html               = Blueworx_Clubhouse_Content_Screen::render( $model );
+		$this->assertStringContainsString( 'class="clubhouse-roletags"', $html );
+		$this->assertMatchesRegularExpression( '/clubhouse-head__titles.*clubhouse-roletags.*<\/div>/s', $html );
+	}
+
+	public function test_no_role_tags_for_anyone_but_an_administrator(): void {
+		$model              = $this->model();
+		$model['role_tags'] = '';
+		$this->assertStringNotContainsString( 'clubhouse-roletag', Blueworx_Clubhouse_Content_Screen::render( $model ) );
+	}
 }

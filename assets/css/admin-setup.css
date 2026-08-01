@@ -132,3 +132,23 @@ body.toplevel_page_clubhouse-setup #wpfooter { display: none; }
 	.clubhouse-head__progress { text-align: left; }
 	.clubhouse-fields { grid-template-columns: 1fr; }
 }
+
+/* ---- Role access tags + the read-only access tables (admins only) ---- */
+/*
+ * Rendered inside .clubhouse-head__titles, under the h1, on every ClubHouse
+ * admin page. Deliberately quiet: this is reference information for an
+ * administrator, not a control, so it reads at label weight rather than
+ * competing with the page title.
+ */
+.clubhouse-roletags { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 10px; }
+.clubhouse-roletags__k { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--color-ink-soft); margin-right: 2px; }
+.clubhouse-roletag { display: inline-flex; align-items: center; padding: 3px 10px; border: 1px solid var(--color-line); border-radius: 999px; font-size: 12px; line-height: 1.4; color: var(--color-ink); background: var(--color-accent-wash); white-space: nowrap; }
+.clubhouse-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+
+.clubhouse-table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+.clubhouse-table th, .clubhouse-table td { text-align: left; vertical-align: top; padding: 12px 16px 12px 0; border-bottom: 1px solid var(--color-line); }
+.clubhouse-table thead th { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--color-ink-soft); font-weight: 600; padding-top: 0; }
+.clubhouse-table tbody th { font-weight: 600; }
+.clubhouse-table__name { display: block; }
+.clubhouse-table__sub { display: block; font-weight: 400; font-size: 12px; color: var(--color-ink-soft); margin-top: 2px; }
+.clubhouse-table__none { color: var(--color-ink-soft); font-size: 13px; }

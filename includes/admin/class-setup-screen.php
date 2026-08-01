@@ -56,7 +56,7 @@ final class Blueworx_Clubhouse_Setup_Screen {
 		$out .= '<style>' . $model['font_face_css']
 			. '.clubhouse-setup{' . self::css_tokens( $active_tokens ) . '}</style>';
 		$out .= '<div class="clubhouse-setup">';
-		$out .= self::header( $model['progress'] );
+		$out .= self::header( $model['progress'], (string) ( $model['role_tags'] ?? '' ) );
 		$out .= self::notices( $model['notices'] );
 		$out .= '<form method="post" action="' . self::esc( (string) $model['action_url'] ) . '" class="clubhouse-form">';
 		$out .= $model['nonce_field'];
@@ -93,12 +93,18 @@ final class Blueworx_Clubhouse_Setup_Screen {
 		return $out;
 	}
 
-	/** @param array{completed:int,total:int} $p */
-	private static function header( array $p ): string {
+	/**
+	 * $role_tags is prebuilt markup from Access_Screen, empty for anyone but an
+	 * administrator. Passed in rather than decided here so this class stays free
+	 * of WordPress — the controller owns the "is this an admin" question.
+	 *
+	 * @param array{completed:int,total:int} $p
+	 */
+	private static function header( array $p, string $role_tags = '' ): string {
 		$pct = 0 === $p['total'] ? 0 : (int) round( 100 * $p['completed'] / $p['total'] );
 		return '<header class="clubhouse-head">'
 			. '<div class="clubhouse-head__titles"><p class="clubhouse-eyebrow">Clubhouse · Site setup</p>'
-			. '<h1 class="clubhouse-head__h1">Clubhouse Setup</h1></div>'
+			. '<h1 class="clubhouse-head__h1">Clubhouse Setup</h1>' . $role_tags . '</div>'
 			. '<div class="clubhouse-head__progress"><p class="clubhouse-pct">' . $pct . '%</p>'
 			. '<p class="clubhouse-progress__label">' . (int) $p['completed'] . ' of ' . (int) $p['total'] . ' complete</p>'
 			. '<div class="clubhouse-progress__track"><div class="clubhouse-progress__bar" style="width:' . $pct . '%"></div></div>'

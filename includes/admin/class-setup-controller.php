@@ -228,6 +228,7 @@ final class Blueworx_Clubhouse_Setup_Controller {
 			'active_slug'   => null !== $active_look ? $active_look->slug() : '',
 			'look_tokens'   => $theming['tokens'],
 			'font_face_css' => $theming['faces'],
+			'role_tags'     => Blueworx_Clubhouse_Access_Controller::role_tags_for( self::PAGE_SLUG ),
 			'can_demo'      => $can_demo,
 			'demo_active'   => $can_demo && ( new Blueworx_Clubhouse_Demo_State( $storage ) )->is_on(),
 		);

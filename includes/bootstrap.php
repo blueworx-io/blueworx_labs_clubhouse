@@ -55,6 +55,8 @@ require_once __DIR__ . '/admin/class-content-catalogue.php';
 require_once __DIR__ . '/admin/class-content-screen.php';
 require_once __DIR__ . '/admin/class-menu-panel.php';
 require_once __DIR__ . '/admin/class-plugin-labels.php';
+require_once __DIR__ . '/admin/class-admin-pages.php';
+require_once __DIR__ . '/admin/class-access-screen.php';
 
 // Collections (pure)
 require_once __DIR__ . '/collections/interface-collections.php';
