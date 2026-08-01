@@ -756,7 +756,7 @@ final class SectionsTest extends TestCase {
 
 		foreach ( array( 'ch-hero' => $standard, 'ch-home-hero' => $home, 'ch-hero-filter' => $filtered ) as $block => $html ) {
 			$this->assertStringContainsString( '<span class="ch-eyebrow">Eyebrow here</span>', $html, "{$block} shares the eyebrow" );
-			$this->assertStringContainsString( '<h1 class="' . $block . '__title">Lead <span class="' . $block . '__hl">highlight.</span></h1>', $html, "{$block} shares the title head" );
+			$this->assertStringContainsString( '<h1 class="' . $block . '__title"><span class="' . $block . '__lead">Lead </span><span class="' . $block . '__hl">highlight.</span></h1>', $html, "{$block} shares the title head" );
 		}
 	}
 
@@ -1060,5 +1060,51 @@ final class SectionsTest extends TestCase {
 		$this->assertSame( 'We will point you to ', Blueworx_Clubhouse_Sections::lead_with_gap( 'We will point you to ' ) );
 		$this->assertSame( 'Squash-', Blueworx_Clubhouse_Sections::lead_with_gap( 'Squash-' ) );
 		$this->assertSame( '', Blueworx_Clubhouse_Sections::lead_with_gap( '' ) );
+	}
+
+	/**
+	 * The lead carries its own span in all three hero variants — that span is what
+	 * the stylesheet makes a block, and it is the whole mechanism putting the
+	 * highlight on line two. Asserted per variant because the rule is the
+	 * component's, not the home page's.
+	 */
+	public function test_every_hero_wraps_its_lead_so_the_highlight_owns_line_two(): void {
+		$hero = Blueworx_Clubhouse_Sections::hero( array(
+			'eyebrow' => 'Est. 1974', 'title_lead' => 'A club for', 'title_highlight' => 'every age and ability',
+			'lede' => 'Nine sports.', 'cta_primary' => 'Join', 'cta_primary_href' => '#',
+			'cta_secondary' => 'Tour', 'cta_secondary_href' => '#',
+			'image' => '', 'image_alt' => '', 'image_caption' => '',
+		) );
+		$this->assertStringContainsString( '<span class="ch-hero__lead">A club for </span><span class="ch-hero__hl">', $hero );
+
+		$home = Blueworx_Clubhouse_Sections::home_hero( array(
+			'eyebrow' => 'Est. 1974', 'title_lead' => 'A club for', 'title_highlight' => 'every age and ability',
+			'lede' => 'Nine sports.', 'cta_primary' => '', 'cta_primary_href' => '',
+			'cta_secondary' => '', 'cta_secondary_href' => '',
+			'image' => '', 'image_alt' => '', 'tiles' => array(),
+		) );
+		$this->assertStringContainsString( '<span class="ch-home-hero__lead">A club for </span><span class="ch-home-hero__hl">', $home );
+
+		$filter = Blueworx_Clubhouse_Sections::hero_filter( array(
+			'eyebrow' => 'Sports', 'title_lead' => 'Nine sports.', 'title_highlight' => 'one club.',
+			'lede' => 'Pick a sport.', 'filter_label' => 'Filter by sport', 'filters' => array(),
+		) );
+		$this->assertStringContainsString( '<span class="ch-hero-filter__lead">Nine sports. </span><span class="ch-hero-filter__hl">', $filter );
+	}
+
+	/**
+	 * A heading that is nothing but its highlight emits no lead span. A block-level
+	 * empty span would print a blank first line above the highlight — the same
+	 * unbalanced heading this change exists to remove.
+	 */
+	public function test_a_hero_with_no_lead_emits_no_lead_span(): void {
+		$html = Blueworx_Clubhouse_Sections::hero( array(
+			'eyebrow' => 'Contact', 'title_lead' => '', 'title_highlight' => 'Talk to us.',
+			'lede' => 'Start here.', 'cta_primary' => 'Email', 'cta_primary_href' => '#',
+			'cta_secondary' => 'Call', 'cta_secondary_href' => '#',
+			'image' => '', 'image_alt' => '', 'image_caption' => '',
+		) );
+		$this->assertStringNotContainsString( 'ch-hero__lead', $html );
+		$this->assertStringContainsString( '__title"><span class="ch-hero__hl">', $html );
 	}
 }

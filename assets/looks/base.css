@@ -34,6 +34,28 @@
 button,input,select,textarea{font-family:inherit}
 
 /*
+ * Hero headings: the highlighted phrase always starts on line two.
+ *
+ * The lead and the highlight are inline siblings inside one <h1>, so left to
+ * natural wrapping the highlight breaks wherever the text runs out — splitting
+ * its underline or fill into two disconnected segments and leaving one line
+ * full-bleed and the next short. Making the lead a block gives the highlight a
+ * line of its own, so the treatment renders as a single continuous run.
+ *
+ * A rule of the component, not per-page content: it applies to all three hero
+ * variants and therefore to every page built from them, at every viewport
+ * (there is no breakpoint at which the lead stops being a block).
+ *
+ * text-wrap:balance is the companion rule — a highlight long enough to wrap on
+ * its own splits evenly rather than orphaning a single word on the last line.
+ * Unsupported browsers simply wrap as before; nothing depends on it.
+ *
+ * Single-class specificity, like everything else here, so a look can override.
+ */
+.ch-hero__lead,.ch-home-hero__lead,.ch-hero-filter__lead{display:block}
+.ch-hero__hl,.ch-home-hero__hl,.ch-hero-filter__hl{text-wrap:balance}
+
+/*
  * Moved verbatim from court-side.css. These six components were styled by that
  * look alone, leaving sports, teams, events and calendar unstyled under
  * Floodlight and Members House. They were already fully tokenized, so they are
