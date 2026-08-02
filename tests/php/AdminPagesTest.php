@@ -19,7 +19,7 @@ final class AdminPagesTest extends TestCase {
 		foreach ( Blueworx_Clubhouse_Admin_Pages::all() as $page ) {
 			$by_slug[ $page['slug'] ] = $page;
 		}
-		$this->assertCount( 5, $by_slug );
+		$this->assertCount( 6, $by_slug );
 
 		$this->assertSame(
 			Blueworx_Clubhouse_Setup_Controller::CAPABILITY,
@@ -64,7 +64,7 @@ final class AdminPagesTest extends TestCase {
 				$page['slug']
 			);
 		}
-		$this->assertCount( 5, Blueworx_Clubhouse_Admin_Pages::pages_for_role( 'administrator' ) );
+		$this->assertCount( 6, Blueworx_Clubhouse_Admin_Pages::pages_for_role( 'administrator' ) );
 	}
 
 	/**
@@ -73,7 +73,7 @@ final class AdminPagesTest extends TestCase {
 	 */
 	public function test_the_owner_reaches_every_page(): void {
 		$this->assertCount(
-			5,
+			6,
 			Blueworx_Clubhouse_Admin_Pages::pages_for_role( Blueworx_Clubhouse_Owner_Capabilities::ROLE )
 		);
 	}
@@ -100,6 +100,24 @@ final class AdminPagesTest extends TestCase {
 
 		$this->assertFalse( Blueworx_Clubhouse_Admin_Pages::role_can( $editor, Blueworx_Clubhouse_Setup_Controller::PAGE_SLUG ), 'Setup' );
 		$this->assertFalse( Blueworx_Clubhouse_Admin_Pages::role_can( $editor, Blueworx_Clubhouse_Import_Controller::PAGE_SLUG ), 'Import' );
+	}
+
+	/**
+	 * The guide hangs off Club Content rather than Setup, and this is why: the
+	 * Content Editor holds the capability it is locked with, but Setup is stripped
+	 * from that role's menu — parented there, the guide would be invisible to the
+	 * role most likely to need it.
+	 */
+	public function test_the_content_editor_can_open_the_user_guide(): void {
+		$guide = Blueworx_Clubhouse_Admin_Pages::find( Blueworx_Clubhouse_Guide_Controller::PAGE_SLUG );
+		$this->assertNotNull( $guide );
+		$this->assertSame( Blueworx_Clubhouse_Content_Controller::PAGE_SLUG, $guide['menu'] );
+		$this->assertTrue(
+			Blueworx_Clubhouse_Admin_Pages::role_can(
+				Blueworx_Clubhouse_Owner_Capabilities::EDITOR_ROLE,
+				Blueworx_Clubhouse_Guide_Controller::PAGE_SLUG
+			)
+		);
 	}
 
 	/**

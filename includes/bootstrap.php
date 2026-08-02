@@ -58,6 +58,8 @@ require_once __DIR__ . '/admin/class-plugin-labels.php';
 require_once __DIR__ . '/admin/class-admin-pages.php';
 require_once __DIR__ . '/admin/class-access-screen.php';
 require_once __DIR__ . '/admin/class-seo-screen.php';
+require_once __DIR__ . '/admin/class-guide.php';
+require_once __DIR__ . '/admin/class-guide-screen.php';
 
 // Collections (pure)
 require_once __DIR__ . '/collections/interface-collections.php';
