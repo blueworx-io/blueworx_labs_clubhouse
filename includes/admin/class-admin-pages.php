@@ -68,6 +68,13 @@ final class Blueworx_Clubhouse_Admin_Pages {
 				'description' => 'Bring a club\'s existing content in, under Club Content.',
 			),
 			array(
+				'slug'        => Blueworx_Clubhouse_Seo_Controller::PAGE_SLUG,
+				'label'       => 'Search &amp; sharing',
+				'cap'         => Blueworx_Clubhouse_Seo_Controller::CAPABILITY,
+				'menu'        => Blueworx_Clubhouse_Setup_Controller::PAGE_SLUG,
+				'description' => 'How each page reads in search results and when it is shared.',
+			),
+			array(
 				'slug'        => Blueworx_Clubhouse_Collection_Types::CONTENT_SLUG,
 				'label'       => 'Collections',
 				'cap'         => Blueworx_Clubhouse_Collection_Types::CONTENT_CAP,

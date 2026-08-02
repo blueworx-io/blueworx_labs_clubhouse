@@ -13,13 +13,13 @@ use PHPUnit\Framework\TestCase;
  */
 final class AdminPagesTest extends TestCase {
 
-	/** The registry names the four ClubHouse pages, and takes each cap from the page that enforces it. */
+	/** The registry names every ClubHouse page, and takes each cap from the page that enforces it. */
 	public function test_the_registry_reads_its_caps_from_the_pages_themselves(): void {
 		$by_slug = array();
 		foreach ( Blueworx_Clubhouse_Admin_Pages::all() as $page ) {
 			$by_slug[ $page['slug'] ] = $page;
 		}
-		$this->assertCount( 4, $by_slug );
+		$this->assertCount( 5, $by_slug );
 
 		$this->assertSame(
 			Blueworx_Clubhouse_Setup_Controller::CAPABILITY,
@@ -64,16 +64,16 @@ final class AdminPagesTest extends TestCase {
 				$page['slug']
 			);
 		}
-		$this->assertCount( 4, Blueworx_Clubhouse_Admin_Pages::pages_for_role( 'administrator' ) );
+		$this->assertCount( 5, Blueworx_Clubhouse_Admin_Pages::pages_for_role( 'administrator' ) );
 	}
 
 	/**
-	 * The Owner holds manage_clubhouse and carries all four pages on its menu
-	 * allowlist, so it reaches all four.
+	 * The Owner holds manage_clubhouse and carries every page on its menu
+	 * allowlist, so it reaches all of them.
 	 */
 	public function test_the_owner_reaches_every_page(): void {
 		$this->assertCount(
-			4,
+			5,
 			Blueworx_Clubhouse_Admin_Pages::pages_for_role( Blueworx_Clubhouse_Owner_Capabilities::ROLE )
 		);
 	}

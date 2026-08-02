@@ -3,7 +3,7 @@
  * Plugin Name:       Blueworx Labs | Clubhouse
  * Plugin URI:        https://github.com/blueworx-io/blueworx_labs_clubhouse
  * Description:        Blueworx Labs Clubhouse WordPress plugin.
- * Version:           0.56.0
+ * Version:           0.57.0
  * Requires at least: 6.0
  * Requires PHP:      8.2
  * Author:            Blueworx
@@ -21,7 +21,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'BLUEWORX_LABS_CLUBHOUSE_VERSION', '0.56.0' );
+define( 'BLUEWORX_LABS_CLUBHOUSE_VERSION', '0.57.0' );
 define( 'BLUEWORX_LABS_CLUBHOUSE_FILE', __FILE__ );
 define( 'BLUEWORX_LABS_CLUBHOUSE_DIR', plugin_dir_path( __FILE__ ) );
 define( 'BLUEWORX_LABS_CLUBHOUSE_URL', plugin_dir_url( __FILE__ ) );
@@ -31,6 +31,7 @@ require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/frontend/class-clubhouse-co
 require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/frontend/class-frontend.php';
 require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/frontend/class-external-chrome.php';
 require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/frontend/class-auth.php';
+require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/frontend/class-seo-head.php';
 require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/admin/class-admin-menu-icons.php';
 require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/admin/class-setup-controller.php';
 require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/admin/class-content-controller.php';
@@ -38,6 +39,7 @@ require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/admin/class-demo-controller
 require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/admin/class-owner-role.php';
 require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/admin/class-plugin-labels-controller.php';
 require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/admin/class-access-controller.php';
+require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/admin/class-seo-controller.php';
 require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/import/class-import-applier.php';
 require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/import/class-import-controller.php';
 
@@ -58,6 +60,7 @@ function blueworx_labs_clubhouse_init() {
 	Blueworx_Clubhouse_Frontend::register();
 	Blueworx_Clubhouse_External_Chrome::register();
 	Blueworx_Clubhouse_Auth::register();
+	Blueworx_Clubhouse_Seo_Head::register();
 	Blueworx_Clubhouse_Admin_Menu_Icons::register();
 	Blueworx_Clubhouse_Setup_Controller::register();
 	Blueworx_Clubhouse_Content_Controller::register();
@@ -67,6 +70,7 @@ function blueworx_labs_clubhouse_init() {
 	Blueworx_Clubhouse_Import_Controller::register();
 	Blueworx_Clubhouse_Plugin_Labels_Controller::register();
 	Blueworx_Clubhouse_Access_Controller::register();
+	Blueworx_Clubhouse_Seo_Controller::register();
 	add_action( 'admin_menu', array( Blueworx_Clubhouse_Collection_Types::class, 'register_content_menu' ) );
 }
 add_action( 'plugins_loaded', 'blueworx_labs_clubhouse_init' );
