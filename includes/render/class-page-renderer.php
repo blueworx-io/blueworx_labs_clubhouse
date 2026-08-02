@@ -280,14 +280,19 @@ final class Blueworx_Clubhouse_Page_Renderer {
 		$banner_text = $banner_on
 			? self::cget( $content, 'global', 'header', 'banner', 'Summer sign-ups are open — register your interest for 2026/27 →' )
 			: '';
+		// A signed-in member is offered the way out where they found the way in,
+		// rather than being sent to wp-admin to find it. Off WordPress the state
+		// seam is unset, so the preview keeps showing "Log in".
+		$auth        = Blueworx_Clubhouse_Auth_View::state();
+		$signed_in   = '' !== $auth['logged_in'] && '' !== $auth['logout_url'];
 		return Blueworx_Clubhouse_Sections::header( array(
 			'club_name'   => $club,
 			'banner'      => $banner_text,
 			'banner_href' => self::cget( $content, 'global', 'header', 'banner_href', Blueworx_Clubhouse_Links::url( 'membership' ) ),
 			'nav'         => Blueworx_Clubhouse_Menu::current()->items( $collections, $visibility ),
 			'active'      => $active,
-			'login'       => 'Log in',
-			'login_href'  => Blueworx_Clubhouse_Links::url( 'login' ),
+			'login'       => $signed_in ? 'Log out' : 'Log in',
+			'login_href'  => $signed_in ? $auth['logout_url'] : Blueworx_Clubhouse_Links::url( 'login' ),
 			'join'        => self::cget( $content, 'global', 'header', 'join', Blueworx_Clubhouse_Cta::JOIN ),
 			'join_href'   => self::cget( $content, 'global', 'header', 'join_href', Blueworx_Clubhouse_Links::url( 'membership' ) ),
 			'logo'        => $logo_url,
@@ -936,19 +941,25 @@ final class Blueworx_Clubhouse_Page_Renderer {
 		$out  = self::shell_header( $club, Blueworx_Clubhouse_Links::url( 'login' ), $visibility, $collections, $logo_url, $content ) . '<main class="ch-main" id="ch-main" tabindex="-1">';
 
 		if ( $visibility->is_section_visible( 'login', 'form' ) ) {
-			$out .= self::anchored( 'login', 'form', Blueworx_Clubhouse_Sections::auth( array(
+			// The card draws whichever step of the account journey this request is
+			// on. Off WordPress — the preview, the unit tests — the state seam is
+			// unset and returns the plain sign-in form a first-time visitor sees.
+			$state = Blueworx_Clubhouse_Auth_View::state();
+			$out  .= self::anchored( 'login', 'form', Blueworx_Clubhouse_Sections::auth( array(
 				'eyebrow'        => 'Members',
 				'heading'        => self::cget( $content, 'login', 'form', 'heading', 'Log in to your account' ),
 				'lede'           => self::cget( $content, 'login', 'form', 'lede', 'Access your membership, bookings and club events.' ),
-				'email_label'    => 'Email',
+				'email_label'    => 'Email or username',
 				'password_label' => 'Password',
 				'remember_label' => 'Remember me',
 				'forgot_label'   => 'Forgot password?',
-				'forgot_href'    => '',
+				'forgot_href'    => Blueworx_Clubhouse_Links::auth_url( Blueworx_Clubhouse_Auth_View::FORGOT ),
+				'signin_href'    => Blueworx_Clubhouse_Links::url( 'login' ),
 				'submit_label'   => 'Log in',
 				'join_prompt'    => 'Not a member yet?',
 				'join_label'     => Blueworx_Clubhouse_Cta::JOIN,
 				'join_href'      => Blueworx_Clubhouse_Links::url( 'membership' ),
+				'state'          => $state,
 			) ) );
 		}
 		$out .= '</main>' . self::shell_footer( $club, $visibility, $branding, $content );

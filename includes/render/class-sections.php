@@ -969,35 +969,172 @@ final class Blueworx_Clubhouse_Sections {
 	}
 
 	/**
-	 * Member sign-in — a single centred card. Unlike a content section, a narrow
-	 * centred column is the expected shape for an auth form, so the width cap is
-	 * deliberate here (it is the only thing on the page). The heading is an <h1>:
-	 * this page has no hero, so the card carries the page's main heading.
+	 * The member account card — sign in, request a reset link, set a new
+	 * password, and the confirmations in between. One card renders all of them
+	 * because they are one journey: a member who asks for a reset link should
+	 * stay on the page they started on, in the club's own look, rather than being
+	 * handed to wp-login.php halfway through.
+	 *
+	 * Unlike a content section, a narrow centred column is the expected shape for
+	 * an auth form, so the width cap is deliberate — it is the only thing on the
+	 * page. The heading is an <h1>: this page has no hero, so the card carries the
+	 * page's main heading.
 	 *
 	 * @param array{eyebrow:string,heading:string,lede:string,email_label:string,
 	 *   password_label:string,remember_label:string,forgot_label:string,forgot_href:string,
-	 *   submit_label:string,join_prompt:string,join_label:string,join_href:string} $data
+	 *   submit_label:string,join_prompt:string,join_label:string,join_href:string,
+	 *   state:array{view:string,error:string,notice:string,form_action:string,hidden:string,redirect_to:string,logged_in:string}} $data
 	 */
 	public static function auth( array $data ): string {
-		$forgot = '' !== $data['forgot_href']
-			? '<a class="ch-auth__forgot" href="' . self::e( $data['forgot_href'] ) . '">' . self::e( $data['forgot_label'] ) . '</a>' : '';
-		$form = '<form class="ch-auth__form" onsubmit="return false">'
-			. '<label class="ch-field"><span class="ch-field__label">' . self::e( $data['email_label'] ) . '</span>'
-			. '<input class="ch-field__input" type="email" name="email" autocomplete="email"></label>'
-			. '<label class="ch-field"><span class="ch-field__label">' . self::e( $data['password_label'] ) . '</span>'
-			. '<input class="ch-field__input" type="password" name="password" autocomplete="current-password"></label>'
-			. '<div class="ch-auth__row">'
-			. '<label class="ch-auth__remember"><input type="checkbox" name="remember"><span>' . self::e( $data['remember_label'] ) . '</span></label>'
-			. $forgot . '</div>'
-			. '<button class="ch-btn ch-btn--accent ch-auth__submit" type="submit">' . self::e( $data['submit_label'] ) . '</button></form>';
-		return '<section class="ch-sec"><div class="ch-wrap ch-auth-wrap"><div class="ch-auth">'
-			. '<span class="ch-eyebrow">' . self::e( $data['eyebrow'] ) . '</span>'
-			. '<h1 class="ch-auth__title">' . self::e( $data['heading'] ) . '</h1>'
-			. '<p class="ch-auth__lede">' . self::e( $data['lede'] ) . '</p>'
-			. $form
-			. '<p class="ch-auth__alt">' . self::e( $data['join_prompt'] ) . ' '
-			. '<a class="ch-auth__alt-link" href="' . self::e( $data['join_href'] ) . '">' . self::e( $data['join_label'] ) . '</a></p>'
+		$state = $data['state'];
+		$view  = $state['view'];
+
+		$copy = self::auth_copy( $view, $data );
+		$body = self::auth_message( $state )
+			. self::auth_form( $view, $state, $data )
+			. self::auth_alt( $view, $data );
+
+		return '<section class="ch-sec"><div class="ch-wrap ch-auth-wrap"><div class="ch-auth" data-auth-view="' . self::e( $view ) . '">'
+			. '<span class="ch-eyebrow">' . self::e( $copy['eyebrow'] ) . '</span>'
+			. '<h1 class="ch-auth__title">' . self::e( $copy['heading'] ) . '</h1>'
+			. '<p class="ch-auth__lede">' . self::e( $copy['lede'] ) . '</p>'
+			. $body
 			. '</div></div></section>';
+	}
+
+	/**
+	 * Heading and lede per view. Sign-in keeps whatever the owner wrote in the
+	 * content editor; the recovery screens are fixed wording, because they explain
+	 * a mechanism rather than describe the club.
+	 *
+	 * @param array<string,mixed> $data
+	 * @return array{eyebrow:string,heading:string,lede:string}
+	 */
+	private static function auth_copy( string $view, array $data ): array {
+		switch ( $view ) {
+			case 'forgot':
+				return array(
+					'eyebrow' => 'Members',
+					'heading' => 'Forgotten your password?',
+					'lede'    => 'Enter the email address or username on your membership and we will send you a link to set a new password.',
+				);
+			case 'sent':
+				return array(
+					'eyebrow' => 'Members',
+					'heading' => 'Check your email',
+					'lede'    => 'The link is valid for 24 hours. If nothing arrives, check your spam folder before trying again.',
+				);
+			case 'reset':
+				return array(
+					'eyebrow' => 'Members',
+					'heading' => 'Set a new password',
+					'lede'    => 'Choose something you do not use anywhere else.',
+				);
+			case 'resetok':
+				return array(
+					'eyebrow' => 'Members',
+					'heading' => 'Password updated',
+					'lede'    => 'You can sign in with your new password now.',
+				);
+			case 'signedout':
+				return array(
+					'eyebrow' => 'Members',
+					'heading' => 'You are signed out',
+					'lede'    => 'Sign back in whenever you need your membership, bookings or club events.',
+				);
+		}
+		return array(
+			'eyebrow' => (string) $data['eyebrow'],
+			'heading' => (string) $data['heading'],
+			'lede'    => (string) $data['lede'],
+		);
+	}
+
+	/**
+	 * The error or confirmation banner. role="alert" so a screen reader announces
+	 * a rejected sign-in rather than leaving the member wondering what happened.
+	 *
+	 * @param array{error:string,notice:string} $state
+	 */
+	private static function auth_message( array $state ): string {
+		if ( '' !== $state['error'] ) {
+			return '<p class="ch-auth__msg ch-auth__msg--error" role="alert">' . self::e( $state['error'] ) . '</p>';
+		}
+		if ( '' !== $state['notice'] ) {
+			return '<p class="ch-auth__msg ch-auth__msg--ok" role="status">' . self::e( $state['notice'] ) . '</p>';
+		}
+		return '';
+	}
+
+	/**
+	 * @param array<string,mixed> $state
+	 * @param array<string,mixed> $data
+	 */
+	private static function auth_form( string $view, array $state, array $data ): string {
+		// The confirmation views have nothing to submit — the link back to sign in
+		// is the whole call to action, and an empty form would only invite a click.
+		if ( in_array( $view, array( 'sent', 'resetok', 'signedout' ), true ) ) {
+			return '';
+		}
+
+		$action = (string) $state['form_action'];
+		$hidden = (string) $state['hidden'];
+		if ( '' !== $state['redirect_to'] ) {
+			$hidden .= '<input type="hidden" name="redirect_to" value="' . self::e( (string) $state['redirect_to'] ) . '">';
+		}
+		// No action attribute in the preview, where there is nothing to post to;
+		// the form still renders so the page can be reviewed.
+		$open = '<form class="ch-auth__form" method="post"'
+			. ( '' !== $action ? ' action="' . self::e( $action ) . '"' : '' ) . '>';
+
+		if ( 'forgot' === $view ) {
+			return $open . $hidden
+				. '<input type="hidden" name="clubhouse_auth_action" value="forgot">'
+				. '<label class="ch-field"><span class="ch-field__label">Email or username</span>'
+				. '<input class="ch-field__input" type="text" name="user_login" autocomplete="username" required></label>'
+				. '<button class="ch-btn ch-btn--accent ch-auth__submit" type="submit">Send reset link</button></form>';
+		}
+
+		if ( 'reset' === $view ) {
+			return $open . $hidden
+				. '<input type="hidden" name="clubhouse_auth_action" value="reset">'
+				. '<label class="ch-field"><span class="ch-field__label">New password</span>'
+				. '<input class="ch-field__input" type="password" name="pass1" autocomplete="new-password" required></label>'
+				. '<label class="ch-field"><span class="ch-field__label">Repeat new password</span>'
+				. '<input class="ch-field__input" type="password" name="pass2" autocomplete="new-password" required></label>'
+				. '<button class="ch-btn ch-btn--accent ch-auth__submit" type="submit">Save password</button></form>';
+		}
+
+		$forgot = '' !== $data['forgot_href']
+			? '<a class="ch-auth__forgot" href="' . self::e( (string) $data['forgot_href'] ) . '">' . self::e( (string) $data['forgot_label'] ) . '</a>'
+			: '';
+		return $open . $hidden
+			. '<input type="hidden" name="clubhouse_auth_action" value="signin">'
+			// type="text", not type="email": a WordPress account can be signed into
+			// with either its username or its email, and type="email" would have the
+			// browser refuse a perfectly valid username before it was ever sent.
+			. '<label class="ch-field"><span class="ch-field__label">' . self::e( (string) $data['email_label'] ) . '</span>'
+			. '<input class="ch-field__input" type="text" name="user_login" autocomplete="username" required></label>'
+			. '<label class="ch-field"><span class="ch-field__label">' . self::e( (string) $data['password_label'] ) . '</span>'
+			. '<input class="ch-field__input" type="password" name="user_password" autocomplete="current-password" required></label>'
+			. '<div class="ch-auth__row">'
+			. '<label class="ch-auth__remember"><input type="checkbox" name="remember" value="1"><span>' . self::e( (string) $data['remember_label'] ) . '</span></label>'
+			. $forgot . '</div>'
+			. '<button class="ch-btn ch-btn--accent ch-auth__submit" type="submit">' . self::e( (string) $data['submit_label'] ) . '</button></form>';
+	}
+
+	/**
+	 * The footer line under the card: an invitation to join on the sign-in form,
+	 * and a way back to it from everywhere else.
+	 *
+	 * @param array<string,mixed> $data
+	 */
+	private static function auth_alt( string $view, array $data ): string {
+		if ( 'signin' === $view ) {
+			return '<p class="ch-auth__alt">' . self::e( (string) $data['join_prompt'] ) . ' '
+				. '<a class="ch-auth__alt-link" href="' . self::e( (string) $data['join_href'] ) . '">' . self::e( (string) $data['join_label'] ) . '</a></p>';
+		}
+		return '<p class="ch-auth__alt"><a class="ch-auth__alt-link" href="' . self::e( (string) $data['signin_href'] ) . '">Back to sign in</a></p>';
 	}
 
 	/**

@@ -5,6 +5,13 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.56.0
+
+- **The member login page is a real login now.** Signing in goes through WordPress itself, so anything else the site has installed still applies — two-factor, login limiters, security plugins — and when one of them refuses a sign-in, its own explanation is what the member reads.
+- **Members who forget their password can sort it out without leaving the club site.** Asking for a reset link, and setting the new password, both happen on the club's own login page in the club's own look, instead of dropping the member onto the bare WordPress login screen halfway through.
+- **You can choose where members land after signing in and after signing out** — Setup → Members. Leave either blank to send them to your front page. A member who was heading somewhere else when they were asked to sign in is returned there instead, and an address on another website is ignored, so the login page cannot be used to bounce people off your site.
+- Signed-in members get a working "Log out" in the header where "Log in" used to be.
+
 ## 0.55.0
 
 - **The club has a news section.** A News page listing everything the club has published — newest story given the top spot, the rest in a grid, filtered by category and paged when there is enough to page.

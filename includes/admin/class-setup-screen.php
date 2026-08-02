@@ -67,6 +67,7 @@ final class Blueworx_Clubhouse_Setup_Screen {
 		$out .= '<div class="clubhouse-tabs" role="tablist">';
 		$out .= '<button type="button" class="clubhouse-tab is-active" data-tab="look" role="tab" aria-selected="true">Base Look &amp; Branding</button>';
 		$out .= '<button type="button" class="clubhouse-tab" data-tab="visibility" role="tab" aria-selected="false">Visibility</button>';
+		$out .= '<button type="button" class="clubhouse-tab" data-tab="members" role="tab" aria-selected="false">Members</button>';
 		if ( $can_demo ) {
 			$out .= '<button type="button" class="clubhouse-tab" data-tab="demo" role="tab" aria-selected="false">Demo Mode</button>';
 		}
@@ -77,6 +78,8 @@ final class Blueworx_Clubhouse_Setup_Screen {
 			. self::branding_area( $model['branding'] ) . '</section>';
 		$out .= '<section class="clubhouse-panel" data-panel="visibility" role="tabpanel">'
 			. self::visibility_area( $model['inventory'], $model['visibility'] ) . '</section>';
+		$out .= '<section class="clubhouse-panel" data-panel="members" role="tabpanel">'
+			. self::members_area( $model['members'] ?? array() ) . '</section>';
 		if ( $can_demo ) {
 			$out .= '<section class="clubhouse-panel" data-panel="demo" role="tabpanel">'
 				. self::demo_area( (bool) ( $model['demo_active'] ?? false ) ) . '</section>';
@@ -322,6 +325,30 @@ final class Blueworx_Clubhouse_Setup_Screen {
 		return '<label class="clubhouse-toggle"><input type="checkbox" name="' . self::esc( $name ) . '" value="1"' . $checked . '>'
 			. '<span class="clubhouse-toggle__track"><span class="clubhouse-toggle__thumb"></span></span>'
 			. '<span class="clubhouse-toggle__label">' . self::esc( $label ) . '</span></label>';
+	}
+
+	/**
+	 * Where members land after signing in and out.
+	 *
+	 * Both fields are optional and both mean "the front page" when empty, which is
+	 * the right answer for most clubs — so this is not a setup step and is not
+	 * counted in progress. An off-site address is refused when the redirect
+	 * happens rather than when it is typed, so the help text says so plainly.
+	 *
+	 * @param array<string,string> $m
+	 */
+	private static function members_area( array $m ): string {
+		$out  = '<div class="clubhouse-step"><p class="clubhouse-step__k">Members</p>'
+			. '<h2 class="clubhouse-step__h">After signing in</h2>';
+		$out .= '<p class="clubhouse-step__lede">Where a member goes once they have signed in, and once they have signed out. '
+			. 'Leave either blank to send them to your front page. If a member was heading somewhere else when they were '
+			. 'asked to sign in, they are returned there instead. Addresses on other websites are ignored.</p>';
+		$out .= '<div class="clubhouse-fields">';
+		$out .= self::text_field( 'clubhouse_post_login', 'After signing in', (string) ( $m['post_login'] ?? '' ) );
+		$out .= self::text_field( 'clubhouse_post_logout', 'After signing out', (string) ( $m['post_logout'] ?? '' ) );
+		$out .= '</div>';
+		$out .= '<p class="clubhouse-help">For example <code>/membership/</code> for a page on this site.</p>';
+		return $out . '</div>';
 	}
 
 	/** Admin-only demo-mode panel. Not a setup step and not counted in progress. */

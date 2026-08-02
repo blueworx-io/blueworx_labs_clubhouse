@@ -99,6 +99,12 @@ function blueworx_clubhouse_preview_document(): string {
 	// article renderer directly, which is what the front end does too.
 	Blueworx_Clubhouse_News::set_source( new Blueworx_Clubhouse_Demo_Posts() );
 	Blueworx_Clubhouse_News::set_page( $_GET[ Blueworx_Clubhouse_News::PAGE_PARAM ] ?? 1 );
+	// The login page's account screens are part of the design, so ?clubhouse_auth=
+	// selects one here too. No form action and no nonce: there is nothing to post
+	// to without WordPress, and the card renders its form either way.
+	Blueworx_Clubhouse_Auth_View::set_state(
+		array( 'view' => Blueworx_Clubhouse_Auth_View::view( $_GET[ Blueworx_Clubhouse_Auth_View::ACTION ] ?? '' ) )
+	);
 	$collections = new Blueworx_Clubhouse_Demo_Collections();
 	$body        = 'post' === $page
 		? Blueworx_Clubhouse_Page_Renderer::post( $branding, $visibility, $collections, '', null, $filter )

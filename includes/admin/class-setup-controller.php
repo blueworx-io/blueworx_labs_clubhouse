@@ -134,6 +134,17 @@ final class Blueworx_Clubhouse_Setup_Controller {
 			$branding->set_favicon( sanitize_text_field( (string) $post['clubhouse_favicon'] ) );
 		}
 
+		// 3b. Where members land after signing in and out. Stored as typed: an
+		// off-site target is refused at redirect time, not at save time, so an owner
+		// who pastes a full URL for their own site is not told they are wrong.
+		$auth = new Blueworx_Clubhouse_Auth_Settings( $storage );
+		if ( isset( $post['clubhouse_post_login'] ) ) {
+			$auth->set_post_login( sanitize_text_field( (string) $post['clubhouse_post_login'] ) );
+		}
+		if ( isset( $post['clubhouse_post_logout'] ) ) {
+			$auth->set_post_logout( sanitize_text_field( (string) $post['clubhouse_post_logout'] ) );
+		}
+
 		// 4. Visibility — a checkbox is present only when ticked; absence = hidden.
 		$pages    = isset( $post['clubhouse_page'] ) && is_array( $post['clubhouse_page'] ) ? $post['clubhouse_page'] : array();
 		$sections = isset( $post['clubhouse_section'] ) && is_array( $post['clubhouse_section'] ) ? $post['clubhouse_section'] : array();
@@ -268,10 +279,16 @@ final class Blueworx_Clubhouse_Setup_Controller {
 			}
 		}
 
+		$auth = new Blueworx_Clubhouse_Auth_Settings( $storage );
+
 		return array(
 			'nonce_field'   => $nonce_field,
 			'action_url'    => $action_url,
 			'notices'       => $notices,
+			'members'       => array(
+				'post_login'  => $auth->get_post_login(),
+				'post_logout' => $auth->get_post_logout(),
+			),
 			'progress'      => Blueworx_Clubhouse_Setup_Progress::compute( $branding, $active_look ?? new Blueworx_Clubhouse_Court_Side(), '' !== $active_slug, (bool) $storage->get( self::VIS_SAVED_KEY, false ) ),
 			'looks'         => $looks,
 			'color_palette' => self::PALETTE,
