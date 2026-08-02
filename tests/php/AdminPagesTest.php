@@ -19,7 +19,7 @@ final class AdminPagesTest extends TestCase {
 		foreach ( Blueworx_Clubhouse_Admin_Pages::all() as $page ) {
 			$by_slug[ $page['slug'] ] = $page;
 		}
-		$this->assertCount( 5, $by_slug );
+		$this->assertCount( 6, $by_slug );
 
 		$this->assertSame(
 			Blueworx_Clubhouse_Setup_Controller::CAPABILITY,
@@ -64,7 +64,7 @@ final class AdminPagesTest extends TestCase {
 				$page['slug']
 			);
 		}
-		$this->assertCount( 5, Blueworx_Clubhouse_Admin_Pages::pages_for_role( 'administrator' ) );
+		$this->assertCount( 6, Blueworx_Clubhouse_Admin_Pages::pages_for_role( 'administrator' ) );
 	}
 
 	/**
@@ -73,7 +73,7 @@ final class AdminPagesTest extends TestCase {
 	 */
 	public function test_the_owner_reaches_every_page(): void {
 		$this->assertCount(
-			5,
+			6,
 			Blueworx_Clubhouse_Admin_Pages::pages_for_role( Blueworx_Clubhouse_Owner_Capabilities::ROLE )
 		);
 	}
