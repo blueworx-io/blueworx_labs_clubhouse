@@ -745,7 +745,9 @@ final class Blueworx_Clubhouse_Page_Renderer {
 		// Tiers sit above the fold — the pricing is the primary intent, so it comes
 		// straight after the hero, before the supporting "Why join" benefits.
 		if ( $visibility->is_section_visible( 'membership', 'tiers' ) ) {
-			$out .= self::anchored( 'membership', 'tiers', Blueworx_Clubhouse_Sections::tier_grid( self::membership_tiers( $content ) ) );
+			// h2 here: on Membership the grid follows the page h1 directly, with no
+			// section heading between them.
+			$out .= self::anchored( 'membership', 'tiers', Blueworx_Clubhouse_Sections::tier_grid( self::membership_tiers( $content ), 2 ) );
 		}
 		if ( $visibility->is_section_visible( 'membership', 'why' ) ) {
 			$out .= self::anchored( 'membership', 'why', Blueworx_Clubhouse_Sections::benefit_grid( array(

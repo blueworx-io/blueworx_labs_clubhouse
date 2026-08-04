@@ -15,8 +15,18 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 final class Blueworx_Clubhouse_Sections {
 
+	/**
+	 * Escape a value for output, exactly once.
+	 *
+	 * Text reaches here already entity-encoded often enough that escaping blind
+	 * printed the entity itself on the page: WordPress hands back titles and
+	 * excerpts with &#8217; for an apostrophe and &#038; for an ampersand, and a
+	 * headline read "Mental &#038; Physical Challenges to Overcome". Decoding
+	 * first makes this idempotent — text that is already plain is unchanged, and
+	 * text that arrives encoded is encoded once rather than twice.
+	 */
 	private static function e( string $s ): string {
-		return htmlspecialchars( $s, ENT_QUOTES, 'UTF-8' );
+		return htmlspecialchars( html_entity_decode( $s, ENT_QUOTES | ENT_HTML5, 'UTF-8' ), ENT_QUOTES, 'UTF-8' );
 	}
 
 	/**
@@ -293,7 +303,7 @@ final class Blueworx_Clubhouse_Sections {
 			// An unset/unknown icon degrades to no glyph rather than a warning.
 			$svg = self::TILE_ICONS[ $t['icon'] ?? '' ] ?? '';
 			$ico = '' !== $svg ? '<span class="ch-home-hero__tile-ico" aria-hidden="true">' . $svg . '</span>' : '';
-			$tiles .= '<a class="ch-home-hero__tile" role="listitem" href="' . self::e( $href ) . '">'
+			$tiles .= '<a class="ch-home-hero__tile" href="' . self::e( $href ) . '">'
 				. $ico
 				. '<span class="ch-home-hero__tile-label">' . self::e( $t['label'] ?? '' ) . '</span>'
 				. '<span class="ch-home-hero__tile-arrow" aria-hidden="true">→</span></a>';
@@ -324,7 +334,10 @@ final class Blueworx_Clubhouse_Sections {
 			. self::hero_head( 'ch-home-hero', $data )
 			. '<p class="ch-home-hero__lede">' . self::e( $data['lede'] ) . '</p>'
 			. $cta
-			. '<div class="ch-home-hero__foot"' . $tiles_id . ' role="list">' . $tiles . '</div>'
+			// A row of links is a set of links, not a list: role="list" here forced a
+			// role="listitem" onto each <a>, which overrode the link role and had a
+			// screen reader announce "list item" where a link was.
+			. '<nav class="ch-home-hero__foot"' . $tiles_id . ' aria-label="Quick links">' . $tiles . '</nav>'
 			. '</div></section>';
 	}
 
@@ -411,11 +424,11 @@ final class Blueworx_Clubhouse_Sections {
 	public static function quick_tiles( array $tiles ): string {
 		$items = '';
 		foreach ( $tiles as $t ) {
-			$items .= '<a class="ch-tiles__tile" role="listitem" href="' . self::e( $t['href'] ) . '">'
+			$items .= '<a class="ch-tiles__tile" href="' . self::e( $t['href'] ) . '">'
 				. '<span class="ch-tiles__label">' . self::e( $t['label'] ) . '</span>'
 				. '<span class="ch-tiles__arrow" aria-hidden="true">→</span></a>';
 		}
-		return '<section class="ch-tiles-sec"><div class="ch-wrap"><div class="ch-tiles" role="list">' . $items . '</div></div></section>';
+		return '<section class="ch-tiles-sec"><div class="ch-wrap"><nav class="ch-tiles" aria-label="Quick links">' . $items . '</nav></div></section>';
 	}
 
 	/** @param array<int,string> $items */
@@ -590,7 +603,16 @@ final class Blueworx_Clubhouse_Sections {
 	 * @param array<int,array{eyebrow:string,name:string,price:string,period:string,
 	 *   features:array<int,string>,recommended:bool,cta_label:string,cta_href:string}> $tiers
 	 */
-	public static function tier_grid( array $tiers ): string {
+	/**
+	 * The tier name's heading level depends on what sits above the grid: on Home
+	 * it follows a section h2, so h3 is right; on Membership the grid comes
+	 * straight after the page h1, where h3 skips a level. The caller knows which,
+	 * so it passes the level rather than this guessing.
+	 *
+	 * @param 2|3 $level
+	 */
+	public static function tier_grid( array $tiers, int $level = 3 ): string {
+		$h     = 2 === $level ? 'h2' : 'h3';
 		$cards = '';
 		foreach ( $tiers as $t ) {
 			$cls   = $t['recommended'] ? 'ch-tier ch-tier--pop' : 'ch-tier';
@@ -601,7 +623,7 @@ final class Blueworx_Clubhouse_Sections {
 			}
 			$cards .= '<div class="' . $cls . '" role="listitem">'
 				. '<span class="ch-tier__k">' . self::e( $t['eyebrow'] ) . '</span>'
-				. '<h3 class="ch-tier__name">' . self::e( $t['name'] ) . '</h3>'
+				. '<' . $h . ' class="ch-tier__name">' . self::e( $t['name'] ) . '</' . $h . '>'
 				. '<div class="ch-tier__amt">' . self::e( $t['price'] ) . '<small>' . self::e( $t['period'] ) . '</small></div>'
 				. '<ul class="ch-tier__feats" role="list">' . $feats . '</ul>'
 				. '<a class="ch-btn ' . $btn . ' ch-tier__cta" href="' . self::e( $t['cta_href'] ) . '">' . self::e( $t['cta_label'] ) . '</a>'
@@ -650,17 +672,32 @@ final class Blueworx_Clubhouse_Sections {
 	 * @param array<string,array{label:string,body:string}> $panels ordered; first is active
 	 */
 	private static function tab_group( array $panels ): string {
+		// Ids must be unique per document — Home carries two tab groups — but also
+		// stable, so rendering the same page twice gives byte-identical output. A
+		// counter satisfied the first and broke the second, so the group is named
+		// after its own first panel key ('fixtures', 'sports'), which is unique per
+		// page and the same on every render.
+		$seq    = (string) array_key_first( $panels );
 		$bar    = '';
 		$bodies = '';
 		$first  = true;
 		foreach ( $panels as $key => $panel ) {
-			$bar    .= '<button type="button" class="ch-tabs__btn' . ( $first ? ' ch-tabs__btn--on' : '' )
+			$btn_id   = 'ch-tab-' . $seq . '-' . self::e( $key );
+			$panel_id = 'ch-tabpanel-' . $seq . '-' . self::e( $key );
+			// A roving tabindex is what makes a tablist one stop rather than one per
+			// tab: arrow keys move between tabs, Tab moves out to the panel.
+			$bar    .= '<button type="button" role="tab" id="' . $btn_id . '"'
+				. ' aria-selected="' . ( $first ? 'true' : 'false' ) . '"'
+				. ' aria-controls="' . $panel_id . '"'
+				. ' tabindex="' . ( $first ? '0' : '-1' ) . '"'
+				. ' class="ch-tabs__btn' . ( $first ? ' ch-tabs__btn--on' : '' )
 				. '" data-ch-tabbtn="' . self::e( $key ) . '">' . self::e( $panel['label'] ) . '</button>';
-			$bodies .= '<div class="' . ( $first ? '' : 'ch-tabs__panel--off' ) . '" data-ch-tab="' . self::e( $key ) . '">'
+			$bodies .= '<div role="tabpanel" id="' . $panel_id . '" aria-labelledby="' . $btn_id . '" tabindex="0"'
+				. ' class="' . ( $first ? '' : 'ch-tabs__panel--off' ) . '" data-ch-tab="' . self::e( $key ) . '">'
 				. $panel['body'] . '</div>';
 			$first   = false;
 		}
-		return '<div class="ch-tabs" data-ch-tabs><div class="ch-tabs__bar">' . $bar . '</div>' . $bodies . '</div>';
+		return '<div class="ch-tabs" data-ch-tabs><div class="ch-tabs__bar" role="tablist">' . $bar . '</div>' . $bodies . '</div>';
 	}
 
 	/**
@@ -669,13 +706,27 @@ final class Blueworx_Clubhouse_Sections {
 	 * left the second one dead. Guarded so emitting it once per section is safe.
 	 */
 	private const TAB_SCRIPT = '<script>(function(){if(window.__chTabs)return;window.__chTabs=1;'
+		// One selector does both the class swap and the ARIA state, so the two can
+		// never drift: a sighted user and a screen reader user are told the same
+		// thing about which tab is on.
+		. 'function sel(r,b){var k=b.getAttribute("data-ch-tabbtn");'
+		. 'r.querySelectorAll("[data-ch-tabbtn]").forEach(function(x){var on=x===b;'
+		. 'x.classList.toggle("ch-tabs__btn--on",on);x.setAttribute("aria-selected",on?"true":"false");'
+		. 'x.setAttribute("tabindex",on?"0":"-1")});'
+		. 'r.querySelectorAll("[data-ch-tab]").forEach(function(p){p.classList.toggle("ch-tabs__panel--off",p.getAttribute("data-ch-tab")!==k)});}'
 		. 'document.addEventListener("click",function(e){'
 		. 'var b=e.target&&e.target.closest?e.target.closest("[data-ch-tabbtn]"):null;if(!b)return;'
+		. 'var r=b.closest("[data-ch-tabs]");if(!r)return;sel(r,b);});'
+		// Arrow keys are what a tablist is expected to answer to; without them the
+		// roving tabindex would strand a keyboard user on the first tab.
+		. 'document.addEventListener("keydown",function(e){'
+		. 'var b=e.target&&e.target.closest?e.target.closest("[data-ch-tabbtn]"):null;if(!b)return;'
+		. 'var d=e.key==="ArrowRight"?1:e.key==="ArrowLeft"?-1:0;if(!d)return;'
 		. 'var r=b.closest("[data-ch-tabs]");if(!r)return;'
-		. 'var k=b.getAttribute("data-ch-tabbtn");'
-		. 'r.querySelectorAll("[data-ch-tabbtn]").forEach(function(x){x.classList.toggle("ch-tabs__btn--on",x===b)});'
-		. 'r.querySelectorAll("[data-ch-tab]").forEach(function(p){p.classList.toggle("ch-tabs__panel--off",p.getAttribute("data-ch-tab")!==k)});'
-		. '})})();</script>';
+		. 'var t=Array.prototype.slice.call(r.querySelectorAll("[data-ch-tabbtn]"));'
+		. 'var n=t[(t.indexOf(b)+d+t.length)%t.length];if(!n)return;'
+		. 'e.preventDefault();sel(r,n);n.focus();});'
+		. '})();</script>';
 
 	/**
 	 * @param array{eyebrow:string,heading:string,
@@ -784,9 +835,11 @@ final class Blueworx_Clubhouse_Sections {
 			foreach ( $col['links'] as $l ) {
 				$links .= '<a class="ch-footer__link" href="' . self::e( $l['href'] ) . '">' . self::e( $l['label'] ) . '</a>';
 			}
-			$cols .= '<div class="ch-footer__col"><h4 class="ch-footer__h">' . self::e( $col['title'] ) . '</h4>' . $links . '</div>';
+			// h2, not h4: the footer is its own landmark and nothing above these sits
+			// at h3, so h4 jumped two levels and broke heading navigation on every page.
+			$cols .= '<div class="ch-footer__col"><h2 class="ch-footer__h">' . self::e( $col['title'] ) . '</h2>' . $links . '</div>';
 		}
-		$nl = '<div class="ch-footer__col ch-footer__nl"><h4 class="ch-footer__h">' . self::e( $data['newsletter']['heading'] ) . '</h4>'
+		$nl = '<div class="ch-footer__col ch-footer__nl"><h2 class="ch-footer__h">' . self::e( $data['newsletter']['heading'] ) . '</h2>'
 			. '<p class="ch-footer__lede">' . self::e( $data['newsletter']['lede'] ) . '</p>'
 			. '<form class="ch-footer__form" onsubmit="return false">'
 			. '<input class="ch-footer__input" type="email" placeholder="' . self::e( $data['newsletter']['placeholder'] ) . '" aria-label="Email address">'
@@ -801,7 +854,7 @@ final class Blueworx_Clubhouse_Sections {
 			. '<div class="ch-footer__brand-col">'
 			. '<a class="ch-brand" href="' . self::e( Blueworx_Clubhouse_Links::url( 'home' ) ) . '">' . self::e( $data['club_name'] ) . '</a>'
 			. '<p class="ch-footer__tagline">' . self::e( $data['tagline'] ) . '</p>'
-			. '<div class="ch-footer__socials ch-social__links" role="list">' . self::social_links( $data['socials'], true ) . '</div></div>'
+			. '<div class="ch-footer__socials ch-social__links">' . self::social_links( $data['socials'], true ) . '</div></div>'
 			. $cols . $nl . '</div>'
 			. $legal_row
 			. '</div></footer>';
@@ -961,7 +1014,7 @@ final class Blueworx_Clubhouse_Sections {
 			. ( '' !== $data['info']['phone']
 				? '<a class="ch-contact__link" href="tel:' . self::e( $tel ) . '">' . self::e( $data['info']['phone'] ) . '</a>'
 				: '' )
-			. '<div class="ch-contact__connect ch-social__links" role="list">' . self::social_links( $data['info']['socials'] ) . '</div></aside>';
+			. '<div class="ch-contact__connect ch-social__links">' . self::social_links( $data['info']['socials'] ) . '</div></aside>';
 		return '<section class="ch-sec"><div class="ch-wrap">'
 			. '<span class="ch-eyebrow">' . self::e( $data['eyebrow'] ) . '</span>'
 			. '<h2 class="ch-sec__title">' . self::e( $data['heading'] ) . '</h2>'
@@ -1222,7 +1275,7 @@ final class Blueworx_Clubhouse_Sections {
 			$icon  = $icons[ $name ] ?? '';
 			$class = $icon_only ? 'ch-social__link ch-social__link--icon' : 'ch-social__link';
 			$label = $icon_only ? '' : '<span class="ch-social__label">' . self::e( $name ) . '</span>';
-			$out .= '<a class="' . $class . '" role="listitem" href="' . self::e( $url ) . '" aria-label="Follow us on ' . self::e( $name ) . '">'
+			$out .= '<a class="' . $class . '" href="' . self::e( $url ) . '" aria-label="Follow us on ' . self::e( $name ) . '">'
 				. '<span class="ch-social__icon" aria-hidden="true">' . $icon . '</span>'
 				. $label . '</a>';
 		}
@@ -1492,7 +1545,7 @@ final class Blueworx_Clubhouse_Sections {
 			$social  = '<div class="ch-wrap ch-social__in">'
 				. '<div class="ch-social__text"><h2 class="ch-social__title">' . self::e( $data['heading'] ) . '</h2>'
 				. '<p class="ch-social__lede">' . self::e( $data['lede'] ) . '</p></div>'
-				. '<div class="ch-social__links" role="list">' . $links . '</div>'
+				. '<div class="ch-social__links">' . $links . '</div>'
 				. '</div>';
 		}
 		$cols = '';
