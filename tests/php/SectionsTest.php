@@ -583,10 +583,33 @@ final class SectionsTest extends TestCase {
 		$this->assertStringNotContainsString( 'href="#"', $html );
 	}
 
-	public function test_news_cards_are_not_links(): void {
+	/**
+	 * Cards with no story behind them — the editable fallback a club sees before it
+	 * has published anything — stay articles. A card that looks clickable and is
+	 * not is worse than one that never invited the click.
+	 */
+	public function test_news_cards_without_a_story_are_not_links(): void {
 		$html = Blueworx_Clubhouse_Sections::news_cards( $this->newsData() );
 		$this->assertStringNotContainsString( 'href="#"', $html );
 		$this->assertStringNotContainsString( '<a class="ch-news__card"', $html );
+		// Articles keep list semantics; only links must not carry them.
+		$this->assertStringContainsString( '<div class="ch-news" role="list">', $html );
+	}
+
+	/** A card backed by a real post is a link to it, and is announced as a link. */
+	public function test_news_cards_with_a_story_link_to_it(): void {
+		$data                    = $this->newsData();
+		$data['cards'][0]['href'] = 'https://example.test/first-story/';
+		$data['cards'][1]['href'] = 'https://example.test/second-story/';
+		$data['cards'][2]['href'] = 'https://example.test/third-story/';
+		$html                    = Blueworx_Clubhouse_Sections::news_cards( $data );
+
+		$this->assertSame( 3, substr_count( $html, '<a class="ch-news__card ch-news__card--link"' ) );
+		$this->assertStringContainsString( 'href="https://example.test/first-story/"', $html );
+		// role="list" would force role="listitem" onto each anchor and override the
+		// link role — the trap the hero tiles and social icons fell into.
+		$this->assertStringNotContainsString( 'role="list"', $html );
+		$this->assertStringNotContainsString( 'role="listitem"', $html );
 	}
 
 	/**
