@@ -5,6 +5,11 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.59.0
+
+- **The news on your home page is now your actual news.** The "From the clubhouse" band shows your three most recent posts — headline, category, date and picture — and each one opens the story. It used to be three headlines typed in by hand that went nowhere.
+- **Nothing to set up.** Publish a post and it appears. Until you have published anything, the band keeps showing whatever is written under Club Content → Home, so a new club never sees an empty space.
+
 ## 0.58.3
 
 - **News is reachable at last.** The News page shipped with nothing linking to it, so it could only be found by typing the address. It now sits in the footer alongside the rest of the club, and the news section on the home page ends with a link through to it.

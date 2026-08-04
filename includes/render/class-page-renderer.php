@@ -541,7 +541,29 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				array( 'image' => '', 'image_alt' => 'Junior footballers', 'tag' => 'Sections', 'date' => '28 Jun', 'title' => 'Junior Football signs 40 new players' ),
 				array( 'image' => '', 'image_alt' => 'Volunteers', 'tag' => 'Volunteering', 'date' => '24 Jun', 'title' => 'Volunteers needed for the Open Day' ),
 			);
-			$items = self::citems( $content, 'home', 'news', $default );
+			// Real posts first. The section is the club's news, so it should show the
+			// club's actual news: the three most recent posts, each linking to the
+			// story. The editable items stay as the fallback for a site that has not
+			// published yet — better three written headlines than an empty band —
+			// and for one that has switched its news section off, where the articles
+			// are not clubhouse-dressed and a link would lead somewhere bare.
+			$source = $visibility->is_page_visible( 'news' ) ? Blueworx_Clubhouse_News::source() : null;
+			$posts  = null !== $source ? $source->recent( 3 ) : array();
+			$items  = array() !== $posts
+				? array_map(
+					static function ( array $p ): array {
+						return array(
+							'image'     => (string) ( $p['image'] ?? '' ),
+							'image_alt' => (string) ( $p['image_alt'] ?? '' ),
+							'tag'       => (string) ( $p['category'] ?? '' ),
+							'date'      => (string) ( $p['date'] ?? '' ),
+							'title'     => (string) ( $p['title'] ?? '' ),
+							'href'      => (string) ( $p['href'] ?? '' ),
+						);
+					},
+					$posts
+				)
+				: self::citems( $content, 'home', 'news', $default );
 			$out .= self::anchored( 'home', 'news', Blueworx_Clubhouse_Sections::news_cards( array(
 				'eyebrow'    => self::cget( $content, 'home', 'news', 'eyebrow', 'Latest news' ),
 				'heading'    => self::cget( $content, 'home', 'news', 'heading', 'From the clubhouse' ),
@@ -556,6 +578,8 @@ final class Blueworx_Clubhouse_Page_Renderer {
 							'tag'       => (string) ( $i['tag'] ?? '' ),
 							'date'      => (string) ( $i['date'] ?? '' ),
 							'title'     => (string) ( $i['title'] ?? '' ),
+							// Empty for the editable fallback, which has no story behind it.
+							'href'      => (string) ( $i['href'] ?? '' ),
 						);
 					},
 					$items

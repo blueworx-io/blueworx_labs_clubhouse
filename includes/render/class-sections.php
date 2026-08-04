@@ -735,11 +735,28 @@ final class Blueworx_Clubhouse_Sections {
 	public static function news_cards( array $data ): string {
 		$cards = '';
 		foreach ( $data['cards'] as $c ) {
-			$cards .= '<article class="ch-news__card" role="listitem">'
-				. self::media( $c['image'], $c['image_alt'], 'ch-news__media' )
+			$body = self::media( $c['image'], $c['image_alt'], 'ch-news__media' )
 				. '<div class="ch-news__meta"><span class="ch-news__tag">' . self::e( $c['tag'] ) . '</span>'
 				. '<span class="ch-news__date">' . self::e( $c['date'] ) . '</span></div>'
-				. '<h3 class="ch-news__title">' . self::e( $c['title'] ) . '</h3></article>';
+				. '<h3 class="ch-news__title">' . self::e( $c['title'] ) . '</h3>';
+			// A card that has a story behind it is a link; one that does not stays an
+			// article, because a card that looks clickable and is not is worse than a
+			// card that never invited the click. role="listitem" is dropped on the
+			// link so the anchor keeps its own role.
+			$href    = (string) ( $c['href'] ?? '' );
+			$cards  .= '' !== $href
+				? '<a class="ch-news__card ch-news__card--link" href="' . self::e( $href ) . '">' . $body . '</a>'
+				: '<article class="ch-news__card" role="listitem">' . $body . '</article>';
+		}
+		// List semantics only while the cards are articles. Once they are links,
+		// role="list" would force role="listitem" onto each anchor and override the
+		// link role — the same trap the hero tiles and social icons fell into.
+		$linked = false;
+		foreach ( $data['cards'] as $c ) {
+			if ( '' !== (string) ( $c['href'] ?? '' ) ) {
+				$linked = true;
+				break;
+			}
 		}
 		// The section used to end at the cards, so a reader who wanted the rest of
 		// the club's news had nowhere to go — News existed but nothing led to it.
@@ -754,7 +771,8 @@ final class Blueworx_Clubhouse_Sections {
 		return '<section class="ch-sec"><div class="ch-wrap">'
 			. '<span class="ch-eyebrow">' . self::e( $data['eyebrow'] ) . '</span>'
 			. '<h2 class="ch-sec__title">' . self::e( $data['heading'] ) . '</h2>'
-			. '<div class="ch-news" role="list">' . $cards . '</div>' . $more . '</div></section>';
+			. ( $linked ? '<div class="ch-news">' : '<div class="ch-news" role="list">' )
+			. $cards . '</div>' . $more . '</div></section>';
 	}
 
 	/**

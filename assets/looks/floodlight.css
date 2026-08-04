@@ -301,6 +301,10 @@ a{color:inherit;text-decoration:none}
 /* News — dark cards, grotesque titles. */
 .ch-news{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(240px,100%),1fr));gap:28px}
 .ch-news__card{display:block;transition:transform .25s ease}
+/* A card that leads to a story says so on hover and keeps the club ink colour rather than the browser link blue. */
+.ch-news__card--link{color:inherit}
+.ch-news__card--link:hover .ch-news__title{color:var(--color-accent-deep)}
+@media(prefers-reduced-motion:no-preference){.ch-news__card--link:hover{transform:translateY(-3px)}}
 .ch-news__media{height:200px;border-radius:var(--radius-md);margin-bottom:16px}
 .ch-news__meta{display:flex;align-items:center;gap:10px;margin-bottom:8px;font-size:12px}
 .ch-news__tag{color:var(--color-accent-deep);font-weight:700;text-transform:uppercase;letter-spacing:.08em}
