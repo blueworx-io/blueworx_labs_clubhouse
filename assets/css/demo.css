@@ -20,6 +20,25 @@
 	box-shadow: 0 6px 24px rgba( 0, 0, 0, 0.35 );
 	font: 500 13px/1.2 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
+/* The switcher sits above everything at z-index 99999, which meant it covered the
+   bottom of the open mobile menu — "Log in" could not be tapped at all on a
+   390px screen, confirmed by hit-testing rather than by eye. The menu is a
+   <details>, so its open state is visible to CSS: stand the tooling down while
+   the menu is up. Tooling must never be the reason a real control is unreachable. */
+body:has( .ch-nav__disc[open] ) .clubhouse-demo {
+	display: none;
+}
+/* On a phone the centred bar landed straight on top of the hero's call-to-action
+   tiles. Tucked into the corner it still reads as an overlay but stops sitting on
+   the middle of the page, where the content people came for is. */
+@media ( max-width: 700px ) {
+	.clubhouse-demo {
+		left: auto;
+		right: 12px;
+		transform: none;
+		max-width: calc( 100vw - 24px );
+	}
+}
 .clubhouse-demo__title {
 	font-weight: 700;
 	opacity: 0.8;

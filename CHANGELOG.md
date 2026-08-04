@@ -5,6 +5,12 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.58.2
+
+- **The menu no longer wraps onto three lines.** "Book a court" was breaking across three lines in the header on ordinary laptop screens, leaving the menu looking broken on every page.
+- **The headline on a phone no longer breaks in the middle of a word** — "One communi / ty." now reads as it should.
+- **Demo mode gets out of the way.** The look switcher was sitting on top of the open menu on a phone, so "Log in" could not be tapped at all. It now hides while the menu is open, and tucks into the corner on small screens instead of covering the middle of the page.
+
 ## 0.58.1
 
 - **Apostrophes and ampersands read properly again.** Headlines and summaries taken from your posts were showing raw code where a punctuation mark should be — "Mental &#038; Physical Challenges" instead of "Mental & Physical Challenges".
