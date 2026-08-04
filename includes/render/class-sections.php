@@ -741,10 +741,20 @@ final class Blueworx_Clubhouse_Sections {
 				. '<span class="ch-news__date">' . self::e( $c['date'] ) . '</span></div>'
 				. '<h3 class="ch-news__title">' . self::e( $c['title'] ) . '</h3></article>';
 		}
+		// The section used to end at the cards, so a reader who wanted the rest of
+		// the club's news had nowhere to go — News existed but nothing led to it.
+		// Absent link_href means no link, which is what a club with news switched
+		// off gets.
+		// Same classes as the sports section's "All sections →", so the two read as
+		// one treatment rather than two links that happen to do the same job.
+		$more = '' !== (string) ( $data['link_href'] ?? '' )
+			? '<a class="ch-btn ch-btn--ghost ch-cards__all" href="' . self::e( (string) $data['link_href'] ) . '">'
+				. self::e( (string) ( $data['link_label'] ?? 'All news →' ) ) . '</a>'
+			: '';
 		return '<section class="ch-sec"><div class="ch-wrap">'
 			. '<span class="ch-eyebrow">' . self::e( $data['eyebrow'] ) . '</span>'
 			. '<h2 class="ch-sec__title">' . self::e( $data['heading'] ) . '</h2>'
-			. '<div class="ch-news" role="list">' . $cards . '</div></div></section>';
+			. '<div class="ch-news" role="list">' . $cards . '</div>' . $more . '</div></section>';
 	}
 
 	/**

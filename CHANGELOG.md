@@ -5,6 +5,11 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.58.3
+
+- **News is reachable at last.** The News page shipped with nothing linking to it, so it could only be found by typing the address. It now sits in the footer alongside the rest of the club, and the news section on the home page ends with a link through to it.
+- Clubs that have already customised their header menu can add News to it themselves under Club Content; the change only affects menus nobody has edited.
+
 ## 0.58.2
 
 - **The menu no longer wraps onto three lines.** "Book a court" was breaking across three lines in the header on ordinary laptop screens, leaving the menu looking broken on every page.

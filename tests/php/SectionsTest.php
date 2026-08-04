@@ -589,6 +589,27 @@ final class SectionsTest extends TestCase {
 		$this->assertStringNotContainsString( '<a class="ch-news__card"', $html );
 	}
 
+	/**
+	 * The section used to end at the cards, so a reader who wanted the rest of the
+	 * club's news had nowhere to go — News existed and nothing led to it.
+	 */
+	public function test_news_section_links_through_to_the_news_page(): void {
+		$html = Blueworx_Clubhouse_Sections::news_cards(
+			$this->newsData() + array( 'link_label' => 'All news →', 'link_href' => '?page=news' )
+		);
+		$this->assertStringContainsString( 'href="?page=news"', $html );
+		$this->assertStringContainsString( 'All news', $html );
+	}
+
+	/** A club with news switched off has nowhere to send anyone, so no link is offered. */
+	public function test_news_section_has_no_link_when_there_is_no_news_page(): void {
+		$html = Blueworx_Clubhouse_Sections::news_cards(
+			$this->newsData() + array( 'link_label' => 'All news →', 'link_href' => '' )
+		);
+		$this->assertStringNotContainsString( 'All news', $html );
+		$this->assertStringNotContainsString( 'ch-cards__all', $html );
+	}
+
 	/** @return array{eyebrow:string,heading:string,cards:array<int,array{image:string,image_alt:string,tag:string,date:string,title:string}>} */
 	private function newsData(): array {
 		return array(
