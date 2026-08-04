@@ -315,6 +315,10 @@ final class Blueworx_Clubhouse_Page_Renderer {
 					array( 'label' => 'Sports', 'key' => 'sports' ),
 					array( 'label' => 'Teams', 'key' => 'teams' ),
 					array( 'label' => 'Events', 'key' => 'events' ),
+					// News shipped with a page of its own but nothing linking to it, so
+					// it could only be reached by typing the address. nav_links() drops
+					// it again for a club that has switched news off.
+					array( 'label' => 'News', 'key' => 'news' ),
 				), $visibility ) ),
 				array( 'title' => 'Get involved', 'links' => self::nav_links( array(
 					array( 'label' => 'Membership', 'key' => 'membership' ),
@@ -539,9 +543,12 @@ final class Blueworx_Clubhouse_Page_Renderer {
 			);
 			$items = self::citems( $content, 'home', 'news', $default );
 			$out .= self::anchored( 'home', 'news', Blueworx_Clubhouse_Sections::news_cards( array(
-				'eyebrow' => self::cget( $content, 'home', 'news', 'eyebrow', 'Latest news' ),
-				'heading' => self::cget( $content, 'home', 'news', 'heading', 'From the clubhouse' ),
-				'cards'   => array_map(
+				'eyebrow'    => self::cget( $content, 'home', 'news', 'eyebrow', 'Latest news' ),
+				'heading'    => self::cget( $content, 'home', 'news', 'heading', 'From the clubhouse' ),
+				// Only offered when the club actually has a news section to send people to.
+				'link_label' => 'All news →',
+				'link_href'  => $visibility->is_page_visible( 'news' ) ? Blueworx_Clubhouse_Links::url( 'news' ) : '',
+				'cards'      => array_map(
 					static function ( array $i ): array {
 						return array(
 							'image'     => self::media_src( (string) ( $i['image'] ?? '' ) ),
