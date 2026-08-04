@@ -5,6 +5,14 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.58.1
+
+- **Apostrophes and ampersands read properly again.** Headlines and summaries taken from your posts were showing raw code where a punctuation mark should be — "Mental &#038; Physical Challenges" instead of "Mental & Physical Challenges".
+- **Buttons and icons that go somewhere are now announced as links.** The quick links under the home page headline, and the social icons, were being read out as list items, so anyone using a screen reader was not told they could be followed.
+- **The Fixtures/Events and Sports/Teams switches now work properly with a keyboard and a screen reader**, including the arrow keys, and say which of the two is showing.
+- **Each page now sends one title to Google, not two.** Every page was sending both its own title and the site's, leaving search engines to pick.
+- **Headings no longer skip levels**, so the outline a screen reader reads out matches the page.
+
 ## 0.58.0
 
 - **A User guide screen, under Club Content.** Plain-English explanations of everything ClubHouse does — what each screen is for, what each page is made of, how to change the words and pictures, what the lists of teams and fixtures are, and how the look and colours work.

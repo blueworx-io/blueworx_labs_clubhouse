@@ -5,22 +5,48 @@ const { test, expect } = require('@playwright/test');
 test('home card grid switches between Sports and Teams', async ({ page }) => {
   await page.goto('?clubhouse_page=home');
 
-  const group = page.locator('.ch-tabs').filter({ has: page.getByRole('button', { name: 'Teams' }) });
+  const group = page.locator('.ch-tabs').filter({ has: page.getByRole('tab', { name: 'Teams' }) });
   const sports = group.locator('[data-ch-tab="sports"]');
   const teams = group.locator('[data-ch-tab="teams"]');
 
   await expect(sports).toBeVisible();
   await expect(teams).toBeHidden();
-  await expect(group.getByRole('button', { name: 'Sports' })).toHaveClass(/ch-tabs__btn--on/);
+  await expect(group.getByRole('tab', { name: 'Sports' })).toHaveClass(/ch-tabs__btn--on/);
 
   await page.evaluate(() => { window.__chNavMarker = 'survived'; });
-  await group.getByRole('button', { name: 'Teams' }).click();
+  await group.getByRole('tab', { name: 'Teams' }).click();
 
   await expect(teams).toBeVisible();
   await expect(sports).toBeHidden();
-  await expect(group.getByRole('button', { name: 'Teams' })).toHaveClass(/ch-tabs__btn--on/);
+  await expect(group.getByRole('tab', { name: 'Teams' })).toHaveClass(/ch-tabs__btn--on/);
+  // The ARIA state must move with the class, or a screen reader is told the old
+  // tab is still the selected one.
+  await expect(group.getByRole('tab', { name: 'Teams' })).toHaveAttribute('aria-selected', 'true');
+  await expect(group.getByRole('tab', { name: 'Sports' })).toHaveAttribute('aria-selected', 'false');
   // Client-side: no navigation, so nothing above the section moves.
   expect(await page.evaluate(() => window.__chNavMarker)).toBe('survived');
+});
+
+// Arrow keys are what a tablist is expected to answer to; without them the roving
+// tabindex would strand a keyboard user on the first tab.
+test('arrow keys move between tabs', async ({ page }) => {
+  await page.goto('?clubhouse_page=home');
+
+  const group = page.locator('.ch-tabs').filter({ has: page.getByRole('tab', { name: 'Teams' }) });
+  const sports = group.getByRole('tab', { name: 'Sports' });
+  const teams = group.getByRole('tab', { name: 'Teams' });
+
+  await sports.focus();
+  await page.keyboard.press('ArrowRight');
+
+  await expect(teams).toBeFocused();
+  await expect(teams).toHaveAttribute('aria-selected', 'true');
+  await expect(group.locator('[data-ch-tab="teams"]')).toBeVisible();
+
+  // And back again, so the wrap-around works in both directions.
+  await page.keyboard.press('ArrowLeft');
+  await expect(sports).toBeFocused();
+  await expect(sports).toHaveAttribute('aria-selected', 'true');
 });
 
 // Each panel carries its own "see them all" link — the Sports panel points at
@@ -29,7 +55,7 @@ test('home card grid switches between Sports and Teams', async ({ page }) => {
 test('each panel links to its own collection page', async ({ page }) => {
   await page.goto('?clubhouse_page=home');
 
-  const group = page.locator('.ch-tabs').filter({ has: page.getByRole('button', { name: 'Teams' }) });
+  const group = page.locator('.ch-tabs').filter({ has: page.getByRole('tab', { name: 'Teams' }) });
   await expect(group.locator('[data-ch-tab="sports"] .ch-cards__all')).toHaveAttribute('href', /sports/);
   await expect(group.locator('[data-ch-tab="teams"] .ch-cards__all')).toHaveAttribute('href', /teams/);
 });

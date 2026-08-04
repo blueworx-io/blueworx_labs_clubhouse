@@ -109,6 +109,24 @@ final class Blueworx_Clubhouse_Frontend {
 		add_action( 'wp_enqueue_scripts', array( self::class, 'enqueue_assets' ), 20 );
 		add_action( 'wp_head', array( self::class, 'render_favicon' ) );
 		add_filter( 'template_include', array( self::class, 'filter_template' ) );
+		// The template used to print its own <title> and then call wp_head(), which
+		// prints WordPress's — so every clubhouse page shipped two titles and the
+		// consumer chose. Let WordPress own the tag and supply the text instead, so
+		// exactly one is emitted. Theme support is declared here rather than assumed:
+		// without it wp_head() prints no title at all, and dropping ours from the
+		// template would have left the page with none.
+		add_action( 'after_setup_theme', static function (): void {
+			add_theme_support( 'title-tag' );
+		} );
+		add_filter( 'pre_get_document_title', array( self::class, 'filter_document_title' ) );
+	}
+
+	/**
+	 * Our title text for a clubhouse page; anything else is left to WordPress and
+	 * whatever SEO plugin the club runs.
+	 */
+	public static function filter_document_title( string $title ): string {
+		return self::is_clubhouse_page() ? self::page_title() : $title;
 	}
 
 	/** Stores the plugin version whose rewrite rules are currently in the cache. */

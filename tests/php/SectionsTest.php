@@ -226,6 +226,29 @@ final class SectionsTest extends TestCase {
 		$this->assertStringNotContainsString( 'Blank href', $html );
 	}
 
+	/**
+	 * Text arrives entity-encoded from WordPress often enough that escaping blind
+	 * printed the entity on the page — a headline read "Mental &#038; Physical".
+	 * Escaping has to be idempotent: plain text is untouched, encoded text is
+	 * encoded once.
+	 */
+	public function test_already_encoded_text_is_not_double_escaped(): void {
+		$html = Blueworx_Clubhouse_Sections::quick_tiles( array(
+			array( 'label' => 'Mental &#038; Physical', 'href' => '?page=news' ),
+		) );
+		$this->assertStringContainsString( 'Mental &amp; Physical', $html );
+		$this->assertStringNotContainsString( '&amp;#038;', $html );
+	}
+
+	/** Plain text still comes out escaped exactly once — the decode must not open a hole. */
+	public function test_plain_text_is_still_escaped(): void {
+		$html = Blueworx_Clubhouse_Sections::quick_tiles( array(
+			array( 'label' => 'Fish & Chips <script>', 'href' => '?page=news' ),
+		) );
+		$this->assertStringContainsString( 'Fish &amp; Chips &lt;script&gt;', $html );
+		$this->assertStringNotContainsString( '<script>', $html );
+	}
+
 	public function test_quick_tiles_render_each_link(): void {
 		$html = Blueworx_Clubhouse_Sections::quick_tiles( array(
 			array( 'label' => 'Membership', 'href' => '?page=membership' ),
@@ -233,7 +256,11 @@ final class SectionsTest extends TestCase {
 		) );
 		$this->assertStringContainsString( 'class="ch-tiles"', $html );
 		$this->assertSame( 2, substr_count( $html, 'ch-tiles__tile' ) );
-		$this->assertListSemantics( $html, 1, 2 );
+		// A row of links is a nav, not a list. It used to carry list semantics, which
+		// forced role="listitem" onto each <a> and overrode the link role — a screen
+		// reader announced "list item" where a link was.
+		$this->assertListSemantics( $html, 0, 0 );
+		$this->assertStringContainsString( '<nav class="ch-tiles" aria-label="Quick links">', $html );
 		$this->assertStringContainsString( 'Membership', $html );
 		$this->assertNoHexColour( $html );
 		$this->assertStringNotContainsString( 'style=', $html );
@@ -393,6 +420,46 @@ final class SectionsTest extends TestCase {
 		$this->assertListSemantics( $html, 2, 2 );
 		$this->assertNoHexColour( $html );
 		$this->assertStringNotContainsString( 'style=', $html );
+	}
+
+	/**
+	 * The switch is a tablist, not two anonymous buttons: without these a screen
+	 * reader is given no way to tell which of the two views is showing.
+	 */
+	public function test_activity_tabs_expose_tab_semantics(): void {
+		$html = Blueworx_Clubhouse_Sections::activity_tabs( array(
+			'eyebrow'  => 'Club activity',
+			'heading'  => 'What is happening',
+			'fixtures' => array( array( 'month' => 'JUL', 'day' => '12', 'competition' => 'Rugby', 'time' => '14:00', 'matchup' => 'A vs B' ) ),
+			'events'   => array( array( 'tag' => 'Open day', 'date' => 'Sat 26 Jul', 'title' => 'Open Day', 'detail' => '10:00' ) ),
+		) );
+		$this->assertStringContainsString( 'role="tablist"', $html );
+		$this->assertSame( 2, substr_count( $html, 'role="tab"' ) );
+		$this->assertSame( 2, substr_count( $html, 'role="tabpanel"' ) );
+		// Exactly one tab is selected, and it is the one whose panel is showing.
+		$this->assertSame( 1, substr_count( $html, 'aria-selected="true"' ) );
+		$this->assertSame( 1, substr_count( $html, 'aria-selected="false"' ) );
+		// Each tab points at its own panel, and each panel names its own tab.
+		$this->assertStringContainsString( 'aria-controls="ch-tabpanel-fixtures-fixtures"', $html );
+		$this->assertStringContainsString( 'id="ch-tabpanel-fixtures-fixtures"', $html );
+		$this->assertStringContainsString( 'aria-labelledby="ch-tab-fixtures-fixtures"', $html );
+	}
+
+	/**
+	 * Two renders of the same section must be byte-identical: ids derived from a
+	 * counter drifted between renders and broke the no-op-save guarantee.
+	 */
+	public function test_activity_tabs_ids_are_stable_across_renders(): void {
+		$data = array(
+			'eyebrow'  => 'Club activity',
+			'heading'  => 'What is happening',
+			'fixtures' => array( array( 'month' => 'JUL', 'day' => '12', 'competition' => 'Rugby', 'time' => '14:00', 'matchup' => 'A vs B' ) ),
+			'events'   => array( array( 'tag' => 'Open day', 'date' => 'Sat 26 Jul', 'title' => 'Open Day', 'detail' => '10:00' ) ),
+		);
+		$this->assertSame(
+			Blueworx_Clubhouse_Sections::activity_tabs( $data ),
+			Blueworx_Clubhouse_Sections::activity_tabs( $data )
+		);
 	}
 
 	/**
@@ -846,7 +913,10 @@ final class SectionsTest extends TestCase {
 		$this->assertStringContainsString( '>Facebook<', $html );
 		$this->assertStringContainsString( '>Instagram<', $html );
 		$this->assertStringContainsString( '>LinkedIn<', $html );
-		$this->assertListSemantics( $html, 1, 3 );
+		// Social icons are links and must be announced as links: the container's
+		// role="list" used to force role="listitem" onto each <a> and override that.
+		$this->assertListSemantics( $html, 0, 0 );
+		$this->assertStringNotContainsString( 'role="listitem" href', $html );
 		$this->assertStringContainsString( 'Follow the club', $html );
 		$this->assertStringContainsString( 'Match-day photos, results and behind-the-scenes.', $html );
 		$this->assertNoHexColour( $html );
