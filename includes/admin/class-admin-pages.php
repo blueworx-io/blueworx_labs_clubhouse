@@ -40,7 +40,7 @@ final class Blueworx_Clubhouse_Admin_Pages {
 	 *        render_page, so this cannot drift from what is enforced.
 	 * 'menu' is the TOP-LEVEL menu slug the page hangs from, which is what the
 	 *        role menu allowlists are written in terms of. Import is a submenu of
-	 *        Club Content, so its menu is its parent's.
+	 *        Club Pages, so its menu is its parent's.
 	 *
 	 * @return array<int,array{slug:string,label:string,cap:string,menu:string,description:string}>
 	 */
@@ -55,7 +55,7 @@ final class Blueworx_Clubhouse_Admin_Pages {
 			),
 			array(
 				'slug'        => Blueworx_Clubhouse_Content_Controller::PAGE_SLUG,
-				'label'       => 'Club Content',
+				'label'       => 'Club Pages',
 				'cap'         => Blueworx_Clubhouse_Content_Controller::CAPABILITY,
 				'menu'        => Blueworx_Clubhouse_Content_Controller::PAGE_SLUG,
 				'description' => 'The words and images on every page, and the header menu.',
@@ -65,7 +65,7 @@ final class Blueworx_Clubhouse_Admin_Pages {
 				'label'       => 'Import',
 				'cap'         => Blueworx_Clubhouse_Import_Controller::CAPABILITY,
 				'menu'        => Blueworx_Clubhouse_Content_Controller::PAGE_SLUG,
-				'description' => 'Bring a club\'s existing content in, under Club Content.',
+				'description' => 'Bring a club\'s existing content in, under Club Pages.',
 			),
 			array(
 				'slug'        => Blueworx_Clubhouse_Seo_Controller::PAGE_SLUG,

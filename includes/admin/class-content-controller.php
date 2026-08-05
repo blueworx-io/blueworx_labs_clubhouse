@@ -18,7 +18,7 @@ final class Blueworx_Clubhouse_Content_Controller {
 
 	// edit_clubhouse_content — owner, content editor + admin. NOT manage_clubhouse:
 	// that is the one capability separating the two Clubhouse roles, so locking
-	// Club Content with it shut the Content Editor out of the only job the role
+	// Club Pages with it shut the Content Editor out of the only job the role
 	// exists for.
 	public const CAPABILITY = Blueworx_Clubhouse_Owner_Capabilities::CONTENT_CAP;
 	public const PAGE_SLUG  = 'clubhouse-site-content';
@@ -31,8 +31,8 @@ final class Blueworx_Clubhouse_Content_Controller {
 
 	public static function add_menu(): void {
 		add_menu_page(
-			'Club Content',
-			'Club Content',
+			'Club Pages',
+			'Club Pages',
 			self::CAPABILITY,
 			self::PAGE_SLUG,
 			array( self::class, 'render_page' ),

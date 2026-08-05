@@ -33,7 +33,7 @@ final class Blueworx_Clubhouse_Owner_Capabilities {
 	public const SETUP_CAP = 'manage_clubhouse';
 
 	/**
-	 * The key to Club Content — the club's own words and images, and the header
+	 * The key to Club Pages — the club's own words and images, and the header
 	 * menu. Held by BOTH Clubhouse roles.
 	 *
 	 * A capability of its own rather than manage_clubhouse, which is what Club
@@ -103,7 +103,7 @@ final class Blueworx_Clubhouse_Owner_Capabilities {
 
 	/**
 	 * Caps stripped off the editor clone. Pages are served by Clubhouse's own
-	 * routing and edited under Club Content, so the raw Pages editor is not a
+	 * routing and edited under Club Pages, so the raw Pages editor is not a
 	 * Clubhouse surface; comments are not a Clubhouse surface either.
 	 *
 	 * @return array<int,string>
@@ -369,7 +369,7 @@ final class Blueworx_Clubhouse_Owner_Capabilities {
 		return array(
 			'index.php',              // Dashboard.
 			'clubhouse-setup',        // Clubhouse.
-			'clubhouse-site-content', // Club Content.
+			'clubhouse-site-content', // Club Pages.
 			'clubhouse-content',      // Collections.
 			self::SURECART_MENU,      // SureCart.
 			self::LATEPOINT_MENU,     // LatePoint.
@@ -391,7 +391,7 @@ final class Blueworx_Clubhouse_Owner_Capabilities {
 	public static function editor_menu_allowlist(): array {
 		return array(
 			'index.php',              // Dashboard.
-			'clubhouse-site-content', // Club Content.
+			'clubhouse-site-content', // Club Pages.
 			'clubhouse-content',      // Collections.
 			'edit.php',               // Posts.
 			'upload.php',             // Media.

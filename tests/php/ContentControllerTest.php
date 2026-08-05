@@ -207,7 +207,7 @@ final class ContentControllerTest extends TestCase {
 	/**
 	 * The new capability must not be reachable by accident. It is not on any
 	 * stock WordPress role, so an ordinary editor or author still cannot open
-	 * Club Content.
+	 * Club Pages.
 	 */
 	public function test_the_content_key_is_not_a_stock_wordpress_capability(): void {
 		$this->assertArrayNotHasKey(

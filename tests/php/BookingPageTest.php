@@ -72,11 +72,11 @@ final class BookingPageTest extends TestCase {
 
 	public function test_no_page_links_to_booking_without_latepoint(): void {
 		$html = Blueworx_Clubhouse_Page_Renderer::home( $this->branding(), $this->visibility(), $this->collections() );
-		$this->assertStringNotContainsString( 'Book a court', $html );
+		$this->assertStringNotContainsString( 'Bookings', $html );
 
 		$this->withLatePoint();
 		$html = Blueworx_Clubhouse_Page_Renderer::home( $this->branding(), $this->visibility(), $this->collections() );
-		$this->assertStringContainsString( 'Book a court', $html, 'nav and footer pick it up' );
+		$this->assertStringContainsString( 'Bookings', $html, 'nav and footer pick it up' );
 	}
 
 	/**

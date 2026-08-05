@@ -81,7 +81,7 @@ final class Blueworx_Clubhouse_Setup_Sections {
 		),
 		'calendar' => array(
 			'hero'     => 'Hero',
-			'booking'  => 'Book a court',
+			'booking'  => 'Bookings',
 			'schedule' => 'Schedule',
 			'cta'      => 'Call to action',
 		),

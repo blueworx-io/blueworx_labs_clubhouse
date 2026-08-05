@@ -333,7 +333,7 @@ final class ContentScreenTest extends TestCase {
 	}
 
 	/**
-	 * Club Content carries the same top-bar role tags as every other ClubHouse
+	 * Club Pages carries the same top-bar role tags as every other ClubHouse
 	 * page, and the same rule: prebuilt markup from the controller, so an owner's
 	 * screen never shows the access map.
 	 */

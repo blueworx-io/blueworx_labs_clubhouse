@@ -43,7 +43,7 @@ final class Blueworx_Clubhouse_Page_Map {
 			array( 'slug' => 'calendar',   'label' => 'Calendar',   'method' => 'calendar' ),
 			array(
 				'slug'     => 'booking',
-				'label'    => 'Book a court',
+				'label'    => 'Bookings',
 				'method'   => 'booking',
 				'requires' => Blueworx_Clubhouse_Integrations::LATEPOINT_TAG,
 			),

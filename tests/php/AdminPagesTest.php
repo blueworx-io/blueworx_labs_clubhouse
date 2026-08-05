@@ -40,9 +40,9 @@ final class AdminPagesTest extends TestCase {
 	}
 
 	/**
-	 * Import is a submenu of Club Content, so the allowlist that decides whether
+	 * Import is a submenu of Club Pages, so the allowlist that decides whether
 	 * it is reachable is its PARENT's. Keyed to the parent slug or a role with
-	 * Club Content on its menu would be reported as unable to reach Import.
+	 * Club Pages on its menu would be reported as unable to reach Import.
 	 */
 	public function test_import_hangs_off_its_parents_menu(): void {
 		$import = Blueworx_Clubhouse_Admin_Pages::find( Blueworx_Clubhouse_Import_Controller::PAGE_SLUG );
@@ -79,10 +79,10 @@ final class AdminPagesTest extends TestCase {
 	}
 
 	/**
-	 * The Content Editor can edit content — Club Content and Collections — and
+	 * The Content Editor can edit content — Club Pages and Collections — and
 	 * nothing that configures the site.
 	 *
-	 * Club Content used to be shut to it, because the page was locked with
+	 * Club Pages used to be shut to it, because the page was locked with
 	 * manage_clubhouse, the single capability separating the two roles. That made
 	 * the Content Editor unable to edit content, which is the only job the role
 	 * exists for. It is now locked with edit_clubhouse_content, which both roles
@@ -95,7 +95,7 @@ final class AdminPagesTest extends TestCase {
 	public function test_the_content_editor_can_edit_content_but_not_configure_the_site(): void {
 		$editor = Blueworx_Clubhouse_Owner_Capabilities::EDITOR_ROLE;
 
-		$this->assertTrue( Blueworx_Clubhouse_Admin_Pages::role_can( $editor, Blueworx_Clubhouse_Content_Controller::PAGE_SLUG ), 'Club Content' );
+		$this->assertTrue( Blueworx_Clubhouse_Admin_Pages::role_can( $editor, Blueworx_Clubhouse_Content_Controller::PAGE_SLUG ), 'Club Pages' );
 		$this->assertTrue( Blueworx_Clubhouse_Admin_Pages::role_can( $editor, Blueworx_Clubhouse_Collection_Types::CONTENT_SLUG ), 'Collections' );
 
 		$this->assertFalse( Blueworx_Clubhouse_Admin_Pages::role_can( $editor, Blueworx_Clubhouse_Setup_Controller::PAGE_SLUG ), 'Setup' );
@@ -103,7 +103,7 @@ final class AdminPagesTest extends TestCase {
 	}
 
 	/**
-	 * The guide hangs off Club Content rather than Setup, and this is why: the
+	 * The guide hangs off Club Pages rather than Setup, and this is why: the
 	 * Content Editor holds the capability it is locked with, but Setup is stripped
 	 * from that role's menu — parented there, the guide would be invisible to the
 	 * role most likely to need it.

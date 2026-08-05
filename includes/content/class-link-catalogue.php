@@ -8,7 +8,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Every place inside this site an owner can point a link, as a flat list of
  * target tags. One catalogue serves both the menu editor and the URL fields in
- * Club Content, so the two can never offer different destinations.
+ * Club Pages, so the two can never offer different destinations.
  *
  * A target is a tagged string rather than a URL, because a URL cannot say what
  * it meant: a stored '/about' does not know it was "the About page" and so

@@ -24,7 +24,7 @@ final class Blueworx_Clubhouse_Menu {
 	/**
 	 * The nav before anyone edits it — the list shell_header() used to hardcode.
 	 * Availability and visibility still filter it at render time, so a site
-	 * without LatePoint never sees "Book a court" here either.
+	 * without LatePoint never sees "Bookings" here either.
 	 *
 	 * @var array<int,array{label:string,target:string,children:array<int,array{label:string,target:string}>}>
 	 */
@@ -36,7 +36,7 @@ final class Blueworx_Clubhouse_Menu {
 		array( 'label' => 'Membership',   'target' => 'page:membership', 'children' => array() ),
 		array( 'label' => 'Events',       'target' => 'page:events',     'children' => array() ),
 		array( 'label' => 'Calendar',     'target' => 'page:calendar',   'children' => array() ),
-		array( 'label' => 'Book a court', 'target' => 'page:booking',    'children' => array() ),
+		array( 'label' => 'Bookings', 'target' => 'page:booking',    'children' => array() ),
 		array( 'label' => 'Contact',      'target' => 'page:contact',    'children' => array() ),
 	);
 
