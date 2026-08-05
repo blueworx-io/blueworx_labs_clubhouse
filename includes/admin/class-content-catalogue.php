@@ -292,7 +292,7 @@ final class Blueworx_Clubhouse_Content_Catalogue {
 			) ),
 			array( 'tab' => 'calendar', 'label' => 'Calendar', 'sections' => array(
 				array( 'key' => 'hero', 'label' => 'Hero', 'type' => 'fields', 'store_page' => 'calendar', 'fields' => self::hero_filter_fields() ),
-				array( 'key' => 'booking', 'label' => 'Book a court', 'type' => 'fields', 'store_page' => 'calendar',
+				array( 'key' => 'booking', 'label' => 'Bookings', 'type' => 'fields', 'store_page' => 'calendar',
 					'note' => 'The Bookings calendar, above the fixtures. Switch the section off under Site setup → Visibility to drop it.',
 					'fields' => self::booking_slot_fields() ),
 				array( 'key' => 'schedule', 'label' => 'Schedule', 'type' => 'fields', 'store_page' => 'calendar',
@@ -303,7 +303,7 @@ final class Blueworx_Clubhouse_Content_Catalogue {
 			// Booking is LatePoint's page. It is dropped entirely — here and from the
 			// visibility inventory — when LatePoint is not live, so an owner is never
 			// shown fields for a page that cannot render. See Page_Map::available().
-			array( 'tab' => 'booking', 'label' => 'Book a court', 'sections' => array(
+			array( 'tab' => 'booking', 'label' => 'Bookings', 'sections' => array(
 				array( 'key' => 'hero', 'label' => 'Hero', 'type' => 'fields', 'store_page' => 'booking', 'fields' => self::hero_fields() ),
 				array( 'key' => 'services', 'label' => 'Sessions and services', 'type' => 'fields', 'store_page' => 'booking',
 					'note' => 'Ships with the Bookings services list. Switch the section off under Site setup → Visibility to drop it.',

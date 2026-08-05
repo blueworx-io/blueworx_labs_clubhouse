@@ -7,7 +7,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Pure HTML for the Club Content → Import screen, in three states: offer the
+ * Pure HTML for the Club Pages → Import screen, in three states: offer the
  * prompt and an upload; review a parsed plan; report what an apply did. Makes
  * no WordPress calls and reads no request data — the controller hands it a
  * finished model. Every value is escaped here; the only raw markup emitted is
@@ -163,7 +163,7 @@ final class Blueworx_Clubhouse_Import_Screen {
 		if ( array() !== $needed ) {
 			$out .= '<div class="clubhouse-import__step">';
 			$out .= '<h2>Images still needed</h2>';
-			$out .= '<p>These picture slots are still empty. Add them under Club Content whenever you have the images.</p><ul>';
+			$out .= '<p>These picture slots are still empty. Add them under Club Pages whenever you have the images.</p><ul>';
 			foreach ( $needed as $item ) {
 				$out .= '<li>' . self::esc( (string) ( $item['label'] ?? '' ) ) . '</li>';
 			}

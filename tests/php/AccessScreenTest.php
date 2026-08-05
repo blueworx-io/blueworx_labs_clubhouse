@@ -15,7 +15,7 @@ final class AccessScreenTest extends TestCase {
 					'name'  => 'Jo Bailey',
 					'email' => 'jo@club.test',
 					'roles' => array( 'ClubHouse - Owner' ),
-					'pages' => array( 'Clubhouse Setup', 'Club Content', 'Import', 'Collections' ),
+					'pages' => array( 'Clubhouse Setup', 'Club Pages', 'Import', 'Collections' ),
 				),
 				array(
 					'login' => 'sam',

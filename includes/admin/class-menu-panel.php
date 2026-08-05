@@ -6,7 +6,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * The Menu tab of the Club Content screen: the nav tree as a list of rows, each
+ * The Menu tab of the Club Pages screen: the nav tree as a list of rows, each
  * a label, a target picker and the buttons that move it.
  *
  * Order and nesting live in the field names (menu[0][children][1][label]), so

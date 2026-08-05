@@ -49,7 +49,7 @@ rules; you do not need to change anything else. Then re-check `/membership/`.
 ## 3. Content — upload the corrected import file
 
 `clubhouse-import.json` in this folder replaces the demo content that is
-currently live. Upload it at **Club Content → Import**, and **leave the
+currently live. Upload it at **Club Pages → Import**, and **leave the
 "switch off sections this file has no content for" tick box on**.
 
 It was validated against the plugin's own import parser: 0 warnings, every field
@@ -125,7 +125,7 @@ grounds that an empty list is usually an oversight. So either:
    the Family tier's wording and its button should be updated to match.
 2. **Club phone number.** The demo number has been cleared rather than replaced,
    because the old site does not publish one. If the club has a number for
-   enquiries, it goes in Club Content → Contact → Contact form → Club phone.
+   enquiries, it goes in Club Pages → Contact → Contact form → Club phone.
 3. **Code of conduct.** You said to use the existing Dropbox link — please send
    it. Nothing on the site links to it yet, and there is no document page in
    ClubHouse today, so it will most likely become a link in the footer or on the

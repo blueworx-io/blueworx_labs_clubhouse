@@ -7,7 +7,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * WordPress surface for the AI content import: the Club Content → Import
+ * WordPress surface for the AI content import: the Club Pages → Import
  * submenu, the prompt download, and the upload → preview → apply flow.
  *
  * handle_request() takes the request arrays and a Storage rather than reading
@@ -55,7 +55,7 @@ final class Blueworx_Clubhouse_Import_Controller {
 	}
 
 	/**
-	 * As a submenu of Club Content, WordPress names this page's hook after its
+	 * As a submenu of Club Pages, WordPress names this page's hook after its
 	 * parent's slug ('club-content'), not 'toplevel_page_…' — Content_Controller's
 	 * own hook only matches its own, unrelated top-level page.
 	 */

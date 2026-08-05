@@ -145,9 +145,9 @@ final class Blueworx_Clubhouse_Guide {
 			'entries' => array(
 				array(
 					'title' => 'Editing a page',
-					'body'  => array( 'Club Content holds the words and pictures for every page, grouped the same way the pages are.' ),
+					'body'  => array( 'Club Pages holds the words and pictures for every page, grouped the same way the pages are.' ),
 					'steps' => array(
-						'Open Club Content.',
+						'Open Club Pages.',
 						'Pick the page across the top, then the section down the side.',
 						'Change the wording, or choose a picture from your media library.',
 						'Save. The change is live immediately — there is nothing to publish.',
@@ -158,7 +158,7 @@ final class Blueworx_Clubhouse_Guide {
 				array(
 					'title' => 'The menu',
 					'body'  => array( 'The menu across the top of your site is yours to arrange — you choose which pages appear, in what order, and what each one is called.' ),
-					'steps' => array( 'Open Club Content.', 'Go to the Menu panel.', 'Add, rename, reorder or remove items, then save.' ),
+					'steps' => array( 'Open Club Pages.', 'Go to the Menu panel.', 'Add, rename, reorder or remove items, then save.' ),
 					'state' => '',
 					'url'   => $content_url,
 				),

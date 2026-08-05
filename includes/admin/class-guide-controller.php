@@ -29,7 +29,7 @@ final class Blueworx_Clubhouse_Guide_Controller {
 	}
 
 	/**
-	 * Hangs off Club Content, not Setup.
+	 * Hangs off Club Pages, not Setup.
 	 *
 	 * The Content Editor role holds the capability this page is locked with, but
 	 * Clubhouse Setup is stripped from that role's menu — a guide parented there

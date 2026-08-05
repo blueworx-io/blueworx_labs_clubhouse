@@ -5,6 +5,12 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.60.0
+
+- **Plugins are called what they are called.** SureCart, LatePoint, SureForms and the rest now show their own names everywhere in the admin, instead of substitutes like "eCommerce" and "Bookings". Looking up help for one no longer means working out which plugin it really is.
+- **"Club Content" is now "Club Pages"** in the menu, the page heading and the browser tab. Nothing has moved and existing bookmarks still work.
+- **The booking page is "Bookings" in the menu**, not "Book a court", which wrapped onto three lines. The page itself still says "Book a court". A club that has renamed the item keeps its own wording.
+
 ## 0.59.0
 
 - **The news on your home page is now your actual news.** The "From the clubhouse" band shows your three most recent posts — headline, category, date and picture — and each one opens the story. It used to be three headlines typed in by hand that went nowhere.

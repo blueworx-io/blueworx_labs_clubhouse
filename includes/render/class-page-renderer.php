@@ -323,7 +323,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				array( 'title' => 'Get involved', 'links' => self::nav_links( array(
 					array( 'label' => 'Membership', 'key' => 'membership' ),
 					array( 'label' => 'Calendar', 'key' => 'calendar' ),
-					array( 'label' => 'Book a court', 'key' => 'booking' ),
+					array( 'label' => 'Bookings', 'key' => 'booking' ),
 					array( 'label' => 'Volunteer', 'key' => 'contact' ),
 					array( 'label' => 'Contact', 'key' => 'contact' ),
 				), $visibility ) ),

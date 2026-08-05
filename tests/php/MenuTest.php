@@ -26,7 +26,7 @@ final class MenuTest extends TestCase {
 		$items = $this->menu()->items( $this->collections(), $this->visibility() );
 		$this->assertSame(
 			array( 'Home', 'About', 'Sports', 'Teams', 'Membership', 'Events', 'Calendar', 'Contact' ),
-			array_values( array_diff( $this->labels( $items ), array( 'Book a court' ) ) )
+			array_values( array_diff( $this->labels( $items ), array( 'Bookings' ) ) )
 		);
 	}
 

@@ -68,6 +68,6 @@ test('@preview a wide shortcode scrolls inside its slot, not the layout', async 
 test('@preview booking is reachable from the header nav and the footer', async ({ page }) => {
   await page.goto('?clubhouse_page=home');
 
-  await expect(page.locator('.ch-nav__links').getByText('Book a court')).toBeVisible();
-  await expect(page.locator('.ch-footer').getByText('Book a court')).toBeVisible();
+  await expect(page.locator('.ch-nav__links').getByText('Bookings')).toBeVisible();
+  await expect(page.locator('.ch-footer').getByText('Bookings')).toBeVisible();
 });
