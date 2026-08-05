@@ -5,6 +5,11 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.60.2
+
+- **The footer now signs off properly.** Your club's name runs across it at poster scale, and there is a copyright line underneath — it picks up the year on its own, so it will still be right next January.
+- Each look renders the big name in its own typeface, so it reads as part of the design rather than bolted on.
+
 ## 0.60.1
 
 - **Links and buttons are big enough to tap.** Menu items, footer links, email addresses, the map link and the filter pills were as small as 20px on a phone, so they were easy to miss. They are all at least 44px now, on every look, and nothing has moved on desktop.

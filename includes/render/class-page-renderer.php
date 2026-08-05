@@ -334,6 +334,10 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'placeholder' => 'Your email',
 				'cta'         => 'Subscribe',
 			),
+			// Year from the server clock rather than a stored setting: a club that
+			// never touches its settings again still has a footer that is right
+			// next January.
+			'copyright'  => '© ' . gmdate( 'Y' ) . ' ' . $branding->get_club_name() . '. All rights reserved.',
 			'legal'      => array(),
 		) );
 	}

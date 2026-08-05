@@ -854,6 +854,7 @@ final class Blueworx_Clubhouse_Sections {
 	 * @param array{club_name:string,tagline:string,socials:array<string,string>,
 	 *   columns:array<int,array{title:string,links:array<int,array{label:string,href:string}>}>,
 	 *   newsletter:array{heading:string,lede:string,placeholder:string,cta:string},
+	 *   copyright:string,
 	 *   legal:array<int,array{label:string,href:string}>} $data
 	 */
 	public static function footer( array $data ): string {
@@ -876,7 +877,22 @@ final class Blueworx_Clubhouse_Sections {
 		foreach ( $data['legal'] as $l ) {
 			$legal .= '<a class="ch-footer__legal-link" href="' . self::e( $l['href'] ) . '">' . self::e( $l['label'] ) . '</a>';
 		}
-		$legal_row = '' !== $legal ? '<div class="ch-footer__legal">' . $legal . '</div>' : '';
+		$copyright = (string) ( $data['copyright'] ?? '' );
+		// The bottom bar carries the copyright even on a club that has set no legal
+		// links, so it renders whenever either half has something to say.
+		$bottom = '';
+		if ( '' !== $copyright || '' !== $legal ) {
+			$bottom = '<div class="ch-footer__bottom">'
+				. ( '' !== $copyright ? '<span class="ch-footer__copyright">' . self::e( $copyright ) . '</span>' : '' )
+				. ( '' !== $legal ? '<div class="ch-footer__legal">' . $legal . '</div>' : '' )
+				. '</div>';
+		}
+
+		// The club's name at poster scale, dropped almost into the background. It
+		// is decoration repeating the name in the brand column directly above, so
+		// it is hidden from screen readers rather than read out twice.
+		$wordmark = '<div class="ch-footer__wordmark" aria-hidden="true">' . self::e( $data['club_name'] ) . '</div>';
+
 		return '<footer class="ch-footer"><div class="ch-wrap">'
 			. '<div class="ch-footer__grid">'
 			. '<div class="ch-footer__brand-col">'
@@ -884,7 +900,8 @@ final class Blueworx_Clubhouse_Sections {
 			. '<p class="ch-footer__tagline">' . self::e( $data['tagline'] ) . '</p>'
 			. '<div class="ch-footer__socials ch-social__links">' . self::social_links( $data['socials'], true ) . '</div></div>'
 			. $cols . $nl . '</div>'
-			. $legal_row
+			. $wordmark
+			. $bottom
 			. '</div></footer>';
 	}
 
