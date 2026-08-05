@@ -5,6 +5,12 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.60.1
+
+- **Links and buttons are big enough to tap.** Menu items, footer links, email addresses, the map link and the filter pills were as small as 20px on a phone, so they were easy to miss. They are all at least 44px now, on every look, and nothing has moved on desktop.
+- **The page can no longer end up blank.** Sections fade in as you scroll, and if that ever broke halfway the rest of the page stayed invisible. It now hands the content back within a couple of seconds if anything goes wrong.
+- Pages now declare UK English, so screen readers use a British voice and browsers stop offering to translate.
+
 ## 0.60.0
 
 - **Plugins are called what they are called.** SureCart, LatePoint, SureForms and the rest now show their own names everywhere in the admin, instead of substitutes like "eCommerce" and "Bookings". Looking up help for one no longer means working out which plugin it really is.
