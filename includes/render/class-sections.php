@@ -466,11 +466,17 @@ final class Blueworx_Clubhouse_Sections {
 	private static function card_list( array $cards ): string {
 		$out = '';
 		foreach ( $cards as $c ) {
-			$out .= '<article class="ch-card" role="listitem">'
+			// Same treatment as the stat cards: the title carries the link, and the
+			// card gets the click target back through CSS.
+			$href  = trim( (string) ( $c['href'] ?? '' ) );
+			$title = '' !== $href
+				? '<a class="ch-scard__link" href="' . self::e( $href ) . '">' . self::e( $c['title'] ) . '</a>'
+				: self::e( $c['title'] );
+			$out  .= '<article class="ch-card' . ( '' !== $href ? ' ch-scard--linked' : '' ) . '" role="listitem">'
 				. self::media( $c['image'], $c['image_alt'], 'ch-card__media' )
 				. '<div class="ch-card__scrim"></div>'
 				. '<span class="ch-card__tag">' . self::e( $c['tag'] ) . '</span>'
-				. '<div class="ch-card__body"><h3 class="ch-card__title">' . self::e( $c['title'] ) . '</h3>'
+				. '<div class="ch-card__body"><h3 class="ch-card__title">' . $title . '</h3>'
 				. '<p class="ch-card__sub">' . self::e( $c['subtitle'] ) . '</p></div></article>';
 		}
 		return '<div class="ch-cards" role="list">' . $out . '</div>';
@@ -537,11 +543,19 @@ final class Blueworx_Clubhouse_Sections {
 				$stats .= '<div class="ch-scard__stat"><b class="ch-scard__stat-v">' . self::e( $s['value'] )
 					. '</b><span class="ch-scard__stat-l">' . self::e( $s['label'] ) . '</span></div>';
 			}
-			$cards .= '<article class="ch-scard" role="listitem">'
+			// The title is the link, not the whole card: a card wrapped in an anchor
+			// swallows the stats and the image into one enormous link label, which
+			// is what a screen reader then has to read out before saying "link".
+			// The class puts the click target back over the whole card visually.
+			$href  = trim( (string) ( $c['href'] ?? '' ) );
+			$title = '' !== $href
+				? '<a class="ch-scard__link" href="' . self::e( $href ) . '">' . self::e( $c['title'] ) . '</a>'
+				: self::e( $c['title'] );
+			$cards .= '<article class="ch-scard' . ( '' !== $href ? ' ch-scard--linked' : '' ) . '" role="listitem">'
 				. self::media( $c['image'], $c['image_alt'], 'ch-scard__media' )
 				. '<span class="ch-scard__chip">' . self::e( $c['chip'] ) . '</span>'
 				. '<div class="ch-scard__body">'
-				. '<h3 class="ch-scard__title">' . self::e( $c['title'] ) . '</h3>'
+				. '<h3 class="ch-scard__title">' . $title . '</h3>'
 				. '<p class="ch-scard__desc">' . self::e( $c['description'] ) . '</p>'
 				. '<div class="ch-scard__stats">' . $stats . '</div></div></article>';
 		}
@@ -591,11 +605,54 @@ final class Blueworx_Clubhouse_Sections {
 		$eyebrow = '' !== $data['eyebrow']
 			? '<span class="ch-eyebrow ch-eyebrow--band">' . self::e( $data['eyebrow'] ) . '</span>' : '';
 		$lede    = '' !== $data['lede'] ? '<p class="ch-band__lede">' . self::e( $data['lede'] ) . '</p>' : '';
+		// Both halves, or neither — the same rule as the event cards. A band with a
+		// label and no link (or a link and no words) rendered a button that went
+		// nowhere, and a band is also useful as a plain statement with no button.
+		$cta = '' !== trim( (string) $data['cta_label'] ) && '' !== trim( (string) $data['cta_href'] )
+			? '<a class="ch-btn ' . $btn . '" href="' . self::e( $data['cta_href'] ) . '">' . self::e( $data['cta_label'] ) . '</a>'
+			: '';
 		return '<section class="ch-wrap ch-band-wrap"><div class="ch-band ' . $mod . '">'
 			. $eyebrow
 			. '<h2 class="ch-band__title">' . self::e( $data['heading'] ) . '</h2>'
 			. $lede
-			. '<a class="ch-btn ' . $btn . '" href="' . self::e( $data['cta_href'] ) . '">' . self::e( $data['cta_label'] ) . '</a>'
+			. $cta
+			. '</div></section>';
+	}
+
+	/**
+	 * Training times and who to ask, for a sport or team page. A plain two-column
+	 * panel: nothing here is a link except the email, because the point is the
+	 * information rather than a journey onward.
+	 *
+	 * @param array{eyebrow:string,heading:string,training:array<int,string>,
+	 *   contact_name:string,contact_email:string} $data
+	 */
+	public static function info_panel( array $data ): string {
+		$times = '';
+		foreach ( $data['training'] as $line ) {
+			$times .= '<li class="ch-info__time" role="listitem">' . self::e( $line ) . '</li>';
+		}
+		$training_block = '' !== $times
+			? '<div class="ch-info__col"><h3 class="ch-info__h">Training</h3>'
+				. '<ul class="ch-info__times" role="list">' . $times . '</ul></div>'
+			: '';
+
+		$name  = trim( $data['contact_name'] );
+		$email = trim( $data['contact_email'] );
+		$who   = '';
+		if ( '' !== $name || '' !== $email ) {
+			$who = '<div class="ch-info__col"><h3 class="ch-info__h">Who to ask</h3>'
+				. ( '' !== $name ? '<p class="ch-info__name">' . self::e( $name ) . '</p>' : '' )
+				. ( '' !== $email
+					? '<a class="ch-info__email" href="mailto:' . self::e( $email ) . '">' . self::e( $email ) . '</a>'
+					: '' )
+				. '</div>';
+		}
+
+		return '<section class="ch-sec"><div class="ch-wrap">'
+			. '<span class="ch-eyebrow">' . self::e( $data['eyebrow'] ) . '</span>'
+			. '<h2 class="ch-sec__title ch-sec__title--sm">' . self::e( $data['heading'] ) . '</h2>'
+			. '<div class="ch-info">' . $training_block . $who . '</div>'
 			. '</div></section>';
 	}
 

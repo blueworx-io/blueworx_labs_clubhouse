@@ -502,6 +502,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 									'image_alt' => $s['title'],
 									'tag'       => $s['label'],
 									'title'     => $s['title'],
+									'href'      => Blueworx_Clubhouse_Links::item_url( 'sports', self::slugify( (string) $s['title'] ) ),
 									'subtitle'  => $s['subtitle'],
 								);
 							},
@@ -519,6 +520,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 									'image_alt' => $t['sport'] . ' ' . $t['title'],
 									'tag'       => $t['sport'],
 									'title'     => $t['title'],
+									'href'      => Blueworx_Clubhouse_Links::item_url( 'teams', self::slugify( (string) $t['title'] ) ),
 									'subtitle'  => $t['description'],
 								);
 							},
@@ -1071,6 +1073,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 							'image_alt'   => $s['title'],
 							'chip'        => $s['label'],
 							'title'       => $s['title'],
+							'href'        => Blueworx_Clubhouse_Links::item_url( 'sports', self::slugify( (string) $s['title'] ) ),
 							'description' => $s['description'],
 							'stats'       => array(
 								array( 'value' => $s['stat1_value'], 'label' => $s['stat1_label'] ),
@@ -1135,6 +1138,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 							'image_alt'   => $t['sport'] . ' ' . $t['title'],
 							'chip'        => $t['sport'],
 							'title'       => $t['title'],
+							'href'        => Blueworx_Clubhouse_Links::item_url( 'teams', self::slugify( (string) $t['title'] ) ),
 							'description' => $t['description'],
 							'stats'       => array(
 								array( 'value' => $t['match_day'], 'label' => 'Match day' ),
@@ -1294,6 +1298,191 @@ final class Blueworx_Clubhouse_Page_Renderer {
 		}
 		$out .= '</main>' . self::shell_footer( $club, $visibility, $branding, $content );
 		return $out;
+	}
+
+	/**
+	 * One section's own page: the thing the Sports cards used to promise and not
+	 * deliver. Assembled entirely from sections that already exist, so it inherits
+	 * every look without a new visual language to maintain.
+	 *
+	 * Returns '' when no sport matches the slug, which is the caller's signal to
+	 * fall back to the listing rather than render an empty page.
+	 */
+	public static function sport_page(
+		string $slug,
+		Blueworx_Clubhouse_Branding $branding,
+		Blueworx_Clubhouse_Visibility $visibility,
+		Blueworx_Clubhouse_Collections $collections,
+		string $logo_url = '',
+		?Blueworx_Clubhouse_Content_Store $content = null
+	): string {
+		$sport = self::find_by_slug( $collections->sports(), $slug );
+		if ( null === $sport ) {
+			return '';
+		}
+		$club  = $branding->get_club_name();
+		$title = (string) $sport['title'];
+		$out   = self::shell_header( $club, Blueworx_Clubhouse_Links::item_url( 'sports', $slug ), $visibility, $collections, $logo_url, $content )
+			. '<main class="ch-main" id="ch-main" tabindex="-1">';
+
+		$out .= Blueworx_Clubhouse_Sections::hero( array(
+			'eyebrow'            => '' !== (string) $sport['label'] ? (string) $sport['label'] : 'Our sports',
+			'title_lead'         => $title . ' ',
+			'title_highlight'    => 'at ' . $club . '.',
+			'lede'               => (string) $sport['subtitle'],
+			'cta_primary'        => Blueworx_Clubhouse_Cta::JOIN,
+			'cta_primary_href'   => Blueworx_Clubhouse_Links::url( 'membership' ),
+			'cta_secondary'      => 'All sports',
+			'cta_secondary_href' => Blueworx_Clubhouse_Links::url( 'sports' ),
+			'image'              => self::media_src( (string) $sport['image'] ),
+			'image_alt'          => $title . ' at ' . $club,
+			'image_caption'      => '',
+		) );
+
+		$out .= self::section_detail_blocks( $sport, $title, $collections );
+		$out .= '</main>' . self::shell_footer( $club, $visibility, $branding, $content );
+		return $out;
+	}
+
+	/**
+	 * One team's own page. Same shape as sport_page(): the team's own words, when
+	 * and where it trains, who to ask, and its fixtures.
+	 */
+	public static function team_page(
+		string $slug,
+		Blueworx_Clubhouse_Branding $branding,
+		Blueworx_Clubhouse_Visibility $visibility,
+		Blueworx_Clubhouse_Collections $collections,
+		string $logo_url = '',
+		?Blueworx_Clubhouse_Content_Store $content = null
+	): string {
+		$team = self::find_by_slug( $collections->teams(), $slug );
+		if ( null === $team ) {
+			return '';
+		}
+		$club  = $branding->get_club_name();
+		$title = (string) $team['title'];
+		$out   = self::shell_header( $club, Blueworx_Clubhouse_Links::item_url( 'teams', $slug ), $visibility, $collections, $logo_url, $content )
+			. '<main class="ch-main" id="ch-main" tabindex="-1">';
+
+		$out .= Blueworx_Clubhouse_Sections::hero( array(
+			'eyebrow'            => (string) $team['sport'],
+			'title_lead'         => $title . ' ',
+			'title_highlight'    => '' !== (string) $team['league'] ? (string) $team['league'] . '.' : 'squad.',
+			'lede'               => (string) $team['description'],
+			'cta_primary'        => Blueworx_Clubhouse_Cta::JOIN,
+			'cta_primary_href'   => Blueworx_Clubhouse_Links::url( 'membership' ),
+			'cta_secondary'      => 'All teams',
+			'cta_secondary_href' => Blueworx_Clubhouse_Links::url( 'teams' ),
+			'image'              => self::media_src( (string) $team['image'] ),
+			'image_alt'          => $title . ' at ' . $club,
+			'image_caption'      => '',
+		) );
+
+		// A team's fixtures are its sport's, narrowed to the ones it plays in.
+		$out .= self::section_detail_blocks( $team, (string) $team['sport'], $collections, $title );
+		$out .= '</main>' . self::shell_footer( $club, $visibility, $branding, $content );
+		return $out;
+	}
+
+	/**
+	 * The blocks a sport page and a team page share: what the club says about it,
+	 * when it trains, who to ask, and its fixtures. Kept in one place because the
+	 * two pages differ only in what fills them.
+	 *
+	 * @param array<string,mixed> $row        The sport or team.
+	 * @param string              $sport_name The sport whose fixtures apply.
+	 * @param string              $team_name  Narrow fixtures to this side, when given.
+	 */
+	private static function section_detail_blocks(
+		array $row,
+		string $sport_name,
+		Blueworx_Clubhouse_Collections $collections,
+		string $team_name = ''
+	): string {
+		$out = '';
+
+		$description = trim( (string) ( $row['description'] ?? '' ) );
+		if ( '' !== $description ) {
+			$out .= Blueworx_Clubhouse_Sections::band( array(
+				'variant'   => 'paper',
+				'eyebrow'   => 'About the section',
+				'heading'   => (string) $row['title'],
+				'lede'      => $description,
+				'cta_label' => '',
+				'cta_href'  => '',
+			) );
+		}
+
+		// Training times and a name to ask for. Rendered only when the club has
+		// filled them in — an empty "Training" heading answers nothing.
+		$training = self::lines( (string) ( $row['training'] ?? '' ) );
+		$contact  = trim( (string) ( $row['contact_name'] ?? '' ) );
+		$email    = trim( (string) ( $row['contact_email'] ?? '' ) );
+		if ( array() !== $training || '' !== $contact || '' !== $email ) {
+			$out .= Blueworx_Clubhouse_Sections::info_panel( array(
+				'eyebrow'       => 'Getting involved',
+				'heading'       => 'Training and contacts',
+				'training'      => $training,
+				'contact_name'  => $contact,
+				'contact_email' => $email,
+			) );
+		}
+
+		$fixtures = array_values( array_filter(
+			$collections->fixtures(),
+			static function ( array $f ) use ( $sport_name, $team_name ): bool {
+				// A fixture names its sport as "Rugby · 1st XV" — the sport, then the
+				// side. Matching the whole string against "Rugby" found nothing, so
+				// the sport is taken from the part before the separator and the side
+				// from what follows.
+				$parts = array_map( 'trim', explode( '·', (string) $f['sport'] ) );
+				$sport = self::slugify( $parts[0] ?? '' );
+				$side  = self::slugify( $parts[1] ?? '' );
+
+				if ( '' !== $sport_name && $sport !== self::slugify( $sport_name ) ) {
+					return false;
+				}
+				if ( '' === $team_name ) {
+					return true;
+				}
+				$wanted = self::slugify( $team_name );
+				return $side === $wanted
+					|| self::slugify( (string) $f['home'] ) === $wanted
+					|| self::slugify( (string) $f['away'] ) === $wanted;
+			}
+		) );
+		if ( array() !== $fixtures ) {
+			$out .= Blueworx_Clubhouse_Sections::calendar_months( array(
+				'eyebrow'    => 'On the calendar',
+				'heading'    => 'Fixtures & results',
+				'empty_text' => '',
+				'months'     => Blueworx_Clubhouse_Fixture_Projection::calendar_months( $fixtures ),
+			) );
+		}
+
+		return $out;
+	}
+
+	/**
+	 * The row whose title slugifies to $slug, or null. Matched on the derived slug
+	 * rather than a stored one so a club renaming a section does not have to think
+	 * about URLs — the same derivation the filter pills already use.
+	 *
+	 * @param array<int,array<string,mixed>> $rows
+	 * @return array<string,mixed>|null
+	 */
+	public static function find_by_slug( array $rows, string $slug ): ?array {
+		$slug = self::slugify( $slug );
+		if ( '' === $slug ) {
+			return null;
+		}
+		foreach ( $rows as $row ) {
+			if ( self::slugify( (string) $row['title'] ) === $slug ) {
+				return $row;
+			}
+		}
+		return null;
 	}
 
 	/**

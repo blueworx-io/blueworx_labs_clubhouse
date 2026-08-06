@@ -24,11 +24,20 @@ const PROBE = (min) =>
       if (el.closest('.ch-switcher') || el.classList.contains('ch-look-toggle')) {
         return false;
       }
-      const r = el.getBoundingClientRect();
+      // A card's title link stretches its hit area over the whole card with an
+      // inset ::after, so the anchor's own box understates what a finger can
+      // press. Measure the card, which is what actually responds to the tap.
+      const box = el.closest('.ch-scard--linked') || el;
+      const r = box.getBoundingClientRect();
       return r.width > 0 && r.height > 0 && Math.min(r.width, r.height) < min;
     })
-    .map((el) => `${el.tagName.toLowerCase()}.${el.className || '(none)'} ` +
-      `${Math.round(el.getBoundingClientRect().width)}x${Math.round(el.getBoundingClientRect().height)}`);
+    .map((el) => {
+      // Report the same box the filter judged, or the failure names a size
+      // nobody measured.
+      const r = (el.closest('.ch-scard--linked') || el).getBoundingClientRect();
+      return `${el.tagName.toLowerCase()}.${el.className || '(none)'} ` +
+        `${Math.round(r.width)}x${Math.round(r.height)}`;
+    });
 
 for (const look of LOOKS) {
   test(`@preview tap targets are at least ${MIN}px on a phone — ${look}`, async ({ page }) => {

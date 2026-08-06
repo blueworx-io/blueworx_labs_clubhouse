@@ -5,6 +5,13 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.63.0
+
+- **Every sport and every team now has its own page.** The cards on Sports, Teams and the home page were a name and a strapline that went nowhere — which is the main thing most people come to a club site for. Each one now opens a page with the section's own words, when it trains, who to ask, and its fixtures.
+- **Two new things to fill in per section:** training times and a contact name and email, under Collections → Sports or Teams. Anything you leave empty is simply not shown.
+- Pages live at addresses like /sports/rugby/ and /teams/1st-xv/, so they can be linked and shared. Rename a section and its address follows the new name.
+- A link to a section that no longer exists lands on the full list rather than an empty page.
+
 ## 0.62.0
 
 - **The page no longer contradicts itself.** Headlines counted "nine sports" and "twenty-four teams" on a club that listed six and four. The numbers are now counted from your own sports and teams, so the claim and the list beneath it always agree.

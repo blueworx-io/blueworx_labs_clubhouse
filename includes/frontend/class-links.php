@@ -62,4 +62,43 @@ final class Blueworx_Clubhouse_Links {
 		$sep = ( false !== strpos( $url, '?' ) ) ? '&' : '?';
 		return $url . $sep . self::FILTER_PARAM . '=' . rawurlencode( $filter );
 	}
+
+	/** The query param naming a single sport or team on its own page. */
+	public const ITEM_PARAM = 'clubhouse_item';
+
+	/**
+	 * One sport's or one team's page — the Sports or Teams listing carrying an
+	 * item. Built on the listing's own URL rather than a slug of its own, so it
+	 * follows whatever form that page resolves to (a permalink live, the query
+	 * form in the preview) without a second resolver to keep in step.
+	 *
+	 * @param string $key  'sports' or 'teams'.
+	 * @param string $slug The item's slug, as Page_Renderer::slugify() derives it.
+	 */
+	public static function item_url( string $key, string $slug ): string {
+		$url = self::url( $key );
+		if ( '' === $slug ) {
+			return $url;
+		}
+		if ( null !== self::$item_resolver ) {
+			return ( self::$item_resolver )( $key, $slug );
+		}
+		$sep = ( false !== strpos( $url, '?' ) ) ? '&' : '?';
+		return $url . $sep . self::ITEM_PARAM . '=' . rawurlencode( $slug );
+	}
+
+	/** @var null|callable(string,string):string */
+	private static $item_resolver = null;
+
+	/**
+	 * Installed by the front end so a sport's page links as /sports/rugby/ rather
+	 * than the query form. Its own seam rather than a branch inside url(), because
+	 * only the front end knows whether permalinks are on; the preview and the
+	 * tests leave it unset and get the query form, which they can serve.
+	 *
+	 * @param null|callable(string,string):string $resolver
+	 */
+	public static function set_item_resolver( ?callable $resolver ): void {
+		self::$item_resolver = $resolver;
+	}
 }
