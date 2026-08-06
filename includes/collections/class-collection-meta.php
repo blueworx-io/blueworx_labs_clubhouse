@@ -58,6 +58,12 @@ final class Blueworx_Clubhouse_Collection_Meta {
 		'clubhouse_event' => array(
 			array( 'key' => 'tag',       'label' => 'Tag',          'type' => 'text' ),
 			array( 'key' => 'date',      'label' => 'Date label',   'type' => 'text' ),
+			// The real date, beside the words shown on the page. Without it an
+			// event stayed under "Upcoming" until somebody remembered to change
+			// its status by hand, so the club open day sat there nine days after
+			// it happened. Optional: an event with no date keeps whatever status
+			// it was given, which is what a recurring or undated entry needs.
+			array( 'key' => 'ends_on',   'label' => 'Date it ends', 'type' => 'date' ),
 			array( 'key' => 'detail',    'label' => 'Detail',       'type' => 'textarea' ),
 			array( 'key' => 'cta_label', 'label' => 'Button label', 'type' => 'text' ),
 			array( 'key' => 'cta_href',  'label' => 'Button link',  'type' => 'href' ),

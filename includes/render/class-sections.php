@@ -785,7 +785,10 @@ final class Blueworx_Clubhouse_Sections {
 		}
 		$cards = '';
 		foreach ( $data['cards'] as $c ) {
-			$cta = '' !== $c['cta_label']
+			// Both halves, or neither. A label with no link rendered a button that
+			// looked live and reloaded the page when pressed — two of them shipped
+			// on the demo Events page. Same rule as the contact details.
+			$cta = '' !== $c['cta_label'] && '' !== trim( (string) $c['cta_href'] )
 				? '<a class="ch-btn ch-btn--ghost ch-event__cta" href="' . self::e( $c['cta_href'] ) . '">' . self::e( $c['cta_label'] ) . '</a>'
 				: '';
 			$cards .= '<article class="ch-event" role="listitem">'

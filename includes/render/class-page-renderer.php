@@ -81,6 +81,39 @@ final class Blueworx_Clubhouse_Page_Renderer {
 		return '<script>' . $js . '</script>';
 	}
 
+	/**
+	 * A count written the way the copy writes it — "nine", "twenty-four".
+	 *
+	 * The default copy used to hardcode those words, so a club with six sections
+	 * still read "Nine sports" in its own headline, footer and About page. The
+	 * numbers now come from the collections that fill the page, so the claim and
+	 * the list below it cannot disagree.
+	 *
+	 * Words up to ninety-nine, digits above: no club has a hundred sections, and
+	 * a fallback that degrades to a numeral is better than one that runs out.
+	 */
+	public static function number_word( int $n ): string {
+		$units = array( 'zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine',
+			'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen',
+			'eighteen', 'nineteen' );
+		$tens  = array( 2 => 'twenty', 'thirty', 'forty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety' );
+
+		if ( $n < 0 || $n > 99 ) {
+			return (string) $n;
+		}
+		if ( $n < 20 ) {
+			return $units[ $n ];
+		}
+		$ten = $tens[ intdiv( $n, 10 ) ];
+		$rem = $n % 10;
+		return 0 === $rem ? $ten : $ten . '-' . $units[ $rem ];
+	}
+
+	/** number_word() with its first letter capitalised, for the start of a sentence. */
+	public static function number_word_upper( int $n ): string {
+		return ucfirst( self::number_word( $n ) );
+	}
+
 	/** Read a single content field, falling back to the hardcoded default when unset or no store. */
 	private static function cget( ?Blueworx_Clubhouse_Content_Store $c, string $page, string $sec, string $field, mixed $default ): mixed {
 		if ( null === $c ) {
@@ -302,7 +335,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 	private static function shell_footer( string $club, Blueworx_Clubhouse_Visibility $visibility, Blueworx_Clubhouse_Branding $branding, ?Blueworx_Clubhouse_Content_Store $content = null ): string {
 		return Blueworx_Clubhouse_Sections::footer( array(
 			'club_name'  => $club,
-			'tagline'    => self::cget( $content, 'global', 'footer', 'tagline', 'Nine sports, one club. A home ground for every team, and everyone who follows them.' ),
+			'tagline'    => self::cget( $content, 'global', 'footer', 'tagline', 'One club, every sport. A home ground for every team, and everyone who follows them.' ),
 			'socials'    => array(
 				'Facebook'  => $branding->get_facebook_url(),
 				'Instagram' => $branding->get_instagram_url(),
@@ -417,7 +450,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'eyebrow'            => self::cget( $content, 'home', 'hero', 'eyebrow', 'Est. 1974 · Marlow, UK' ),
 				'title_lead'         => self::cget( $content, 'home', 'hero', 'title_lead', 'Every sport. Every age. ' ),
 				'title_highlight'    => self::cget( $content, 'home', 'hero', 'title_highlight', 'One community.' ),
-				'lede'               => self::cget( $content, 'home', 'hero', 'lede', "Nine sports, twenty-four teams, and a clubhouse that's always open. Come for the game — stay for the people." ),
+				'lede'               => self::cget( $content, 'home', 'hero', 'lede', self::number_word_upper( count( $collections->sports() ) ) . ' sports, ' . self::number_word( count( $collections->teams() ) ) . " teams, and a clubhouse that's always open. Come for the game — stay for the people." ),
 				// Off by default — the quick-tile row below repeats these actions. Still
 				// configurable: an owner who sets a label in the catalogue gets the
 				// button pair back (see home_hero()).
@@ -426,7 +459,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'cta_secondary'      => self::cget( $content, 'home', 'hero', 'cta_secondary', '' ),
 				'cta_secondary_href' => self::cget( $content, 'home', 'hero', 'cta_secondary_href', Blueworx_Clubhouse_Links::url( 'about' ) ),
 				'image'              => self::media_src( (string) self::cget( $content, 'home', 'hero', 'image', '' ) ),
-				'image_alt'          => 'ClubHouse floodlit pitch on a Saturday',
+				'image_alt'          => $club . ' floodlit pitch on a Saturday',
 				'tiles_id'           => Blueworx_Clubhouse_Link_Catalogue::anchor_id( 'home', 'quick_tiles' ),
 				'tiles'              => self::citems( $content, 'home', 'quick_tiles', array(
 					array( 'label' => Blueworx_Clubhouse_Cta::JOIN, 'href' => Blueworx_Clubhouse_Links::url( 'membership' ), 'icon' => 'join' ),
@@ -499,7 +532,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 			$out .= self::anchored( 'home', 'clubhouse', Blueworx_Clubhouse_Sections::image_band( array(
 				'eyebrow'   => self::cget( $content, 'home', 'clubhouse', 'eyebrow', 'The clubhouse' ),
 				'heading'   => self::cget( $content, 'home', 'clubhouse', 'heading', "Bar, kitchen and a full social calendar — the club doesn\u{2019}t stop at the final whistle" ),
-				'image'     => self::media_src( (string) self::cget( $content, 'home', 'clubhouse', 'image', '' ) ), 'image_alt' => 'ClubHouse pavilion at dusk',
+				'image'     => self::media_src( (string) self::cget( $content, 'home', 'clubhouse', 'image', '' ) ), 'image_alt' => $club . ' pavilion at dusk',
 				'cta_label' => self::cget( $content, 'home', 'clubhouse', 'cta_label', 'Visit us' ), 'cta_href' => self::cget( $content, 'home', 'clubhouse', 'cta_href', Blueworx_Clubhouse_Links::url( 'contact' ) ),
 			) ) );
 		}
@@ -657,20 +690,20 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'eyebrow'            => self::cget( $content, 'about', 'hero', 'eyebrow', 'About the club' ),
 				'title_lead'         => self::cget( $content, 'about', 'hero', 'title_lead', 'Fifty-two years of ' ),
 				'title_highlight'    => self::cget( $content, 'about', 'hero', 'title_highlight', 'community sport.' ),
-				'lede'               => self::cget( $content, 'about', 'hero', 'lede', 'From one rugby pitch in 1974 to nine sports and twenty-four teams — ClubHouse has always been about more than the game.' ),
+				'lede'               => self::cget( $content, 'about', 'hero', 'lede', 'From one rugby pitch in 1974 to ' . self::number_word( count( $collections->sports() ) ) . ' sports and ' . self::number_word( count( $collections->teams() ) ) . ' teams — ' . $club . ' has always been about more than the game.' ),
 				'cta_primary'        => self::cget( $content, 'about', 'hero', 'cta_primary', Blueworx_Clubhouse_Cta::JOIN ),
 				'cta_primary_href'   => self::cget( $content, 'about', 'hero', 'cta_primary_href', Blueworx_Clubhouse_Links::url( 'membership' ) ),
 				'cta_secondary'      => self::cget( $content, 'about', 'hero', 'cta_secondary', 'Meet the committee' ),
 				'cta_secondary_href' => self::cget( $content, 'about', 'hero', 'cta_secondary_href', Blueworx_Clubhouse_Links::url( 'contact' ) ),
 				'image'              => self::media_src( (string) self::cget( $content, 'about', 'hero', 'image', '' ) ),
-				'image_alt'          => 'ClubHouse members on the terrace',
+				'image_alt'          => $club . ' members on the terrace',
 				'image_caption'      => '',
 			) ) );
 		}
 		if ( $visibility->is_section_visible( 'about', 'history' ) ) {
 			$out .= self::anchored( 'about', 'history', Blueworx_Clubhouse_Sections::timeline( array(
 				'eyebrow'    => 'Our story',
-				'heading'    => self::cget( $content, 'about', 'history', 'heading', 'From one pitch to nine sports' ),
+				'heading'    => self::cget( $content, 'about', 'history', 'heading', 'From one pitch to ' . self::number_word( count( $collections->sports() ) ) . ' sports' ),
 				'milestones' => array_map(
 					static function ( array $m ): array {
 						return array(
@@ -684,7 +717,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 						array( 'year' => '1982', 'title' => 'Cricket joins', 'desc' => 'Summer cricket takes over the square; the first pavilion goes up.' ),
 						array( 'year' => '1991', 'title' => 'Juniors take root', 'desc' => 'Minis and colts sections launch across rugby and cricket.' ),
 						array( 'year' => '2003', 'title' => 'Courts & clubhouse', 'desc' => 'Four tennis courts and the current clubhouse open.' ),
-						array( 'year' => '2015', 'title' => 'Nine sports', 'desc' => 'Hockey, netball and squash complete the multi-sport club.' ),
+						array( 'year' => '2015', 'title' => 'A multi-sport club', 'desc' => 'Hockey, netball and squash complete the multi-sport club.' ),
 						array( 'year' => '2024', 'title' => 'A modern home', 'desc' => 'A full clubhouse refurbishment for the next generation.' ),
 					) )
 				),
@@ -708,7 +741,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 			$out .= self::anchored( 'about', 'facilities', Blueworx_Clubhouse_Sections::image_band( array(
 				'eyebrow'   => self::cget( $content, 'about', 'facilities', 'eyebrow', 'The facilities' ),
 				'heading'   => self::cget( $content, 'about', 'facilities', 'heading', 'Five pitches, four courts, one clubhouse' ),
-				'image'     => self::media_src( (string) self::cget( $content, 'about', 'facilities', 'image', '' ) ), 'image_alt' => 'ClubHouse grounds from the air',
+				'image'     => self::media_src( (string) self::cget( $content, 'about', 'facilities', 'image', '' ) ), 'image_alt' => $club . ' grounds from the air',
 				'cta_label' => self::cget( $content, 'about', 'facilities', 'cta_label', 'Book a visit' ), 'cta_href' => self::cget( $content, 'about', 'facilities', 'cta_href', Blueworx_Clubhouse_Links::url( 'contact' ) ),
 			) ) );
 		}
@@ -772,7 +805,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'cta_secondary'      => self::cget( $content, 'membership', 'hero', 'cta_secondary', 'Ask a question' ),
 				'cta_secondary_href' => self::cget( $content, 'membership', 'hero', 'cta_secondary_href', Blueworx_Clubhouse_Links::url( 'contact' ) ),
 				'image'              => self::media_src( (string) self::cget( $content, 'membership', 'hero', 'image', '' ) ),
-				'image_alt'          => 'ClubHouse members warming up',
+				'image_alt'          => $club . ' members warming up',
 				'image_caption'      => '',
 			) ) );
 		}
@@ -1017,7 +1050,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 		if ( $visibility->is_section_visible( 'sports', 'hero' ) ) {
 			$out .= self::anchored( 'sports', 'hero', Blueworx_Clubhouse_Sections::hero_filter( array(
 				'eyebrow'         => self::cget( $content, 'sports', 'hero', 'eyebrow', 'Our sports' ),
-				'title_lead'      => self::cget( $content, 'sports', 'hero', 'title_lead', 'Nine sports, ' ),
+				'title_lead'      => self::cget( $content, 'sports', 'hero', 'title_lead', self::number_word_upper( count( $sports ) ) . ' sports, ' ),
 				'title_highlight' => self::cget( $content, 'sports', 'hero', 'title_highlight', 'one club.' ),
 				'lede'            => self::cget( $content, 'sports', 'hero', 'lede', 'From first session to first team — find your section and get playing.' ),
 				'filter_label'    => 'Filter by sport',
@@ -1081,9 +1114,9 @@ final class Blueworx_Clubhouse_Page_Renderer {
 		if ( $visibility->is_section_visible( 'teams', 'hero' ) ) {
 			$out .= self::anchored( 'teams', 'hero', Blueworx_Clubhouse_Sections::hero_filter( array(
 				'eyebrow'         => self::cget( $content, 'teams', 'hero', 'eyebrow', 'Our teams' ),
-				'title_lead'      => self::cget( $content, 'teams', 'hero', 'title_lead', 'Twenty-four teams, ' ),
+				'title_lead'      => self::cget( $content, 'teams', 'hero', 'title_lead', self::number_word_upper( count( $teams ) ) . ' teams, ' ),
 				'title_highlight' => self::cget( $content, 'teams', 'hero', 'title_highlight', 'every level.' ),
-				'lede'            => self::cget( $content, 'teams', 'hero', 'lede', 'League sides, development squads and junior pathways across all nine sports.' ),
+				'lede'            => self::cget( $content, 'teams', 'hero', 'lede', 'League sides, development squads and junior pathways across all ' . self::number_word( count( $collections->sports() ) ) . ' sports.' ),
 				'filter_label'    => 'Filter teams by sport',
 				'filters'         => self::filter_pills( 'teams', $labels, $filter ),
 			) ) );
@@ -1224,7 +1257,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'eyebrow'         => self::cget( $content, 'calendar', 'hero', 'eyebrow', 'Fixtures & results' ),
 				'title_lead'      => self::cget( $content, 'calendar', 'hero', 'title_lead', 'Every game, ' ),
 				'title_highlight' => self::cget( $content, 'calendar', 'hero', 'title_highlight', 'all season.' ),
-				'lede'            => self::cget( $content, 'calendar', 'hero', 'lede', 'Match days across all nine sports, with results as they come in.' ),
+				'lede'            => self::cget( $content, 'calendar', 'hero', 'lede', 'Match days across all ' . self::number_word( count( $collections->sports() ) ) . ' sports, with results as they come in.' ),
 				'filter_label'    => 'Filter fixtures by sport',
 				'filters'         => self::filter_pills( 'calendar', $labels, $filter ),
 			) ) );
