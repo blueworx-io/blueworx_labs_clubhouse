@@ -1,20 +1,23 @@
 const { test, expect } = require('@playwright/test');
 
-// @wordpress only: this is about a page WordPress serves that the plugin does
-// NOT own — SureCart's customer dashboard is the real one. The preview harness
-// can only render clubhouse pages, so it has nothing to say here.
+// @wordpress only: this is about pages WordPress serves that the plugin does
+// NOT render itself. The preview harness only renders clubhouse pages, so it has
+// nothing to say about most of this.
 //
 // The tag has to be on each TEST TITLE, not only in this comment: the config
 // selects specs with Playwright's grep, which matches titles. Stating it here
-// alone is what left these five running against the preview — where the fixture
-// does not exist — and failing on every local run.
+// alone is what left these running against the preview — where the fixture does
+// not exist — and failing on every local run.
 //
-// The last test in this file is deliberately untagged. It checks that a
-// clubhouse page is NOT wrapped, which the preview can answer perfectly well.
+// Two rules are covered, and they pull in opposite directions:
+//   - a bad URL or an archive SHOULD get the club chrome, because otherwise it
+//     is bare theme output with no way back to the club; but
+//   - a SureCart page should NOT, because SureCart ships a complete UI of its
+//     own and the club's tokens fought it.
 //
-// The fixture is seeded by tests/global-setup.js: an ordinary page carrying the
-// page template slug the detection keys off ('…surecart…'). See the comment
-// there for why the fixture is a template slug rather than SureCart itself.
+// The SureCart fixture is seeded by tests/global-setup.js: an ordinary page
+// carrying the page template slug the detection keys off ('…surecart…'). See the
+// comment there for why the fixture is a template slug rather than SureCart itself.
 //
 // Navigated by its pretty permalink, not ?pagename=: the harness sets
 // /%postname%/, so the query form is a redirect, and a redirect on the first
@@ -22,51 +25,35 @@ const { test, expect } = require('@playwright/test');
 // navigation.
 const FIXTURE = '/external-chrome-fixture/';
 
-test('a page another plugin owns gets the club header and footer @wordpress', async ({ page }) => {
+// SureCart owns its own look. Wrapping the customer dashboard and checkout in
+// the club header, footer and design tokens fought SureCart's styling instead
+// of complementing it, so commerce pages are excluded outright and stand alone.
+test('a SureCart page gets no club chrome at all @wordpress', async ({ page }) => {
   await page.goto(FIXTURE);
 
-  await expect(page.locator('header.ch-nav')).toBeVisible();
-  await expect(page.locator('.ch-footer')).toBeVisible();
+  await expect(page.locator('header.ch-nav')).toHaveCount(0);
+  await expect(page.locator('.ch-footer')).toHaveCount(0);
+  await expect(page.locator('.ch-external')).toHaveCount(0);
 });
 
-test("the other plugin's content is kept, inside the content well @wordpress", async ({ page }) => {
+test('a SureCart page loads none of the club stylesheets @wordpress', async ({ page }) => {
   await page.goto(FIXTURE);
 
-  const foreign = page.locator('#foreign-content');
-  await expect(foreign).toHaveText('FOREIGN CONTENT');
-  // Between the two halves of the chrome, not swallowed by either.
-  await expect(page.locator('.ch-external .ch-external__in #foreign-content')).toHaveCount(1);
-});
+  await expect(page.locator('link#clubhouse-base-css')).toHaveCount(0);
+  await expect(page.locator('link#clubhouse-look-css')).toHaveCount(0);
 
-test('the look stylesheet loads so the page is in the club typeface @wordpress', async ({ page }) => {
-  await page.goto(FIXTURE);
-
-  await expect(page.locator('link#clubhouse-base-css')).toHaveCount(1);
-  await expect(page.locator('link#clubhouse-look-css')).toHaveCount(1);
-
-  // The derived :root variables are what make the chrome the club's colours.
+  // No club design tokens on :root either — those are what were re-colouring
+  // SureCart's own components.
   const accent = await page.evaluate(() =>
     getComputedStyle(document.documentElement).getPropertyValue('--color-accent').trim()
   );
-  expect(accent).not.toBe('');
+  expect(accent).toBe('');
 });
 
-// Our scroll reveal adds a hidden-until-observed class to the children of
-// .ch-main. Applied to a foreign page it would hide that plugin's UI — a
-// checkout or a dashboard — behind an animation it never asked for.
-test('the scroll reveal is not loaded, and nothing is hidden by us @wordpress', async ({ page }) => {
+test("the SureCart page's own content is untouched @wordpress", async ({ page }) => {
   await page.goto(FIXTURE);
 
-  await expect(page.locator('script#clubhouse-reveal-js')).toHaveCount(0);
-  await expect(page.locator('.ch-reveal')).toHaveCount(0);
-  await expect(page.locator('#foreign-content')).toBeVisible();
-});
-
-test('the chrome is emitted once, not once per nested body match @wordpress', async ({ page }) => {
-  await page.goto(FIXTURE);
-
-  await expect(page.locator('header.ch-nav')).toHaveCount(1);
-  await expect(page.locator('.ch-external')).toHaveCount(1);
+  await expect(page.locator('#foreign-content')).toHaveText('FOREIGN CONTENT');
 });
 
 // A clubhouse page renders its own complete document. If the wrapper ever

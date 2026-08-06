@@ -42,19 +42,50 @@ final class Blueworx_Clubhouse_External_Chrome {
 	 * way back to the club. Those URLs are in the sitemap, so they are what a
 	 * visitor arriving from a search result could land on.
 	 *
-	 * A clubhouse page is excluded because it already renders the full document
-	 * itself; dressing it would emit a second header and footer.
+	 * Two things are excluded outright, and neither the filter nor anything else
+	 * can opt them back in:
+	 *
+	 *   - A clubhouse page, which already renders the full document itself;
+	 *     dressing it would emit a second header and footer.
+	 *   - Anything on a SureCart template — the customer dashboard, checkout,
+	 *     order pages, products. SureCart ships a complete, self-contained UI and
+	 *     wrapping it in the club's header, footer and design tokens fought its
+	 *     own styling instead of complementing it. Commerce pages stand alone.
 	 *
 	 * @param bool $is_clubhouse_page Whether Frontend is serving this request.
 	 * @param bool $is_dressable_view Whether this is a front-end view that renders
 	 *                                a page (not a feed, robots.txt or a redirect).
+	 * @param bool $is_surecart_view  Whether SureCart owns this page.
 	 * @param bool $forced            An explicit opt-in from the filter below.
 	 */
-	public static function dresses( bool $is_clubhouse_page, bool $is_dressable_view, bool $forced = false ): bool {
-		if ( $is_clubhouse_page ) {
+	public static function dresses( bool $is_clubhouse_page, bool $is_dressable_view, bool $is_surecart_view, bool $forced = false ): bool {
+		if ( $is_clubhouse_page || $is_surecart_view ) {
 			return false;
 		}
 		return $forced || $is_dressable_view;
+	}
+
+	/**
+	 * Whether SureCart owns the page being rendered. Pure, so the matching is
+	 * testable without WordPress.
+	 *
+	 * Matched on two independent signals, because SureCart's pages do not all
+	 * look alike: the customer dashboard and checkout carry a page template whose
+	 * slug names the vendor, while products are a post type of their own. Either
+	 * is enough.
+	 *
+	 * @param string $template_slug The page's stored _wp_page_template value.
+	 * @param string $post_type     The post type being rendered.
+	 */
+	public static function is_surecart( string $template_slug, string $post_type ): bool {
+		if ( str_contains( strtolower( $template_slug ), 'surecart' ) ) {
+			return true;
+		}
+		$type = strtolower( $post_type );
+		// SureCart registers its post types under an sc_ prefix (sc_product and
+		// friends). Prefix-matched rather than listed, so a type added by a later
+		// SureCart release is covered without an update here.
+		return str_starts_with( $type, 'sc_' ) || str_contains( $type, 'surecart' );
 	}
 
 	/**
@@ -117,11 +148,22 @@ final class Blueworx_Clubhouse_External_Chrome {
 		 * @param bool $forced Whether to dress this request regardless.
 		 */
 		$forced = (bool) apply_filters( 'blueworx_clubhouse_dress_external_page', false );
+		$slug   = function_exists( 'get_page_template_slug' ) ? get_page_template_slug() : '';
 		return self::dresses(
 			Blueworx_Clubhouse_Frontend::is_clubhouse_page(),
 			self::is_dressable_view(),
+			self::is_surecart( is_string( $slug ) ? $slug : '', self::current_post_type() ),
 			$forced
 		);
+	}
+
+	/** The post type being rendered, or '' when the view has no single post. */
+	private static function current_post_type(): string {
+		if ( ! function_exists( 'get_post_type' ) ) {
+			return '';
+		}
+		$type = get_post_type();
+		return is_string( $type ) ? $type : '';
 	}
 
 	/**

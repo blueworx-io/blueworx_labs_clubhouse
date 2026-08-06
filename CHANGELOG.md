@@ -5,6 +5,11 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.61.1
+
+- **Shop pages are left entirely alone now.** The customer dashboard, checkout, order pages and products no longer pick up the club's header, footer, fonts or colours — Clubhouse was fighting SureCart's own design instead of sitting alongside it. They stand on their own.
+- The "page not found" screen and category listings still carry the club's design, as before.
+
 ## 0.61.0
 
 - **The contact form and newsletter signup now work — or aren't shown.** Both looked real and did nothing: someone could type out an enquiry, press send, be told nothing, and the club would never hear from them.
