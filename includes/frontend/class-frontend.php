@@ -36,6 +36,31 @@ final class Blueworx_Clubhouse_Frontend {
 		return self::sanitize_filter( is_string( $raw ) ? wp_unslash( $raw ) : '' );
 	}
 
+	/**
+	 * The sport or team named on a Sports/Teams URL, sanitised to the same slug
+	 * shape the filter uses — it is matched against a slugified title, so anything
+	 * that is not a slug cannot match and is safely reduced to one.
+	 */
+	private static function current_item(): string {
+		// The rewrite fills the query var; the query form fills $_GET. Both reach
+		// here so /sports/rugby/ and ?clubhouse_item=rugby serve the same page.
+		$raw = function_exists( 'get_query_var' ) ? get_query_var( Blueworx_Clubhouse_Links::ITEM_PARAM ) : '';
+		if ( ! is_string( $raw ) || '' === $raw ) {
+			// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only display selector, no state change.
+			$raw = $_GET[ Blueworx_Clubhouse_Links::ITEM_PARAM ] ?? '';
+			$raw = is_string( $raw ) ? wp_unslash( $raw ) : '';
+		}
+		return self::sanitize_filter( $raw );
+	}
+
+	/** /sports/rugby/ when permalinks allow it, the query form when they do not. */
+	public static function item_link_url( string $key, string $slug ): string {
+		if ( '' !== (string) get_option( 'permalink_structure', '' ) ) {
+			return home_url( '/' . $key . '/' . rawurlencode( $slug ) . '/' );
+		}
+		return home_url( '/?' . self::QUERY_VAR . '=' . $key . '&' . Blueworx_Clubhouse_Links::ITEM_PARAM . '=' . rawurlencode( $slug ) );
+	}
+
 	public static function resolve_slug( bool $is_front_page, mixed $query_var, ?Blueworx_Clubhouse_Visibility $visibility = null ): ?string {
 		$slug = null;
 		if ( is_string( $query_var ) && '' !== $query_var && Blueworx_Clubhouse_Page_Map::has( $query_var ) ) {
@@ -173,15 +198,26 @@ final class Blueworx_Clubhouse_Frontend {
 
 	public static function register_rewrites(): void {
 		add_rewrite_tag( '%' . self::QUERY_VAR . '%', '([^&]+)' );
+		add_rewrite_tag( '%' . Blueworx_Clubhouse_Links::ITEM_PARAM . '%', '([^&/]+)' );
 		foreach ( Blueworx_Clubhouse_Page_Map::pages() as $page ) {
 			if ( '' === $page['slug'] ) {
 				continue;
 			}
+			// The item rule goes in first: 'top' prepends, so the LAST rule added
+			// at the top is matched first, and /sports/rugby/ must not be eaten by
+			// the bare /sports/ rule.
 			add_rewrite_rule(
 				'^' . $page['slug'] . '/?$',
 				'index.php?' . self::QUERY_VAR . '=' . $page['slug'],
 				'top'
 			);
+			if ( in_array( $page['slug'], array( 'sports', 'teams' ), true ) ) {
+				add_rewrite_rule(
+					'^' . $page['slug'] . '/([^/]+)/?$',
+					'index.php?' . self::QUERY_VAR . '=' . $page['slug'] . '&' . Blueworx_Clubhouse_Links::ITEM_PARAM . '=$matches[1]',
+					'top'
+				);
+			}
 		}
 	}
 
@@ -343,6 +379,7 @@ final class Blueworx_Clubhouse_Frontend {
 			return '';
 		}
 		Blueworx_Clubhouse_Links::set_resolver( array( self::class, 'link_url' ) );
+		Blueworx_Clubhouse_Links::set_item_resolver( array( self::class, 'item_link_url' ) );
 		Blueworx_Clubhouse_Menu::set_provider(
 			static fn(): Blueworx_Clubhouse_Menu => new Blueworx_Clubhouse_Menu( new Blueworx_Clubhouse_Options_Storage() )
 		);
@@ -356,7 +393,7 @@ final class Blueworx_Clubhouse_Frontend {
 		if ( $is_article ) {
 			return Blueworx_Clubhouse_Page_Renderer::post( $ctx->branding, $ctx->visibility, $ctx->collections, $logo_url, $ctx->content );
 		}
-		return Blueworx_Clubhouse_Page_Map::render( $slug, $ctx->branding, $ctx->visibility, $ctx->collections, $logo_url, $ctx->content, self::current_filter() );
+		return Blueworx_Clubhouse_Page_Map::render( $slug, $ctx->branding, $ctx->visibility, $ctx->collections, $logo_url, $ctx->content, self::current_filter(), self::current_item() );
 	}
 
 	/**

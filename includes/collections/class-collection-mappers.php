@@ -29,6 +29,10 @@ final class Blueworx_Clubhouse_Collection_Mappers {
 			'stat2_value' => self::m( $post, 'stat2_value' ),
 			'stat2_label' => self::m( $post, 'stat2_label' ),
 			'image'       => self::m( $post, 'image' ),
+			'slug'          => Blueworx_Clubhouse_Page_Renderer::slugify( (string) $post['title'] ),
+			'training'      => self::m( $post, 'training' ),
+			'contact_name'  => self::m( $post, 'contact_name' ),
+			'contact_email' => self::m( $post, 'contact_email' ),
 		);
 	}
 
@@ -40,6 +44,10 @@ final class Blueworx_Clubhouse_Collection_Mappers {
 			'match_day'   => self::m( $post, 'match_day' ),
 			'league'      => self::m( $post, 'league' ),
 			'image'       => self::m( $post, 'image' ),
+			'slug'          => Blueworx_Clubhouse_Page_Renderer::slugify( (string) $post['title'] ),
+			'training'      => self::m( $post, 'training' ),
+			'contact_name'  => self::m( $post, 'contact_name' ),
+			'contact_email' => self::m( $post, 'contact_email' ),
 		);
 	}
 

@@ -105,10 +105,13 @@ function blueworx_clubhouse_preview_document(): string {
 	Blueworx_Clubhouse_Auth_View::set_state(
 		array( 'view' => Blueworx_Clubhouse_Auth_View::view( $_GET[ Blueworx_Clubhouse_Auth_View::ACTION ] ?? '' ) )
 	);
+	// One sport's or one team's own page, same param the front end reads.
+	$raw_item = $_GET[ Blueworx_Clubhouse_Links::ITEM_PARAM ] ?? '';
+	$item     = is_string( $raw_item ) ? trim( (string) preg_replace( '/[^a-z0-9]+/', '-', strtolower( $raw_item ) ), '-' ) : '';
 	$collections = new Blueworx_Clubhouse_Demo_Collections();
 	$body        = 'post' === $page
 		? Blueworx_Clubhouse_Page_Renderer::post( $branding, $visibility, $collections, '', null, $filter )
-		: Blueworx_Clubhouse_Page_Map::render( $slug, $branding, $visibility, $collections, '', null, $filter );
+		: Blueworx_Clubhouse_Page_Map::render( $slug, $branding, $visibility, $collections, '', null, $filter, $item );
 	$palettes  = blueworx_clubhouse_preview_palettes( $registry->active() );
 	$switcher   = '<div class="ch-switcher" data-ch-palettes=\''
 		. htmlspecialchars( json_encode( $palettes ), ENT_QUOTES, 'UTF-8' ) . '\'></div>'

@@ -47,6 +47,12 @@ final class Blueworx_Clubhouse_Collection_Meta {
 			array( 'key' => 'stat2_value', 'label' => 'Stat 2 value', 'type' => 'text' ),
 			array( 'key' => 'stat2_label', 'label' => 'Stat 2 label', 'type' => 'text' ),
 			array( 'key' => 'image',       'label' => 'Image',        'type' => 'media' ),
+			// What a section's own page is for. The cards used to be a name and a
+			// strapline that went nowhere, and a section is the main reason most
+			// people visit a club site at all.
+			array( 'key' => 'training',      'label' => 'Training times', 'type' => 'textarea' ),
+			array( 'key' => 'contact_name',  'label' => 'Contact name',   'type' => 'text' ),
+			array( 'key' => 'contact_email', 'label' => 'Contact email',  'type' => 'email' ),
 		),
 		'clubhouse_team' => array(
 			array( 'key' => 'sport',       'label' => 'Sport',       'type' => 'text' ),
@@ -54,6 +60,9 @@ final class Blueworx_Clubhouse_Collection_Meta {
 			array( 'key' => 'match_day',   'label' => 'Match day',   'type' => 'text' ),
 			array( 'key' => 'league',      'label' => 'League',      'type' => 'text' ),
 			array( 'key' => 'image',       'label' => 'Image',       'type' => 'media' ),
+			array( 'key' => 'training',      'label' => 'Training times', 'type' => 'textarea' ),
+			array( 'key' => 'contact_name',  'label' => 'Contact name',   'type' => 'text' ),
+			array( 'key' => 'contact_email', 'label' => 'Contact email',  'type' => 'email' ),
 		),
 		'clubhouse_event' => array(
 			array( 'key' => 'tag',       'label' => 'Tag',          'type' => 'text' ),

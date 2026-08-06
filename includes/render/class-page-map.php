@@ -109,8 +109,20 @@ final class Blueworx_Clubhouse_Page_Map {
 		Blueworx_Clubhouse_Collections $collections,
 		string $logo_url = '',
 		?Blueworx_Clubhouse_Content_Store $content = null,
-		string $filter = ''
+		string $filter = '',
+		string $item = ''
 	): string {
+		// A sport or a team named on the Sports or Teams URL gets its own page.
+		// Falls through to the listing when the name matches nothing, so a stale
+		// or mistyped link lands somewhere useful instead of on an empty page.
+		if ( '' !== $item && in_array( $slug, array( 'sports', 'teams' ), true ) ) {
+			$detail = 'sports' === $slug
+				? Blueworx_Clubhouse_Page_Renderer::sport_page( $item, $branding, $visibility, $collections, $logo_url, $content )
+				: Blueworx_Clubhouse_Page_Renderer::team_page( $item, $branding, $visibility, $collections, $logo_url, $content );
+			if ( '' !== $detail ) {
+				return $detail;
+			}
+		}
 		$method = 'home';
 		foreach ( self::pages() as $page ) {
 			if ( $page['slug'] === $slug ) {

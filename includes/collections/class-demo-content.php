@@ -19,22 +19,22 @@ final class Blueworx_Clubhouse_Demo_Content {
 		return array(
 			array( 'title' => 'Rugby', 'label' => 'Sat', 'subtitle' => 'Senior · colts · touch',
 				'description' => 'Senior, colts and touch rugby, from minis upward.',
-				'stat1_value' => '4', 'stat1_label' => 'Teams', 'stat2_value' => '120', 'stat2_label' => 'Players', 'image' => '' ),
+				'stat1_value' => '4', 'stat1_label' => 'Teams', 'stat2_value' => '120', 'stat2_label' => 'Players', 'image' => '', 'training' => "Tue & Thu 19:00-20:30 - The Meadow\nColts Sat 09:30 - Pitch 2", 'contact_name' => 'Dan Foster', 'contact_email' => 'rugby@clubhouse.example' ),
 			array( 'title' => 'Tennis', 'label' => 'Daily', 'subtitle' => 'Four courts · coaching',
 				'description' => 'Four courts with coaching for every age.',
-				'stat1_value' => '4', 'stat1_label' => 'Courts', 'stat2_value' => '90', 'stat2_label' => 'Members', 'image' => '' ),
+				'stat1_value' => '4', 'stat1_label' => 'Courts', 'stat2_value' => '90', 'stat2_label' => 'Members', 'image' => '', 'training' => "Courts open Mon-Fri 08:00-21:00\nCoaching Wed 18:00", 'contact_name' => 'Rob Lindqvist', 'contact_email' => 'tennis@clubhouse.example' ),
 			array( 'title' => 'Cricket', 'label' => 'Summer', 'subtitle' => 'Youth → senior league',
 				'description' => 'Youth to senior league cricket on the square.',
-				'stat1_value' => '3', 'stat1_label' => 'Teams', 'stat2_value' => '80', 'stat2_label' => 'Players', 'image' => '' ),
+				'stat1_value' => '3', 'stat1_label' => 'Teams', 'stat2_value' => '80', 'stat2_label' => 'Players', 'image' => '', 'training' => "Nets Tue 18:30 - indoor school\nMatch day Sat 11:00", 'contact_name' => 'Sam Achebe', 'contact_email' => 'cricket@clubhouse.example' ),
 			array( 'title' => 'Football', 'label' => 'Sun', 'subtitle' => 'Juniors · ages 5–16',
 				'description' => 'Junior football for ages 5 to 16.',
-				'stat1_value' => '6', 'stat1_label' => 'Teams', 'stat2_value' => '140', 'stat2_label' => 'Players', 'image' => '' ),
+				'stat1_value' => '6', 'stat1_label' => 'Teams', 'stat2_value' => '140', 'stat2_label' => 'Players', 'image' => '', 'training' => "Juniors Sat 09:00 - Pitch 2\nSeniors Thu 19:30", 'contact_name' => 'Priya Nair', 'contact_email' => 'football@clubhouse.example' ),
 			array( 'title' => 'Hockey', 'label' => 'Sat', 'subtitle' => 'Ladies · mixed',
 				'description' => 'Ladies and mixed hockey, league affiliated.',
-				'stat1_value' => '3', 'stat1_label' => 'Teams', 'stat2_value' => '60', 'stat2_label' => 'Players', 'image' => '' ),
+				'stat1_value' => '3', 'stat1_label' => 'Teams', 'stat2_value' => '60', 'stat2_label' => 'Players', 'image' => '', 'training' => "Wed 20:00-21:30 - Riverside Turf\nJuniors Sun 10:00", 'contact_name' => 'Alex Reyes', 'contact_email' => 'hockey@clubhouse.example' ),
 			array( 'title' => 'Netball', 'label' => 'Wed', 'subtitle' => 'Back-to-netball · squads',
 				'description' => 'Back-to-netball through to divisional squads.',
-				'stat1_value' => '2', 'stat1_label' => 'Teams', 'stat2_value' => '40', 'stat2_label' => 'Players', 'image' => '' ),
+				'stat1_value' => '2', 'stat1_label' => 'Teams', 'stat2_value' => '40', 'stat2_label' => 'Players', 'image' => '', 'training' => "Wed 19:00-20:30 - Courtside Hall", 'contact_name' => 'Kate Wren', 'contact_email' => 'netball@clubhouse.example' ),
 		);
 	}
 

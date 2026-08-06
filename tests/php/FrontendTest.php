@@ -134,11 +134,43 @@ final class FrontendTest extends TestCase {
 	public function test_register_rewrites_adds_one_rule_per_non_home_page(): void {
 		Blueworx_Clubhouse_Frontend::register_rewrites();
 
-		$rules      = wp_stub_calls( 'add_rewrite_rule' );
-		$non_home   = array_filter( Blueworx_Clubhouse_Page_Map::pages(), static fn( $p ) => '' !== $p['slug'] );
-		$this->assertCount( count( $non_home ), $rules );
-		// Each rule maps its slug to the clubhouse_page query var.
-		$this->assertStringContainsString( 'clubhouse_page=about', $rules[0]['args'][1] . $rules[1]['args'][1] . $rules[2]['args'][1] );
+		$rules    = wp_stub_calls( 'add_rewrite_rule' );
+		$non_home = array_filter( Blueworx_Clubhouse_Page_Map::pages(), static fn( $p ) => '' !== $p['slug'] );
+		// One per page, plus one each for /sports/<sport>/ and /teams/<team>/.
+		$this->assertCount( count( $non_home ) + 2, $rules );
+		$all = implode( '|', array_map( static fn( $r ) => $r['args'][1], $rules ) );
+		$this->assertStringContainsString( 'clubhouse_page=about', $all );
+	}
+
+	/**
+	 * /sports/rugby/ must not be swallowed by the bare /sports/ rule. add_rewrite_rule
+	 * with 'top' prepends, so the item rule has to be registered after its listing
+	 * to end up in front of it.
+	 */
+	public function test_a_sport_page_rule_is_matched_before_the_sports_listing(): void {
+		Blueworx_Clubhouse_Frontend::register_rewrites();
+
+		$patterns = array_map( static fn( $r ) => $r['args'][0], wp_stub_calls( 'add_rewrite_rule' ) );
+		$listing  = array_search( '^sports/?$', $patterns, true );
+		$item     = array_search( '^sports/([^/]+)/?$', $patterns, true );
+
+		$this->assertIsInt( $listing );
+		$this->assertIsInt( $item );
+		$this->assertGreaterThan( $listing, $item, 'the item rule must be added after the listing to sit above it' );
+	}
+
+	public function test_a_sport_page_rule_carries_the_item_through(): void {
+		Blueworx_Clubhouse_Frontend::register_rewrites();
+
+		$targets = array_map( static fn( $r ) => $r['args'][1], wp_stub_calls( 'add_rewrite_rule' ) );
+		$this->assertContains(
+			'index.php?clubhouse_page=sports&clubhouse_item=$matches[1]',
+			$targets
+		);
+		$this->assertContains(
+			'index.php?clubhouse_page=teams&clubhouse_item=$matches[1]',
+			$targets
+		);
 	}
 
 	public function test_resolve_slug_front_page_is_home(): void {

@@ -385,6 +385,26 @@ a{color:inherit;text-decoration:none}
 /* Contact — form + dark info panel. */
 .ch-contact{display:grid;grid-template-columns:1.4fr 1fr;gap:32px;align-items:start}
 .ch-contact__form{display:grid;gap:16px}
+
+/* Training times and who to ask, on a sport or team page. Two plain columns —
+   the point is the information, so the only link is the email. */
+.ch-info{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:32px;margin-top:24px}
+.ch-info__col{display:flex;flex-direction:column;gap:10px}
+.ch-info__h{font-family:var(--font-display);font-size:18px;margin:0;color:var(--color-ink)}
+.ch-info__times{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.ch-info__time{color:var(--color-ink-soft);font-size:16px;padding-block:4px;border-bottom:1px solid var(--color-line)}
+.ch-info__name{margin:0;font-size:16px;color:var(--color-ink)}
+.ch-info__email{color:var(--color-accent-deep);font-size:16px;word-break:break-word}
+.ch-info__email:hover{color:var(--color-ink)}
+
+/* A card whose title links to its own page. The pseudo-element puts the click
+   target back over the whole card without wrapping it all in one anchor, which
+   would make a screen reader read the image and stats out as the link label. */
+.ch-scard--linked{position:relative}
+.ch-scard__link{color:inherit;text-decoration:none}
+.ch-scard__link::after{content:"";position:absolute;inset:0}
+.ch-scard--linked:hover .ch-scard__link{color:var(--color-accent-deep)}
+.ch-scard__link:focus-visible{outline:2px solid var(--color-ink);outline-offset:3px}
 /* No form built yet: the slot keeps its shape and offers the email address,
    rather than showing an input that would swallow an enquiry silently. */
 .ch-contact__form--offline{align-self:stretch;align-content:center;gap:18px;padding:24px;border:1px solid var(--color-line);border-radius:var(--radius-md);background:var(--color-surface)}
