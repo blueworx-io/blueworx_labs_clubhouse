@@ -160,8 +160,10 @@ final class ContentCatalogueTest extends TestCase {
 		// The info_* fields do: the address, email and phone beside the form were
 		// hard-coded demo values ("12 Riverside Lane, Marlow") that no club could
 		// change, so they are now content like everything else.
+		// 'shortcode' holds the club's real form. The built-in fields it replaced
+		// posted nowhere, so they were never editable content in the first place.
 		$this->assertSame(
-			array( 'eyebrow', 'heading', 'submit_label', 'info_heading', 'address', 'email', 'phone', 'map_image' ),
+			array( 'eyebrow', 'heading', 'shortcode', 'submit_label', 'info_heading', 'address', 'email', 'phone', 'map_image' ),
 			$this->fieldKeysByTabAndSection( 'contact', 'form' )
 		);
 

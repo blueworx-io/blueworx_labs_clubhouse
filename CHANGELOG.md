@@ -5,6 +5,12 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.61.0
+
+- **The contact form and newsletter signup now work — or aren't shown.** Both looked real and did nothing: someone could type out an enquiry, press send, be told nothing, and the club would never hear from them.
+- **To take enquiries, paste a SureForms shortcode** into Club Pages → Contact → Contact form. Do the same under Global → Footer for newsletter signups.
+- Until you do, the contact page offers your club email instead, and the footer signup box is hidden. Nothing on the site now asks for details it will not act on.
+
 ## 0.60.3
 
 - **A wrong web address now looks like your club, not a broken page.** The "not found" page and category listings used to come out as plain text on white — no header, no footer, no way back. They now carry the club's design like every other page.

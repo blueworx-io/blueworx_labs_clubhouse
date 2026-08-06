@@ -329,10 +329,9 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				), $visibility ) ),
 			),
 			'newsletter' => array(
-				'heading'     => 'Stay in the loop',
-				'lede'        => 'Fixtures, results and club news — one email a month.',
-				'placeholder' => 'Your email',
-				'cta'         => 'Subscribe',
+				'heading'   => self::cget( $content, 'global', 'footer', 'newsletter_heading', 'Stay in the loop' ),
+				'lede'      => self::cget( $content, 'global', 'footer', 'newsletter_lede', 'Fixtures, results and club news — one email a month.' ),
+				'shortcode' => (string) self::cget( $content, 'global', 'footer', 'newsletter_shortcode', '' ),
 			),
 			// Year from the server clock rather than a stored setting: a club that
 			// never touches its settings again still has a footer that is right
@@ -919,11 +918,8 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'eyebrow'         => self::cget( $content, 'contact', 'form', 'eyebrow', 'Get in touch' ),
 				'heading'         => self::cget( $content, 'contact', 'form', 'heading', 'Send us a message' ),
 				'club_name'       => $branding->get_club_name(),
-				'name_label'      => 'Full name',
-				'email_label'     => 'Email',
-				'enquiry_label'   => 'Enquiry type',
-				'enquiry_options' => array( 'General enquiry', 'Membership', 'Coaching', 'Venue hire', 'Volunteering', 'Something else' ),
-				'message_label'   => 'Message',
+				'shortcode'       => (string) self::cget( $content, 'contact', 'form', 'shortcode', '' ),
+				'offline_note'    => self::cget( $content, 'contact', 'form', 'offline_note', 'Drop us an email and someone from the committee will come back to you.' ),
 				'submit_label'    => self::cget( $content, 'contact', 'form', 'submit_label', 'Send message' ),
 				'info'            => array(
 					'heading' => self::cget( $content, 'contact', 'form', 'info_heading', 'Find us' ),
