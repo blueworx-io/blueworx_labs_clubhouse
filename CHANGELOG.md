@@ -5,6 +5,13 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.62.0
+
+- **The page no longer contradicts itself.** Headlines counted "nine sports" and "twenty-four teams" on a club that listed six and four. The numbers are now counted from your own sports and teams, so the claim and the list beneath it always agree.
+- **Events retire themselves.** Add the date an event ends and it moves to "Recently at the club" on its own the day after. Previously the club open day sat under "Upcoming" nine days after it happened, until someone changed it by hand. You can still mark something past early; nothing will drag a finished event back.
+- **No more buttons that go nowhere.** An event with a button label but no link showed a button that just reloaded the page. It now shows one only when there is somewhere to go.
+- Picture descriptions name your club rather than saying "ClubHouse" on every site.
+
 ## 0.61.1
 
 - **Shop pages are left entirely alone now.** The customer dashboard, checkout, order pages and products no longer pick up the club's header, footer, fonts or colours — Clubhouse was fighting SureCart's own design instead of sitting alongside it. They stand on their own.
