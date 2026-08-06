@@ -17,11 +17,14 @@ final class ExternalChromeTest extends TestCase {
 		Blueworx_Clubhouse_Menu::set_provider( null );
 	}
 
-	/** SureCart's dashboard is the page this exists for. */
-	public function test_a_surecart_templated_page_is_dressed(): void {
-		$this->assertTrue(
-			Blueworx_Clubhouse_External_Chrome::dresses( false, true, 'pages/template-surecart-dashboard.php' )
-		);
+	/**
+	 * Anything the plugin does not render itself gets the chrome — SureCart's
+	 * dashboard and checkout, a blog post, a product, a category archive, the
+	 * 404. Each of those used to come out as bare theme output, and each is a
+	 * URL a visitor can arrive at from a search result.
+	 */
+	public function test_every_page_the_plugin_does_not_own_is_dressed(): void {
+		$this->assertTrue( Blueworx_Clubhouse_External_Chrome::dresses( false, true ) );
 	}
 
 	/**
@@ -29,28 +32,19 @@ final class ExternalChromeTest extends TestCase {
 	 * print a second header and a second footer inside the first.
 	 */
 	public function test_a_clubhouse_page_is_never_dressed(): void {
-		$this->assertFalse(
-			Blueworx_Clubhouse_External_Chrome::dresses( true, true, 'pages/template-surecart-dashboard.php' )
-		);
+		$this->assertFalse( Blueworx_Clubhouse_External_Chrome::dresses( true, true ) );
 	}
 
-	public function test_an_ordinary_theme_page_is_left_alone(): void {
-		$this->assertFalse( Blueworx_Clubhouse_External_Chrome::dresses( false, true, '' ) );
-		$this->assertFalse( Blueworx_Clubhouse_External_Chrome::dresses( false, true, 'page-wide.php' ) );
+	/** A feed or an embed is not an HTML document; injecting into one corrupts it. */
+	public function test_a_view_that_is_not_a_page_is_left_alone(): void {
+		$this->assertFalse( Blueworx_Clubhouse_External_Chrome::dresses( false, false ) );
 	}
 
-	/** Archives, feeds and the blog index are the theme's business, not ours. */
-	public function test_a_non_singular_request_is_left_alone(): void {
+	/** The filter still opts a request in, and still cannot override the exclusion. */
+	public function test_the_filter_opts_a_request_in(): void {
+		$this->assertTrue( Blueworx_Clubhouse_External_Chrome::dresses( false, false, true ) );
 		$this->assertFalse(
-			Blueworx_Clubhouse_External_Chrome::dresses( false, false, 'pages/template-surecart-dashboard.php' )
-		);
-	}
-
-	/** SureCart's checkout carries no template slug, so it opts in by filter instead. */
-	public function test_the_filter_opts_a_page_in_without_a_template_slug(): void {
-		$this->assertTrue( Blueworx_Clubhouse_External_Chrome::dresses( false, true, '', true ) );
-		$this->assertFalse(
-			Blueworx_Clubhouse_External_Chrome::dresses( true, true, '', true ),
+			Blueworx_Clubhouse_External_Chrome::dresses( true, false, true ),
 			'the filter must not override the clubhouse-page exclusion'
 		);
 	}

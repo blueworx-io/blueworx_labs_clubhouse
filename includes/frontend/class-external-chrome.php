@@ -33,33 +33,28 @@ if ( ! defined( 'ABSPATH' ) ) {
 final class Blueworx_Clubhouse_External_Chrome {
 
 	/**
-	 * Marker in a page template's slug that identifies a page as SureCart's.
-	 * SureCart's dashboard sets `pages/template-surecart-dashboard.php`, which
-	 * is the signal available early enough to decide on — the `surecart-template`
-	 * body class it also adds is only filtered while the body is being rendered,
-	 * long after wp_enqueue_scripts has run.
-	 */
-	private const SURECART_TEMPLATE_MARKER = 'surecart';
-
-	/**
 	 * Whether this request should be dressed in the Clubhouse chrome. Pure.
+	 *
+	 * The rule is "everything the plugin does not render itself". It used to be
+	 * "SureCart's dashboard, and anything a filter opts in", which left the 404,
+	 * every blog post, every category archive and every product page rendering
+	 * as bare theme output — blue underlined links, no header, no footer and no
+	 * way back to the club. Those URLs are in the sitemap, so they are what a
+	 * visitor arriving from a search result could land on.
 	 *
 	 * A clubhouse page is excluded because it already renders the full document
 	 * itself; dressing it would emit a second header and footer.
 	 *
-	 * @param bool   $is_clubhouse_page Whether Frontend is serving this request.
-	 * @param bool   $is_singular       Whether a single post/page is being shown.
-	 * @param string $template_slug     The page's stored _wp_page_template value.
-	 * @param bool   $forced            An explicit opt-in from the filter below.
+	 * @param bool $is_clubhouse_page Whether Frontend is serving this request.
+	 * @param bool $is_dressable_view Whether this is a front-end view that renders
+	 *                                a page (not a feed, robots.txt or a redirect).
+	 * @param bool $forced            An explicit opt-in from the filter below.
 	 */
-	public static function dresses( bool $is_clubhouse_page, bool $is_singular, string $template_slug, bool $forced = false ): bool {
-		if ( $is_clubhouse_page || ! $is_singular ) {
+	public static function dresses( bool $is_clubhouse_page, bool $is_dressable_view, bool $forced = false ): bool {
+		if ( $is_clubhouse_page ) {
 			return false;
 		}
-		if ( $forced ) {
-			return true;
-		}
-		return str_contains( strtolower( $template_slug ), self::SURECART_TEMPLATE_MARKER );
+		return $forced || $is_dressable_view;
 	}
 
 	/**
@@ -114,21 +109,39 @@ final class Blueworx_Clubhouse_External_Chrome {
 		if ( ! function_exists( 'is_singular' ) ) {
 			return false;
 		}
-		$slug = function_exists( 'get_page_template_slug' ) ? get_page_template_slug() : '';
 		/**
-		 * Opt a page into the Clubhouse chrome that template detection misses —
-		 * SureCart's checkout and order pages are plain block pages, so they carry
-		 * no template slug to key off.
+		 * Opt a request into, or out of, the Clubhouse chrome. Left as a filter
+		 * because a club may run a plugin that renders its own complete document
+		 * the way Clubhouse pages do, and that page needs a way to say so.
 		 *
 		 * @param bool $forced Whether to dress this request regardless.
 		 */
 		$forced = (bool) apply_filters( 'blueworx_clubhouse_dress_external_page', false );
 		return self::dresses(
 			Blueworx_Clubhouse_Frontend::is_clubhouse_page(),
-			(bool) is_singular(),
-			is_string( $slug ) ? $slug : '',
+			self::is_dressable_view(),
 			$forced
 		);
+	}
+
+	/**
+	 * A front-end view that renders a page a human reads. Feeds, embeds and
+	 * trackbacks are excluded because they are not HTML documents, and injecting
+	 * a header into one corrupts it — inject() would decline anyway, but deciding
+	 * here means the output buffer is never opened in the first place.
+	 */
+	private static function is_dressable_view(): bool {
+		foreach ( array( 'is_feed', 'is_embed', 'is_trackback', 'is_robots' ) as $fn ) {
+			if ( function_exists( $fn ) && $fn() ) {
+				return false;
+			}
+		}
+		foreach ( array( 'is_singular', 'is_404', 'is_archive', 'is_home', 'is_search' ) as $fn ) {
+			if ( function_exists( $fn ) && $fn() ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	public static function maybe_enqueue(): void {
