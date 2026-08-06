@@ -163,8 +163,13 @@ final class Blueworx_Clubhouse_Content_Catalogue {
 						self::f_url( 'banner_href', 'Announcement link' ),
 					) ),
 				array( 'key' => 'footer', 'label' => 'Footer', 'type' => 'fields', 'store_page' => 'global',
-					'note' => 'Shown on every page. Contact details and social links come from Site setup → Branding.',
-					'fields' => array( self::f_area( 'tagline', 'About blurb', 4 ) ) ),
+					'note' => 'Shown on every page. Contact details and social links come from Site setup → Branding. Paste a SureForms shortcode to collect newsletter signups — without one the signup box is hidden, because a box that takes an address and does nothing with it is worse than none.',
+					'fields' => array(
+						self::f_area( 'tagline', 'About blurb', 4 ),
+						self::f_text( 'newsletter_heading', 'Newsletter heading' ),
+						self::f_area( 'newsletter_lede', 'Newsletter blurb', 2 ),
+						self::f_shortcode( 'newsletter_shortcode', 'Newsletter signup shortcode (SureForms)' ),
+					) ),
 			) ),
 			array( 'tab' => 'home', 'label' => 'Home', 'sections' => array(
 				array( 'key' => 'hero', 'label' => 'Hero', 'type' => 'fields', 'store_page' => 'home', 'fields' => self::hero_fields() ),
@@ -235,10 +240,11 @@ final class Blueworx_Clubhouse_Content_Catalogue {
 			array( 'tab' => 'contact', 'label' => 'Contact', 'sections' => array(
 				array( 'key' => 'hero', 'label' => 'Hero', 'type' => 'fields', 'store_page' => 'contact', 'fields' => self::hero_fields() ),
 				array( 'key' => 'form', 'label' => 'Contact form', 'type' => 'fields', 'store_page' => 'contact',
-					'note' => 'This is a demo form — it does not send submissions anywhere yet. The details beside it are the real club address, email and phone.',
+					'note' => 'Paste a SureForms shortcode to take real enquiries. Until you do, the form here is a demo that does not send anywhere — so visitors are shown the club email and phone instead. The details beside it are the real club address, email and phone.',
 					'fields' => array(
 						self::f_text( 'eyebrow', 'Eyebrow' ),
 						self::f_text( 'heading', 'Heading' ),
+						self::f_shortcode( 'shortcode', 'Form shortcode (SureForms)' ),
 						self::f_text( 'submit_label', 'Submit button label' ),
 						self::f_text( 'info_heading', 'Details heading' ),
 						self::f_area( 'address', 'Club address (one line per line)' ),

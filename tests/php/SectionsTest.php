@@ -766,32 +766,69 @@ final class SectionsTest extends TestCase {
 		$this->assertStringNotContainsString( 'style=', $html );
 	}
 
-	public function test_contact_form_renders_fields_select_and_info(): void {
-		$html = Blueworx_Clubhouse_Sections::contact_form( array(
-			'eyebrow' => 'Get in touch', 'heading' => 'Send us a message',
-			'club_name' => 'Riverside Sports Club',
-			'name_label' => 'Full name', 'email_label' => 'Email',
-			'enquiry_label' => 'Enquiry type', 'enquiry_options' => array( 'General', 'Membership' ),
-			'message_label' => 'Message', 'submit_label' => 'Send message',
-			'info' => array(
-				'heading' => 'Find us', 'address' => array( '12 Riverside Lane', 'Marlow' ),
-				'email' => 'hello@clubhouse.example', 'phone' => '01628 000 000',
-				'socials' => array( 'Facebook' => 'https://facebook.com/clubhouse', 'Instagram' => 'https://instagram.com/clubhouse' ),
-			),
-		) );
+	public function test_contact_form_renders_the_club_details_beside_the_form(): void {
+		$html = Blueworx_Clubhouse_Sections::contact_form( $this->contactData() );
 		$this->assertStringContainsString( 'class="ch-contact"', $html );
-		$this->assertStringContainsString( 'onsubmit="return false"', $html );
-		$this->assertSame( 2, substr_count( $html, '<option' ) );
 		$this->assertStringContainsString( 'mailto:hello@clubhouse.example', $html );
 		// tel: href strips whitespace so it dials; the visible number keeps its spacing.
 		$this->assertStringContainsString( 'href="tel:01628000000"', $html );
 		$this->assertStringNotContainsString( 'tel:01628 000 000', $html );
 		$this->assertStringContainsString( '01628 000 000', $html );
 		// Quote-anchored so the count doesn't also pick up the container's
-		// plural class "ch-social__links".
-		$this->assertSame( 2, substr_count( $html, 'ch-social__link"' ) );
+		// plural class "ch-social__links". Three, matching contactData()'s socials.
+		$this->assertSame( 3, substr_count( $html, 'ch-social__link"' ) );
 		$this->assertNoHexColour( $html );
 		$this->assertStringNotContainsString( 'style=', $html );
+	}
+
+	/**
+	 * The bug this replaced: a full contact form wired to onsubmit="return false".
+	 * A visitor typed out an enquiry, pressed send, was told nothing, and the club
+	 * never heard from them. With no real form configured there must be no inputs
+	 * at all — just the email address, which does work.
+	 */
+	public function test_no_form_is_shown_when_none_is_configured(): void {
+		$html = Blueworx_Clubhouse_Sections::contact_form( $this->contactData() );
+
+		$this->assertStringNotContainsString( '<form', $html );
+		$this->assertStringNotContainsString( 'onsubmit="return false"', $html );
+		$this->assertStringNotContainsString( '<input', $html );
+		$this->assertStringNotContainsString( '<textarea', $html );
+		$this->assertStringContainsString( 'ch-contact__form--offline', $html );
+		// The way through that does work, offered where the form would have been.
+		$this->assertStringContainsString( 'href="mailto:hello@clubhouse.example"', $html );
+	}
+
+	/** A club that has built a real form gets it, in the slot the demo occupied. */
+	public function test_a_configured_form_shortcode_replaces_the_offline_slot(): void {
+		$data              = $this->contactData();
+		$data['shortcode'] = '[sureforms id="12"]';
+
+		$html = Blueworx_Clubhouse_Sections::contact_form( $data );
+
+		$this->assertStringContainsString( 'ch-contact__form ch-shortcode', $html );
+		$this->assertStringNotContainsString( 'ch-contact__form--offline', $html );
+		// The club details stay put alongside it.
+		$this->assertStringContainsString( 'ch-contact__info', $html );
+	}
+
+	/** Same rule in the footer: no signup box until something is behind it. */
+	public function test_no_newsletter_box_is_shown_when_none_is_configured(): void {
+		$html = Blueworx_Clubhouse_Sections::footer( $this->footerData() );
+
+		$this->assertStringNotContainsString( '<form', $html );
+		$this->assertStringNotContainsString( '<input', $html );
+		// The column keeps its words — only the dead box goes.
+		$this->assertStringContainsString( 'ch-footer__nl', $html );
+	}
+
+	public function test_a_configured_newsletter_shortcode_renders_in_the_footer(): void {
+		$data                              = $this->footerData();
+		$data['newsletter']['shortcode'] = '[sureforms id="7"]';
+
+		$html = Blueworx_Clubhouse_Sections::footer( $data );
+
+		$this->assertStringContainsString( 'ch-footer__form ch-shortcode', $html );
 	}
 
 	public function test_auth_renders_login_card_with_fields_and_join_link(): void {
@@ -1025,17 +1062,14 @@ final class SectionsTest extends TestCase {
 		);
 	}
 
-	/** @return array{eyebrow:string,heading:string,name_label:string,email_label:string,enquiry_label:string,enquiry_options:array<int,string>,message_label:string,submit_label:string,info:array{heading:string,address:array<int,string>,email:string,phone:string,socials:array<string,string>}} */
+	/** @return array{eyebrow:string,heading:string,club_name:string,shortcode:string,offline_note:string,submit_label:string,info:array{heading:string,address:array<int,string>,email:string,phone:string,socials:array<string,string>}} */
 	private function contactData(): array {
 		return array(
 			'eyebrow'         => 'Get in touch',
 			'heading'         => 'Send us a message',
 			'club_name'       => 'Riverside Sports Club',
-			'name_label'      => 'Full name',
-			'email_label'     => 'Email',
-			'enquiry_label'   => 'Enquiry type',
-			'enquiry_options' => array( 'General', 'Membership' ),
-			'message_label'   => 'Message',
+			'shortcode'       => '',
+			'offline_note'    => 'Drop us an email and someone will come back to you.',
 			'submit_label'    => 'Send message',
 			'info'            => array(
 				'heading' => 'Find us',

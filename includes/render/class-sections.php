@@ -853,7 +853,7 @@ final class Blueworx_Clubhouse_Sections {
 	/**
 	 * @param array{club_name:string,tagline:string,socials:array<string,string>,
 	 *   columns:array<int,array{title:string,links:array<int,array{label:string,href:string}>}>,
-	 *   newsletter:array{heading:string,lede:string,placeholder:string,cta:string},
+	 *   newsletter:array{heading:string,lede:string,shortcode?:string},
 	 *   copyright:string,
 	 *   legal:array<int,array{label:string,href:string}>} $data
 	 */
@@ -868,11 +868,18 @@ final class Blueworx_Clubhouse_Sections {
 			// at h3, so h4 jumped two levels and broke heading navigation on every page.
 			$cols .= '<div class="ch-footer__col"><h2 class="ch-footer__h">' . self::e( $col['title'] ) . '</h2>' . $links . '</div>';
 		}
+		// Same rule as the contact form: a signup box that swallows an address and
+		// says nothing is worse than none, so the input only appears once a real
+		// form is behind it. Until then the column keeps its words and drops the box.
+		$nl_shortcode = trim( (string) ( $data['newsletter']['shortcode'] ?? '' ) );
+		$nl_form      = '' !== $nl_shortcode
+			? '<div class="ch-footer__form ch-shortcode">'
+				. Blueworx_Clubhouse_Shortcodes::expand( $nl_shortcode ) // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- a shortcode's own output, same contract as shortcode_block().
+				. '</div>'
+			: '';
 		$nl = '<div class="ch-footer__col ch-footer__nl"><h2 class="ch-footer__h">' . self::e( $data['newsletter']['heading'] ) . '</h2>'
 			. '<p class="ch-footer__lede">' . self::e( $data['newsletter']['lede'] ) . '</p>'
-			. '<form class="ch-footer__form" onsubmit="return false">'
-			. '<input class="ch-footer__input" type="email" placeholder="' . self::e( $data['newsletter']['placeholder'] ) . '" aria-label="Email address">'
-			. '<button class="ch-btn ch-btn--accent" type="submit">' . self::e( $data['newsletter']['cta'] ) . '</button></form></div>';
+			. $nl_form . '</div>';
 		$legal = '';
 		foreach ( $data['legal'] as $l ) {
 			$legal .= '<a class="ch-footer__legal-link" href="' . self::e( $l['href'] ) . '">' . self::e( $l['label'] ) . '</a>';
@@ -1014,29 +1021,35 @@ final class Blueworx_Clubhouse_Sections {
 	}
 
 	/**
-	 * @param array{eyebrow:string,heading:string,club_name:string,name_label:string,email_label:string,enquiry_label:string,
-	 *   enquiry_options:array<int,string>,message_label:string,submit_label:string,
+	 * @param array{eyebrow:string,heading:string,club_name:string,shortcode?:string,
+	 *   offline_note:string,submit_label:string,
 	 *   info:array{heading:string,address:array<int,string>,email:string,phone:string,map:string,socials:array<string,string>}} $data
 	 */
 	public static function contact_form( array $data ): string {
-		$opts = '';
-		foreach ( $data['enquiry_options'] as $o ) {
-			$opts .= '<option>' . self::e( $o ) . '</option>';
-		}
 		$addr = '';
 		foreach ( $data['info']['address'] as $line ) {
 			$addr .= '<span class="ch-contact__line">' . self::e( $line ) . '</span>';
 		}
-		$form = '<form class="ch-contact__form" onsubmit="return false">'
-			. '<label class="ch-field"><span class="ch-field__label">' . self::e( $data['name_label'] ) . '</span>'
-			. '<input class="ch-field__input" type="text" name="name"></label>'
-			. '<label class="ch-field"><span class="ch-field__label">' . self::e( $data['email_label'] ) . '</span>'
-			. '<input class="ch-field__input" type="email" name="email"></label>'
-			. '<label class="ch-field"><span class="ch-field__label">' . self::e( $data['enquiry_label'] ) . '</span>'
-			. '<select class="ch-field__input" name="enquiry">' . $opts . '</select></label>'
-			. '<label class="ch-field"><span class="ch-field__label">' . self::e( $data['message_label'] ) . '</span>'
-			. '<textarea class="ch-field__input" name="message" rows="5"></textarea></label>'
-			. '<button class="ch-btn ch-btn--accent" type="submit">' . self::e( $data['submit_label'] ) . '</button></form>';
+		// The club's own form, if they have built one. A form that posts nowhere is
+		// worse than no form: a visitor types out an enquiry, presses send, and is
+		// told nothing while the club never hears from them. So the built-in fields
+		// only render when a real form is in place; otherwise the slot offers the
+		// email address, which does work.
+		$shortcode = trim( (string) ( $data['shortcode'] ?? '' ) );
+		if ( '' !== $shortcode ) {
+			$form = '<div class="ch-contact__form ch-shortcode">'
+				. Blueworx_Clubhouse_Shortcodes::expand( $shortcode ) // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- a shortcode's own output, same contract as shortcode_block().
+				. '</div>';
+		} else {
+			$email = trim( (string) $data['info']['email'] );
+			$form  = '<div class="ch-contact__form ch-contact__form--offline">'
+				. '<p class="ch-contact__offline-note">' . self::e( $data['offline_note'] ) . '</p>'
+				. ( '' !== $email
+					? '<a class="ch-btn ch-btn--accent" href="mailto:' . self::e( $email ) . '">'
+						. self::e( $data['submit_label'] ) . '</a>'
+					: '' )
+				. '</div>';
+		}
 		$tel = preg_replace( '/\s+/', '', $data['info']['phone'] );
 		// The map is a link to Google Maps for the club's own address, not a dead
 		// tile: with no map image set the placeholder was unfillable — there was no
