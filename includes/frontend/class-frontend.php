@@ -41,7 +41,7 @@ final class Blueworx_Clubhouse_Frontend {
 	 * shape the filter uses — it is matched against a slugified title, so anything
 	 * that is not a slug cannot match and is safely reduced to one.
 	 */
-	private static function current_item(): string {
+	public static function current_item(): string {
 		// The rewrite fills the query var; the query form fills $_GET. Both reach
 		// here so /sports/rugby/ and ?clubhouse_item=rugby serve the same page.
 		$raw = function_exists( 'get_query_var' ) ? get_query_var( Blueworx_Clubhouse_Links::ITEM_PARAM ) : '';
@@ -445,6 +445,26 @@ final class Blueworx_Clubhouse_Frontend {
 		}
 		$slug  = self::current_slug();
 		$label = null === $slug ? '' : Blueworx_Clubhouse_Page_Map::label( $slug );
-		return self::document_title( self::club_name(), $label );
+		// A sport or team page is titled after the section, not after the listing
+		// it hangs off. Without this every one of them read "Sports" in the tab, in
+		// a search result and in a shared link — indistinguishable from each other.
+		$item = self::current_item_title( $slug );
+		return self::document_title( self::club_name(), '' !== $item ? $item : $label );
+	}
+
+	/**
+	 * The name of the sport or team this request is showing, or '' when the
+	 * request is a listing (or names something that no longer exists, in which
+	 * case the listing is what actually renders).
+	 */
+	public static function current_item_title( ?string $slug ): string {
+		$item = self::current_item();
+		if ( '' === $item || ! in_array( $slug, array( 'sports', 'teams' ), true ) ) {
+			return '';
+		}
+		$collections = self::context()->collections;
+		$rows        = 'sports' === $slug ? $collections->sports() : $collections->teams();
+		$row         = Blueworx_Clubhouse_Page_Renderer::find_by_slug( $rows, $item );
+		return null === $row ? '' : (string) $row['title'];
 	}
 }

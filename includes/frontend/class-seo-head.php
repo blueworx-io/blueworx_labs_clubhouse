@@ -84,6 +84,16 @@ final class Blueworx_Clubhouse_Seo_Head {
 		$ctx  = self::context();
 		$tags = Blueworx_Clubhouse_Seo::tags( $ctx );
 
+		// A filtered view is the same page with some of it hidden — a convenience
+		// for a reader, not a page of its own. Every one of them produced a
+		// crawlable address (/sports/?clubhouse_filter=hockey) sharing the title
+		// and canonical of the unfiltered page. The canonical already pointed the
+		// right way; this stops the filtered address being indexed in its own
+		// right, while still letting a crawler follow the links on it.
+		if ( self::is_filtered_view() ) {
+			echo "\n<meta name=\"robots\" content=\"noindex, follow\">\n";
+		}
+
 		echo "\n<link rel=\"canonical\" href=\"" . esc_url( $ctx['url'] ) . "\">\n";
 		// Values are escaped inside render(); esc_html would double-encode them.
 		echo Blueworx_Clubhouse_Seo::render( $tags ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in Seo::render.
@@ -108,7 +118,10 @@ final class Blueworx_Clubhouse_Seo_Head {
 		return array(
 			'title'        => Blueworx_Clubhouse_Frontend::page_title(),
 			'description'  => self::description( $ctx, $page, $club ),
-			'url'          => Blueworx_Clubhouse_Frontend::link_url( $page ),
+			// A sport or team page is its own address, not the listing's. Pointing
+			// its canonical at /sports/ told search engines the page was a duplicate
+			// of the list and to drop it — the opposite of what it is for.
+			'url'          => self::canonical_url( $slug, $page ),
 			'site_name'    => $club,
 			'type'         => 'website',
 			'image'        => $logo,
@@ -151,5 +164,29 @@ final class Blueworx_Clubhouse_Seo_Head {
 	private static function slug(): string {
 		$qv = get_query_var( Blueworx_Clubhouse_Frontend::QUERY_VAR );
 		return is_string( $qv ) ? $qv : '';
+	}
+
+	/**
+	 * Whether a filter is narrowing what this page shows. Read from the request
+	 * rather than the rendered output, so the decision is made before any markup
+	 * exists to inspect.
+	 */
+	private static function is_filtered_view(): bool {
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only display filter, no state change.
+		$raw = $_GET[ Blueworx_Clubhouse_Links::FILTER_PARAM ] ?? '';
+		return is_string( $raw ) && '' !== Blueworx_Clubhouse_Frontend::sanitize_filter( wp_unslash( $raw ) );
+	}
+
+	/**
+	 * The address this page should claim as its own: a sport or team page claims
+	 * itself, everything else claims its listing (which is what makes a filtered
+	 * view consolidate rather than compete).
+	 */
+	private static function canonical_url( string $slug, string $page ): string {
+		$item = Blueworx_Clubhouse_Frontend::current_item();
+		if ( '' !== $item && '' !== Blueworx_Clubhouse_Frontend::current_item_title( $slug ) ) {
+			return Blueworx_Clubhouse_Frontend::item_link_url( $slug, $item );
+		}
+		return Blueworx_Clubhouse_Frontend::link_url( $page );
 	}
 }
