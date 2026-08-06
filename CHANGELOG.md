@@ -5,6 +5,11 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.60.3
+
+- **A wrong web address now looks like your club, not a broken page.** The "not found" page and category listings used to come out as plain text on white — no header, no footer, no way back. They now carry the club's design like every other page.
+- This matters most for someone arriving from a Google result, which is exactly where those addresses turn up.
+
 ## 0.60.2
 
 - **The footer now signs off properly.** Your club's name runs across it at poster scale, and there is a copyright line underneath — it picks up the year on its own, so it will still be right next January.

@@ -57,7 +57,19 @@ if ( is_int( $id ) && $id > 0 ) {
 	update_post_meta( $id, '_wp_page_template', 'pages/template-surecart-dashboard.php' );
 }
 
-echo ( get_option( 'clubhouse_demo_active' ) && is_int( $id ) && $id > 0 ) ? "on" : "off";
+// A real blog post, for the news story a visitor opens from the News page. It
+// carries no template slug and belongs to no plugin — exactly the page that
+// used to render as bare theme output with no header, footer or way back.
+$post = get_page_by_path( 'clubhouse-post-fixture', OBJECT, 'post' );
+$post_id = $post instanceof WP_Post ? $post->ID : wp_insert_post( array(
+	'post_type'    => 'post',
+	'post_status'  => 'publish',
+	'post_name'    => 'clubhouse-post-fixture',
+	'post_title'   => 'Clubhouse post fixture',
+	'post_content' => '<p id="post-content">POST CONTENT</p>',
+) );
+
+echo ( get_option( 'clubhouse_demo_active' ) && is_int( $id ) && $id > 0 && is_int( $post_id ) && $post_id > 0 ) ? "on" : "off";
 `
   );
   const res = spawnSync('php', [php], { encoding: 'utf8' });

@@ -77,3 +77,36 @@ test('a clubhouse page is not double-wrapped', async ({ page }) => {
   await expect(page.locator('header.ch-nav')).toHaveCount(1);
   await expect(page.locator('.ch-external')).toHaveCount(0);
 });
+
+// The pages nobody dressed. Each rendered as bare theme output — blue
+// underlined links, serif body text, no header, no footer and no way back to
+// the club — and each is a URL a visitor can arrive at from a search result.
+//
+// A single post is NOT in this list: posts already render through Clubhouse's
+// own article template (.ch-main--article), so they were never bare. These are
+// the views that fell through: a bad URL, and a category archive.
+const UNDRESSED = [
+  { what: 'a bad URL', url: '/no-such-page-anywhere/' },
+  { what: 'a category archive', url: '/category/uncategorized/' },
+];
+
+for (const { what, url } of UNDRESSED) {
+  test(`${what} still shows the club's header and footer @wordpress`, async ({ page }) => {
+    await page.goto(url);
+
+    await expect(page.locator('header.ch-nav')).toHaveCount(1);
+    await expect(page.locator('.ch-footer')).toHaveCount(1);
+    // A way back to the club, which is the point of dressing these at all.
+    await expect(page.locator('header.ch-nav a').first()).toBeVisible();
+  });
+}
+
+// Posts route through the article template, not this wrapper. Asserted so a
+// future change to the dressing rule cannot quietly start double-wrapping them.
+test('a news story uses the article template, not the external wrapper @wordpress', async ({ page }) => {
+  await page.goto('/clubhouse-post-fixture/');
+
+  await expect(page.locator('.ch-main--article')).toHaveCount(1);
+  await expect(page.locator('.ch-external')).toHaveCount(0);
+  await expect(page.locator('header.ch-nav')).toHaveCount(1);
+});
