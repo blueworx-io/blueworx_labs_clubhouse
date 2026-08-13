@@ -359,7 +359,7 @@ final class Blueworx_Clubhouse_Content_Controller {
 		$notices = array_merge( self::images_needed_notice( $storage ), $notices );
 
 		$catalogue = array();
-		foreach ( Blueworx_Clubhouse_Content_Catalogue::pages() as $page ) {
+		foreach ( Blueworx_Clubhouse_Content_Catalogue::pages( Blueworx_Clubhouse_Products_Source::get() ) as $page ) {
 			$vis_page = self::vis_page_for_tab( $page['tab'] );
 			$sections = array();
 			foreach ( $page['sections'] as $section ) {
@@ -498,7 +498,7 @@ final class Blueworx_Clubhouse_Content_Controller {
 
 	/** The Content_Catalogue page entry for a tab slug, or null if unknown. */
 	private static function find_page( string $tab_slug ): ?array {
-		foreach ( Blueworx_Clubhouse_Content_Catalogue::pages() as $page ) {
+		foreach ( Blueworx_Clubhouse_Content_Catalogue::pages( Blueworx_Clubhouse_Products_Source::get() ) as $page ) {
 			if ( $page['tab'] === $tab_slug ) {
 				return $page;
 			}

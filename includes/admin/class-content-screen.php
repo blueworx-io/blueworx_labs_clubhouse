@@ -334,6 +334,19 @@ final class Blueworx_Clubhouse_Content_Screen {
 		return $out;
 	}
 
+	/**
+	 * Render a single field's HTML in isolation, for tests that need to inspect
+	 * a field's markup (e.g. the select's stale-value handling) without driving
+	 * the whole screen. $id doubles as the field's `name` attribute, exactly as
+	 * field_row() uses its $name parameter — there is no separate id/name split
+	 * to preserve here.
+	 *
+	 * @param array<string,mixed> $field
+	 */
+	public static function field_html( array $field, mixed $value, string $id ): string {
+		return self::field_row( $field, $id, $value );
+	}
+
 	/** @param array<string,mixed> $field_def */
 	private static function field_row( array $field_def, string $name, mixed $value ): string {
 		$id    = self::slug_id( 'field', $name );
@@ -380,6 +393,12 @@ final class Blueworx_Clubhouse_Content_Screen {
 				break;
 			case 'select':
 				$options = (array) ( $field_def['options'] ?? array() );
+				// A value the shop no longer offers: keep it visible and selected, and
+				// say so. Rendering it as "Not connected" would tell the owner their
+				// tier was never wired up, when in fact its product has gone.
+				if ( '' !== (string) $value && ! array_key_exists( (string) $value, $options ) ) {
+					$options[ (string) $value ] = 'no longer available — visitors see your typed price, and this clears when you save';
+				}
 				$out    .= '<select id="' . self::esc( $id ) . '" name="' . self::esc( $name ) . '" class="clubhouse-input">';
 				foreach ( $options as $opt_value => $opt_label ) {
 					$selected = ( (string) $value === (string) $opt_value ) ? ' selected' : '';
