@@ -136,6 +136,29 @@ final class BlockLibraryTest extends TestCase {
 		$this->assertSame( 'join-cta-2', $new );
 	}
 
+	/**
+	 * "Retired" slugifies to the literal id 'retired', which used to be the same
+	 * key the library stored its retired-ids list under. Creating this block must
+	 * not collide with, or be destroyed by, that bookkeeping.
+	 */
+	public function test_a_block_named_retired_round_trips_and_retirement_still_works(): void {
+		$lib = $this->lib();
+		$id  = $lib->add( 'hero', 'Retired' );
+		$this->assertSame( 'retired', $id );
+
+		$block = $lib->get( $id );
+		$this->assertNotNull( $block );
+		$this->assertSame( 'Retired', $block['name'] );
+		$this->assertArrayHasKey( 'retired', $lib->all() );
+
+		$other = $lib->add( 'band', 'Join CTA' );
+		$lib->delete( $other );
+		$new = $lib->add( 'band', 'Join CTA' );
+		$this->assertNotSame( $other, $new );
+
+		$this->assertTrue( $lib->has( 'retired' ) );
+	}
+
 	public function test_retired_ids_survive_a_new_store_over_the_same_storage(): void {
 		$storage = new Blueworx_Clubhouse_Fake_Storage();
 		$first   = new Blueworx_Clubhouse_Block_Library( $storage );

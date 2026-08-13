@@ -24,10 +24,14 @@ final class Blueworx_Clubhouse_Block_Library {
 
 	/**
 	 * The sub-key holding retired ids inside the same stored entry as the blocks,
-	 * so the store stays one storage key. A block never has a 'retired' field, so
-	 * this key can never be confused with a block entry.
+	 * so the store stays one storage key. unique_id() only ever hands out ids made
+	 * of [a-z0-9-], so this key carries an underscore on purpose — a character
+	 * unique_id() can never produce — so a block can never be named into
+	 * colliding with it. Do NOT "tidy" this into a plain word like 'retired':
+	 * a block named "Retired" slugifies to exactly that word, and a plain-word
+	 * key would let such a block overwrite the retired-ids list (and vice versa).
 	 */
-	private const RETIRED_KEY = 'retired';
+	private const RETIRED_KEY = '_retired_';
 
 	private Blueworx_Clubhouse_Storage $storage;
 
