@@ -26,6 +26,9 @@ require_once __DIR__ . '/content/class-menu.php';
 require_once __DIR__ . '/content/class-shortcodes.php';
 require_once __DIR__ . '/content/class-integrations.php';
 
+// Blocks
+require_once __DIR__ . '/blocks/class-block-context.php';
+
 // Theme
 require_once __DIR__ . '/theme/interface-base-look.php';
 require_once __DIR__ . '/theme/class-base-look-registry.php';
