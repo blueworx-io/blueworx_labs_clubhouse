@@ -124,12 +124,25 @@ The anchor is derived from the page slug plus the block's **type key**, not its
 name or id. Two blocks of one type on one page: the first keeps the plain
 anchor, later ones get a numbered suffix.
 
-**Demo content.** Today's defaults are hardcoded inline in the page methods and
-surface only when nothing is saved. They become data: a `Block_Seeder` creates
-the named demo blocks and the default page compositions on activation when the
-library is empty, mirroring `Collection_Seeder`. Extracting those defaults from
-`Page_Renderer` into a declarative table is a substantial slice of this work and
-must be exact — it is what the parity check below guards.
+**Defaults stay in code, and stay live.** Today's demo copy is hardcoded in the
+page methods and surfaces only where nothing is saved. It cannot simply be
+frozen into seeded data, because some of it is computed at render time — the
+Home lede counts the club's sports and teams, and default button links resolve
+through the link resolver. Freezing those would leave a club reading "nine
+sports" with six.
+
+So each block type keeps a defaults function in code, and a block stores only
+the owner's overrides — exactly the `cget` behaviour that exists now. Because
+Home's hero copy differs from About's, a block also carries a `defaults_key`
+naming which default set it draws on: the migrated and seeded blocks carry
+their original `page/section` address, and a block an owner creates fresh uses
+its type's generic set. Extracting those ~55 default sets out of `Page_Renderer`
+is the largest single slice of this work, and the parity check below is what
+proves it exact.
+
+A `Block_Seeder` therefore creates named blocks with no content and the default
+page compositions on activation, when the library is empty — mirroring
+`Collection_Seeder`.
 
 ## Admin
 
@@ -197,9 +210,10 @@ Runs once on upgrade, guarded by a version stamp in the same way
 
 For each of the ~55 page-and-section addresses in today's catalogue:
 
-1. Create a block of the matching type, named "Home · Hero", "About · Hero".
-2. Its content is the club's saved content for that address if any, otherwise
-   the demo default for that address.
+1. Create a block of the matching type, named "Home · Hero", "About · Hero",
+   carrying that address as its `defaults_key`.
+2. Its content is the club's saved content for that address, or nothing — in
+   which case it falls back to the same code defaults it uses today.
 3. Add it to that page's block list if the section is currently visible; leave
    it in the library, off the page, if it is hidden.
 
@@ -232,3 +246,8 @@ diagnosed; they are not read once migration has run.
 Owner-created pages, drag-to-reorder, per-page overrides of a shared block
 (duplicate instead), block-level style options, and any change to `Sections`
 markup or the Base Look stylesheets.
+
+The per-sport and per-team detail pages, the single-post view and the filtered
+list views are generated from a collection item, not composed from a block list.
+They keep their current dedicated renderers and are not offered in the page
+editor.
