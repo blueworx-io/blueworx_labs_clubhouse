@@ -13,8 +13,11 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Positions step by ten within a page — the running order the page methods in
  * Page_Renderer produce — leaving room to slot something between two later.
  *
- * The header and footer are absent on purpose: they are singleton blocks shown
- * on every page, not entries on any one page.
+ * The map holds one entry per section a page visibility toggle controls,
+ * including the header and footer — which are entries here too, singleton
+ * blocks shown on every page rather than sections of any one page. Some
+ * addresses share a rendered block with another address on the same page;
+ * see folds() for which.
  *
  * @package BlueworxLabsClubhouse
  */
@@ -34,6 +37,11 @@ final class Blueworx_Clubhouse_Block_Addresses {
 				'sports'      => 'card_grid_switch',
 				'clubhouse'   => 'image_band',
 				'membership'  => 'band',
+				// Mirrors the Membership page's tiers — the same tier content
+				// rendered twice, with the Home copy's CTAs pointed at the
+				// Membership page. A later migration must put the SAME block
+				// on both pages, not create a second one.
+				'tiers'       => 'tier_grid',
 				'activity'    => 'activity_tabs',
 				'news'        => 'news_cards',
 				'sponsors'    => 'sponsors',
@@ -119,5 +127,23 @@ final class Blueworx_Clubhouse_Block_Addresses {
 	/** The block type an address renders as, or '' when the address is unknown. */
 	public static function type( string $address ): string {
 		return (string) ( self::map()[ $address ]['type'] ?? '' );
+	}
+
+	/**
+	 * Addresses whose content renders inside another address's block rather than
+	 * as a section of its own — folded address => the address it renders inside.
+	 * `home/quick_tiles` renders inside `home/hero`'s home_hero block, and
+	 * `home/info` renders inside `home/social`'s closing_band. Both sides of a
+	 * fold still appear in map(), so a migration seeding from map() at face value
+	 * must consult this first or it will create duplicate sections and break
+	 * existing anchors such as `#ch-home-quick-tiles`.
+	 *
+	 * @return array<string,string>
+	 */
+	public static function folds(): array {
+		return array(
+			'home/quick_tiles' => 'home/hero',
+			'home/info'        => 'home/social',
+		);
 	}
 }

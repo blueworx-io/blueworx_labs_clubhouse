@@ -79,6 +79,7 @@ final class BlockSpineTest extends TestCase {
 				'home/sports',
 				'home/clubhouse',
 				'home/membership',
+				'home/tiers',
 				'home/activity',
 				'home/news',
 				'home/sponsors',

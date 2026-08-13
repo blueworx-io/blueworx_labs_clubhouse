@@ -105,4 +105,45 @@ final class BlockLibraryTest extends TestCase {
 		$second = new Blueworx_Clubhouse_Block_Library( $storage );
 		$this->assertSame( 'Home hero', $second->get( $id )['name'] );
 	}
+
+	public function test_settings_round_trip(): void {
+		$lib = $this->lib();
+		$id  = $lib->add( 'hero', 'Home hero' );
+		$lib->set_settings( $id, array( 'variant' => 'accent' ) );
+		$this->assertSame( 'accent', $lib->get( $id )['settings']['variant'] );
+	}
+
+	public function test_setting_settings_on_an_unknown_id_is_a_no_op(): void {
+		$lib = $this->lib();
+		$lib->set_settings( 'nope', array( 'variant' => 'accent' ) );
+		$this->assertSame( array(), $lib->all() );
+	}
+
+	/**
+	 * A deleted block's id must never come back onto a page that still lists it —
+	 * see delete(). Home and About both keep 'join-cta' in their composition after
+	 * the block is deleted; a fresh block that lands back on 'join-cta' would
+	 * silently reappear on both pages.
+	 */
+	public function test_a_deleted_id_is_never_handed_out_again(): void {
+		$lib = $this->lib();
+		$id  = $lib->add( 'band', 'Join CTA' );
+		$this->assertSame( 'join-cta', $id );
+
+		$lib->delete( $id );
+		$new = $lib->add( 'band', 'Join CTA' );
+		$this->assertNotSame( 'join-cta', $new );
+		$this->assertSame( 'join-cta-2', $new );
+	}
+
+	public function test_retired_ids_survive_a_new_store_over_the_same_storage(): void {
+		$storage = new Blueworx_Clubhouse_Fake_Storage();
+		$first   = new Blueworx_Clubhouse_Block_Library( $storage );
+		$id      = $first->add( 'band', 'Join CTA' );
+		$first->delete( $id );
+
+		$second = new Blueworx_Clubhouse_Block_Library( $storage );
+		$new    = $second->add( 'band', 'Join CTA' );
+		$this->assertNotSame( 'join-cta', $new );
+	}
 }

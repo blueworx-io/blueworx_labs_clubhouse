@@ -59,9 +59,21 @@ final class BlockTypesTest extends TestCase {
 	 * would silently drop it — so the two lists are pinned together here.
 	 */
 	public function test_every_catalogue_address_has_a_block(): void {
-		$map = Blueworx_Clubhouse_Block_Addresses::map();
-		foreach ( Blueworx_Clubhouse_Content_Catalogue::index() as $address => $entry ) {
-			$this->assertArrayHasKey( $address, $map, $address . ' has no block type' );
+		// Without a detector installed, Integrations::provides() is false and the
+		// Bookings page and calendar/booking are dropped from the catalogue before
+		// this test sees them. Install one for the duration of the test so all
+		// addresses — LatePoint-gated ones included — are actually pinned, then
+		// restore the "nothing installed" default the rest of the suite assumes.
+		Blueworx_Clubhouse_Integrations::set_detector(
+			static fn( string $tag ): bool => Blueworx_Clubhouse_Integrations::LATEPOINT_TAG === $tag
+		);
+		try {
+			$map = Blueworx_Clubhouse_Block_Addresses::map();
+			foreach ( Blueworx_Clubhouse_Content_Catalogue::index() as $address => $entry ) {
+				$this->assertArrayHasKey( $address, $map, $address . ' has no block type' );
+			}
+		} finally {
+			Blueworx_Clubhouse_Integrations::set_detector( null );
 		}
 	}
 
@@ -73,6 +85,25 @@ final class BlockTypesTest extends TestCase {
 			$slot = $page . ':' . $entry['position'];
 			$this->assertArrayNotHasKey( $slot, $seen, $address . ' collides with ' . ( $seen[ $slot ] ?? '' ) );
 			$seen[ $slot ] = $address;
+		}
+	}
+
+	public function test_folds_names_the_two_addresses_that_share_a_rendered_block(): void {
+		$this->assertSame(
+			array(
+				'home/quick_tiles' => 'home/hero',
+				'home/info'        => 'home/social',
+			),
+			Blueworx_Clubhouse_Block_Addresses::folds()
+		);
+	}
+
+	/** Both sides of every fold must be real addresses, or a migration reading folds() would point at nothing. */
+	public function test_every_folded_address_exists_in_the_map(): void {
+		$map = Blueworx_Clubhouse_Block_Addresses::map();
+		foreach ( Blueworx_Clubhouse_Block_Addresses::folds() as $folded => $into ) {
+			$this->assertArrayHasKey( $folded, $map, $folded . ' is not a real address' );
+			$this->assertArrayHasKey( $into, $map, $into . ' is not a real address' );
 		}
 	}
 }
