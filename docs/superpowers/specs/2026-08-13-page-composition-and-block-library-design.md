@@ -28,7 +28,7 @@ and their stylesheets carry over untouched.
 | Question | Decision |
 | --- | --- |
 | What do pages share? | Named instances in a library. Same block on two pages = genuinely shared content. Different words = two blocks. |
-| Can owners reorder? | No. Each block type carries a fixed rank; blocks slot into it. |
+| Can owners reorder? | No. Each block carries a position, seeded from where it sits today; its type supplies the default position for blocks created fresh. |
 | Can owners create pages? | No. The eleven pages stay fixed. |
 | Which blocks can go where? | Any block on any page, including collection-driven ones. |
 | Setup → Visibility tab | Removed. Page on/off moves into the page editor. |
@@ -47,8 +47,9 @@ declares:
 - `fields` — the editable field list, in the shape `Content_Catalogue` already
   uses (`text`, `textarea`, `url`, `image`, `toggle`, `select`, `shortcode`) plus
   an optional repeatable-item definition.
-- `rank` — integer position on any page. Header is first, footer last, hero near
-  the top, call-to-action near the bottom.
+- `rank` — the default position for a block of this type created fresh. Header
+  is first, footer last, hero near the top, call-to-action near the bottom. A
+  block may carry its own position instead; see below.
 - `source` — `content` (owner writes it), `collection` (drawn from a CPT) or
   `mixed` (a heading the owner writes over a collection-driven list).
 - `settings` — optional per-block configuration for collection-driven types that
@@ -75,6 +76,11 @@ A named instance of a type:
 - `content` — field values plus repeatable items, same shape `Content_Store`
   holds today.
 - `settings` — values for the type's declared settings, if any.
+- `position` — where it sits on a page. Seeded and migrated blocks carry the
+  position they hold today; a block created fresh takes its type's `rank`.
+  One rank per type alone cannot reproduce today's pages — About runs values,
+  facilities, committee, get involved, where the first and last are the same
+  type either side of two others — so the position belongs to the block.
 
 ### Page — stored owner data
 
@@ -86,8 +92,9 @@ singleton blocks shown on every one. Each page stores:
 - `enabled` — whether the page is on the site.
 - `blocks` — the ids of the blocks it shows, in the order they were added.
 
-Order is **not** stored. Render order is the type's `rank`, with the stored
-order breaking ties between two blocks of the same type.
+Render order is each block's `position`, with the stored list order breaking
+ties. The page does not store an order of its own — moving a block is not
+something the editor offers.
 
 ### Storage
 
@@ -110,7 +117,7 @@ readable so nothing else breaks mid-build, and is removed in the final step.
 1. Read the page's block ids.
 2. Resolve each to a block and its type; drop ids with no block, and types whose
    integration is absent.
-3. Sort by `(rank, stored position)`.
+3. Sort by each block's `position`, ties broken by its place in the stored list.
 4. Render each, wrapped in its anchor.
 5. Header and footer are pinned outside the loop — header first, then `<main>`,
    then footer.
@@ -211,7 +218,8 @@ Runs once on upgrade, guarded by a version stamp in the same way
 For each of the ~55 page-and-section addresses in today's catalogue:
 
 1. Create a block of the matching type, named "Home · Hero", "About · Hero",
-   carrying that address as its `defaults_key`.
+   carrying that address as its `defaults_key` and its position on the page as
+   it renders today.
 2. Its content is the club's saved content for that address, or nothing — in
    which case it falls back to the same code defaults it uses today.
 3. Add it to that page's block list if the section is currently visible; leave
