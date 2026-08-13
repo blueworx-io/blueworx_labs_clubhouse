@@ -31,6 +31,7 @@ require_once __DIR__ . '/blocks/class-block-context.php';
 require_once __DIR__ . '/blocks/class-block-types.php';
 require_once __DIR__ . '/blocks/class-block-addresses.php';
 require_once __DIR__ . '/blocks/class-block-library.php';
+require_once __DIR__ . '/blocks/class-page-composition.php';
 
 // Theme
 require_once __DIR__ . '/theme/interface-base-look.php';
