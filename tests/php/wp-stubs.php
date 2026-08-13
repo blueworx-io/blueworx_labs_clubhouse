@@ -23,6 +23,7 @@ $GLOBALS['wp_stub_sideload_fail'] = array();
 $GLOBALS['wp_stub_insert_fail']   = array();
 $GLOBALS['wp_stub_update_fail']   = array();
 $GLOBALS['wp_stub_delete_fail']   = array();
+$GLOBALS['wp_stub_permalinks']    = array();
 
 function wp_stub_reset(): void {
 	$GLOBALS['wp_stub_calls']       = array();
@@ -42,6 +43,7 @@ function wp_stub_reset(): void {
 	$GLOBALS['wp_stub_insert_fail']   = array();
 	$GLOBALS['wp_stub_update_fail']   = array();
 	$GLOBALS['wp_stub_delete_fail']   = array();
+	$GLOBALS['wp_stub_permalinks']    = array();
 	unset( $GLOBALS['menu'], $GLOBALS['wp_meta_boxes'] );
 }
 
@@ -328,6 +330,17 @@ if ( ! function_exists( 'is_front_page' ) ) {
 }
 if ( ! function_exists( 'get_query_var' ) ) {
 	function get_query_var( string $var, $default = '' ) { return $GLOBALS['wp_stub_query_vars'][ $var ] ?? $default; }
+}
+if ( ! function_exists( 'get_permalink' ) ) {
+	// Recorded (unlike get_option()) so tests can assert whether this ran at
+	// all — needed to prove Frontend::register() never resolves a checkout
+	// URL eagerly, since that would reach this function via
+	// SureCart_Products::checkout_url() before $wp_rewrite exists.
+	function get_permalink( $post = 0 ) {
+		wp_stub_record( 'get_permalink', array( $post ) );
+		$id = is_object( $post ) ? (int) ( $post->ID ?? 0 ) : (int) $post;
+		return $GLOBALS['wp_stub_permalinks'][ $id ] ?? false;
+	}
 }
 
 /** Make the next sideload of this URL fail, as a dead link would. */

@@ -25,6 +25,34 @@ final class FrontendTest extends TestCase {
 		// this same PHPUnit process, including PreviewRenderTest, whose entire
 		// premise is "no provider installed, so Menu::current() is DEFAULTS".
 		Blueworx_Clubhouse_Menu::set_provider( null );
+		// register() also installs the shop, when SureCart looks active —
+		// likewise global state that must not leak into later tests.
+		Blueworx_Clubhouse_Products_Source::set( null );
+		Blueworx_Clubhouse_Checkout::set_base_url( '' );
+		Blueworx_Clubhouse_SureCart_Products::set_active_for_tests( null );
+	}
+
+	/**
+	 * The critical bug this guards: Frontend::register() once called
+	 * SureCart_Products::checkout_url() directly at install time, which
+	 * reaches get_permalink() — needing $wp_rewrite, an object WordPress does
+	 * not create until after plugins_loaded, exactly when register() runs. A
+	 * resolver must be installed instead, and left uncalled until a checkout
+	 * link is actually built. Re-introducing an eager
+	 * `set_base_url( checkout_url() )` in register() would call get_permalink()
+	 * immediately and fail this.
+	 */
+	public function test_register_does_not_resolve_a_checkout_url_eagerly(): void {
+		Blueworx_Clubhouse_SureCart_Products::set_active_for_tests( true );
+		update_option( 'surecart_checkout_page_id', 42 );
+
+		Blueworx_Clubhouse_Frontend::register();
+
+		$this->assertSame(
+			array(),
+			wp_stub_calls( 'get_permalink' ),
+			'register() must not resolve the checkout URL eagerly'
+		);
 	}
 
 	/**

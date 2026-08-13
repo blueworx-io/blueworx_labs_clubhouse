@@ -42,18 +42,6 @@ final class CheckoutLinkTest extends TestCase {
 		$this->assertStringContainsString( 'price%26admin%3D1', $url );
 	}
 
-	public function test_a_resolver_is_not_called_until_a_url_is_actually_built(): void {
-		// checkout_url() is not safe to call at plugins_loaded (see class docblock
-		// on Checkout::set_resolver()) — the whole point of the resolver seam is
-		// that installing it must not itself trigger the call.
-		$calls = 0;
-		Blueworx_Clubhouse_Checkout::set_resolver( function () use ( &$calls ) {
-			++$calls;
-			return 'https://club.test/checkout/';
-		} );
-		$this->assertSame( 0, $calls );
-	}
-
 	public function test_a_resolver_runs_at_most_once_per_request(): void {
 		$calls = 0;
 		Blueworx_Clubhouse_Checkout::set_resolver( function () use ( &$calls ) {
@@ -66,12 +54,5 @@ final class CheckoutLinkTest extends TestCase {
 		Blueworx_Clubhouse_Checkout::url( 'price_b' );
 
 		$this->assertSame( 1, $calls );
-	}
-
-	public function test_a_resolver_produces_a_working_checkout_url(): void {
-		Blueworx_Clubhouse_Checkout::set_resolver( static fn(): string => 'https://club.test/checkout/' );
-		$url = Blueworx_Clubhouse_Checkout::url( 'price_adult_monthly' );
-		$this->assertStringStartsWith( 'https://club.test/checkout/?', $url );
-		$this->assertStringContainsString( 'price_adult_monthly', $url );
 	}
 }

@@ -70,7 +70,12 @@ MD;
 
 	private static function content_inventory(): string {
 		$out = "## The pages\n\n";
-		foreach ( Blueworx_Clubhouse_Content_Catalogue::pages() as $page ) {
+		// Without the products adapter, the tier price_id select has only its
+		// "Not connected" option, so the AI is told that is the only valid
+		// value and a realistic import clears every tier's connection —
+		// Content_Controller and Import_Parser::sections() pass this same
+		// source for exactly this reason; the prompt generator must match it.
+		foreach ( Blueworx_Clubhouse_Content_Catalogue::pages( Blueworx_Clubhouse_Products_Source::get() ) as $page ) {
 			$out .= '### ' . $page['label'] . "\n\n";
 			foreach ( $page['sections'] as $section ) {
 				$address = (string) $section['store_page'] . '.' . (string) $section['key'];

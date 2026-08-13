@@ -5,8 +5,23 @@ use PHPUnit\Framework\TestCase;
 
 final class ImportPromptTest extends TestCase {
 
+	protected function tearDown(): void {
+		Blueworx_Clubhouse_Products_Source::set( null );
+	}
+
 	private function md(): string {
 		return Blueworx_Clubhouse_Import_Prompt::markdown( '9.9.9' );
+	}
+
+	/**
+	 * Without the installed products adapter, the tier price_id select has
+	 * only its "Not connected" option, so the AI is told that is the only
+	 * valid value and a realistic import clears every tier's connection —
+	 * see ImportParserContentTest for the parser side of the same bug.
+	 */
+	public function test_price_id_options_reflect_the_installed_shop(): void {
+		Blueworx_Clubhouse_Products_Source::set( new Blueworx_Clubhouse_Demo_Products() );
+		$this->assertStringContainsString( 'price_adult_monthly', $this->md() );
 	}
 
 	public function test_it_states_the_format_version_and_plugin_version(): void {

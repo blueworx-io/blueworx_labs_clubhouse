@@ -255,9 +255,14 @@ final class SureCartProductsTest extends TestCase {
 		$products = new Blueworx_Clubhouse_SureCart_Products();
 		$products->prices(); // the failing fetch
 
-		// Same request window (no transient reset) — if the failure had been
-		// cached under the normal key, this second call would read that stale
-		// "nothing" straight back and never reach the now-working fetcher.
+		// The failure is now remembered briefly (FAILURE_TTL, see
+		// test_a_second_failure_within_the_window_does_not_repeat_the_fetch),
+		// so simulate that window elapsing before checking the property this
+		// test actually guards: the failure itself was never written into the
+		// normal success cache slot. If it had been, this reset would not
+		// matter — the stale "nothing" would already be sitting there under
+		// the same key a genuine success also uses.
+		$GLOBALS['wp_stub_transients'] = array();
 		Blueworx_Clubhouse_SureCart_Products::set_raw_fetcher( fn(): array => array( $this->raw_price() ) );
 
 		$this->assertCount( 1, $products->prices() );
@@ -286,5 +291,78 @@ final class SureCartProductsTest extends TestCase {
 		$this->assertSame( 'auth-only', $auth[0]['id'], 'the logged-in request must not be served the guest cache entry' );
 
 		$GLOBALS['wp_stub_logged_in'] = false;
+	}
+
+	public function test_the_test_seams_are_inert_without_the_running_tests_constant(): void {
+		// BLUEWORX_CLUBHOUSE_RUNNING_TESTS is defined once, process-wide, by
+		// this suite's own bootstrap, so proving the gate actually gates
+		// anything needs a process that never defines it — see the fixture.
+		$fixture = __DIR__ . '/fixtures/surecart-seam-gate-check.php';
+		$output  = shell_exec( escapeshellarg( PHP_BINARY ) . ' ' . escapeshellarg( $fixture ) );
+		$result  = json_decode( (string) $output, true );
+
+		$this->assertIsArray( $result, 'fixture did not return valid JSON: ' . (string) $output );
+		$this->assertFalse( $result['is_active'], 'set_active_for_tests() must be a no-op without the constant' );
+		$this->assertFalse( $result['raw_fetcher_set'], 'set_raw_fetcher() must be a no-op without the constant' );
+	}
+
+	public function test_a_second_failure_within_the_window_does_not_repeat_the_fetch(): void {
+		// The regression this guards: a failed fetch was never cached at all,
+		// so a sustained outage made every single page render re-run the full
+		// fetch_raw() dispatch — including firing rest_api_init and a
+		// rest_do_request() that may itself be slow or hanging, exactly when
+		// the shop is unhealthy. A short failure marker makes repeated
+		// failures cheap while still serving the last-good list.
+		Blueworx_Clubhouse_SureCart_Products::set_active_for_tests( true );
+		$calls = 0;
+		Blueworx_Clubhouse_SureCart_Products::set_raw_fetcher( function () use ( &$calls ): ?array {
+			++$calls;
+			return null;
+		} );
+
+		$products = new Blueworx_Clubhouse_SureCart_Products();
+		$products->prices();
+		$products->prices();
+
+		$this->assertSame( 1, $calls, 'a second failure within the window must not repeat the expensive fetch' );
+	}
+
+	public function test_a_corrupt_last_good_option_is_filtered_rather_than_left_to_fatal(): void {
+		// last_good() used to validate only is_array(), then price() indexed
+		// $price['id'] on each element. The option never expires and the
+		// invalidation hook only clears transients, so a corrupt value (a
+		// manual edit, a failed unserialize, a future format change) would
+		// otherwise stay forever. Only rows that actually look like a price
+		// record must survive.
+		Blueworx_Clubhouse_SureCart_Products::set_active_for_tests( true );
+
+		$method = new ReflectionMethod( Blueworx_Clubhouse_SureCart_Products::class, 'last_good_option' );
+		$method->setAccessible( true );
+		$key = $method->invoke( null, 'guest' );
+
+		$good = array( 'id' => 'still-good', 'product' => 'P', 'label' => 'P — £1', 'amount' => '£1', 'period' => '' );
+		$GLOBALS['wp_stub_options'][ $key ] = array(
+			$good,
+			array( 'no' => 'id here' ),
+			'not even an array',
+			null,
+		);
+
+		Blueworx_Clubhouse_SureCart_Products::set_raw_fetcher( fn(): ?array => null );
+
+		$products = new Blueworx_Clubhouse_SureCart_Products();
+		$this->assertSame( array( $good ), $products->prices() );
+	}
+
+	public function test_the_last_good_option_key_does_not_change_with_the_plugin_version(): void {
+		// A permanent safety net keyed by version is empty again after every
+		// release until one fetch succeeds — an update followed by an outage
+		// wipes every connection on the next Save, exactly the failure the
+		// net exists to prevent. The key must not carry the version at all.
+		$method = new ReflectionMethod( Blueworx_Clubhouse_SureCart_Products::class, 'last_good_option' );
+		$method->setAccessible( true );
+		$key = $method->invoke( null, 'guest' );
+
+		$this->assertStringNotContainsString( md5( (string) BLUEWORX_LABS_CLUBHOUSE_VERSION ), $key );
 	}
 }
