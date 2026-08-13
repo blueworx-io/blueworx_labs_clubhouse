@@ -5,6 +5,10 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.64.0
+
+- Groundwork for the new page editor: blocks can now be stored as a reusable library, and each page can record which of them it shows. Nothing changes on the site yet.
+
 ## 0.63.1
 
 - **Search engines now see one page per sport and team, not one "Sports" page repeated.** Each section page carries its own name and its own address, so it can be found and shared. Without this the new pages would have been treated as copies of the list and dropped.
