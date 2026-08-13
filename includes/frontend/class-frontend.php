@@ -119,6 +119,13 @@ final class Blueworx_Clubhouse_Frontend {
 		Blueworx_Clubhouse_Integrations::set_detector(
 			static fn( string $tag ): bool => (bool) shortcode_exists( $tag )
 		);
+		// The shop, when there is one. Both are installed together: a products
+		// adapter with no checkout page can only produce half-connected tiers,
+		// which the renderer deliberately refuses to show.
+		if ( Blueworx_Clubhouse_SureCart_Products::is_active() ) {
+			Blueworx_Clubhouse_Products_Source::set( new Blueworx_Clubhouse_SureCart_Products() );
+			Blueworx_Clubhouse_Checkout::set_base_url( Blueworx_Clubhouse_SureCart_Products::checkout_url() );
+		}
 		add_action( 'init', array( self::class, 'register_rewrites' ) );
 		// Priority 11: after register_rewrites() above, so a flush writes the rules
 		// this version actually declares.

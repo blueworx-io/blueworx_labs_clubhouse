@@ -71,6 +71,7 @@ function blueworx_labs_clubhouse_init() {
 	Blueworx_Clubhouse_Access_Controller::register();
 	Blueworx_Clubhouse_Seo_Controller::register();
 	Blueworx_Clubhouse_Guide_Controller::register();
+	Blueworx_Clubhouse_SureCart_Products::register();
 	add_action( 'admin_menu', array( Blueworx_Clubhouse_Collection_Types::class, 'register_content_menu' ) );
 }
 add_action( 'plugins_loaded', 'blueworx_labs_clubhouse_init' );

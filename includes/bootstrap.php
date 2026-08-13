@@ -31,6 +31,7 @@ require_once __DIR__ . '/membership/interface-products.php';
 require_once __DIR__ . '/membership/class-demo-products.php';
 require_once __DIR__ . '/membership/class-products-source.php';
 require_once __DIR__ . '/membership/class-checkout.php';
+require_once __DIR__ . '/membership/class-surecart-products.php';
 
 // Theme
 require_once __DIR__ . '/theme/interface-base-look.php';
