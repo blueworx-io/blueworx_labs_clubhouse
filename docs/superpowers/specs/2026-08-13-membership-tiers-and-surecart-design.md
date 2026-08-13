@@ -106,9 +106,11 @@ Three states the field must handle honestly:
 
 - **SureCart absent** — the field explains that instead of showing an empty
   dropdown.
-- **Stored id no longer resolves** — the field says the product has gone and
-  states what visitors are seeing meanwhile, rather than silently resetting to
-  "Not connected" and losing the owner's intent.
+- **Stored id no longer resolves** — the field shows that value as "no longer
+  available", still selected, and says what visitors are seeing meanwhile and
+  that saving will clear it. What must not happen is the field quietly reading
+  "Not connected", which would tell an owner their tier was never wired up when
+  in fact its product has gone.
 - **No prices yet** — SureCart is installed but has no products; say so, and
   where to make one.
 
