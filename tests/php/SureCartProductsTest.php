@@ -56,4 +56,111 @@ final class SureCartProductsTest extends TestCase {
 			in_array( Blueworx_Clubhouse_Products::class, class_implements( Blueworx_Clubhouse_SureCart_Products::class ), true )
 		);
 	}
+
+	// The record shapes below are the one from docs/integrations/surecart-notes.md,
+	// trimmed and varied to cover the cases the notes called out: a null price
+	// name, a one-off with null interval fields, and the archived/current_version
+	// booleans.
+
+	public function test_a_monthly_recurring_price_maps_with_the_product_name_and_mo_suffix(): void {
+		$price = Blueworx_Clubhouse_SureCart_Products::map_price(
+			array(
+				'id'                       => 'd31a3fac-1b95-4c45-965b-f55fecc34a58',
+				'object'                   => 'price',
+				'name'                     => 'Subscribe Monthly & Save',
+				'amount'                   => 2900,
+				'currency'                 => 'gbp',
+				'archived'                 => false,
+				'current_version'          => true,
+				'recurring_interval'       => 'month',
+				'recurring_interval_count' => 1,
+				'product'                  => array( 'name' => 'Subscribe & Save Product' ),
+			)
+		);
+		$this->assertSame(
+			array(
+				'id'      => 'd31a3fac-1b95-4c45-965b-f55fecc34a58',
+				'product' => 'Subscribe & Save Product',
+				'label'   => 'Subscribe & Save Product — £29/mo',
+				'amount'  => '£29',
+				'period'  => '/mo',
+			),
+			$price
+		);
+	}
+
+	public function test_a_one_off_price_has_null_interval_fields_and_maps_to_no_period(): void {
+		// 7 of the 13 real prices had this shape: recurring_interval and
+		// recurring_interval_count both null, not absent.
+		$price = Blueworx_Clubhouse_SureCart_Products::map_price(
+			array(
+				'id'                       => 'one-off-id',
+				'name'                     => null,
+				'amount'                   => 5000,
+				'currency'                 => 'gbp',
+				'archived'                 => false,
+				'current_version'          => true,
+				'recurring_interval'       => null,
+				'recurring_interval_count' => null,
+				'product'                  => array( 'name' => 'Life membership' ),
+			)
+		);
+		$this->assertSame( '', $price['period'] );
+		$this->assertSame( '£50', $price['amount'] );
+		$this->assertSame( 'Life membership', $price['product'] );
+	}
+
+	public function test_a_null_price_name_still_gets_a_usable_label_from_the_product(): void {
+		// 3 of the first 6 real prices had a null price name; the label must
+		// come from the product, not read as blank.
+		$price = Blueworx_Clubhouse_SureCart_Products::map_price(
+			array(
+				'id'                       => 'null-name-id',
+				'name'                     => null,
+				'amount'                   => 1200,
+				'currency'                 => 'gbp',
+				'archived'                 => false,
+				'current_version'          => true,
+				'recurring_interval'       => 'month',
+				'recurring_interval_count' => 1,
+				'product'                  => array( 'name' => 'Junior membership' ),
+			)
+		);
+		$this->assertSame( 'Junior membership — £12/mo', $price['label'] );
+	}
+
+	public function test_a_record_missing_fields_entirely_does_not_fatal(): void {
+		$this->assertNull( Blueworx_Clubhouse_SureCart_Products::map_price( array() ) );
+		$this->assertNull( Blueworx_Clubhouse_SureCart_Products::map_price( array( 'id' => 'only-an-id' ) ) );
+		// No product name anywhere to build a label from.
+		$this->assertNull(
+			Blueworx_Clubhouse_SureCart_Products::map_price(
+				array( 'id' => 'x', 'amount' => 100, 'currency' => 'gbp', 'name' => null, 'product' => 'a-bare-id-string' )
+			)
+		);
+	}
+
+	public function test_an_archived_price_is_not_sellable(): void {
+		$this->assertFalse(
+			Blueworx_Clubhouse_SureCart_Products::is_sellable(
+				array( 'archived' => true, 'current_version' => true )
+			)
+		);
+	}
+
+	public function test_a_price_that_is_not_the_current_version_is_not_sellable(): void {
+		$this->assertFalse(
+			Blueworx_Clubhouse_SureCart_Products::is_sellable(
+				array( 'archived' => false, 'current_version' => false )
+			)
+		);
+	}
+
+	public function test_an_active_current_price_is_sellable(): void {
+		$this->assertTrue(
+			Blueworx_Clubhouse_SureCart_Products::is_sellable(
+				array( 'archived' => false, 'current_version' => true )
+			)
+		);
+	}
 }

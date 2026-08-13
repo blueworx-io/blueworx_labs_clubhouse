@@ -129,6 +129,15 @@ final class Blueworx_Clubhouse_SureCart_Products implements Blueworx_Clubhouse_P
 			// rest_api_init, which a normal page render never fires. Firing it
 			// once, guarded by did_action(), makes the dispatch below see
 			// SureCart's routes without a real HTTP round trip.
+			//
+			// This is NOT scoped to SureCart: rest_api_init is a global action,
+			// so firing it here also runs every other plugin's REST-registration
+			// callback that has not already run. Guarded by is_active() (only
+			// reachable from fetch_prices(), which only runs when SureCart is
+			// live) and did_action() (fires at most once per request), so the
+			// blast radius is one extra global hook run on the first page load
+			// that needs a price — not a call anyone should widen without
+			// re-checking that reasoning.
 			if ( function_exists( 'rest_get_server' ) && function_exists( 'did_action' ) && ! did_action( 'rest_api_init' ) ) {
 				do_action( 'rest_api_init', rest_get_server() );
 			}
@@ -167,19 +176,39 @@ final class Blueworx_Clubhouse_SureCart_Products implements Blueworx_Clubhouse_P
 	}
 
 	/**
-	 * A price is sellable when it is not archived and, when SureCart says so,
-	 * not superseded by a newer version. current_version was true on every
-	 * price the notes observed, so a superseded price's value there is
-	 * unverified — treated as not sellable only when explicitly false, never
-	 * assumed from an absent field.
+	 * A price is sellable when it is not archived, not draft, and — when
+	 * SureCart says so — not superseded by a newer version.
+	 *
+	 * current_version was true on every price the notes observed, so a
+	 * superseded price's value there is unverified — treated as not sellable
+	 * only when explicitly false, never assumed from an absent field.
+	 *
+	 * No draft field was ever observed either — the 13 real prices in the
+	 * notes carried no status/draft/published key at all, so this cannot say
+	 * what SureCart actually calls it. The three checks below are a cheap,
+	 * fail-closed guess at the plausible names; each only excludes a price
+	 * when the field is present AND says unpublished, so they cost nothing on
+	 * the (verified) shape the notes recorded and do nothing harmful if the
+	 * real field is named something else entirely. See the "draft" entry in
+	 * the report's assumptions list — if SureCart's real draft field doesn't
+	 * match one of these, a draft price would still reach this list.
 	 *
 	 * @param array<string,mixed> $price
 	 */
-	private static function is_sellable( array $price ): bool {
+	public static function is_sellable( array $price ): bool {
 		if ( ! empty( $price['archived'] ) ) {
 			return false;
 		}
 		if ( array_key_exists( 'current_version', $price ) && false === $price['current_version'] ) {
+			return false;
+		}
+		if ( array_key_exists( 'status', $price ) && is_string( $price['status'] ) && 'draft' === strtolower( $price['status'] ) ) {
+			return false;
+		}
+		if ( array_key_exists( 'draft', $price ) && true === $price['draft'] ) {
+			return false;
+		}
+		if ( array_key_exists( 'published', $price ) && false === $price['published'] ) {
 			return false;
 		}
 		return true;
@@ -193,7 +222,7 @@ final class Blueworx_Clubhouse_SureCart_Products implements Blueworx_Clubhouse_P
 	 * @param array<string,mixed> $price
 	 * @return array{id:string,product:string,label:string,amount:string,period:string}|null
 	 */
-	private static function map_price( array $price ): ?array {
+	public static function map_price( array $price ): ?array {
 		if ( ! isset( $price['id'], $price['amount'], $price['currency'] ) ) {
 			return null;
 		}
