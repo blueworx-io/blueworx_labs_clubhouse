@@ -42,4 +42,37 @@ final class BlockTypesTest extends TestCase {
 		$type = Blueworx_Clubhouse_Block_Types::get( 'shortcode_block' );
 		$this->assertSame( Blueworx_Clubhouse_Integrations::LATEPOINT_TAG, $type['requires'] );
 	}
+
+	public function test_every_address_maps_to_a_real_type(): void {
+		foreach ( Blueworx_Clubhouse_Block_Addresses::map() as $address => $entry ) {
+			$this->assertTrue(
+				Blueworx_Clubhouse_Block_Types::has( $entry['type'] ),
+				$address . ' maps to unknown type ' . $entry['type']
+			);
+			$this->assertIsInt( $entry['position'], $address );
+		}
+	}
+
+	/**
+	 * The addresses are the ones the content editor offers today. If a section is
+	 * added to the catalogue without a block type behind it, the page editor
+	 * would silently drop it — so the two lists are pinned together here.
+	 */
+	public function test_every_catalogue_address_has_a_block(): void {
+		$map = Blueworx_Clubhouse_Block_Addresses::map();
+		foreach ( Blueworx_Clubhouse_Content_Catalogue::index() as $address => $entry ) {
+			$this->assertArrayHasKey( $address, $map, $address . ' has no block type' );
+		}
+	}
+
+	/** Positions are unique within a page, or two blocks would fight for a slot. */
+	public function test_positions_are_unique_within_each_page(): void {
+		$seen = array();
+		foreach ( Blueworx_Clubhouse_Block_Addresses::map() as $address => $entry ) {
+			$page = explode( '/', $address )[0];
+			$slot = $page . ':' . $entry['position'];
+			$this->assertArrayNotHasKey( $slot, $seen, $address . ' collides with ' . ( $seen[ $slot ] ?? '' ) );
+			$seen[ $slot ] = $address;
+		}
+	}
 }
