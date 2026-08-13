@@ -99,6 +99,11 @@ function blueworx_clubhouse_preview_document(): string {
 	// article renderer directly, which is what the front end does too.
 	Blueworx_Clubhouse_News::set_source( new Blueworx_Clubhouse_Demo_Posts() );
 	Blueworx_Clubhouse_News::set_page( $_GET[ Blueworx_Clubhouse_News::PAGE_PARAM ] ?? 1 );
+	// Membership tiers, without a shop behind them. The preview has no stored
+	// content, so every tier renders unconnected — the correct default — but the
+	// seam is installed so the preview exercises the same code path as the live site.
+	Blueworx_Clubhouse_Products_Source::set( new Blueworx_Clubhouse_Demo_Products() );
+	Blueworx_Clubhouse_Checkout::set_base_url( '?page=checkout-demo' );
 	// The login page's account screens are part of the design, so ?clubhouse_auth=
 	// selects one here too. No form action and no nonce: there is nothing to post
 	// to without WordPress, and the card renders its form either way.

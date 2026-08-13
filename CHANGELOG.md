@@ -5,6 +5,11 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.65.0
+
+- **Membership tiers can now sell.** Connect a tier to a product in your shop and the card shows what that product charges, with its button going straight to checkout with the right membership in the basket. Change a price in the shop and the page follows. Tiers you don't connect are unchanged — they show the price you type and point at the contact page.
+- **Fixed a Join button that went nowhere.** Custom membership tiers had no way to set where their Join button linked to, so the button could end up pointing at nothing. It now falls back to your contact page.
+
 ## 0.63.1
 
 - **Search engines now see one page per sport and team, not one "Sports" page repeated.** Each section page carries its own name and its own address, so it can be found and shared. Without this the new pages would have been treated as copies of the list and dropped.

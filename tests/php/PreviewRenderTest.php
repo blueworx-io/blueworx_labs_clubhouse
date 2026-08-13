@@ -20,6 +20,10 @@ final class PreviewRenderTest extends TestCase {
 		// Frontend/External_Chrome), so this suite must reset it defensively
 		// rather than trust it was left alone.
 		Blueworx_Clubhouse_Menu::set_provider( null );
+		// The preview now installs the demo products adapter and a checkout base
+		// URL on every render (task 7) — same leak risk as the two resets above.
+		Blueworx_Clubhouse_Products_Source::set( null );
+		Blueworx_Clubhouse_Checkout::set_base_url( '' );
 	}
 
 	public function test_preview_builds_a_full_court_side_home_document(): void {
