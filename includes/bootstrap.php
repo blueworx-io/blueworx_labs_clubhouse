@@ -26,6 +26,11 @@ require_once __DIR__ . '/content/class-menu.php';
 require_once __DIR__ . '/content/class-shortcodes.php';
 require_once __DIR__ . '/content/class-integrations.php';
 
+// Membership
+require_once __DIR__ . '/membership/interface-products.php';
+require_once __DIR__ . '/membership/class-demo-products.php';
+require_once __DIR__ . '/membership/class-products-source.php';
+
 // Theme
 require_once __DIR__ . '/theme/interface-base-look.php';
 require_once __DIR__ . '/theme/class-base-look-registry.php';
