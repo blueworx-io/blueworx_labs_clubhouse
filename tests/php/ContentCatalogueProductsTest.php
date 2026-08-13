@@ -79,7 +79,7 @@ final class ContentCatalogueProductsTest extends TestCase {
 		$this->assertStringContainsString( 'value="price_vanished"', $html );
 		$this->assertMatchesRegularExpression( '/value="price_vanished"[^>]*selected/', $html );
 		// ...and it says what happened, rather than reading as "Not connected".
-		$this->assertStringContainsString( 'no longer', $html );
+		$this->assertStringContainsString( 'longer available', $html );
 	}
 
 	public function test_a_normal_value_gains_no_extra_option(): void {

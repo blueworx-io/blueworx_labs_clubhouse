@@ -397,7 +397,7 @@ final class Blueworx_Clubhouse_Content_Screen {
 				// say so. Rendering it as "Not connected" would tell the owner their
 				// tier was never wired up, when in fact its product has gone.
 				if ( '' !== (string) $value && ! array_key_exists( (string) $value, $options ) ) {
-					$options[ (string) $value ] = 'no longer available — visitors see your typed price, and this clears when you save';
+					$options[ (string) $value ] = 'No longer available — visitors see your typed price, and this clears when you save';
 				}
 				$out    .= '<select id="' . self::esc( $id ) . '" name="' . self::esc( $name ) . '" class="clubhouse-input">';
 				foreach ( $options as $opt_value => $opt_label ) {
