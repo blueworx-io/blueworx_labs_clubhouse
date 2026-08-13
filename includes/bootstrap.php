@@ -28,6 +28,7 @@ require_once __DIR__ . '/content/class-integrations.php';
 
 // Blocks
 require_once __DIR__ . '/blocks/class-block-context.php';
+require_once __DIR__ . '/blocks/class-block-types.php';
 
 // Theme
 require_once __DIR__ . '/theme/interface-base-look.php';
