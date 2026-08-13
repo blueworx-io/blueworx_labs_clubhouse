@@ -32,7 +32,8 @@ set -euo pipefail
 SLUG="blueworx-labs-clubhouse"
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 OUT_DIR="${1:-$(cd "$ROOT/.." && pwd)}"
-ZIP="$OUT_DIR/$SLUG.zip"
+# ZIP is named once the version has been read, below: the filename carries the
+# version so the folder cannot end up holding several builds that look alike.
 
 # ---------------------------------------------------------------------------
 # THE ALLOWLIST — what ships. Allowlist, not denylist: a new dev directory is
@@ -79,6 +80,11 @@ VERSION="$(grep -oE "define\( 'BLUEWORX_LABS_CLUBHOUSE_VERSION', '[^']+'" "$ROOT
 [ -n "$VERSION" ] || die "could not read the plugin version from $SLUG.php"
 say "Version  : $VERSION"
 
+# The version lives in the FILENAME only. The folder inside the archive stays
+# "$SLUG/" — WordPress identifies a plugin by that folder, so putting the version
+# there would make every release look like a different plugin.
+ZIP="$OUT_DIR/$SLUG-$VERSION.zip"
+
 # --- stage -------------------------------------------------------------------
 STAGE="$(mktemp -d)"
 trap 'rm -rf "$STAGE"' EXIT
@@ -90,7 +96,9 @@ done
 
 # --- build -------------------------------------------------------------------
 mkdir -p "$OUT_DIR"
-rm -f "$ZIP"
+# Exactly one zip per plugin is ever present: an older build left beside the new
+# one is how the wrong version reaches a club site.
+rm -f "$OUT_DIR/$SLUG.zip" "$OUT_DIR"/"$SLUG"-*.zip
 case "$TOOL_KIND" in
 	bsdtar) ( cd "$STAGE" && "$TOOL_BIN" -a -c -f "$ZIP" "$SLUG" ) ;;
 	zip)    ( cd "$STAGE" && "$TOOL_BIN" -q -r -X "$ZIP" "$SLUG" ) ;;

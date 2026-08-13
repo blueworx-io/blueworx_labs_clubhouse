@@ -3,7 +3,7 @@
 ## build-zip.sh — the deployment artifact
 
 ```bash
-npm run build:zip            # writes ../blueworx-labs-clubhouse.zip
+npm run build:zip            # writes ../blueworx-labs-clubhouse-<version>.zip
 bash bin/build-zip.sh DIR    # or choose the output directory
 ```
 
