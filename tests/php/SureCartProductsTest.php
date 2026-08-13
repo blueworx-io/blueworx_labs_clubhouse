@@ -4,6 +4,34 @@ use PHPUnit\Framework\TestCase;
 
 final class SureCartProductsTest extends TestCase {
 
+	protected function setUp(): void {
+		wp_stub_reset();
+	}
+
+	protected function tearDown(): void {
+		Blueworx_Clubhouse_SureCart_Products::set_active_for_tests( null );
+		Blueworx_Clubhouse_SureCart_Products::set_raw_fetcher( null );
+		wp_stub_reset();
+	}
+
+	/** @param array<string,mixed> $overrides */
+	private function raw_price( array $overrides = array() ): array {
+		return array_merge(
+			array(
+				'id'                       => 'p1',
+				'amount'                   => 2800,
+				'currency'                 => 'gbp',
+				'name'                     => null,
+				'archived'                 => false,
+				'current_version'          => true,
+				'recurring_interval'       => 'month',
+				'recurring_interval_count' => 1,
+				'product'                  => array( 'name' => 'Adult membership' ),
+			),
+			$overrides
+		);
+	}
+
 	public function test_whole_amounts_lose_their_decimals(): void {
 		$this->assertSame( '£28', Blueworx_Clubhouse_SureCart_Products::format_amount( 2800, 'GBP' ) );
 		$this->assertSame( '£300', Blueworx_Clubhouse_SureCart_Products::format_amount( 30000, 'GBP' ) );
@@ -129,6 +157,27 @@ final class SureCartProductsTest extends TestCase {
 		$this->assertSame( 'Junior membership — £12/mo', $price['label'] );
 	}
 
+	public function test_a_quarterly_price_maps_to_null_rather_than_showing_as_a_one_off(): void {
+		// format_period( 'month', 3 ) is '' — silence beside the price is right
+		// for the suffix, but a card that then shows "£75" with no period reads
+		// as a single payment when the visitor is actually billed every quarter.
+		// map_price() must drop the whole price, not just the suffix.
+		$price = Blueworx_Clubhouse_SureCart_Products::map_price(
+			array(
+				'id'                       => 'quarterly-id',
+				'name'                     => null,
+				'amount'                   => 7500,
+				'currency'                 => 'gbp',
+				'archived'                 => false,
+				'current_version'          => true,
+				'recurring_interval'       => 'month',
+				'recurring_interval_count' => 3,
+				'product'                  => array( 'name' => 'Family membership' ),
+			)
+		);
+		$this->assertNull( $price );
+	}
+
 	public function test_a_record_missing_fields_entirely_does_not_fatal(): void {
 		$this->assertNull( Blueworx_Clubhouse_SureCart_Products::map_price( array() ) );
 		$this->assertNull( Blueworx_Clubhouse_SureCart_Products::map_price( array( 'id' => 'only-an-id' ) ) );
@@ -162,5 +211,80 @@ final class SureCartProductsTest extends TestCase {
 				array( 'archived' => false, 'current_version' => true )
 			)
 		);
+	}
+
+	// The tests below exercise prices()/price() end to end via set_raw_fetcher(),
+	// the test seam that stands in for rest_do_request() — none of these can be
+	// reached through map_price()/is_sellable() alone, since the bug each one
+	// guards against lives in prices()'s caching, not the mapping.
+
+	public function test_a_quarterly_price_is_not_offered_by_prices_and_price_returns_null(): void {
+		Blueworx_Clubhouse_SureCart_Products::set_active_for_tests( true );
+		Blueworx_Clubhouse_SureCart_Products::set_raw_fetcher( fn(): array => array(
+			$this->raw_price( array( 'id' => 'quarterly-id', 'amount' => 7500, 'recurring_interval_count' => 3 ) ),
+		) );
+
+		$products = new Blueworx_Clubhouse_SureCart_Products();
+		$this->assertSame( array(), $products->prices() );
+		$this->assertNull( $products->price( 'quarterly-id' ) );
+	}
+
+	public function test_a_failed_fetch_falls_back_to_the_last_good_list_not_an_empty_one(): void {
+		Blueworx_Clubhouse_SureCart_Products::set_active_for_tests( true );
+		Blueworx_Clubhouse_SureCart_Products::set_raw_fetcher( fn(): array => array( $this->raw_price() ) );
+
+		$products = new Blueworx_Clubhouse_SureCart_Products();
+		$first    = $products->prices();
+		$this->assertCount( 1, $first );
+
+		// A later request whose cache has expired and whose fetch then fails —
+		// e.g. the shop going briefly unreachable. Without the fix this would
+		// come back as array(), which the admin picker and Content_Sanitiser's
+		// select handling would both read as "the shop has no products",
+		// clearing every stored price_id on the next Save.
+		$GLOBALS['wp_stub_transients'] = array();
+		Blueworx_Clubhouse_SureCart_Products::set_raw_fetcher( fn(): ?array => null );
+
+		$this->assertSame( $first, $products->prices() );
+	}
+
+	public function test_a_failed_fetch_is_never_cached_as_an_empty_catalogue(): void {
+		Blueworx_Clubhouse_SureCart_Products::set_active_for_tests( true );
+		Blueworx_Clubhouse_SureCart_Products::set_raw_fetcher( fn(): ?array => null );
+
+		$products = new Blueworx_Clubhouse_SureCart_Products();
+		$products->prices(); // the failing fetch
+
+		// Same request window (no transient reset) — if the failure had been
+		// cached under the normal key, this second call would read that stale
+		// "nothing" straight back and never reach the now-working fetcher.
+		Blueworx_Clubhouse_SureCart_Products::set_raw_fetcher( fn(): array => array( $this->raw_price() ) );
+
+		$this->assertCount( 1, $products->prices() );
+	}
+
+	public function test_a_price_cache_gathered_logged_out_is_not_served_to_a_logged_in_request(): void {
+		// rest_do_request() applies the route's own permission callback against
+		// the current user, so a logged-out and a logged-in request can
+		// legitimately see different prices. The cache is a shared transient;
+		// without splitting it by permission context, whichever request
+		// populates it first decides what everyone sees for the next 5 minutes.
+		Blueworx_Clubhouse_SureCart_Products::set_active_for_tests( true );
+		$GLOBALS['wp_stub_logged_in'] = false;
+		Blueworx_Clubhouse_SureCart_Products::set_raw_fetcher( fn(): array => array(
+			$this->raw_price( array( 'id' => 'guest-visible' ) ),
+		) );
+		$products = new Blueworx_Clubhouse_SureCart_Products();
+		$guest    = $products->prices();
+		$this->assertSame( 'guest-visible', $guest[0]['id'] );
+
+		$GLOBALS['wp_stub_logged_in'] = true;
+		Blueworx_Clubhouse_SureCart_Products::set_raw_fetcher( fn(): array => array(
+			$this->raw_price( array( 'id' => 'auth-only' ) ),
+		) );
+		$auth = $products->prices();
+		$this->assertSame( 'auth-only', $auth[0]['id'], 'the logged-in request must not be served the guest cache entry' );
+
+		$GLOBALS['wp_stub_logged_in'] = false;
 	}
 }

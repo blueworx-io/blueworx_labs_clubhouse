@@ -12,6 +12,7 @@ $GLOBALS['wp_stub_posts']       = array();
 $GLOBALS['wp_stub_postmeta']    = array();
 $GLOBALS['wp_stub_roles']       = array( 'administrator' => array( 'display' => 'Administrator', 'caps' => array() ) );
 $GLOBALS['wp_stub_current_user'] = (object) array( 'roles' => array() );
+$GLOBALS['wp_stub_logged_in']    = false;
 $GLOBALS['wp_stub_is_front_page'] = false;
 $GLOBALS['wp_stub_is_admin']      = false;
 $GLOBALS['wp_stub_users']         = array();
@@ -30,6 +31,7 @@ function wp_stub_reset(): void {
 	$GLOBALS['wp_stub_postmeta']    = array();
 	$GLOBALS['wp_stub_roles']       = array( 'administrator' => array( 'display' => 'Administrator', 'caps' => array() ) );
 	$GLOBALS['wp_stub_current_user'] = (object) array( 'roles' => array() );
+	$GLOBALS['wp_stub_logged_in']    = false;
 	$GLOBALS['wp_stub_is_front_page'] = false;
 	$GLOBALS['wp_stub_is_admin']      = false;
 	$GLOBALS['wp_stub_users']         = array();
@@ -197,6 +199,9 @@ if ( ! function_exists( 'remove_submenu_page' ) ) {
 }
 if ( ! function_exists( 'wp_get_current_user' ) ) {
 	function wp_get_current_user() { return $GLOBALS['wp_stub_current_user']; }
+}
+if ( ! function_exists( 'is_user_logged_in' ) ) {
+	function is_user_logged_in(): bool { return $GLOBALS['wp_stub_logged_in'] ?? false; }
 }
 if ( ! function_exists( 'remove_menu_page' ) ) {
 	function remove_menu_page( $slug ) { wp_stub_record( 'remove_menu_page', array( $slug ) ); return false; }

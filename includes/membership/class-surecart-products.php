@@ -37,15 +37,47 @@ final class Blueworx_Clubhouse_SureCart_Products implements Blueworx_Clubhouse_P
 	 */
 	private const CACHE_TTL = 300;
 
+	/**
+	 * Test-only seam: overrides how raw price records are obtained, bypassing
+	 * rest_do_request() so prices()/price() can be exercised end to end without
+	 * a WordPress REST server. Null (the default) uses the real dispatch in
+	 * fetch_raw(). Return null from this to simulate a failed fetch.
+	 *
+	 * @var (callable():?array<int,mixed>)|null
+	 */
+	private static $raw_fetcher = null;
+
+	/** @param (callable():?array<int,mixed>)|null $fetcher */
+	public static function set_raw_fetcher( ?callable $fetcher ): void {
+		self::$raw_fetcher = $fetcher;
+	}
+
 	/** @return array<int,array{id:string,product:string,label:string,amount:string,period:string}> */
 	public function prices(): array {
-		$cached = get_transient( self::cache_key() );
+		$context = self::cache_context();
+		$cached  = get_transient( self::cache_key( $context ) );
 		if ( is_array( $cached ) ) {
 			return $cached;
 		}
 
 		$prices = self::fetch_prices();
-		set_transient( self::cache_key(), $prices, self::CACHE_TTL );
+		if ( null === $prices ) {
+			// A failed fetch (API outage, permission denial, anything) is not the
+			// same fact as a genuinely empty catalogue, and must not be cached the
+			// same way — doing so would make the admin picker read "your shop has
+			// no products" for a full TTL, which the Content editor's select then
+			// treats as license to clear every stored price_id on the next Save.
+			// Serve whatever was last fetched successfully in this same
+			// permission context instead, so a blip never looks (or behaves) like
+			// the shop has nothing to sell.
+			return self::last_good( $context );
+		}
+
+		set_transient( self::cache_key( $context ), $prices, self::CACHE_TTL );
+		// No expiry: this is read only when a later fetch fails, so it must
+		// still be here whenever that happens, however long ago the last
+		// success was.
+		update_option( self::last_good_option( $context ), $prices, false );
 		return $prices;
 	}
 
@@ -63,10 +95,28 @@ final class Blueworx_Clubhouse_SureCart_Products implements Blueworx_Clubhouse_P
 	}
 
 	/**
+	 * Test-only seam, same pattern as Shortcodes::set_expander(): overrides
+	 * is_active() so prices()/price() can be exercised end to end (together
+	 * with set_raw_fetcher()) without depending on a real surecart() function
+	 * or \SureCart\SureCart class existing in the test process. Null (default)
+	 * uses the real detection below.
+	 *
+	 * @var bool|null
+	 */
+	private static ?bool $active_override = null;
+
+	public static function set_active_for_tests( ?bool $active ): void {
+		self::$active_override = $active;
+	}
+
+	/**
 	 * Whether SureCart is live on this site. Guards every other method: false
 	 * here means every caller sees an empty list or null, never a fatal.
 	 */
 	public static function is_active(): bool {
+		if ( null !== self::$active_override ) {
+			return self::$active_override;
+		}
 		return function_exists( 'surecart' ) || class_exists( '\SureCart\SureCart' );
 	}
 
@@ -101,27 +151,74 @@ final class Blueworx_Clubhouse_SureCart_Products implements Blueworx_Clubhouse_P
 			return;
 		}
 		$invalidate = static function (): void {
-			delete_transient( self::cache_key() );
+			// Both permission contexts' caches, not just the one that happened
+			// to populate first — see cache_context().
+			foreach ( self::CACHE_CONTEXTS as $context ) {
+				delete_transient( self::cache_key( $context ) );
+			}
 		};
 		add_action( 'surecart/price/saved', $invalidate );
 		add_action( 'surecart/product/saved', $invalidate );
 		add_action( 'save_post_sc_product', $invalidate );
 	}
 
+	/** The two permission contexts a price cache can be gathered under — see cache_context(). */
+	private const CACHE_CONTEXTS = array( 'guest', 'auth' );
+
 	/**
 	 * Fetch every sellable price from SureCart, mapped into this plugin's price
-	 * array. Dispatches the verified REST route internally rather than through
-	 * an unverified PHP model — see the class docblock. Any failure at any step
-	 * yields an empty array, never a notice or a fatal.
+	 * array, or null when the fetch itself failed — see fetch_raw(). Any
+	 * per-record failure still yields no fatal, only that one record dropped.
 	 *
-	 * @return array<int,array{id:string,product:string,label:string,amount:string,period:string}>
+	 * @return array<int,array{id:string,product:string,label:string,amount:string,period:string}>|null
 	 */
-	private static function fetch_prices(): array {
+	private static function fetch_prices(): ?array {
 		if ( ! self::is_active() ) {
 			return array();
 		}
+		$data = self::fetch_raw();
+		if ( null === $data ) {
+			return null;
+		}
+
+		$prices = array();
+		foreach ( $data as $raw ) {
+			if ( ! is_array( $raw ) || ! self::is_sellable( $raw ) ) {
+				continue;
+			}
+			$mapped = self::map_price( $raw );
+			if ( null !== $mapped ) {
+				$prices[] = $mapped;
+			}
+		}
+		return $prices;
+	}
+
+	/**
+	 * Dispatch the verified REST route internally rather than through an
+	 * unverified PHP model — see the class docblock. Returns null whenever the
+	 * fetch itself could not be trusted (missing REST plumbing, an exception, an
+	 * error response, a malformed body) — deliberately distinct from array(),
+	 * which means "asked, and there is nothing to sell". prices() depends on
+	 * that distinction to avoid caching an outage as an empty shop.
+	 *
+	 * **Unverified**: whether this route is readable by a logged-out visitor
+	 * has never been checked against a live site — see
+	 * docs/integrations/surecart-notes.md and the task-6 report's assumptions
+	 * list. rest_do_request() applies the route's own permission callback
+	 * against the current request's user, so if the route requires a
+	 * capability, a logged-out visitor gets exactly this failure path (null),
+	 * and — before the cache_context() split below — would have been served
+	 * whatever a logged-in admin's request happened to cache first.
+	 *
+	 * @return array<int,mixed>|null
+	 */
+	private static function fetch_raw(): ?array {
+		if ( null !== self::$raw_fetcher ) {
+			return ( self::$raw_fetcher )();
+		}
 		if ( ! function_exists( 'rest_do_request' ) || ! class_exists( 'WP_REST_Request' ) ) {
-			return array();
+			return null;
 		}
 
 		try {
@@ -147,32 +244,18 @@ final class Blueworx_Clubhouse_SureCart_Products implements Blueworx_Clubhouse_P
 			$request->set_param( 'expand', array( 'product' ) );
 			$response = rest_do_request( $request );
 		} catch ( \Throwable $e ) {
-			return array();
+			return null;
 		}
 
 		if ( ! is_object( $response ) || ! method_exists( $response, 'get_data' ) ) {
-			return array();
+			return null;
 		}
 		if ( method_exists( $response, 'is_error' ) && $response->is_error() ) {
-			return array();
+			return null;
 		}
 
 		$data = $response->get_data();
-		if ( ! is_array( $data ) ) {
-			return array();
-		}
-
-		$prices = array();
-		foreach ( $data as $raw ) {
-			if ( ! is_array( $raw ) || ! self::is_sellable( $raw ) ) {
-				continue;
-			}
-			$mapped = self::map_price( $raw );
-			if ( null !== $mapped ) {
-				$prices[] = $mapped;
-			}
-		}
-		return $prices;
+		return is_array( $data ) ? $data : null;
 	}
 
 	/**
@@ -251,6 +334,17 @@ final class Blueworx_Clubhouse_SureCart_Products implements Blueworx_Clubhouse_P
 		$amount = self::format_amount( (int) $price['amount'], $price['currency'] );
 		$period = self::format_period( $interval, $count );
 
+		// format_period() returns '' both for a genuine one-off (no interval at
+		// all) and for a cadence it has no words for (e.g. every 3 months) —
+		// silence is right for the suffix beside a price, but wrong for the
+		// tier itself: showing "£75" with no period on a recurring membership
+		// reads as a single payment. A price that IS recurring but cannot be
+		// labelled must drop the whole price, not just the suffix, so the tier
+		// falls back to its typed price exactly as an archived price does.
+		if ( '' !== $interval && '' === $period ) {
+			return null;
+		}
+
 		return array(
 			'id'      => $price['id'],
 			'product' => $product_name,
@@ -297,9 +391,38 @@ final class Blueworx_Clubhouse_SureCart_Products implements Blueworx_Clubhouse_P
 		return $product . ' — ' . $amount . $period;
 	}
 
-	/** Transient key, scoped to the running plugin version like Theme_Cache. */
-	private static function cache_key(): string {
+	/**
+	 * Which permission context the current request fetches under. SureCart's
+	 * route applies its own permission callback to the current user
+	 * (fetch_raw()), and this cache is a shared transient — without this split,
+	 * whichever request populates it first (an admin browsing the picker, or a
+	 * logged-out visitor) decides what every other visitor sees for the rest of
+	 * the TTL, including a privileged price a logged-out visitor should never
+	 * have been shown, or vice versa.
+	 */
+	private static function cache_context(): string {
+		return ( function_exists( 'is_user_logged_in' ) && is_user_logged_in() ) ? 'auth' : 'guest';
+	}
+
+	/** Transient key, scoped to the running plugin version like Theme_Cache, and to cache_context(). */
+	private static function cache_key( string $context ): string {
 		$version = defined( 'BLUEWORX_LABS_CLUBHOUSE_VERSION' ) ? BLUEWORX_LABS_CLUBHOUSE_VERSION : 'dev';
-		return 'blueworx_clubhouse_surecart_prices_' . md5( (string) $version );
+		return 'blueworx_clubhouse_surecart_prices_' . $context . '_' . md5( (string) $version );
+	}
+
+	/**
+	 * The last successfully fetched price list for a permission context, or
+	 * array() when none has ever succeeded. Stored as an option (no expiry),
+	 * not a transient — it must outlive the transient TTL, since it is only
+	 * ever read after a fetch has already failed.
+	 */
+	private static function last_good( string $context ): array {
+		$stored = get_option( self::last_good_option( $context ), array() );
+		return is_array( $stored ) ? $stored : array();
+	}
+
+	private static function last_good_option( string $context ): string {
+		$version = defined( 'BLUEWORX_LABS_CLUBHOUSE_VERSION' ) ? BLUEWORX_LABS_CLUBHOUSE_VERSION : 'dev';
+		return 'blueworx_clubhouse_surecart_prices_last_good_' . $context . '_' . md5( (string) $version );
 	}
 }

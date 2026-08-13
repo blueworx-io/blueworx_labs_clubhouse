@@ -5,12 +5,31 @@ use PHPUnit\Framework\TestCase;
 
 final class ImportParserContentTest extends TestCase {
 
+	protected function tearDown(): void {
+		Blueworx_Clubhouse_Products_Source::set( null );
+	}
+
 	/** @param array<string,mixed> $content */
 	private function parse( array $content ): array {
 		return Blueworx_Clubhouse_Import_Parser::parse( array(
 			'clubhouse_import' => 1,
 			'content'          => $content,
 		) );
+	}
+
+	public function test_a_tier_price_id_survives_import_when_a_shop_is_installed(): void {
+		// sections() must build its price_id select against the installed
+		// products adapter, the same way Content_Controller does — otherwise
+		// the select's only option is "not connected" and Content_Sanitiser
+		// clears any real price_id straight back to '', wiping the connection
+		// on every AI import that touches a tiers section.
+		Blueworx_Clubhouse_Products_Source::set( new Blueworx_Clubhouse_Demo_Products() );
+
+		$out = $this->parse( array( 'membership' => array( 'tiers' => array( 'items' => array(
+			array( 'name' => 'Adult', 'price' => '£99', 'price_id' => 'price_adult_monthly' ),
+		) ) ) ) );
+
+		$this->assertSame( 'price_adult_monthly', $out['plan']->items()['membership']['tiers'][0]['price_id'] );
 	}
 
 	public function test_a_non_array_file_is_a_hard_error(): void {
