@@ -132,12 +132,14 @@ function blueworx_clubhouse_preview_document(): string {
 		. 'r.setProperty("--color-accent-block",p.block);};'
 		. 'box.appendChild(s);});'
 		. '})();</script>';
-	// The last rule is the same one the demo switcher carries in demo.css: this
+	// The second rule is the same clearance demo.css gives the demo bar: this
 	// harness's own look picker sits in the corner the cookie notice's dismiss
 	// button occupies, and preview tooling must never be the reason a real
-	// control cannot be clicked.
+	// control cannot be clicked. The notice moves up rather than the tooling
+	// standing down — the notice is on screen for every first page load, so
+	// hiding the picker for it would mean hiding it almost always.
 	$style     = '<style>.ch-switcher{position:fixed;right:16px;bottom:16px;z-index:90;background:#fff;border:1px solid #e9e4d8;border-radius:16px;padding:8px;display:flex;flex-wrap:wrap;max-width:150px}'
-		. 'body:has(#ch-cookie:not([hidden])) .ch-switcher{display:none}</style>';
+		. 'body:has(.ch-switcher) .ch-cookie{bottom:120px}</style>';
 
 	$idx        = array_search( (string) $look_slug, $look_order, true );
 	$next       = $look_order[ ( (int) $idx + 1 ) % count( $look_order ) ];
