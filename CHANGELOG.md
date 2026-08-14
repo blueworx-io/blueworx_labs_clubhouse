@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **The plugin zip is now named after the version it contains**, and building a new one removes the old, so the folder can never hold two builds that look alike and the wrong one cannot reach a club site by mistake. The folder inside the archive is unchanged, so WordPress still treats every release as the same plugin.
 
+## 0.63.2
+
+- **The demo mode switcher no longer sits on top of the home page's buttons.** It was a bar across the bottom of the screen, covering two of the hero's call-to-action tiles at every screen size. It is now a small "Demo" button in the corner, which opens when you click it.
+
 ## 0.63.1
 
 - **Search engines now see one page per sport and team, not one "Sports" page repeated.** Each section page carries its own name and its own address, so it can be found and shared. Without this the new pages would have been treated as copies of the list and dropped.
