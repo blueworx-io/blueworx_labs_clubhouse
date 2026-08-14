@@ -1,41 +1,44 @@
 # What to work on next
 
-The standing priority order for this repo. Two things are being pushed right now
-— **making SureCart actually work**, and **the page builder**. Everything else
-waits behind them unless it is dangerous.
+The standing priority order for this repo. The SureCart work and the legal pages
+are done; **the page builder is now the thing being pushed**, and the booking
+system is the biggest pile of real bugs behind it.
 
-Written 14 August 2026, against main at v0.65.0. Keep it current: when an issue
-closes, strike it here; when priorities change, change them here rather than in
-someone's head.
+Written 14 August 2026, updated the same day against main at v0.67.0. Keep it
+current: when an issue closes, strike it here; when priorities change, change
+them here rather than in someone's head.
 
 ---
 
-## 1. Make SureCart work
+## 1. Make SureCart work — **done**
 
-A club cannot take a single payment today. The tiers can sell — that shipped in
-v0.65.0 — but there is nowhere to send a buyer, so every tier quietly falls back
-to the contact page. This is the shortest path from "demo" to "a club could use
-this".
+Shipped in v0.66.0 and v0.67.0. The whole section is closed, and the reason none
+of it worked was not on this list at all: **the plugin never recognised SureCart**.
+It looked for two symbols the plugin does not have, so every real site concluded
+there was no shop, which silently switched off tier prices, checkout links and
+everything else to do with selling. One line, and it is why membership tiers
+never sold on a live site despite working in testing.
 
-| Order | Issue | Why it is here |
-| --- | --- | --- |
-| 1 | [#169](../../issues/169) Create the checkout page | The blocker. Nothing else in this section matters until a Join button has a real destination. |
-| 2 | [#91](../../issues/91) Hidden basket with a dead Checkout button on every page | Broken furniture shipped site-wide. Likely closes itself once the checkout page exists — check it does. |
-| 3 | [#132](../../issues/132) Add to Cart spins forever, never reports an error | The only buy path on the site today, failing silently and retrying several times a second. Re-test with the support window closed; the silent retry is a defect regardless. |
-| 4 | [#170](../../issues/170) Create the customer dashboard page | Where a member manages a membership after paying. Needed for a real membership, not for the first sale. |
-| 5 | [#90](../../issues/90) Membership has no way to join or pay | The umbrella. Verify and close once 1 and 4 are done and the page's copy matches what actually happens. |
-| 6 | [#130](../../issues/130) Every product image is broken | Shop presentation. Real, but nobody reaches the shop yet. |
-| 7 | [#131](../../issues/131) Products indexable but unreachable | Partly stale — a Shop page now exists. Re-check before working it. |
+| Issue | Outcome |
+| --- | --- |
+| [#169](../../issues/169) Create the checkout page | Done, but not as written. SureCart seeds its own pages, so Clubhouse detects a missing or trashed one and offers to repair it by calling SureCart's own seeder. |
+| [#91](../../issues/91) Dead Checkout button in the basket | Closed by the above — the button was empty only because there was no checkout page. |
+| [#132](../../issues/132) Add to Cart spins forever | Not ours. The retry loop is SureCart's own JavaScript; this plugin ships no front-end script that makes requests. Re-check once the site is live with a connected shop. |
+| [#170](../../issues/170) Customer dashboard page | Page is created and members land on it after signing in. **Still open** for one thing: a member who navigates away has no link back — the header has a single slot, currently "Log out". |
+| [#90](../../issues/90) Membership has no way to join or pay | Done. The page now reads its promise off the tier buttons a visitor can see, so it never promises "join in five minutes" above "register your interest". |
+| [#130](../../issues/130) Every product image is broken | Not ours. SureCart serves product images from its own CDN and there is no setting to change that; the 404s mean those products have no image in the SureCart account. |
+| [#131](../../issues/131) Products indexable but unreachable | Done. The shop's pages are link targets and the default nav carries a Shop item on sites that have one. |
 
-**The honest gap.** The SureCart adapter shipped with four guesses that could not
-be verified without a live shop: how prices are reached from PHP, what SureCart
-calls its checkout page, which hooks fire when a price changes, and whether its
-price route answers a logged-out visitor. Each fails safe — a wrong guess means
-tiers fall back, not that anything breaks. `docs/integrations/surecart-notes.md`
-records what was observed and what was not. **Item 1 is also the first chance to
-close those**, so test it end to end, including once in a private window.
+**The honest gap is closed.** All four unverified guesses were settled by reading
+SureCart's own source rather than probing a live site — two were right, two were
+wrong. `docs/integrations/surecart-notes.md` records which, and the lesson:
+download the vendor's plugin before designing around a guess.
 
-## 2. The page builder
+**Still to prove:** one real purchase on a live shop. The link format is
+confirmed against SureCart's source, but only an actual checkout proves the
+basket prefills.
+
+## 2. The page builder — now the top of the list
 
 Pages are currently fixed recipes in code; an owner can only switch a section
 off. The goal is a library of blocks edited once and reused, and a page built by
@@ -57,12 +60,13 @@ spec. Raise issues for them if that suits how you want to work.
 
 ## 3. Everything else, in the order it should be dealt with
 
-**Legal first.** [#121](../../issues/121) — no privacy policy, terms or cookie
-notice, while forms collect names, emails and phone numbers. This is the one
-item in this section that should jump the queue if the site goes anywhere near
-real visitors.
+**Legal — done.** [#121](../../issues/121) shipped in v0.67.0: privacy and terms
+pages linked from every footer, and a cookie notice that says what the site
+actually uses cookies for without pretending to block anything. Both pages carry
+starter wording marked `ADD:` wherever only the club can answer — **those lines
+still need writing before the site takes real sign-ups.**
 
-**Then the booking system**, which is a whole subsystem still showing the
+**So the booking system is next**, which is a whole subsystem still showing the
 vendor's sample data: [#92](../../issues/92) sample data, [#93](../../issues/93)
 courts in the wrong cities, [#96](../../issues/96) everything costs £0.00,
 [#94](../../issues/94) and [#95](../../issues/95) US phone defaults,

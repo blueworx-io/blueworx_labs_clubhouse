@@ -5,6 +5,10 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.67.1
+
+- Recorded what the team is working on next, in the repo rather than in someone's head. No change to the plugin itself.
+
 ## 0.67.0
 
 - **Your site now has a privacy policy and terms**, linked from the footer of every page. Both ship with starter wording that describes what this site actually collects and where it goes. Anywhere it says ADD, only your club can answer — those lines need writing before you take real sign-ups. It is a starting point, not legal advice.
