@@ -10,6 +10,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Membership tiers can now sell.** Connect a tier to a product in your shop and the card shows what that product charges, with its button going straight to checkout with the right membership in the basket. Change a price in the shop and the page follows. Tiers you don't connect are unchanged — they show the price you type and point at the contact page.
 - **Fixed a Join button that went nowhere.** Custom membership tiers had no way to set where their Join button linked to, so the button could end up pointing at nothing. It now falls back to your contact page.
 
+## 0.64.0
+
+- Groundwork for the new page editor: blocks can now be stored as a reusable library, and each page can record which of them it shows. Nothing changes on the site yet.
+
+## 0.63.3
+
+- **The plugin zip is now named after the version it contains**, and building a new one removes the old, so the folder can never hold two builds that look alike and the wrong one cannot reach a club site by mistake. The folder inside the archive is unchanged, so WordPress still treats every release as the same plugin.
+
+## 0.63.2
+
+- **The demo mode switcher no longer sits on top of the home page's buttons.** It was a bar across the bottom of the screen, covering two of the hero's call-to-action tiles at every screen size. It is now a small "Demo" button in the corner, which opens when you click it.
+
 ## 0.63.1
 
 - **Search engines now see one page per sport and team, not one "Sports" page repeated.** Each section page carries its own name and its own address, so it can be found and shared. Without this the new pages would have been treated as copies of the list and dropped.
