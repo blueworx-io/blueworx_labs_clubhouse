@@ -216,4 +216,22 @@ final class SetupScreenTest extends TestCase {
 		$html                           = Blueworx_Clubhouse_Setup_Screen::render( $model );
 		$this->assertStringNotContainsString( 'derived from your primary colour', $html );
 	}
+
+	/**
+	 * A blank "after signing in" quietly does two different things depending on
+	 * whether a shop is connected, so the screen has to say which one is in
+	 * force rather than leave an owner to discover it.
+	 */
+	public function test_a_club_with_a_shop_is_told_members_land_on_the_dashboard(): void {
+		$model                            = $this->model();
+		$model['members']['dashboard_url'] = 'https://club.test/customer-dashboard/';
+		$html                              = Blueworx_Clubhouse_Setup_Screen::render( $model );
+		$this->assertStringContainsString( 'account dashboard', $html );
+	}
+
+	public function test_a_club_with_no_shop_is_told_members_land_on_the_front_page(): void {
+		$html = Blueworx_Clubhouse_Setup_Screen::render( $this->model() );
+		$this->assertStringNotContainsString( 'account dashboard', $html );
+		$this->assertStringContainsString( 'blank to send them to your front page', $html );
+	}
 }

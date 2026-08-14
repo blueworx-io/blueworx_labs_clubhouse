@@ -221,7 +221,12 @@ final class Blueworx_Clubhouse_Auth {
 		}
 
 		wp_set_current_user( $user->ID );
-		self::go( self::settings()->get_post_login() );
+		self::go(
+			Blueworx_Clubhouse_Auth_View::post_login_target(
+				self::settings()->get_post_login(),
+				Blueworx_Clubhouse_Shop_Pages::url( 'dashboard' )
+			)
+		);
 		return array(
 			'view'   => Blueworx_Clubhouse_Auth_View::SIGN_IN,
 			'error'  => '',
@@ -296,11 +301,11 @@ final class Blueworx_Clubhouse_Auth {
 			return;
 		}
 		wp_logout();
-		$target = self::settings()->get_post_logout();
-		if ( '' === $target ) {
-			$target = self::url( Blueworx_Clubhouse_Auth_View::SIGNED );
-		}
-		self::go( $target );
+		// Blank means the front page, which is what the Members screen has
+		// always told owners it means. It used to mean the login page's
+		// signed-out view instead — a screen that says "you have signed out"
+		// and then leaves someone on a login form they no longer need.
+		self::go( self::settings()->get_post_logout() );
 	}
 
 	/** The signed logout URL for the header link. */
