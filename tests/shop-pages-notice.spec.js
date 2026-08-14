@@ -35,6 +35,14 @@ test('a club with no shop is never told its shop pages are missing @wordpress', 
   await expect(page.locator('body')).not.toContainText('not ready to take payments');
 });
 
+test('a club with no shop gets no Shop link in its nav @wordpress', async ({ page }) => {
+  // The Shop item ships in the default nav and must disappear on every site
+  // that cannot serve it, the same way Bookings does without LatePoint. A nav
+  // link to a page that does not exist is worse than no link.
+  await page.goto('/');
+  await expect(page.locator('.ch-nav a', { hasText: /^Shop$/ })).toHaveCount(0);
+});
+
 test('membership tiers keep their fallback while there is no reachable checkout @wordpress', async ({ page }) => {
   // The other side of the same rule: no shop, or a shop whose checkout page is
   // gone, must leave every Join button pointing somewhere real rather than at a

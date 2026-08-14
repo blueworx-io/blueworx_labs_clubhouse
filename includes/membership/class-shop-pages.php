@@ -219,6 +219,11 @@ final class Blueworx_Clubhouse_Shop_Pages {
 			self::seed();
 		}
 
+		// The link catalogue memoises which shop pages exist, and this request
+		// has just changed the answer — without this the Shop link would not
+		// appear in the nav until the next page load.
+		Blueworx_Clubhouse_Link_Catalogue::forget_shop_targets();
+
 		return array() === self::repairable( self::problems( self::statuses() ), self::pages() );
 	}
 
