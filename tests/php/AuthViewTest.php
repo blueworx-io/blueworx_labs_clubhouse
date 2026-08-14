@@ -33,6 +33,48 @@ final class AuthViewTest extends TestCase {
 		$this->assertSame( 'signin', Blueworx_Clubhouse_Auth_View::view( array( 'forgot' ) ) );
 	}
 
+	public function test_a_blank_setting_sends_members_to_the_shop_dashboard(): void {
+		// A club with a shop has somewhere useful to send someone who has just
+		// signed in; the front page is a dead end for them.
+		$this->assertSame(
+			'https://club.example/customer-dashboard/',
+			Blueworx_Clubhouse_Auth_View::post_login_target( '', 'https://club.example/customer-dashboard/' )
+		);
+	}
+
+	public function test_what_the_owner_typed_always_wins(): void {
+		$this->assertSame(
+			'/membership/',
+			Blueworx_Clubhouse_Auth_View::post_login_target( '/membership/', 'https://club.example/customer-dashboard/' )
+		);
+	}
+
+	public function test_a_club_with_no_shop_keeps_the_front_page(): void {
+		// '' here falls through safe_target() to the home URL, unchanged from
+		// how every club without a shop already behaves.
+		$this->assertSame( '', Blueworx_Clubhouse_Auth_View::post_login_target( '', '' ) );
+		$this->assertSame(
+			self::HOME,
+			Blueworx_Clubhouse_Auth_View::safe_target( '', Blueworx_Clubhouse_Auth_View::post_login_target( '', '' ), self::HOME )
+		);
+	}
+
+	public function test_a_setting_of_only_spaces_counts_as_blank(): void {
+		$this->assertSame(
+			'https://club.example/customer-dashboard/',
+			Blueworx_Clubhouse_Auth_View::post_login_target( '   ', 'https://club.example/customer-dashboard/' )
+		);
+	}
+
+	public function test_where_a_member_was_heading_still_beats_the_dashboard(): void {
+		// Signing in to reach a specific page must still land on that page.
+		$target = Blueworx_Clubhouse_Auth_View::post_login_target( '', 'https://club.example/customer-dashboard/' );
+		$this->assertSame(
+			'https://club.example/events/',
+			Blueworx_Clubhouse_Auth_View::safe_target( '/events/', $target, self::HOME )
+		);
+	}
+
 	public function test_requested_path_beats_the_configured_default(): void {
 		$this->assertSame(
 			'https://club.example/members/',

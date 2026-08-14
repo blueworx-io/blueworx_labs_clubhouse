@@ -23,7 +23,7 @@ final class SetupSectionsTest extends TestCase {
 	public function test_covers_the_always_available_pages_in_page_map_order(): void {
 		$pages = array_map( static fn( $p ) => $p['page'], $this->inventory() );
 		$this->assertSame(
-			array( 'home', 'about', 'membership', 'contact', 'login', 'news', 'sports', 'teams', 'events', 'calendar' ),
+			array( 'home', 'about', 'membership', 'contact', 'login', 'news', 'sports', 'teams', 'events', 'calendar', 'privacy', 'terms' ),
 			$pages
 		);
 	}
@@ -54,7 +54,7 @@ final class SetupSectionsTest extends TestCase {
 		$home = array_values( array_filter( $this->inventory(), static fn( $p ) => 'home' === $p['page'] ) )[0];
 		$keys = array_map( static fn( $s ) => $s['key'], $home['sections'] );
 		$this->assertSame(
-			array( 'header', 'hero', 'quick_tiles', 'ticker', 'sports', 'clubhouse', 'membership', 'activity', 'news', 'info', 'sponsors', 'social', 'footer' ),
+			array( 'cookies', 'header', 'hero', 'quick_tiles', 'ticker', 'sports', 'clubhouse', 'membership', 'activity', 'news', 'info', 'sponsors', 'social', 'footer' ),
 			$keys
 		);
 	}
@@ -68,12 +68,12 @@ final class SetupSectionsTest extends TestCase {
 		}
 	}
 
-	/** 48 since the News page added three. Booking adds 5 more. */
-	public function test_total_section_count_is_48_without_latepoint_and_53_with_it(): void {
+	/** 53 since Privacy and Terms added two each and the cookie notice one. Booking adds 5 more. */
+	public function test_total_section_count_is_53_without_latepoint_and_58_with_it(): void {
 		$count = fn(): int => array_sum( array_map( static fn( $p ) => count( $p['sections'] ), $this->inventory() ) );
-		$this->assertSame( 48, $count() );
+		$this->assertSame( 53, $count() );
 
 		$this->withLatePoint();
-		$this->assertSame( 53, $count() );
+		$this->assertSame( 58, $count() );
 	}
 }

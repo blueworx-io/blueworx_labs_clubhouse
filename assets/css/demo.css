@@ -56,6 +56,15 @@
 body:has( .ch-nav__disc[open] ) .clubhouse-demo {
 	display: none;
 }
+/* The switcher's corner landed on the cookie notice's dismiss button, so the
+   notice could not be dismissed while demo mode was on — the click went to the
+   tooling. Standing the switcher down was the wrong fix: the notice shows on
+   every first page load, so it would have hidden the demo bar almost always.
+   The notice moves up instead, and both stay usable. Lives here rather than in
+   the looks because the clearance it needs is this file's own dimensions. */
+body:has( .clubhouse-demo ) .ch-cookie {
+	bottom: 76px;
+}
 /* On a phone the centred bar landed straight on top of the hero's call-to-action
    tiles. Tucked into the corner it still reads as an overlay but stops sitting on
    the middle of the page, where the content people came for is. */

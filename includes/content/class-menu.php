@@ -34,6 +34,12 @@ final class Blueworx_Clubhouse_Menu {
 		array( 'label' => 'Sports',       'target' => 'page:sports',     'children' => array() ),
 		array( 'label' => 'Teams',        'target' => 'page:teams',      'children' => array() ),
 		array( 'label' => 'Membership',   'target' => 'page:membership', 'children' => array() ),
+		// Only rendered by a club whose shop has a reachable shop page; it
+		// resolves to '' and is dropped everywhere else, the same way Bookings
+		// disappears without LatePoint. Without it a club's products sat in the
+		// sitemap, findable from a search engine, with nothing on the site
+		// linking to them (issue #131).
+		array( 'label' => 'Shop',         'target' => 'shop:shop',       'children' => array() ),
 		array( 'label' => 'Events',       'target' => 'page:events',     'children' => array() ),
 		array( 'label' => 'Calendar',     'target' => 'page:calendar',   'children' => array() ),
 		array( 'label' => 'Bookings', 'target' => 'page:booking',    'children' => array() ),

@@ -328,6 +328,15 @@ final class Blueworx_Clubhouse_Frontend {
 			BLUEWORX_LABS_CLUBHOUSE_VERSION,
 			true
 		);
+		// Reveals the cookie notice, which ships hidden, and remembers its
+		// dismissal — see assets/js/cookie-notice.js.
+		wp_enqueue_script(
+			'clubhouse-cookie-notice',
+			BLUEWORX_LABS_CLUBHOUSE_URL . 'assets/js/cookie-notice.js',
+			array(),
+			BLUEWORX_LABS_CLUBHOUSE_VERSION,
+			true
+		);
 	}
 
 	/**

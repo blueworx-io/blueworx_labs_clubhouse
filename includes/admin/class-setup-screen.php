@@ -340,8 +340,15 @@ final class Blueworx_Clubhouse_Setup_Screen {
 	private static function members_area( array $m ): string {
 		$out  = '<div class="clubhouse-step"><p class="clubhouse-step__k">Members</p>'
 			. '<h2 class="clubhouse-step__h">After signing in</h2>';
+		// The dashboard default is worth saying out loud: a blank field that
+		// quietly does two different things depending on whether a shop is
+		// connected is the kind of behaviour an owner should read, not discover.
+		$signed_in = '' !== (string) ( $m['dashboard_url'] ?? '' )
+			? 'Leave "after signing in" blank and members go to their account dashboard, where they manage what they have paid for. '
+			: 'Leave "after signing in" blank to send them to your front page. ';
 		$out .= '<p class="clubhouse-step__lede">Where a member goes once they have signed in, and once they have signed out. '
-			. 'Leave either blank to send them to your front page. If a member was heading somewhere else when they were '
+			. self::esc( $signed_in )
+			. 'Leave "after signing out" blank to send them to your front page. If a member was heading somewhere else when they were '
 			. 'asked to sign in, they are returned there instead. Addresses on other websites are ignored.</p>';
 		$out .= '<div class="clubhouse-fields">';
 		$out .= self::text_field( 'clubhouse_post_login', 'After signing in', (string) ( $m['post_login'] ?? '' ) );

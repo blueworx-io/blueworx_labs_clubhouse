@@ -65,6 +65,27 @@ final class Blueworx_Clubhouse_Auth_View {
 	 * @param string $configured The owner's setting; may be empty, a path or a URL.
 	 * @param string $home       Absolute home URL, used as the last resort.
 	 */
+	/**
+	 * Where a member goes after signing in when the owner has typed nothing.
+	 *
+	 * A club with a shop has somewhere useful to send them — the customer
+	 * dashboard, where a paid membership is managed — and the front page is a
+	 * dead end for someone who has just signed in. So a blank setting means the
+	 * dashboard on a site that has one, and the front page everywhere else.
+	 *
+	 * It stays a default rather than a saved value: typing nothing means "do
+	 * the sensible thing", and a club that later removes its shop should go
+	 * back to the front page rather than keep redirecting at a page that has
+	 * gone. Anything typed wins, and so does the page a member was heading for
+	 * when they were asked to sign in — see safe_target().
+	 *
+	 * Pure: the dashboard URL is passed in, and is '' when there is not a
+	 * reachable one.
+	 */
+	public static function post_login_target( string $configured, string $dashboard_url ): string {
+		return '' !== trim( $configured ) ? $configured : $dashboard_url;
+	}
+
 	public static function safe_target( string $requested, string $configured, string $home ): string {
 		$host = self::host_of( $home );
 		foreach ( array( $requested, $configured ) as $candidate ) {

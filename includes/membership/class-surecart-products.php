@@ -146,39 +146,51 @@ final class Blueworx_Clubhouse_SureCart_Products implements Blueworx_Clubhouse_P
 	/**
 	 * Whether SureCart is live on this site. Guards every other method: false
 	 * here means every caller sees an empty list or null, never a fatal.
+	 *
+	 * Both signals are checked against a real SureCart 4.6.3 install. The two
+	 * this used to check — a surecart() function and a \SureCart\SureCart class
+	 * — exist nowhere in the plugin: its application class is the GLOBAL
+	 * SureCart, in no namespace at all, and it defines no such helper function.
+	 * So this answered false on every real shop, and the whole integration —
+	 * tier prices, checkout links, the missing-page notice — was unreachable in
+	 * production while passing every test, because the tests set the override
+	 * above rather than exercising the detection.
+	 *
+	 * The constant is checked first and is the more reliable of the two: it is
+	 * defined at the top of the plugin's entry file, before anything that could
+	 * fail, while the class is only as loadable as the autoloader beneath it.
 	 */
 	public static function is_active(): bool {
 		if ( null !== self::$active_override ) {
 			return self::$active_override;
 		}
-		return function_exists( 'surecart' ) || class_exists( '\SureCart\SureCart' );
+		return defined( 'SURECART_PLUGIN_FILE' ) || class_exists( 'SureCart' );
 	}
 
 	/**
-	 * SureCart's checkout page URL, or '' when it has none — which is the case
-	 * on the club's own site today (issue #150). The notes could not verify
-	 * where SureCart keeps this, because that site has no checkout page to
-	 * observe; the fallback of returning '' is correct either way, since it
-	 * makes every tier fall back to its typed price and the contact link.
+	 * SureCart's checkout page URL, or '' when there is not a reachable one —
+	 * which is the case on the club's own site today (issue #169).
+	 *
+	 * Delegated to Shop_Pages, which knows the difference between "no page" and
+	 * "a page in the trash". This used to read the option and hand its
+	 * permalink straight out, which meant a deleted checkout page produced a
+	 * live-looking Join button leading to a 404.
 	 */
 	public static function checkout_url(): string {
-		if ( ! self::is_active() || ! function_exists( 'get_option' ) ) {
-			return '';
-		}
-		$page_id = get_option( 'surecart_checkout_page_id', 0 );
-		if ( ! is_numeric( $page_id ) || (int) $page_id <= 0 ) {
-			return '';
-		}
-		$url = function_exists( 'get_permalink' ) ? get_permalink( (int) $page_id ) : false;
-		return is_string( $url ) ? $url : '';
+		return Blueworx_Clubhouse_Shop_Pages::url( 'checkout' );
 	}
 
 	/**
 	 * Hook cache invalidation to SureCart's save actions, so a price change
-	 * shows without waiting for the transient to expire. The hook names below
-	 * are the plugin's best-effort guess, not something the notes could
-	 * confirm — add_action() registering a hook that never fires is harmless,
-	 * and CACHE_TTL is the real safety net regardless of whether these fire.
+	 * shows without waiting for the transient to expire.
+	 *
+	 * These were guessed when the notes could only be written from REST. Two of
+	 * the three guesses — surecart/price/saved and surecart/product/saved — do
+	 * not exist anywhere in SureCart, so they never fired and CACHE_TTL was
+	 * quietly doing all the work. The names below are read from SureCart's
+	 * source (Sync\PostSyncService, and the sc_product post type). Registering
+	 * a hook that never fires is harmless either way, and CACHE_TTL remains the
+	 * safety net.
 	 */
 	public static function register(): void {
 		if ( ! function_exists( 'add_action' ) ) {
@@ -192,8 +204,8 @@ final class Blueworx_Clubhouse_SureCart_Products implements Blueworx_Clubhouse_P
 				delete_transient( self::failure_cache_key( $context ) );
 			}
 		};
-		add_action( 'surecart/price/saved', $invalidate );
-		add_action( 'surecart/product/saved', $invalidate );
+		add_action( 'surecart/product/sync/created', $invalidate );
+		add_action( 'surecart/product/sync/updated', $invalidate );
 		add_action( 'save_post_sc_product', $invalidate );
 	}
 
