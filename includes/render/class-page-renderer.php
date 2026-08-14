@@ -307,6 +307,35 @@ final class Blueworx_Clubhouse_Page_Renderer {
 	}
 
 	/**
+	 * Whether this page can actually take money: at least one tier whose button
+	 * goes to the shop's checkout rather than the contact form. Pure.
+	 *
+	 * The Membership page used to promise "Join in five minutes" above steps
+	 * that said register your interest, no payment yet, and we will be in touch
+	 * within a few days (issue #90). Both halves were once true of some club, so
+	 * the fix is not to pick one and hard-code it: it is for the page to say
+	 * whichever is true here. Every line it decides is still only a default, so
+	 * a club that has written its own copy keeps it.
+	 *
+	 * Read off the finished tiers rather than recomputed, so it cannot disagree
+	 * with the buttons the visitor is looking at.
+	 *
+	 * @param array<int,array<string,mixed>> $tiers    From membership_tiers().
+	 * @param string                         $checkout The checkout base URL, '' when there is none.
+	 */
+	public static function tiers_sell( array $tiers, string $checkout ): bool {
+		if ( '' === $checkout ) {
+			return false;
+		}
+		foreach ( $tiers as $tier ) {
+			if ( str_starts_with( (string) ( $tier['cta_href'] ?? '' ), $checkout ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
 	 * membership_tiers() for tests. The tier list is the one piece of this
 	 * renderer with logic worth testing on its own — everything else is markup
 	 * assembly covered by the page tests.
@@ -831,14 +860,21 @@ final class Blueworx_Clubhouse_Page_Renderer {
 		$club = $branding->get_club_name();
 		$out  = self::shell_header( $club, Blueworx_Clubhouse_Links::url( 'membership' ), $visibility, $collections, $logo_url, $content ) . '<main class="ch-main" id="ch-main" tabindex="-1">';
 
+		// What this page may promise. A club whose tiers reach a real checkout
+		// can say "join and pay"; one whose tiers still point at the contact
+		// form must say "register your interest" — see tiers_sell().
+		$tiers     = self::membership_tiers( $content );
+		$sells     = self::tiers_sell( $tiers, Blueworx_Clubhouse_Checkout::base_url() );
+		$tiers_url = '#' . Blueworx_Clubhouse_Link_Catalogue::anchor_id( 'membership', 'tiers' );
+
 		if ( $visibility->is_section_visible( 'membership', 'hero' ) ) {
 			$out .= self::anchored( 'membership', 'hero', Blueworx_Clubhouse_Sections::hero( array(
 				'eyebrow'            => self::cget( $content, 'membership', 'hero', 'eyebrow', 'Membership' ),
-				'title_lead'         => self::cget( $content, 'membership', 'hero', 'title_lead', 'Join in five minutes. ' ),
+				'title_lead'         => self::cget( $content, 'membership', 'hero', 'title_lead', $sells ? 'Join in five minutes. ' : 'Find your membership. ' ),
 				'title_highlight'    => self::cget( $content, 'membership', 'hero', 'title_highlight', 'Play for years.' ),
 				'lede'               => self::cget( $content, 'membership', 'hero', 'lede', 'From first-timers to county players, there is a category for you — every membership includes clubhouse access, discounted events and a free trial.' ),
-				'cta_primary'        => self::cget( $content, 'membership', 'hero', 'cta_primary', 'Register interest' ),
-				'cta_primary_href'   => self::cget( $content, 'membership', 'hero', 'cta_primary_href', Blueworx_Clubhouse_Links::url( 'contact' ) ),
+				'cta_primary'        => self::cget( $content, 'membership', 'hero', 'cta_primary', $sells ? 'Choose your membership' : 'Register interest' ),
+				'cta_primary_href'   => self::cget( $content, 'membership', 'hero', 'cta_primary_href', $sells ? $tiers_url : Blueworx_Clubhouse_Links::url( 'contact' ) ),
 				'cta_secondary'      => self::cget( $content, 'membership', 'hero', 'cta_secondary', 'Ask a question' ),
 				'cta_secondary_href' => self::cget( $content, 'membership', 'hero', 'cta_secondary_href', Blueworx_Clubhouse_Links::url( 'contact' ) ),
 				'image'              => self::media_src( (string) self::cget( $content, 'membership', 'hero', 'image', '' ) ),
@@ -851,7 +887,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 		if ( $visibility->is_section_visible( 'membership', 'tiers' ) ) {
 			// h2 here: on Membership the grid follows the page h1 directly, with no
 			// section heading between them.
-			$out .= self::anchored( 'membership', 'tiers', Blueworx_Clubhouse_Sections::tier_grid( self::membership_tiers( $content ), 2 ) );
+			$out .= self::anchored( 'membership', 'tiers', Blueworx_Clubhouse_Sections::tier_grid( $tiers, 2 ) );
 		}
 		if ( $visibility->is_section_visible( 'membership', 'why' ) ) {
 			$out .= self::anchored( 'membership', 'why', Blueworx_Clubhouse_Sections::benefit_grid( array(
@@ -902,8 +938,12 @@ final class Blueworx_Clubhouse_Page_Renderer {
 			$default = array(
 				array( 'number' => '01', 'title' => 'Pick your section', 'description' => 'Browse sports and find where you fit.' ),
 				array( 'number' => '02', 'title' => 'Choose a tier', 'description' => 'Adult, family, junior or social.' ),
-				array( 'number' => '03', 'title' => 'Register interest', 'description' => 'Fill in a short form — no payment yet.' ),
-				array( 'number' => '04', 'title' => 'Come and play', 'description' => 'We will match you to a coach and a session.' ),
+				$sells
+					? array( 'number' => '03', 'title' => 'Join and pay', 'description' => 'Pay securely online — it takes a couple of minutes.' )
+					: array( 'number' => '03', 'title' => 'Register interest', 'description' => 'Fill in a short form — no payment yet.' ),
+				$sells
+					? array( 'number' => '04', 'title' => 'Come and play', 'description' => 'We will match you to a coach and a session.' )
+					: array( 'number' => '04', 'title' => 'Come and play', 'description' => 'We will be in touch, then match you to a coach and a session.' ),
 			);
 			$items = array_values( self::citems( $content, 'membership', 'steps', $default ) );
 			$out .= self::anchored( 'membership', 'steps', Blueworx_Clubhouse_Sections::step_grid( array(
@@ -928,7 +968,9 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				array( 'question' => 'Can I try before I join?', 'answer' => 'Yes, your first session is a free trial.', 'open' => false ),
 				array( 'question' => 'Do you have junior sections?', 'answer' => 'Every sport runs junior pathways from age 5 upward.', 'open' => false ),
 				array( 'question' => 'Is there a family rate?', 'answer' => 'Family membership covers up to five people at one address.', 'open' => false ),
-				array( 'question' => 'How do I pay?', 'answer' => 'Payment details are arranged once your interest is confirmed.', 'open' => false ),
+				$sells
+					? array( 'question' => 'How do I pay?', 'answer' => 'By card, at checkout, when you join.', 'open' => false )
+					: array( 'question' => 'How do I pay?', 'answer' => 'Payment details are arranged once your interest is confirmed.', 'open' => false ),
 			);
 			$items = self::citems( $content, 'membership', 'faq', $default );
 			$out .= self::anchored( 'membership', 'faq', Blueworx_Clubhouse_Sections::faq( array(
@@ -950,10 +992,12 @@ final class Blueworx_Clubhouse_Page_Renderer {
 			$out .= self::anchored( 'membership', 'cta', Blueworx_Clubhouse_Sections::band( array(
 				'variant'   => 'ink',
 				'eyebrow'   => 'Ready?',
-				'heading'   => self::cget( $content, 'membership', 'cta', 'heading', 'Register your interest' ),
-				'lede'      => self::cget( $content, 'membership', 'cta', 'lede', 'Tell us a little about you and we will be in touch within a few days.' ),
-				'cta_label' => self::cget( $content, 'membership', 'cta', 'cta_label', 'Register interest →' ),
-				'cta_href'  => self::cget( $content, 'membership', 'cta', 'cta_href', Blueworx_Clubhouse_Links::url( 'contact' ) ),
+				'heading'   => self::cget( $content, 'membership', 'cta', 'heading', $sells ? 'Join the club' : 'Register your interest' ),
+				'lede'      => self::cget( $content, 'membership', 'cta', 'lede', $sells
+					? 'Pick the membership that fits and pay online — you can play this week.'
+					: 'Tell us a little about you and we will be in touch within a few days.' ),
+				'cta_label' => self::cget( $content, 'membership', 'cta', 'cta_label', $sells ? 'See memberships →' : 'Register interest →' ),
+				'cta_href'  => self::cget( $content, 'membership', 'cta', 'cta_href', $sells ? $tiers_url : Blueworx_Clubhouse_Links::url( 'contact' ) ),
 			) ) );
 		}
 		$out .= '</main>' . self::shell_footer( $club, $visibility, $branding, $content );
