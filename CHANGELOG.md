@@ -5,6 +5,12 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.66.0
+
+- **The shop can now tell you when it has no checkout page**, which is why Join buttons on this site have been sending people to the contact page instead of taking payment. If the page is missing or in the trash, an admin notice offers to put it back for you. Nothing is created without you asking.
+- **A deleted checkout page no longer produces Join buttons that lead to a "page not found."** They fall back to your contact page, as they should.
+- **Price changes in the shop now show on the site straight away** rather than up to five minutes later.
+
 ## 0.65.0
 
 - **Membership tiers can now sell.** Connect a tier to a product in your shop and the card shows what that product charges, with its button going straight to checkout with the right membership in the basket. Change a price in the shop and the page follows. Tiers you don't connect are unchanged — they show the price you type and point at the contact page.
