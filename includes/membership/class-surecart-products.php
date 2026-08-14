@@ -146,12 +146,25 @@ final class Blueworx_Clubhouse_SureCart_Products implements Blueworx_Clubhouse_P
 	/**
 	 * Whether SureCart is live on this site. Guards every other method: false
 	 * here means every caller sees an empty list or null, never a fatal.
+	 *
+	 * Both signals are checked against a real SureCart 4.6.3 install. The two
+	 * this used to check — a surecart() function and a \SureCart\SureCart class
+	 * — exist nowhere in the plugin: its application class is the GLOBAL
+	 * SureCart, in no namespace at all, and it defines no such helper function.
+	 * So this answered false on every real shop, and the whole integration —
+	 * tier prices, checkout links, the missing-page notice — was unreachable in
+	 * production while passing every test, because the tests set the override
+	 * above rather than exercising the detection.
+	 *
+	 * The constant is checked first and is the more reliable of the two: it is
+	 * defined at the top of the plugin's entry file, before anything that could
+	 * fail, while the class is only as loadable as the autoloader beneath it.
 	 */
 	public static function is_active(): bool {
 		if ( null !== self::$active_override ) {
 			return self::$active_override;
 		}
-		return function_exists( 'surecart' ) || class_exists( '\SureCart\SureCart' );
+		return defined( 'SURECART_PLUGIN_FILE' ) || class_exists( 'SureCart' );
 	}
 
 	/**

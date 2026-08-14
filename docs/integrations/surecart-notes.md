@@ -72,8 +72,9 @@ five minutes stale after an edit rather than immediate.
 
 ## The checkout page
 
-**SureCart creates this page itself.** `Activation\ActivationService::activate()`
-runs on `register_activation_hook` and calls `PageSeeder::seed()`, which seeds a
+**SureCart has its own seeder for this page.**
+`Activation\ActivationService::activate()` is wired to
+`register_activation_hook` and calls `PageSeeder::seed()`, which seeds a
 checkout form, a checkout page, a cart post and a shop page. The checkout page:
 
 | Thing | Value |
@@ -93,11 +94,35 @@ guess at this name was right.
 "no page". Clubhouse is stricter still and accepts only `publish`, because a
 draft or private page is a 404 to the logged-out visitor doing the buying.
 
-**So the demo site's missing checkout page is damage, not a default.** Something
-deleted it after activation. That is what `Blueworx_Clubhouse_Checkout_Page`
-exists for: it reports the state and, on an owner's say-so, republishes or
-recreates the page using SureCart's own slug, block and option, so SureCart
-cannot tell the difference.
+**But seeding does not always happen.** SureCart 4.6.3 was installed into the
+local test harness and activated through wp-admin, and no checkout page, form or
+option appeared — the seeder exists and is wired to the activation hook, but on
+a fresh install with no store connected it produced nothing. The onboarding
+path (`Install\InstallService::createPages`) creates the same pages again, which
+suggests seeding really lands when a store is connected rather than at
+activation.
+
+So a site can be missing a checkout page for two different reasons — never
+seeded, or seeded and later deleted — and the fix is the same either way. That
+is what `Blueworx_Clubhouse_Checkout_Page` does: report the state and, on an
+owner's say-so, republish or recreate the page using SureCart's own slug, block
+and option, so SureCart cannot tell the difference. Verified end to end against
+a real SureCart install on 14 August 2026: notice shown, button pressed, page
+created, and SureCart's own slide-out cart picked up the new page as its
+Checkout destination.
+
+## Detecting that SureCart is here at all
+
+`SURECART_PLUGIN_FILE` (a constant defined at the top of `surecart.php`) and the
+**global** `SureCart` class — no namespace. Confirmed by loading the real plugin.
+
+This was previously a `surecart()` function and a `\SureCart\SureCart` class,
+neither of which exists anywhere in the plugin, so Clubhouse never detected a
+shop on any real site. Everything downstream — tier prices, checkout links, the
+missing-page notice — was unreachable in production while every test passed,
+because the tests set an override rather than exercising the detection. There is
+now an out-of-process test that does exercise it
+(`tests/php/fixtures/surecart-detection-check.php`).
 
 ## The checkout URL
 
