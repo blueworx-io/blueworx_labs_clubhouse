@@ -71,6 +71,7 @@ final class Blueworx_Clubhouse_Block_Types {
 			self::type( 'info_panel', 'Find us details', 360, 'content' ),
 			self::type( 'sponsors', 'Sponsors', 370, 'collection' ),
 			self::type( 'auth', 'Log in form', 390, 'content' ),
+			self::type( 'prose', 'Document text', 395, 'content' ),
 			self::type( 'band', 'Call to action band', 400, 'content' ),
 			self::type( 'closing_band', 'Social band', 410, 'mixed' ),
 

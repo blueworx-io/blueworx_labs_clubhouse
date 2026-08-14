@@ -255,6 +255,14 @@ final class Blueworx_Clubhouse_Sections {
 		return $lead . ' ';
 	}
 
+	/** One hero button, or nothing when either half of it is missing. */
+	private static function hero_button( string $variant, string $label, string $href ): string {
+		if ( '' === trim( $label ) || '' === trim( $href ) ) {
+			return '';
+		}
+		return '<a class="ch-btn ' . $variant . '" href="' . self::e( $href ) . '">' . self::e( $label ) . '</a>';
+	}
+
 	public static function hero( array $data ): string {
 		$caption = '' !== $data['image_caption']
 			? '<div class="ch-hero__pill"><i class="ch-hero__pill-dot"></i>' . self::e( $data['image_caption'] ) . '</div>'
@@ -263,14 +271,19 @@ final class Blueworx_Clubhouse_Sections {
 		$media     = $has_media
 			? '<div class="ch-hero__media">' . self::media( $data['image'], $data['image_alt'], '' ) . $caption . '</div>'
 			: '';
+		// Both halves, or no button — the rule the event cards and the CTA band
+		// already follow. A hero with no buttons at all (a legal page, say) drops
+		// the row rather than emitting two empty ones, which rendered as a pair
+		// of unlabelled boxes linking to the current page.
+		$buttons = self::hero_button( 'ch-btn--accent', $data['cta_primary'], $data['cta_primary_href'] )
+			. self::hero_button( 'ch-btn--ghost', $data['cta_secondary'], $data['cta_secondary_href'] );
+
 		return '<section class="ch-hero"><div class="ch-wrap">'
 			. self::hero_head( 'ch-hero', $data )
 			. '<div class="ch-hero__sub">'
 			. '<p class="ch-hero__lede">' . self::e( $data['lede'] ) . '</p>'
-			. '<div class="ch-hero__cta">'
-			. '<a class="ch-btn ch-btn--accent" href="' . self::e( $data['cta_primary_href'] ) . '">' . self::e( $data['cta_primary'] ) . '</a>'
-			. '<a class="ch-btn ch-btn--ghost" href="' . self::e( $data['cta_secondary_href'] ) . '">' . self::e( $data['cta_secondary'] ) . '</a>'
-			. '</div></div>'
+			. ( '' !== $buttons ? '<div class="ch-hero__cta">' . $buttons . '</div>' : '' )
+			. '</div>'
 			. $media
 			. '</div></section>';
 	}
@@ -620,6 +633,84 @@ final class Blueworx_Clubhouse_Sections {
 	}
 
 	/**
+	 * A document made of headed prose — a privacy policy, terms, anything a club
+	 * has to say at length and nobody wants to read in three columns.
+	 *
+	 * Deliberately the plainest section here: one measure, one heading level, no
+	 * cards, no images, no calls to action. A legal page is read to find one
+	 * clause, so it is set for scanning rather than for persuading, and each
+	 * block carries an id so a clause can be linked to directly.
+	 *
+	 * Blank lines in a block's body become paragraphs. That is the whole of the
+	 * formatting: an owner writing a policy in a textarea should not have to
+	 * learn markup, and letting HTML through here would be an injection hole in
+	 * the one place a club is most likely to paste something from elsewhere.
+	 *
+	 * @param array{heading:string,blocks:array<int,array{heading:string,body:string}>} $data
+	 */
+	public static function prose( array $data ): string {
+		$out = '';
+		foreach ( $data['blocks'] as $i => $block ) {
+			$heading = trim( (string) ( $block['heading'] ?? '' ) );
+			$body    = trim( (string) ( $block['body'] ?? '' ) );
+			if ( '' === $heading && '' === $body ) {
+				continue;
+			}
+			$paras = '';
+			foreach ( preg_split( '/\n\s*\n/', $body ) ?: array() as $para ) {
+				$para = trim( (string) $para );
+				if ( '' !== $para ) {
+					$paras .= '<p class="ch-prose__p">' . nl2br( self::e( $para ) ) . '</p>';
+				}
+			}
+			$id   = 'ch-prose-' . ( (int) $i + 1 );
+			$out .= '<div class="ch-prose__block" id="' . self::e( $id ) . '">'
+				. ( '' !== $heading ? '<h2 class="ch-prose__h">' . self::e( $heading ) . '</h2>' : '' )
+				. $paras
+				. '</div>';
+		}
+		if ( '' === $out ) {
+			return '';
+		}
+		return '<section class="ch-sec"><div class="ch-wrap"><div class="ch-prose">' . $out . '</div></div></section>';
+	}
+
+	/**
+	 * A standing note that the site uses cookies, and where to read about them.
+	 *
+	 * What this is NOT is a consent manager. It does not pretend to withhold
+	 * anything: the shop and its payment provider set their own cookies as soon
+	 * as a commerce page loads, and a banner that claimed to block them while
+	 * they loaded anyway would be worse than saying nothing — it would be a
+	 * false statement on every page. A club that needs true consent gating
+	 * wants a dedicated consent plugin, and this notice steps aside for one
+	 * (it is skipped whenever its text is empty).
+	 *
+	 * The dismissal is remembered in localStorage rather than a cookie, so
+	 * reading this notice does not itself add to what the site stores about
+	 * someone.
+	 *
+	 * @param array{text:string,link_label:string,link_href:string,dismiss:string} $data
+	 */
+	public static function cookie_notice( array $data ): string {
+		$text = trim( $data['text'] );
+		if ( '' === $text ) {
+			return '';
+		}
+		$link = '' !== trim( $data['link_href'] ) && '' !== trim( $data['link_label'] )
+			? ' <a class="ch-cookie__link" href="' . self::e( $data['link_href'] ) . '">' . self::e( $data['link_label'] ) . '</a>'
+			: '';
+		// hidden until the script has checked storage, so a returning visitor who
+		// dismissed it never sees it flash back on the next page.
+		return '<div class="ch-cookie" id="ch-cookie" role="region" aria-label="Cookie notice" hidden>'
+			. '<p class="ch-cookie__text">' . self::e( $text ) . $link . '</p>'
+			. '<button type="button" class="ch-btn ch-cookie__dismiss" id="ch-cookie-dismiss">'
+			. self::e( '' !== trim( $data['dismiss'] ) ? $data['dismiss'] : 'Got it' )
+			. '</button>'
+			. '</div>';
+	}
+
+	/**
 	 * Training times and who to ask, for a sport or team page. A plain two-column
 	 * panel: nothing here is a link except the email, because the point is the
 	 * information rather than a journey onward.
@@ -915,7 +1006,8 @@ final class Blueworx_Clubhouse_Sections {
 	 *   columns:array<int,array{title:string,links:array<int,array{label:string,href:string}>}>,
 	 *   newsletter:array{heading:string,lede:string,shortcode?:string},
 	 *   copyright:string,
-	 *   legal:array<int,array{label:string,href:string}>} $data
+	 *   legal:array<int,array{label:string,href:string}>,
+	 *   cookie?:string} $data
 	 */
 	public static function footer( array $data ): string {
 		$cols = '';
@@ -969,7 +1061,10 @@ final class Blueworx_Clubhouse_Sections {
 			. $cols . $nl . '</div>'
 			. $wordmark
 			. $bottom
-			. '</div></footer>';
+			. '</div></footer>'
+			// Outside the footer's wrap: it is fixed to the viewport, not part of
+			// the footer's layout, and it must not inherit the footer's measure.
+			. (string) ( $data['cookie'] ?? '' );
 	}
 
 	/** @param array{eyebrow:string,heading:string,cards:array<int,array{title:string,description:string}>} $data */

@@ -1,0 +1,147 @@
+<?php
+
+use PHPUnit\Framework\TestCase;
+
+/**
+ * The privacy policy, the terms, and the cookie notice.
+ *
+ * Issue #121: both pages 404'd, nothing in the footer pointed at them, and
+ * there was no cookie wording anywhere — on a site whose forms collect names,
+ * email addresses and phone numbers.
+ */
+final class LegalPagesTest extends TestCase {
+
+	private function branding(): Blueworx_Clubhouse_Branding {
+		return new Blueworx_Clubhouse_Branding( new Blueworx_Clubhouse_Fake_Storage() );
+	}
+
+	private function visibility(): Blueworx_Clubhouse_Visibility {
+		return new Blueworx_Clubhouse_Visibility( new Blueworx_Clubhouse_Fake_Storage() );
+	}
+
+	private function collections(): Blueworx_Clubhouse_Collections {
+		return new Blueworx_Clubhouse_Demo_Collections();
+	}
+
+	private function privacy( ?Blueworx_Clubhouse_Content_Store $content = null ): string {
+		return Blueworx_Clubhouse_Page_Renderer::privacy( $this->branding(), $this->visibility(), $this->collections(), '', $content );
+	}
+
+	private function terms( ?Blueworx_Clubhouse_Content_Store $content = null ): string {
+		return Blueworx_Clubhouse_Page_Renderer::terms( $this->branding(), $this->visibility(), $this->collections(), '', $content );
+	}
+
+	public function test_both_pages_are_pages_this_site_serves(): void {
+		$this->assertTrue( Blueworx_Clubhouse_Page_Map::is_available( 'privacy' ) );
+		$this->assertTrue( Blueworx_Clubhouse_Page_Map::is_available( 'terms' ) );
+	}
+
+	public function test_the_privacy_page_names_what_the_forms_actually_collect(): void {
+		$html = $this->privacy();
+		$this->assertStringContainsString( 'What we collect', $html );
+		$this->assertStringContainsString( 'phone number', $html );
+		$this->assertStringContainsString( 'never see or store your card number', $html );
+	}
+
+	public function test_the_privacy_page_covers_the_rights_a_uk_visitor_has(): void {
+		$html = $this->privacy();
+		$this->assertStringContainsString( 'Your rights', $html );
+		$this->assertStringContainsString( 'ico.org.uk', $html );
+	}
+
+	public function test_the_starter_text_marks_what_only_the_club_can_answer(): void {
+		// A generated policy that confidently describes data sharing nobody does
+		// is worse than an obviously unfinished one — only the second gets
+		// corrected. The markers are how an owner finds those lines.
+		$this->assertStringContainsString( 'ADD:', $this->privacy() );
+		$this->assertStringContainsString( 'ADD:', $this->terms() );
+	}
+
+	public function test_the_terms_page_leaves_payments_and_refunds_to_the_club(): void {
+		$html = $this->terms();
+		$this->assertStringContainsString( 'Membership and payments', $html );
+		$this->assertStringContainsString( 'Refunds', $html );
+	}
+
+	public function test_a_club_can_replace_the_wording_entirely(): void {
+		$content = new Blueworx_Clubhouse_Content_Store( new Blueworx_Clubhouse_Fake_Storage() );
+		$content->set_items( 'privacy', 'body', array(
+			array( 'heading' => 'Our policy', 'body' => "First para.\n\nSecond para." ),
+		) );
+		$html = $this->privacy( $content );
+		$this->assertStringContainsString( 'Our policy', $html );
+		$this->assertStringNotContainsString( 'ADD:', $html );
+		// Blank lines become paragraphs; that is the whole of the formatting.
+		$this->assertStringContainsString( 'First para.', $html );
+		$this->assertStringContainsString( 'Second para.', $html );
+		$this->assertSame( 2, substr_count( $html, 'ch-prose__p' ) );
+	}
+
+	public function test_pasted_markup_is_escaped_rather_than_rendered(): void {
+		// The one page a club is most likely to paste something into from
+		// elsewhere, so it is also the one that must not honour what it pastes.
+		$content = new Blueworx_Clubhouse_Content_Store( new Blueworx_Clubhouse_Fake_Storage() );
+		$content->set_items( 'privacy', 'body', array(
+			array( 'heading' => 'X', 'body' => '<script>alert(1)</script>' ),
+		) );
+		$this->assertStringNotContainsString( '<script>', $this->privacy( $content ) );
+	}
+
+	public function test_the_footer_links_to_both_pages_from_every_page(): void {
+		// The slot has been in the footer all along and has always been empty.
+		foreach ( array( $this->privacy(), $this->terms() ) as $html ) {
+			$this->assertStringContainsString( 'ch-footer__legal', $html );
+			$this->assertStringContainsString( '>Privacy<', $html );
+			$this->assertStringContainsString( '>Terms<', $html );
+		}
+	}
+
+	public function test_a_hidden_legal_page_is_not_linked(): void {
+		// A link to a page a club has switched off is a link to a 404.
+		$storage = new Blueworx_Clubhouse_Fake_Storage();
+		$vis     = new Blueworx_Clubhouse_Visibility( $storage );
+		$vis->set_page_visible( 'terms', false );
+
+		$html = Blueworx_Clubhouse_Page_Renderer::privacy( $this->branding(), $vis, $this->collections(), '', null );
+		$this->assertStringContainsString( '>Privacy<', $html );
+		$this->assertStringNotContainsString( '>Terms<', $html );
+	}
+
+	public function test_the_cookie_notice_says_what_is_true_of_this_site(): void {
+		$html = $this->privacy();
+		$this->assertStringContainsString( 'ch-cookie', $html );
+		$this->assertStringContainsString( 'to take payment', $html );
+		// It must not claim to do something it does not do.
+		$this->assertStringNotContainsString( 'Reject', $html );
+		$this->assertStringNotContainsString( 'Manage preferences', $html );
+	}
+
+	public function test_the_cookie_notice_ships_hidden_and_links_the_policy(): void {
+		$html = $this->privacy();
+		$this->assertStringContainsString( 'id="ch-cookie"', $html );
+		$this->assertStringContainsString( 'hidden>', $html );
+		$this->assertStringContainsString( 'Read our privacy policy', $html );
+	}
+
+	public function test_a_club_can_switch_the_cookie_notice_off_by_emptying_it(): void {
+		// Clubs running a real consent plugin need this out of the way, and an
+		// empty text is the plainest way to ask for that.
+		$content = new Blueworx_Clubhouse_Content_Store( new Blueworx_Clubhouse_Fake_Storage() );
+		$content->set( 'global', 'cookies', 'show', '0' );
+		$this->assertStringNotContainsString( 'ch-cookie', $this->privacy( $content ) );
+	}
+
+	public function test_an_empty_document_renders_nothing_rather_than_an_empty_section(): void {
+		$this->assertSame( '', Blueworx_Clubhouse_Sections::prose( array( 'heading' => '', 'blocks' => array() ) ) );
+		$this->assertSame(
+			'',
+			Blueworx_Clubhouse_Sections::prose( array( 'heading' => '', 'blocks' => array( array( 'heading' => '', 'body' => '' ) ) ) )
+		);
+	}
+
+	public function test_every_clause_can_be_linked_to_directly(): void {
+		// A policy is read to find one clause, and quoted by pointing at it.
+		$this->assertStringContainsString( 'id="ch-prose-1"', $this->privacy() );
+		$this->assertStringContainsString( 'id="ch-prose-2"', $this->privacy() );
+	}
+}

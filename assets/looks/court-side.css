@@ -253,7 +253,7 @@ a{color:inherit;text-decoration:none}
 .ch-footer__wordmark{font-family:var(--font-display);font-weight:800;font-size:clamp(40px,9.5vw,132px);line-height:.95;letter-spacing:-.02em;text-transform:uppercase;color:var(--color-ink);opacity:.07;white-space:nowrap;overflow:hidden;user-select:none;margin-top:40px}
 .ch-footer__bottom{display:flex;flex-wrap:wrap;gap:16px 24px;align-items:center;justify-content:space-between;margin-top:24px;padding-top:24px;border-top:1px solid var(--color-line)}
 .ch-footer__copyright{font-size:14px;color:var(--color-ink-soft)}
-.ch-footer__legal-link{color:var(--color-ink-soft);display:inline-block;padding-block:8px}
+.ch-footer__legal-link{color:var(--color-ink-soft);display:inline-block;padding-block:13px;min-width:44px;text-align:center}
 .ch-footer__legal-link:hover{color:var(--color-ink)}
 @media(max-width:820px){.ch-footer__grid{grid-template-columns:1fr 1fr}}
 @media(max-width:520px){.ch-footer__grid{grid-template-columns:1fr}}
@@ -522,3 +522,24 @@ a{color:inherit;text-decoration:none}
 .ch-tabs__btn,.ch-filter{min-width:44px;justify-content:center}
 .ch-social__col-link,.ch-contact__link,.ch-person__email,.ch-contact__map-link,.ch-filter{min-height:44px;display:inline-flex;align-items:center}
 }
+
+/* Legal documents: one measure, generous leading, nothing to click. A privacy
+   policy is read to find one clause, so it is set for scanning. */
+.ch-prose{max-width:68ch}
+.ch-prose__block+.ch-prose__block{margin-top:38px}
+.ch-prose__h{font-family:var(--font-display);font-weight:800;font-size:clamp(22px,3vw,30px);letter-spacing:-.02em;line-height:1.15;margin-bottom:14px;color:var(--color-ink)}
+.ch-prose__p{font-size:17px;line-height:1.7;color:var(--color-ink-soft);max-width:68ch}
+.ch-prose__p+.ch-prose__p{margin-top:14px}
+
+/* The cookie notice. Fixed to the foot of the viewport so it is seen, and given
+   a hard stop at the top of the page's own content on small screens. */
+.ch-cookie{position:fixed;left:16px;right:16px;bottom:16px;z-index:40;display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center;justify-content:space-between;background:var(--color-paper);border:1px solid var(--color-line);border-radius:16px;padding:16px 20px;box-shadow:0 10px 40px rgba(0,0,0,.18)}
+.ch-cookie[hidden]{display:none}
+.ch-cookie__text{font-size:14px;line-height:1.6;color:var(--color-ink-soft);max-width:80ch;margin:0}
+.ch-cookie__link{color:var(--color-ink);text-decoration:underline;display:inline-block;padding-block:13px}
+.ch-cookie__dismiss{flex:0 0 auto}
+@media(max-width:520px){.ch-cookie{left:8px;right:8px;bottom:8px;padding:14px 16px}}
+/* The open mobile menu is a real control and the notice is fixed over the foot
+   of the viewport, so on a phone it landed on the drawer's last item. Same rule
+   the demo switcher follows: stand down while the menu is up. */
+body:has(.ch-nav__disc[open]) .ch-cookie{display:none}

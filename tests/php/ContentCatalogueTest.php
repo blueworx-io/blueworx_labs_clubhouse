@@ -13,7 +13,7 @@ final class ContentCatalogueTest extends TestCase {
 	public function test_returns_tabs_in_page_map_order_with_global_split_from_home(): void {
 		$tabs = array_column( Blueworx_Clubhouse_Content_Catalogue::pages(), 'tab' );
 		$this->assertSame(
-			array( 'global', 'home', 'about', 'membership', 'contact', 'login', 'news', 'sports', 'teams', 'events', 'calendar' ),
+			array( 'global', 'home', 'about', 'membership', 'contact', 'login', 'news', 'sports', 'teams', 'events', 'calendar', 'privacy', 'terms' ),
 			$tabs
 		);
 	}
@@ -88,7 +88,7 @@ final class ContentCatalogueTest extends TestCase {
 	public function test_global_tab_holds_only_sitewide_sections(): void {
 		$pages = Blueworx_Clubhouse_Content_Catalogue::pages();
 		$global = array_values( array_filter( $pages, static fn( $p ) => 'global' === $p['tab'] ) )[0];
-		$this->assertSame( array( 'header', 'footer' ), array_map( static fn( $s ) => $s['key'], $global['sections'] ) );
+		$this->assertSame( array( 'header', 'footer', 'cookies' ), array_map( static fn( $s ) => $s['key'], $global['sections'] ) );
 		foreach ( $global['sections'] as $s ) {
 			$this->assertSame( 'global', $s['store_page'], $s['key'] );
 		}

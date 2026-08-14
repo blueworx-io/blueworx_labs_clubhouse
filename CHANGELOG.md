@@ -5,6 +5,12 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.67.0
+
+- **Your site now has a privacy policy and terms**, linked from the footer of every page. Both ship with starter wording that describes what this site actually collects and where it goes. Anywhere it says ADD, only your club can answer — those lines need writing before you take real sign-ups. It is a starting point, not legal advice.
+- **A cookie notice appears once for each visitor** and says, in plain words, what cookies this site uses. It does not pretend to block anything, because the shop and its payment provider set theirs the moment those pages load — if you need real consent gating, switch this off under Club Pages → Global and use a consent plugin.
+- **Fixed empty buttons appearing under a heading** when a page had no call to action set. They rendered as two blank boxes that reloaded the page.
+
 ## 0.66.0
 
 - **The plugin now recognises that SureCart is installed.** It was looking for the wrong thing, so on a real site it decided there was no shop — which quietly disabled everything to do with selling, including tier prices and Join buttons. This is why membership tiers never sold on a live site despite working in testing.

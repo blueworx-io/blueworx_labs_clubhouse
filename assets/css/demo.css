@@ -56,6 +56,14 @@
 body:has( .ch-nav__disc[open] ) .clubhouse-demo {
 	display: none;
 }
+/* Same rule, same reason: the switcher's corner landed on the cookie notice's
+   dismiss button, so the notice could not be dismissed at all while demo mode
+   was on — the click went to the tooling. The notice carries [hidden] until it
+   is shown and again once dismissed, so this stands the tooling down for
+   exactly as long as the notice is up. */
+body:has( #ch-cookie:not( [hidden] ) ) .clubhouse-demo {
+	display: none;
+}
 /* On a phone the centred bar landed straight on top of the hero's call-to-action
    tiles. Tucked into the corner it still reads as an overlay but stops sitting on
    the middle of the page, where the content people came for is. */
