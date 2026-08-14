@@ -306,6 +306,32 @@ final class SureCartProductsTest extends TestCase {
 		$this->assertFalse( $result['raw_fetcher_set'], 'set_raw_fetcher() must be a no-op without the constant' );
 	}
 
+	/** @return array<string,mixed> */
+	private function detection( string $signal ): array {
+		$fixture = __DIR__ . '/fixtures/surecart-detection-check.php';
+		$output  = shell_exec(
+			escapeshellarg( PHP_BINARY ) . ' ' . escapeshellarg( $fixture ) . ' ' . escapeshellarg( $signal )
+		);
+		$result = json_decode( (string) $output, true );
+		$this->assertIsArray( $result, 'fixture did not return valid JSON: ' . (string) $output );
+		return $result;
+	}
+
+	public function test_a_real_shop_is_detected_by_the_symbols_surecart_actually_defines(): void {
+		// The regression this guards is the worst kind: silent and total. The
+		// detection used to look for a surecart() function and a
+		// \SureCart\SureCart class, neither of which exists in the plugin — so
+		// it answered false on every real shop, and the entire integration was
+		// dead in production while every test passed, because the tests set the
+		// override instead of exercising this.
+		$this->assertTrue( $this->detection( 'constant' )['is_active'], 'SURECART_PLUGIN_FILE must count as a shop' );
+		$this->assertTrue( $this->detection( 'class' )['is_active'], 'the global SureCart class must count as a shop' );
+	}
+
+	public function test_a_site_without_surecart_is_not_mistaken_for_a_shop(): void {
+		$this->assertFalse( $this->detection( 'none' )['is_active'] );
+	}
+
 	public function test_a_second_failure_within_the_window_does_not_repeat_the_fetch(): void {
 		// The regression this guards: a failed fetch was never cached at all,
 		// so a sustained outage made every single page render re-run the full

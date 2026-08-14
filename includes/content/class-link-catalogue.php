@@ -17,6 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *   page:<key>              a plugin page          → /about
  *   anchor:<page>.<section> a section of a page    → /about#ch-about-history
  *   filter:<page>:<slug>    a filtered list view   → /sports?clubhouse_filter=netball
+ *   shop:<key>              a page the shop owns   → /shop
  *   url:<href>              anything else          → itself
  *
  * @package BlueworxLabsClubhouse
@@ -39,7 +40,61 @@ final class Blueworx_Clubhouse_Link_Catalogue {
 	 * @return array<int,array{target:string,label:string,group:string,url:string}>
 	 */
 	public static function targets( Blueworx_Clubhouse_Collections $collections ): array {
-		return array_merge( self::pages(), self::anchors(), self::filters( $collections ) );
+		return array_merge( self::pages(), self::shop(), self::anchors(), self::filters( $collections ) );
+	}
+
+	/**
+	 * The shop's own pages, offered only when they exist and can be reached.
+	 *
+	 * Without these a club with a shop had no way to link to it: eleven products
+	 * were in the sitemap and findable from a search engine, while nothing on
+	 * the site pointed at the shop and a member browsing the club could never
+	 * get to it (issue #131). The customer dashboard is here for the same
+	 * reason — a member who has paid needs a way back to it that is not a URL
+	 * they were sent once (#170).
+	 *
+	 * SureCart owns these pages; this only offers them as somewhere a link can
+	 * point. A club with no shop, or one whose shop pages are missing, sees
+	 * nothing here and a menu item pointing at one resolves to '' and is
+	 * dropped — the same way Bookings disappears without LatePoint.
+	 *
+	 * Memoised: resolve() rebuilds the whole catalogue for every menu item, and
+	 * each entry here costs an option read and a permalink lookup.
+	 *
+	 * @return array<int,array{target:string,label:string,group:string,url:string}>
+	 */
+	private static function shop(): array {
+		if ( null !== self::$shop_cache ) {
+			return self::$shop_cache;
+		}
+		$out = array();
+		foreach ( array( 'shop' => 'Shop', 'dashboard' => 'My account' ) as $key => $label ) {
+			$url = Blueworx_Clubhouse_Shop_Pages::url( $key );
+			if ( '' === $url ) {
+				continue;
+			}
+			$out[] = array(
+				'target' => 'shop:' . $key,
+				'label'  => $label,
+				'group'  => 'Shop',
+				'url'    => $url,
+			);
+		}
+		self::$shop_cache = $out;
+		return $out;
+	}
+
+	/**
+	 * Memoised shop targets, for this request only. Reset by the repair that
+	 * creates the pages, so an owner who has just pressed the button does not
+	 * have to reload twice to see the Shop link appear.
+	 *
+	 * @var array<int,array{target:string,label:string,group:string,url:string}>|null
+	 */
+	private static ?array $shop_cache = null;
+
+	public static function forget_shop_targets(): void {
+		self::$shop_cache = null;
 	}
 
 	/** @return array<int,array{target:string,label:string,group:string,url:string}> */

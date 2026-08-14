@@ -17,6 +17,7 @@ final class Blueworx_Clubhouse_Setup_Sections {
 	/** @var array<string, array<string,string>> page-slug => (section-key => label) */
 	private const MAP = array(
 		'home' => array(
+			'cookies'     => 'Cookie notice',
 			'header'      => 'Header',
 			'hero'        => 'Hero',
 			'quick_tiles' => 'Quick tiles',
@@ -90,6 +91,14 @@ final class Blueworx_Clubhouse_Setup_Sections {
 			'services'  => 'Sessions and services',
 			'locations' => 'Courts and locations',
 			'agents'    => 'Coaches and staff',
+		),
+		'privacy' => array(
+			'hero' => 'Hero',
+			'body' => 'Policy',
+		),
+		'terms' => array(
+			'hero' => 'Hero',
+			'body' => 'Terms',
 		),
 	);
 

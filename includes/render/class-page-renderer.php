@@ -66,7 +66,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 			. '<link rel="stylesheet" href="' . $base . '">'
 			. '<link rel="stylesheet" href="' . $sheet . '">'
 			. '<style>' . $css . '</style>'
-			. '</head><body>' . $body . self::reveal_script() . '</body></html>';
+			. '</head><body>' . $body . self::inline_script( 'reveal.js' ) . self::inline_script( 'cookie-notice.js' ) . '</body></html>';
 	}
 
 	/**
@@ -75,9 +75,14 @@ final class Blueworx_Clubhouse_Page_Renderer {
 	 * viewport. Bails out with content fully visible when IntersectionObserver is absent
 	 * or the user prefers reduced motion, so nothing is ever hidden without JS. Vanilla
 	 * JS by design — no dependency; GSAP stays reserved for genuinely complex animation.
+	 *
+	 * Also carries the cookie notice's script, which reveals it and remembers its
+	 * dismissal. WordPress enqueues both properly (Frontend::enqueue_assets); this
+	 * is the preview's equivalent, so the preview shows the same page a visitor
+	 * would see rather than one with a permanent bar across the bottom.
 	 */
-	private static function reveal_script(): string {
-		$js = (string) file_get_contents( dirname( __DIR__, 2 ) . '/assets/js/reveal.js' );
+	private static function inline_script( string $file ): string {
+		$js = (string) file_get_contents( dirname( __DIR__, 2 ) . '/assets/js/' . $file );
 		return '<script>' . $js . '</script>';
 	}
 
@@ -307,6 +312,35 @@ final class Blueworx_Clubhouse_Page_Renderer {
 	}
 
 	/**
+	 * Whether this page can actually take money: at least one tier whose button
+	 * goes to the shop's checkout rather than the contact form. Pure.
+	 *
+	 * The Membership page used to promise "Join in five minutes" above steps
+	 * that said register your interest, no payment yet, and we will be in touch
+	 * within a few days (issue #90). Both halves were once true of some club, so
+	 * the fix is not to pick one and hard-code it: it is for the page to say
+	 * whichever is true here. Every line it decides is still only a default, so
+	 * a club that has written its own copy keeps it.
+	 *
+	 * Read off the finished tiers rather than recomputed, so it cannot disagree
+	 * with the buttons the visitor is looking at.
+	 *
+	 * @param array<int,array<string,mixed>> $tiers    From membership_tiers().
+	 * @param string                         $checkout The checkout base URL, '' when there is none.
+	 */
+	public static function tiers_sell( array $tiers, string $checkout ): bool {
+		if ( '' === $checkout ) {
+			return false;
+		}
+		foreach ( $tiers as $tier ) {
+			if ( str_starts_with( (string) ( $tier['cta_href'] ?? '' ), $checkout ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
 	 * membership_tiers() for tests. The tier list is the one piece of this
 	 * renderer with logic worth testing on its own — everything else is markup
 	 * assembly covered by the page tests.
@@ -405,9 +439,35 @@ final class Blueworx_Clubhouse_Page_Renderer {
 			// never touches its settings again still has a footer that is right
 			// next January.
 			'copyright'  => '© ' . gmdate( 'Y' ) . ' ' . $branding->get_club_name() . '. All rights reserved.',
-			'legal'      => array(),
+			// The slot has always been here and has always been empty, which is
+			// how a site collecting names, emails and phone numbers came to have
+			// no route to a privacy policy from anywhere (issue #121). Filtered
+			// like every other footer column, so a club that switches a legal
+			// page off does not get a link to a page that 404s.
+			'legal'      => self::nav_links( array(
+				array( 'label' => 'Privacy', 'key' => 'privacy' ),
+				array( 'label' => 'Terms', 'key' => 'terms' ),
+			), $visibility ),
+			// Off is a real choice, not an empty text box: a club running a proper
+			// consent plugin needs this out of the way, and blanking the wording
+			// would only put the default back (cget treats empty as unset).
+			'cookie'     => ! self::cget( $content, 'global', 'cookies', 'show', true ) ? '' : Blueworx_Clubhouse_Sections::cookie_notice( array(
+				'text'       => (string) self::cget( $content, 'global', 'cookies', 'text', self::COOKIE_TEXT ),
+				'link_label' => (string) self::cget( $content, 'global', 'cookies', 'link_label', 'Read our privacy policy' ),
+				'link_href'  => (string) self::cget( $content, 'global', 'cookies', 'link_href', Blueworx_Clubhouse_Links::url( 'privacy' ) ),
+				'dismiss'    => (string) self::cget( $content, 'global', 'cookies', 'dismiss', 'Got it' ),
+			) ),
 		) );
 	}
+
+	/**
+	 * The default cookie wording. Written to be true of a stock Clubhouse site
+	 * rather than to sound thorough: this plugin sets nothing on a visitor's
+	 * machine, WordPress sets a cookie when somebody signs in, and the shop and
+	 * its payment provider set their own on the pages that take payment. A club
+	 * that adds analytics has to say so itself, which is why this is editable.
+	 */
+	private const COOKIE_TEXT = 'This site uses cookies to keep you signed in and, on our shop pages, to take payment. We do not use them to advertise to you.';
 
 	/**
 	 * Drop links whose target page is hidden, then resolve each surviving page
@@ -831,14 +891,21 @@ final class Blueworx_Clubhouse_Page_Renderer {
 		$club = $branding->get_club_name();
 		$out  = self::shell_header( $club, Blueworx_Clubhouse_Links::url( 'membership' ), $visibility, $collections, $logo_url, $content ) . '<main class="ch-main" id="ch-main" tabindex="-1">';
 
+		// What this page may promise. A club whose tiers reach a real checkout
+		// can say "join and pay"; one whose tiers still point at the contact
+		// form must say "register your interest" — see tiers_sell().
+		$tiers     = self::membership_tiers( $content );
+		$sells     = self::tiers_sell( $tiers, Blueworx_Clubhouse_Checkout::base_url() );
+		$tiers_url = '#' . Blueworx_Clubhouse_Link_Catalogue::anchor_id( 'membership', 'tiers' );
+
 		if ( $visibility->is_section_visible( 'membership', 'hero' ) ) {
 			$out .= self::anchored( 'membership', 'hero', Blueworx_Clubhouse_Sections::hero( array(
 				'eyebrow'            => self::cget( $content, 'membership', 'hero', 'eyebrow', 'Membership' ),
-				'title_lead'         => self::cget( $content, 'membership', 'hero', 'title_lead', 'Join in five minutes. ' ),
+				'title_lead'         => self::cget( $content, 'membership', 'hero', 'title_lead', $sells ? 'Join in five minutes. ' : 'Find your membership. ' ),
 				'title_highlight'    => self::cget( $content, 'membership', 'hero', 'title_highlight', 'Play for years.' ),
 				'lede'               => self::cget( $content, 'membership', 'hero', 'lede', 'From first-timers to county players, there is a category for you — every membership includes clubhouse access, discounted events and a free trial.' ),
-				'cta_primary'        => self::cget( $content, 'membership', 'hero', 'cta_primary', 'Register interest' ),
-				'cta_primary_href'   => self::cget( $content, 'membership', 'hero', 'cta_primary_href', Blueworx_Clubhouse_Links::url( 'contact' ) ),
+				'cta_primary'        => self::cget( $content, 'membership', 'hero', 'cta_primary', $sells ? 'Choose your membership' : 'Register interest' ),
+				'cta_primary_href'   => self::cget( $content, 'membership', 'hero', 'cta_primary_href', $sells ? $tiers_url : Blueworx_Clubhouse_Links::url( 'contact' ) ),
 				'cta_secondary'      => self::cget( $content, 'membership', 'hero', 'cta_secondary', 'Ask a question' ),
 				'cta_secondary_href' => self::cget( $content, 'membership', 'hero', 'cta_secondary_href', Blueworx_Clubhouse_Links::url( 'contact' ) ),
 				'image'              => self::media_src( (string) self::cget( $content, 'membership', 'hero', 'image', '' ) ),
@@ -851,7 +918,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 		if ( $visibility->is_section_visible( 'membership', 'tiers' ) ) {
 			// h2 here: on Membership the grid follows the page h1 directly, with no
 			// section heading between them.
-			$out .= self::anchored( 'membership', 'tiers', Blueworx_Clubhouse_Sections::tier_grid( self::membership_tiers( $content ), 2 ) );
+			$out .= self::anchored( 'membership', 'tiers', Blueworx_Clubhouse_Sections::tier_grid( $tiers, 2 ) );
 		}
 		if ( $visibility->is_section_visible( 'membership', 'why' ) ) {
 			$out .= self::anchored( 'membership', 'why', Blueworx_Clubhouse_Sections::benefit_grid( array(
@@ -902,8 +969,12 @@ final class Blueworx_Clubhouse_Page_Renderer {
 			$default = array(
 				array( 'number' => '01', 'title' => 'Pick your section', 'description' => 'Browse sports and find where you fit.' ),
 				array( 'number' => '02', 'title' => 'Choose a tier', 'description' => 'Adult, family, junior or social.' ),
-				array( 'number' => '03', 'title' => 'Register interest', 'description' => 'Fill in a short form — no payment yet.' ),
-				array( 'number' => '04', 'title' => 'Come and play', 'description' => 'We will match you to a coach and a session.' ),
+				$sells
+					? array( 'number' => '03', 'title' => 'Join and pay', 'description' => 'Pay securely online — it takes a couple of minutes.' )
+					: array( 'number' => '03', 'title' => 'Register interest', 'description' => 'Fill in a short form — no payment yet.' ),
+				$sells
+					? array( 'number' => '04', 'title' => 'Come and play', 'description' => 'We will match you to a coach and a session.' )
+					: array( 'number' => '04', 'title' => 'Come and play', 'description' => 'We will be in touch, then match you to a coach and a session.' ),
 			);
 			$items = array_values( self::citems( $content, 'membership', 'steps', $default ) );
 			$out .= self::anchored( 'membership', 'steps', Blueworx_Clubhouse_Sections::step_grid( array(
@@ -928,7 +999,9 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				array( 'question' => 'Can I try before I join?', 'answer' => 'Yes, your first session is a free trial.', 'open' => false ),
 				array( 'question' => 'Do you have junior sections?', 'answer' => 'Every sport runs junior pathways from age 5 upward.', 'open' => false ),
 				array( 'question' => 'Is there a family rate?', 'answer' => 'Family membership covers up to five people at one address.', 'open' => false ),
-				array( 'question' => 'How do I pay?', 'answer' => 'Payment details are arranged once your interest is confirmed.', 'open' => false ),
+				$sells
+					? array( 'question' => 'How do I pay?', 'answer' => 'By card, at checkout, when you join.', 'open' => false )
+					: array( 'question' => 'How do I pay?', 'answer' => 'Payment details are arranged once your interest is confirmed.', 'open' => false ),
 			);
 			$items = self::citems( $content, 'membership', 'faq', $default );
 			$out .= self::anchored( 'membership', 'faq', Blueworx_Clubhouse_Sections::faq( array(
@@ -950,14 +1023,184 @@ final class Blueworx_Clubhouse_Page_Renderer {
 			$out .= self::anchored( 'membership', 'cta', Blueworx_Clubhouse_Sections::band( array(
 				'variant'   => 'ink',
 				'eyebrow'   => 'Ready?',
-				'heading'   => self::cget( $content, 'membership', 'cta', 'heading', 'Register your interest' ),
-				'lede'      => self::cget( $content, 'membership', 'cta', 'lede', 'Tell us a little about you and we will be in touch within a few days.' ),
-				'cta_label' => self::cget( $content, 'membership', 'cta', 'cta_label', 'Register interest →' ),
-				'cta_href'  => self::cget( $content, 'membership', 'cta', 'cta_href', Blueworx_Clubhouse_Links::url( 'contact' ) ),
+				'heading'   => self::cget( $content, 'membership', 'cta', 'heading', $sells ? 'Join the club' : 'Register your interest' ),
+				'lede'      => self::cget( $content, 'membership', 'cta', 'lede', $sells
+					? 'Pick the membership that fits and pay online — you can play this week.'
+					: 'Tell us a little about you and we will be in touch within a few days.' ),
+				'cta_label' => self::cget( $content, 'membership', 'cta', 'cta_label', $sells ? 'See memberships →' : 'Register interest →' ),
+				'cta_href'  => self::cget( $content, 'membership', 'cta', 'cta_href', $sells ? $tiers_url : Blueworx_Clubhouse_Links::url( 'contact' ) ),
 			) ) );
 		}
 		$out .= '</main>' . self::shell_footer( $club, $visibility, $branding, $content );
 		return $out;
+	}
+
+	/**
+	 * The privacy policy and the terms, which are the same page with different
+	 * words: a heading, an intro, and a run of headed clauses a club edits.
+	 *
+	 * The starter text is deliberately narrow. It says only what is true of a
+	 * stock Clubhouse site — what the forms on it collect, what sets cookies,
+	 * and the rights a UK visitor has — and it names the things only the club
+	 * can answer rather than inventing them. A generated policy that confidently
+	 * describes data sharing nobody does is worse than an obviously unfinished
+	 * one, because only the second gets corrected.
+	 */
+	public static function privacy(
+		Blueworx_Clubhouse_Branding $branding,
+		Blueworx_Clubhouse_Visibility $visibility,
+		Blueworx_Clubhouse_Collections $collections,
+		string $logo_url = '',
+		?Blueworx_Clubhouse_Content_Store $content = null
+	): string {
+		return self::legal_page( 'privacy', $branding, $visibility, $collections, $logo_url, $content );
+	}
+
+	public static function terms(
+		Blueworx_Clubhouse_Branding $branding,
+		Blueworx_Clubhouse_Visibility $visibility,
+		Blueworx_Clubhouse_Collections $collections,
+		string $logo_url = '',
+		?Blueworx_Clubhouse_Content_Store $content = null
+	): string {
+		return self::legal_page( 'terms', $branding, $visibility, $collections, $logo_url, $content );
+	}
+
+	private static function legal_page(
+		string $page,
+		Blueworx_Clubhouse_Branding $branding,
+		Blueworx_Clubhouse_Visibility $visibility,
+		Blueworx_Clubhouse_Collections $collections,
+		string $logo_url,
+		?Blueworx_Clubhouse_Content_Store $content
+	): string {
+		$club = $branding->get_club_name();
+		$out  = self::shell_header( $club, Blueworx_Clubhouse_Links::url( $page ), $visibility, $collections, $logo_url, $content )
+			. '<main class="ch-main" id="ch-main" tabindex="-1">';
+
+		$defaults = 'privacy' === $page ? self::privacy_defaults( $club ) : self::terms_defaults( $club );
+
+		if ( $visibility->is_section_visible( $page, 'hero' ) ) {
+			$out .= self::anchored( $page, 'hero', Blueworx_Clubhouse_Sections::hero( array(
+				'eyebrow'            => self::cget( $content, $page, 'hero', 'eyebrow', $defaults['eyebrow'] ),
+				'title_lead'         => self::cget( $content, $page, 'hero', 'title_lead', $defaults['title_lead'] ),
+				'title_highlight'    => self::cget( $content, $page, 'hero', 'title_highlight', $defaults['title_highlight'] ),
+				'lede'               => self::cget( $content, $page, 'hero', 'lede', $defaults['lede'] ),
+				// A legal page is a destination, not a journey — nothing to click
+				// on to, and no photograph.
+				'cta_primary'        => '',
+				'cta_primary_href'   => '',
+				'cta_secondary'      => '',
+				'cta_secondary_href' => '',
+				'image'              => '',
+				'image_alt'          => '',
+				'image_caption'      => '',
+			) ) );
+		}
+
+		if ( $visibility->is_section_visible( $page, 'body' ) ) {
+			$out .= self::anchored( $page, 'body', Blueworx_Clubhouse_Sections::prose( array(
+				'heading' => '',
+				'blocks'  => array_map(
+					static fn ( array $b ): array => array(
+						'heading' => (string) ( $b['heading'] ?? '' ),
+						'body'    => (string) ( $b['body'] ?? '' ),
+					),
+					self::citems( $content, $page, 'body', $defaults['blocks'] )
+				),
+			) ) );
+		}
+
+		return $out . '</main>' . self::shell_footer( $club, $visibility, $branding, $content );
+	}
+
+	/** @return array{eyebrow:string,title_lead:string,title_highlight:string,lede:string,blocks:array<int,array{heading:string,body:string}>} */
+	private static function privacy_defaults( string $club ): array {
+		return array(
+			'eyebrow'         => 'Privacy',
+			'title_lead'      => 'How we look after ',
+			'title_highlight' => 'your details.',
+			'lede'            => 'What ' . $club . ' collects when you get in touch or join, why we hold it, and how to ask us to change or delete it.',
+			'blocks'          => array(
+				array(
+					'heading' => 'Who we are',
+					'body'    => $club . ' runs this website. If you have a question about anything on this page, or you want to see, correct or delete what we hold about you, contact us through the contact page and say so — we will answer.'
+						. "\n\n" . 'ADD: your club’s postal address, and the name or role of whoever handles data questions. If your club is registered with the ICO, add your registration number here.',
+				),
+				array(
+					'heading' => 'What we collect, and when',
+					'body'    => 'We only collect what you type into a form on this site, and only when you choose to send it.'
+						. "\n\n" . 'Getting in touch: your name, email address and whatever you write in the message. Joining or paying: your name, email address and billing details, which go to our payment provider — we never see or store your card number. Signing in: your email address and password, held by the website itself. Booking a session: your name, email address and phone number.'
+						. "\n\n" . 'ADD: anything else your club collects — membership forms, medical or emergency-contact details for juniors, photography consent.',
+				),
+				array(
+					'heading' => 'Why we hold it',
+					'body'    => 'To reply to you, to run your membership, to take a payment you have asked to make, and to organise the sessions you have booked. We do not sell it, and we do not use it to advertise to you.',
+				),
+				array(
+					'heading' => 'Who else sees it',
+					'body'    => 'Our website host, and our payment provider when you pay. Both handle it on our behalf and are not allowed to use it for anything else.'
+						. "\n\n" . 'ADD: anyone else your club shares data with — a league or governing body, an email newsletter service, a booking system.',
+				),
+				array(
+					'heading' => 'Cookies',
+					'body'    => 'A cookie is a small file a website leaves on your device. This site sets one when you sign in, so it can remember you between pages. Our shop and payment pages set their own when you use them, which is what makes paying work.'
+						. "\n\n" . 'ADD: if your club adds analytics or advertising tools, say so here — those are the ones people care about.',
+				),
+				array(
+					'heading' => 'How long we keep it',
+					'body'    => 'ADD: how long your club keeps enquiries, membership records and payment records. Payment records usually have to be kept for six years; an enquiry rarely needs keeping at all once it is answered.',
+				),
+				array(
+					'heading' => 'Your rights',
+					'body'    => 'You can ask us what we hold about you, ask us to correct it, and ask us to delete it. You can withdraw consent at any time, and you can complain to the Information Commissioner’s Office at ico.org.uk if you think we have got it wrong. Ask us first if you can — it is usually quicker.',
+				),
+				array(
+					'heading' => 'Children',
+					'body'    => 'ADD: how your club handles junior members’ details, and who gives consent for them.',
+				),
+			),
+		);
+	}
+
+	/** @return array{eyebrow:string,title_lead:string,title_highlight:string,lede:string,blocks:array<int,array{heading:string,body:string}>} */
+	private static function terms_defaults( string $club ): array {
+		return array(
+			'eyebrow'         => 'Terms',
+			'title_lead'      => 'The rules of ',
+			'title_highlight' => 'using this site.',
+			'lede'            => 'What you can expect from ' . $club . ', and what we expect from you.',
+			'blocks'          => array(
+				array(
+					'heading' => 'Using this website',
+					'body'    => 'You are welcome to use this site to find out about the club, get in touch, and manage a membership. Please do not try to break it, take it offline, or use it to send anyone anything they did not ask for.',
+				),
+				array(
+					'heading' => 'Membership and payments',
+					'body'    => 'ADD: what a membership includes and for how long, when payment is taken, whether it renews automatically, and how somebody cancels. If you take payments, this is the section that matters most — write it before you sell anything.',
+				),
+				array(
+					'heading' => 'Refunds',
+					'body'    => 'ADD: your club’s refund position — for memberships, for sessions cancelled by a member, and for sessions cancelled by the club.',
+				),
+				array(
+					'heading' => 'Bookings',
+					'body'    => 'ADD: how far ahead sessions can be booked, how much notice is needed to cancel one, and what happens if somebody does not turn up.',
+				),
+				array(
+					'heading' => 'Behaviour at the club',
+					'body'    => 'ADD: link to your club’s code of conduct, safeguarding policy and any ground rules, or write the short version here.',
+				),
+				array(
+					'heading' => 'What we can and cannot promise',
+					'body'    => 'We keep this site accurate and available as best we can, but we cannot promise it is never wrong or never offline. Fixtures, times and prices can change.',
+				),
+				array(
+					'heading' => 'Changes to these terms',
+					'body'    => 'We may update this page. The version here is the one that applies.',
+				),
+			),
+		);
 	}
 
 	public static function contact(

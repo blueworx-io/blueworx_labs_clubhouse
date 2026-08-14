@@ -5,6 +5,23 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.67.0
+
+- **Your site now has a privacy policy and terms**, linked from the footer of every page. Both ship with starter wording that describes what this site actually collects and where it goes. Anywhere it says ADD, only your club can answer — those lines need writing before you take real sign-ups. It is a starting point, not legal advice.
+- **A cookie notice appears once for each visitor** and says, in plain words, what cookies this site uses. It does not pretend to block anything, because the shop and its payment provider set theirs the moment those pages load — if you need real consent gating, switch this off under Club Pages → Global and use a consent plugin.
+- **Fixed empty buttons appearing under a heading** when a page had no call to action set. They rendered as two blank boxes that reloaded the page.
+
+## 0.66.0
+
+- **The plugin now recognises that SureCart is installed.** It was looking for the wrong thing, so on a real site it decided there was no shop — which quietly disabled everything to do with selling, including tier prices and Join buttons. This is why membership tiers never sold on a live site despite working in testing.
+- **The plugin now tells you when your shop is missing pages it needs** — the checkout page, the order confirmation page, the customer dashboard or the shop page — and says what each one costs you. A missing checkout page is why Join buttons have been sending people to the contact page instead of taking payment. One button puts back what SureCart can, and it asks SureCart to build its own pages rather than making copies of them. Nothing happens without you pressing it.
+- **A deleted checkout page no longer produces Join buttons that lead to a "page not found."** They fall back to your contact page, as they should.
+- **Clubs with a shop now get a Shop link in their navigation**, and can point any menu item or button at the shop or at a member's account. Products used to be findable from Google while nothing on the site linked to them. Clubs without a shop see no change.
+- **The Membership page no longer contradicts itself.** It promised "join in five minutes" above steps that said register your interest, no payment yet, and we'll be in touch in a few days. It now says whichever is actually true: a club whose tiers reach a real checkout talks about joining and paying, and one whose tiers don't talks about registering interest. Any wording you have written yourself is untouched.
+- **Members with a shop connected now land on their account dashboard after signing in**, instead of the front page, so they can see and manage what they have paid for. You can still send them anywhere you like on the Members screen — this only applies when you have left that box empty.
+- **Signing out now returns members to your front page**, which is what the Members screen has always said it does. It used to leave them on a sign-in form they no longer needed.
+- **Price changes in the shop now show on the site straight away** rather than up to five minutes later.
+
 ## 0.65.0
 
 - **Membership tiers can now sell.** Connect a tier to a product in your shop and the card shows what that product charges, with its button going straight to checkout with the right membership in the basket. Change a price in the shop and the page follows. Tiers you don't connect are unchanged — they show the price you type and point at the contact page.

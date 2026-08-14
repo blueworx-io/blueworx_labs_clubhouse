@@ -27,8 +27,11 @@ final class Blueworx_Clubhouse_Block_Addresses {
 	public static function map(): array {
 		$pages = array(
 			'global' => array(
-				'header' => 'header',
-				'footer' => 'footer',
+				'header'  => 'header',
+				'footer'  => 'footer',
+				// Rendered by the footer block, like the footer's own newsletter
+				// column — it is not a block anyone places on a page.
+				'cookies' => 'footer',
 			),
 			'home' => array(
 				'hero'        => 'home_hero',
@@ -107,6 +110,14 @@ final class Blueworx_Clubhouse_Block_Addresses {
 				'services'  => 'shortcode_block',
 				'locations' => 'shortcode_block',
 				'agents'    => 'shortcode_block',
+			),
+			'privacy' => array(
+				'hero' => 'hero',
+				'body' => 'prose',
+			),
+			'terms' => array(
+				'hero' => 'hero',
+				'body' => 'prose',
 			),
 		);
 

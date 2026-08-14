@@ -286,8 +286,11 @@ final class Blueworx_Clubhouse_Setup_Controller {
 			'action_url'    => $action_url,
 			'notices'       => $notices,
 			'members'       => array(
-				'post_login'  => $auth->get_post_login(),
-				'post_logout' => $auth->get_post_logout(),
+				'post_login'    => $auth->get_post_login(),
+				'post_logout'   => $auth->get_post_logout(),
+				// Empty unless the shop has a reachable dashboard, which is
+				// exactly when a blank "after signing in" starts meaning it.
+				'dashboard_url' => Blueworx_Clubhouse_Shop_Pages::url( 'dashboard' ),
 			),
 			'progress'      => Blueworx_Clubhouse_Setup_Progress::compute( $branding, $active_look ?? new Blueworx_Clubhouse_Court_Side(), '' !== $active_slug, (bool) $storage->get( self::VIS_SAVED_KEY, false ) ),
 			'looks'         => $looks,

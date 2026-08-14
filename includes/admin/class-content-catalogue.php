@@ -56,6 +56,39 @@ final class Blueworx_Clubhouse_Content_Catalogue {
 	);
 
 	/**
+	 * The hero of a legal page. The same four fields every other hero has, minus
+	 * the buttons and the photograph — the renderer passes those empty, so
+	 * offering them here would be four controls that visibly do nothing.
+	 *
+	 * @return array<int,array<string,mixed>>
+	 */
+	private static function legal_hero_fields(): array {
+		return array(
+			self::f_text( 'eyebrow', 'Eyebrow' ),
+			self::f_text( 'title_lead', 'Heading' ),
+			self::f_text( 'title_highlight', 'Highlighted phrase' ),
+			self::f_area( 'lede', 'Subheading' ),
+		);
+	}
+
+	/**
+	 * One clause of a legal document: a heading and its prose. Blank lines in
+	 * the body become paragraphs; nothing else is interpreted.
+	 *
+	 * @return array<string,mixed>
+	 */
+	private static function legal_loop(): array {
+		return array(
+			'name'   => 'Section',
+			'plural' => 'Sections',
+			'fields' => array(
+				self::f_text( 'heading', 'Heading' ),
+				self::f_area( 'body', 'Text (leave a blank line between paragraphs)', 8 ),
+			),
+		);
+	}
+
+	/**
 	 * Shared hero field set, used by every page's Hero section — keys map to
 	 * Page_Renderer's Sections::hero() input array exactly.
 	 */
@@ -203,6 +236,15 @@ final class Blueworx_Clubhouse_Content_Catalogue {
 						self::f_text( 'newsletter_heading', 'Newsletter heading' ),
 						self::f_area( 'newsletter_lede', 'Newsletter blurb', 2 ),
 						self::f_shortcode( 'newsletter_shortcode', 'Newsletter signup shortcode (SureForms)' ),
+					) ),
+				array( 'key' => 'cookies', 'label' => 'Cookie notice', 'type' => 'fields', 'store_page' => 'global',
+					'note' => 'Shown once per visitor, at the foot of every page, until they dismiss it. It says what this site uses cookies for — it does not withhold anything, because the shop and its payment provider set theirs as soon as those pages load. If you run a dedicated consent plugin, switch this off and let that one do the job.',
+					'fields' => array(
+						self::f_toggle( 'show', 'Show the cookie notice' ),
+						self::f_area( 'text', 'Notice text', 3 ),
+						self::f_text( 'link_label', 'Link label' ),
+						self::f_url( 'link_href', 'Link' ),
+						self::f_text( 'dismiss', 'Dismiss button label' ),
 					) ),
 			) ),
 			array( 'tab' => 'home', 'label' => 'Home', 'sections' => array(
@@ -356,6 +398,18 @@ final class Blueworx_Clubhouse_Content_Catalogue {
 				array( 'key' => 'agents', 'label' => 'Coaches and staff', 'type' => 'fields', 'store_page' => 'booking',
 					'note' => 'Ships with the Bookings agents list. Switch the section off under Site setup → Visibility to drop it.',
 					'fields' => self::booking_slot_fields() ),
+			) ),
+			array( 'tab' => 'privacy', 'label' => 'Privacy', 'sections' => array(
+				array( 'key' => 'hero', 'label' => 'Hero', 'type' => 'fields', 'store_page' => 'privacy', 'fields' => self::legal_hero_fields() ),
+				array( 'key' => 'body', 'label' => 'Policy', 'type' => 'loop', 'store_page' => 'privacy',
+					'note' => 'Ships with starter wording that describes what this site actually collects. Anywhere it says ADD, only your club can answer — replace those lines before you take real sign-ups. This is a starting point, not legal advice.',
+					'loop' => self::legal_loop() ),
+			) ),
+			array( 'tab' => 'terms', 'label' => 'Terms', 'sections' => array(
+				array( 'key' => 'hero', 'label' => 'Hero', 'type' => 'fields', 'store_page' => 'terms', 'fields' => self::legal_hero_fields() ),
+				array( 'key' => 'body', 'label' => 'Terms', 'type' => 'loop', 'store_page' => 'terms',
+					'note' => 'Ships with starter wording. Anywhere it says ADD, only your club can answer — the payments and refunds sections matter most, and should be written before you sell anything. This is a starting point, not legal advice.',
+					'loop' => self::legal_loop() ),
 			) ),
 		);
 

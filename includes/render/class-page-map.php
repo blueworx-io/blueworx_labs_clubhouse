@@ -47,6 +47,11 @@ final class Blueworx_Clubhouse_Page_Map {
 				'method'   => 'booking',
 				'requires' => Blueworx_Clubhouse_Integrations::LATEPOINT_TAG,
 			),
+			// Last, and linked from the footer rather than the nav: nobody comes to
+			// a club site to read the terms, but a site whose forms collect names,
+			// emails and phone numbers has to have somewhere to point at.
+			array( 'slug' => 'privacy',    'label' => 'Privacy',    'method' => 'privacy' ),
+			array( 'slug' => 'terms',      'label' => 'Terms',      'method' => 'terms' ),
 		);
 	}
 

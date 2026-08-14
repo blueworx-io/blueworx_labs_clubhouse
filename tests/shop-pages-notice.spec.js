@@ -1,0 +1,59 @@
+const { test, expect } = require('@playwright/test');
+
+// @wordpress only: this is a wp-admin notice, and the DB-free preview has no
+// admin.
+//
+// What is asserted here is the half a real WordPress can prove without
+// SureCart: that a club with no shop is never nagged about one. That is the
+// failure mode with actual cost — most clubhouse sites have no SureCart at all,
+// and a warning about missing shop pages on every admin screen of a site that
+// will never sell anything would be pure noise.
+//
+// The other half — the notice appearing, and its button handing page creation
+// to SureCart's own seeder — needs SureCart installed. Installing it here to
+// assert our own notice would be testing SureCart, the same reasoning
+// external-chrome.spec.js records; the decisions are pure and covered branch by
+// branch in tests/php/ShopPagesTest.php, and the whole flow was exercised
+// against a real SureCart 4.6.3 install (see docs/integrations/surecart-notes.md).
+
+async function loginAsAdmin(page) {
+  await page.goto('/wp-login.php');
+  await page.fill('#user_login', 'admin');
+  await page.fill('#user_pass', 'wptest-admin-pw');
+  await page.click('#wp-submit');
+  await expect(page.locator('#wpadminbar')).toBeVisible();
+}
+
+test('a club with no shop is never told its shop pages are missing @wordpress', async ({ page }) => {
+  await loginAsAdmin(page);
+  await page.goto('/wp-admin/index.php', { waitUntil: 'domcontentloaded' });
+  await expect(page.locator('body')).not.toContainText('not ready to take payments');
+
+  // The Clubhouse screens too — the notice hangs off admin_notices, which every
+  // admin screen fires.
+  await page.goto('/wp-admin/admin.php?page=clubhouse-setup', { waitUntil: 'domcontentloaded' });
+  await expect(page.locator('body')).not.toContainText('not ready to take payments');
+});
+
+test('a club with no shop gets no Shop link in its nav @wordpress', async ({ page }) => {
+  // The Shop item ships in the default nav and must disappear on every site
+  // that cannot serve it, the same way Bookings does without LatePoint. A nav
+  // link to a page that does not exist is worse than no link.
+  await page.goto('/');
+  await expect(page.locator('.ch-nav a', { hasText: /^Shop$/ })).toHaveCount(0);
+});
+
+test('membership tiers keep their fallback while there is no reachable checkout @wordpress', async ({ page }) => {
+  // The other side of the same rule: no shop, or a shop whose checkout page is
+  // gone, must leave every Join button pointing somewhere real rather than at a
+  // half-built checkout URL.
+  await page.goto('/?clubhouse_page=membership');
+  const links = page.locator('.ch-tier a[href]');
+  const count = await links.count();
+  expect(count).toBeGreaterThan(0);
+  for (let i = 0; i < count; i += 1) {
+    const href = await links.nth(i).getAttribute('href');
+    expect(href).toBeTruthy();
+    expect(href).not.toBe('#');
+  }
+});

@@ -24,6 +24,8 @@ $GLOBALS['wp_stub_insert_fail']   = array();
 $GLOBALS['wp_stub_update_fail']   = array();
 $GLOBALS['wp_stub_delete_fail']   = array();
 $GLOBALS['wp_stub_permalinks']    = array();
+$GLOBALS['wp_stub_post_status']   = array();
+$GLOBALS['wp_stub_referer']       = false;
 
 function wp_stub_reset(): void {
 	$GLOBALS['wp_stub_calls']       = array();
@@ -44,6 +46,8 @@ function wp_stub_reset(): void {
 	$GLOBALS['wp_stub_update_fail']   = array();
 	$GLOBALS['wp_stub_delete_fail']   = array();
 	$GLOBALS['wp_stub_permalinks']    = array();
+	$GLOBALS['wp_stub_post_status']   = array();
+	$GLOBALS['wp_stub_referer']       = false;
 	unset( $GLOBALS['menu'], $GLOBALS['wp_meta_boxes'] );
 }
 
@@ -112,9 +116,26 @@ if ( ! function_exists( 'delete_option' ) ) {
 }
 if ( ! function_exists( 'get_posts' ) ) {
 	function get_posts( array $args = array() ) {
-		$type = $args['post_type'] ?? '';
-		return $GLOBALS['wp_stub_posts'][ $type ] ?? array();
+		$type  = $args['post_type'] ?? '';
+		$posts = $GLOBALS['wp_stub_posts'][ $type ] ?? array();
+		// Real get_posts() returns ints, not post objects, for fields => 'ids'.
+		// Callers branch on that, so the stub has to honour it.
+		if ( 'ids' === ( $args['fields'] ?? '' ) ) {
+			$posts = array_map( static fn ( $post ) => (int) ( $post->ID ?? 0 ), $posts );
+		}
+		return $posts;
 	}
+}
+if ( ! function_exists( 'get_post_status' ) ) {
+	// False for a post that does not exist, a status string otherwise —
+	// including 'trash', which is the case Checkout_Page exists to catch.
+	function get_post_status( $post = null ) {
+		$id = is_object( $post ) ? (int) ( $post->ID ?? 0 ) : (int) $post;
+		return $GLOBALS['wp_stub_post_status'][ $id ] ?? false;
+	}
+}
+if ( ! function_exists( 'wp_get_referer' ) ) {
+	function wp_get_referer() { return $GLOBALS['wp_stub_referer'] ?? false; }
 }
 if ( ! function_exists( 'get_post_meta' ) ) {
 	function get_post_meta( int $id, string $key = '', bool $single = false ) {
