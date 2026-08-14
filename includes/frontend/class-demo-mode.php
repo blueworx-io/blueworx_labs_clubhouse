@@ -103,7 +103,15 @@ final class Blueworx_Clubhouse_Demo_Mode {
 	 * @param array<int,array{slug:string,name:string}> $looks
 	 */
 	public static function switcher_html( array $looks, ?string $current_slug, ?string $deactivate_url ): string {
-		$out  = '<div id="clubhouse-demo" class="clubhouse-demo" role="region" aria-label="Demo mode look switcher">';
+		// Collapsed by default. Open, the bar sat across the bottom of the viewport
+		// and covered whatever was there — on the home page, two of the hero's call
+		// to action tiles at every width. Tooling must never be the reason a real
+		// control is hidden, so it now starts as a small launcher and opens when
+		// someone actually wants it. A <details> so it needs no JavaScript and is
+		// keyboard-operable for free.
+		$out  = '<details id="clubhouse-demo" class="clubhouse-demo">';
+		$out .= '<summary class="clubhouse-demo__toggle" aria-label="Demo mode look switcher">Demo</summary>';
+		$out .= '<div class="clubhouse-demo__panel" role="region" aria-label="Demo mode look switcher">';
 		$out .= '<span class="clubhouse-demo__title">Demo mode</span>';
 		$out .= '<div class="clubhouse-demo__looks" role="group" aria-label="Choose a Base Look">';
 		foreach ( $looks as $look ) {
@@ -132,7 +140,7 @@ final class Blueworx_Clubhouse_Demo_Mode {
 		if ( null !== $deactivate_url ) {
 			$out .= '<a class="clubhouse-demo__exit" href="' . self::esc( $deactivate_url ) . '">Turn off demo mode</a>';
 		}
-		$out .= '</div>';
+		$out .= '</div></details>';
 		return $out;
 	}
 

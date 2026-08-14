@@ -1,5 +1,16 @@
 const { test, expect } = require('@playwright/test');
 
+// The panel is closed by default now — it used to be a bar across the bottom of
+// the viewport covering the hero's call-to-action tiles. Its controls therefore
+// have to be revealed before they can be driven.
+const openDemo = async (page) => {
+  const toggle = page.locator('.clubhouse-demo__toggle');
+  if (await toggle.count()) {
+    const panel = page.locator('#clubhouse-demo');
+    if ((await panel.getAttribute('open')) === null) await toggle.click();
+  }
+};
+
 // The demo bar's look controls, mounted in the DB-free preview via ?demo=1.
 //
 // SCOPE — read before extending this file. These tests prove the CLIENT contract
@@ -29,12 +40,14 @@ const cookie = async (page, name) => {
 
 test('the demo bar renders one look control per registered look', async ({ page }) => {
   await page.goto('?demo=1');
+  await openDemo(page);
   await expect(page.locator('[data-clubhouse-look]')).toHaveCount(3);
   await expect(page.locator('[data-clubhouse-look="floodlight"]')).toBeVisible();
 });
 
 test('the current look is the only one flagged @preview', async ({ page }) => {
   await page.goto('?demo=1&look=floodlight');
+  await openDemo(page);
   await expect(page.locator('[data-clubhouse-look="floodlight"]')).toHaveAttribute('aria-pressed', 'true');
   await expect(page.locator('[data-clubhouse-look][aria-pressed="true"]')).toHaveCount(1);
   await expect(page.locator('[data-clubhouse-look="court-side"]')).toHaveAttribute('aria-pressed', 'false');
@@ -42,6 +55,7 @@ test('the current look is the only one flagged @preview', async ({ page }) => {
 
 test('clicking a look writes the cookie and reloads', async ({ page }) => {
   await page.goto('?demo=1');
+  await openDemo(page);
   await mark(page);
 
   const navigated = page.waitForEvent('framenavigated');
@@ -56,6 +70,7 @@ test('clicking a look writes the cookie and reloads', async ({ page }) => {
 
 test('the look and accent branches do not cross-talk', async ({ page }) => {
   await page.goto('?demo=1');
+  await openDemo(page);
   await mark(page);
   await page.locator('[data-clubhouse-accent="berry"]').click();
 

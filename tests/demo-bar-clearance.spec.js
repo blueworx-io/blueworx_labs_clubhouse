@@ -35,3 +35,36 @@ test.describe('@preview demo switcher clearance', () => {
     }
   });
 });
+
+// The panel used to be a bar across the bottom of the viewport, covering two of
+// the home hero's call-to-action tiles at every width. It is now closed by
+// default and opens only when someone asks for it.
+test('the demo panel starts closed, as a small launcher @wordpress', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto('/');
+
+  const panel = page.locator('#clubhouse-demo');
+  await expect(panel).toHaveCount(1);
+  await expect(panel).not.toHaveAttribute('open', '');
+
+  // Nothing of the club's is underneath it at desktop width.
+  const covered = await page.evaluate(() => {
+    const s = document.querySelector('#clubhouse-demo').getBoundingClientRect();
+    return [...document.querySelectorAll('a,button')]
+      .filter((el) => !el.closest('#clubhouse-demo'))
+      .filter((el) => {
+        const b = el.getBoundingClientRect();
+        if (!b.width || !b.height) return false;
+        return !(b.right < s.left || b.left > s.right || b.bottom < s.top || b.top > s.bottom);
+      }).length;
+  });
+  expect(covered).toBe(0);
+});
+
+test('the demo panel still opens, and its controls work @wordpress', async ({ page }) => {
+  await page.goto('/');
+
+  await page.locator('#clubhouse-demo .clubhouse-demo__toggle').click();
+  await expect(page.locator('#clubhouse-demo')).toHaveAttribute('open', '');
+  await expect(page.locator('.clubhouse-demo__look').first()).toBeVisible();
+});
