@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## 0.66.0
 
 - **The plugin now recognises that SureCart is installed.** It was looking for the wrong thing, so on a real site it decided there was no shop — which quietly disabled everything to do with selling, including tier prices and Join buttons. This is why membership tiers never sold on a live site despite working in testing.
-- **The shop can now tell you when it has no checkout page**, which is why Join buttons on this site have been sending people to the contact page instead of taking payment. If the page is missing or in the trash, an admin notice offers to put it back for you. Nothing is created without you asking.
+- **The plugin now tells you when your shop is missing pages it needs** — the checkout page, the order confirmation page, the customer dashboard or the shop page — and says what each one costs you. A missing checkout page is why Join buttons have been sending people to the contact page instead of taking payment. One button puts back what SureCart can, and it asks SureCart to build its own pages rather than making copies of them. Nothing happens without you pressing it.
 - **A deleted checkout page no longer produces Join buttons that lead to a "page not found."** They fall back to your contact page, as they should.
 - **Price changes in the shop now show on the site straight away** rather than up to five minutes later.
 

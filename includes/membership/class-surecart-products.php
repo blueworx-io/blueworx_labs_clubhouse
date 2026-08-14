@@ -171,13 +171,13 @@ final class Blueworx_Clubhouse_SureCart_Products implements Blueworx_Clubhouse_P
 	 * SureCart's checkout page URL, or '' when there is not a reachable one —
 	 * which is the case on the club's own site today (issue #169).
 	 *
-	 * Delegated to Checkout_Page, which knows the difference between "no page"
-	 * and "a page in the trash". This used to read the option and hand its
+	 * Delegated to Shop_Pages, which knows the difference between "no page" and
+	 * "a page in the trash". This used to read the option and hand its
 	 * permalink straight out, which meant a deleted checkout page produced a
 	 * live-looking Join button leading to a 404.
 	 */
 	public static function checkout_url(): string {
-		return Blueworx_Clubhouse_Checkout_Page::url();
+		return Blueworx_Clubhouse_Shop_Pages::url( 'checkout' );
 	}
 
 	/**

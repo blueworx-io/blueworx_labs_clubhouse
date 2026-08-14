@@ -102,14 +102,32 @@ path (`Install\InstallService::createPages`) creates the same pages again, which
 suggests seeding really lands when a store is connected rather than at
 activation.
 
-So a site can be missing a checkout page for two different reasons — never
-seeded, or seeded and later deleted — and the fix is the same either way. That
-is what `Blueworx_Clubhouse_Checkout_Page` does: report the state and, on an
-owner's say-so, republish or recreate the page using SureCart's own slug, block
-and option, so SureCart cannot tell the difference. Verified end to end against
-a real SureCart install on 14 August 2026: notice shown, button pressed, page
-created, and SureCart's own slide-out cart picked up the new page as its
-Checkout destination.
+So a site can be missing shop pages for two different reasons — never seeded, or
+seeded and later deleted.
+
+`Blueworx_Clubhouse_Shop_Pages` reports the state of all four (checkout, order
+confirmation, customer dashboard, shop) and, on an owner's say-so, repairs what
+it can. **It does not write any of these pages itself.** It calls SureCart's own
+seeder, resolved from SureCart's container as `surecart.pages.seeder`, so the
+pages come out exactly as SureCart makes them and stay right when SureCart
+changes them. The shop runs the shop; this plugin only makes sure the pages the
+links point at exist.
+
+Two things the seeder cannot do, both handled directly:
+
+- **A trashed page.** `findOrCreate` treats trash as "no page", so seeding would
+  create a second checkout beside the first and leave SureCart's links on the
+  wrong one. A page that already exists is republished instead.
+- **The order-confirmation page**, which `PageSeeder` does not create — only the
+  onboarding path does. It is reported when missing, with no button and a
+  pointer to SureCart, rather than being invented here.
+
+Verified end to end against a real SureCart 4.6.3 install on 14 August 2026:
+every page wiped, notice shown listing all four, button pressed, checkout,
+dashboard and shop created by SureCart's seeder, order confirmation honestly
+still reported. Pages trashed and repaired again — republished, and repeated
+repairs produced no duplicates. SureCart's own slide-out cart picked up the new
+checkout page as its Checkout destination, which is issue #91.
 
 ## Detecting that SureCart is here at all
 

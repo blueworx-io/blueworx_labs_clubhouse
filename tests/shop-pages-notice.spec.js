@@ -4,16 +4,17 @@ const { test, expect } = require('@playwright/test');
 // admin.
 //
 // What is asserted here is the half a real WordPress can prove without
-// SureCart: that a club with no shop is never nagged about a shop. That is the
+// SureCart: that a club with no shop is never nagged about one. That is the
 // failure mode with actual cost — most clubhouse sites have no SureCart at all,
-// and a warning about a missing checkout page on every admin screen of a site
-// that will never sell anything would be pure noise.
+// and a warning about missing shop pages on every admin screen of a site that
+// will never sell anything would be pure noise.
 //
-// The other half — the notice appearing, and its button repairing the page —
-// depends on SureCart being installed. Installing it here to assert our own
-// notice would be testing SureCart, the same reasoning external-chrome.spec.js
-// records; the decision itself is pure and covered branch by branch in
-// tests/php/CheckoutPageTest.php.
+// The other half — the notice appearing, and its button handing page creation
+// to SureCart's own seeder — needs SureCart installed. Installing it here to
+// assert our own notice would be testing SureCart, the same reasoning
+// external-chrome.spec.js records; the decisions are pure and covered branch by
+// branch in tests/php/ShopPagesTest.php, and the whole flow was exercised
+// against a real SureCart 4.6.3 install (see docs/integrations/surecart-notes.md).
 
 async function loginAsAdmin(page) {
   await page.goto('/wp-login.php');
@@ -23,15 +24,15 @@ async function loginAsAdmin(page) {
   await expect(page.locator('#wpadminbar')).toBeVisible();
 }
 
-test('a club with no shop is never told its checkout page is missing @wordpress', async ({ page }) => {
+test('a club with no shop is never told its shop pages are missing @wordpress', async ({ page }) => {
   await loginAsAdmin(page);
   await page.goto('/wp-admin/index.php', { waitUntil: 'domcontentloaded' });
-  await expect(page.locator('body')).not.toContainText('checkout page');
+  await expect(page.locator('body')).not.toContainText('not ready to take payments');
 
   // The Clubhouse screens too — the notice hangs off admin_notices, which every
   // admin screen fires.
   await page.goto('/wp-admin/admin.php?page=clubhouse-setup', { waitUntil: 'domcontentloaded' });
-  await expect(page.locator('body')).not.toContainText('checkout page');
+  await expect(page.locator('body')).not.toContainText('not ready to take payments');
 });
 
 test('membership tiers keep their fallback while there is no reachable checkout @wordpress', async ({ page }) => {
