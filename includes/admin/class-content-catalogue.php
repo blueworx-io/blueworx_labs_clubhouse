@@ -144,8 +144,42 @@ final class Blueworx_Clubhouse_Content_Catalogue {
 		return $entry['tab_label'] . ' · ' . $entry['section_label'];
 	}
 
-	/** @return array<int,array<string,mixed>> */
-	public static function pages(): array {
+	/**
+	 * The options for a tier's product picker: "Not connected" first, then every
+	 * price the shop offers. With no shop there is only the first, and the
+	 * section's note explains why — an empty dropdown explains nothing.
+	 *
+	 * @return array<string,string>
+	 */
+	private static function price_options( ?Blueworx_Clubhouse_Products $products ): array {
+		$options = array( '' => 'Not connected — use the price typed above' );
+		if ( null === $products ) {
+			return $options;
+		}
+		foreach ( $products->prices() as $price ) {
+			$options[ (string) $price['id'] ] = (string) $price['label'];
+		}
+		return $options;
+	}
+
+	/** The note under the tiers section, which depends on whether there is a shop to connect to. */
+	private static function tiers_note( ?Blueworx_Clubhouse_Products $products ): string {
+		if ( null === $products ) {
+			return 'Connect a tier to a product to take payment for it. No shop is installed yet, so tiers show the price you type here and their button goes to the contact page.';
+		}
+		if ( array() === $products->prices() ) {
+			return 'Connect a tier to a product to take payment for it. Your shop has no products yet — add one, and it will appear here.';
+		}
+		return 'Connect a tier to a product and the card shows what that product charges, with its button going straight to checkout. Change the price in the shop and this page follows. A tier left unconnected shows the price you type here.';
+	}
+
+	/**
+	 * @param Blueworx_Clubhouse_Products|null $products The shop, when there is one.
+	 *                                                   Its prices become the tier
+	 *                                                   product picker's options.
+	 * @return array<int,array<string,mixed>>
+	 */
+	public static function pages( ?Blueworx_Clubhouse_Products $products = null ): array {
 		$pages = array(
 			// Two tabs, not one: the header and footer appear on every page, while
 			// everything else under the old combined tab was Home-only. Editing the
@@ -221,6 +255,7 @@ final class Blueworx_Clubhouse_Content_Catalogue {
 					'fields' => array( self::f_text( 'heading', 'Heading' ), self::f_area( 'eyebrow', 'Intro' ) ),
 					'loop' => array( 'name' => 'Benefit', 'plural' => 'Benefits', 'fields' => array( self::f_text( 'title', 'Title' ), self::f_area( 'description', 'Description' ) ) ) ),
 				array( 'key' => 'tiers', 'label' => 'Tiers', 'type' => 'loop', 'store_page' => 'membership',
+					'note' => self::tiers_note( $products ),
 					'loop' => array( 'name' => 'Tier', 'plural' => 'Tiers', 'fields' => array(
 						self::f_text( 'name', 'Name' ),
 						self::f_text( 'price', 'Price' ),
@@ -228,6 +263,7 @@ final class Blueworx_Clubhouse_Content_Catalogue {
 						self::f_area( 'features', 'Features (one per line)', 4 ),
 						self::f_toggle( 'featured', 'Most popular' ),
 						self::f_text( 'cta_label', 'CTA label' ),
+						self::f_select( 'price_id', 'Sells', self::price_options( $products ) ),
 					) ) ),
 				array( 'key' => 'detail', 'label' => 'Included / excluded', 'type' => 'loop', 'store_page' => 'membership',
 					'loop' => array( 'name' => 'Point', 'plural' => 'Points', 'fields' => array( self::f_text( 'text', 'Text' ), self::f_toggle( 'included', 'Included' ) ) ) ),

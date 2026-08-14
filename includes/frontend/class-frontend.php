@@ -119,6 +119,21 @@ final class Blueworx_Clubhouse_Frontend {
 		Blueworx_Clubhouse_Integrations::set_detector(
 			static fn( string $tag ): bool => (bool) shortcode_exists( $tag )
 		);
+		// The shop, when there is one. Both are installed together: a products
+		// adapter with no checkout page can only produce half-connected tiers,
+		// which the renderer deliberately refuses to show.
+		//
+		// The checkout URL is installed as a resolver, not a computed string:
+		// register() runs on plugins_loaded, and checkout_url() reaches
+		// get_permalink(), which needs $wp_rewrite — an object WordPress does
+		// not create until after plugins_loaded. Resolving it here would fatal
+		// on every request once the option is set (see Checkout::set_resolver()).
+		if ( Blueworx_Clubhouse_SureCart_Products::is_active() ) {
+			Blueworx_Clubhouse_Products_Source::set( new Blueworx_Clubhouse_SureCart_Products() );
+			Blueworx_Clubhouse_Checkout::set_resolver(
+				static fn(): string => Blueworx_Clubhouse_SureCart_Products::checkout_url()
+			);
+		}
 		add_action( 'init', array( self::class, 'register_rewrites' ) );
 		// Priority 11: after register_rewrites() above, so a flush writes the rules
 		// this version actually declares.

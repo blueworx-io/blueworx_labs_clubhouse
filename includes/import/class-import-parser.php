@@ -112,7 +112,12 @@ final class Blueworx_Clubhouse_Import_Parser {
 	private static function sections(): array {
 		$labels = Blueworx_Clubhouse_Content_Catalogue::index();
 		$out    = array();
-		foreach ( Blueworx_Clubhouse_Content_Catalogue::pages() as $page ) {
+		// Without the products adapter, the tier's price_id select has only its
+		// empty option, and Content_Sanitiser::field() then sanitises every
+		// imported price_id to '' — silently clearing every tier's connection.
+		// Content_Controller::find_page()/build_model() pass this same source
+		// for exactly this reason; the importer must match it.
+		foreach ( Blueworx_Clubhouse_Content_Catalogue::pages( Blueworx_Clubhouse_Products_Source::get() ) as $page ) {
 			foreach ( $page['sections'] as $section ) {
 				$address         = (string) $section['store_page'] . '/' . (string) $section['key'];
 				$out[ $address ] = array(

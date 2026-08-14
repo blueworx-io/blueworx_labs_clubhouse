@@ -28,6 +28,14 @@ if ( ! defined( 'BLUEWORX_LABS_CLUBHOUSE_VERSION' ) ) {
 	define( 'BLUEWORX_LABS_CLUBHOUSE_VERSION', 'test' );
 }
 
+// Gates test-only seams that would otherwise be callable in production — e.g.
+// Blueworx_Clubhouse_SureCart_Products::set_raw_fetcher(), which injects an
+// arbitrary callable's output straight onto the front end. Only ever defined
+// here, so the seams are no-ops outside a PHPUnit run.
+if ( ! defined( 'BLUEWORX_CLUBHOUSE_RUNNING_TESTS' ) ) {
+	define( 'BLUEWORX_CLUBHOUSE_RUNNING_TESTS', true );
+}
+
 require_once __DIR__ . '/wp-stubs.php';
 
 require dirname( __DIR__, 2 ) . '/includes/bootstrap.php';

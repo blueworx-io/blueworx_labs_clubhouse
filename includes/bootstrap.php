@@ -26,6 +26,13 @@ require_once __DIR__ . '/content/class-menu.php';
 require_once __DIR__ . '/content/class-shortcodes.php';
 require_once __DIR__ . '/content/class-integrations.php';
 
+// Membership
+require_once __DIR__ . '/membership/interface-products.php';
+require_once __DIR__ . '/membership/class-demo-products.php';
+require_once __DIR__ . '/membership/class-products-source.php';
+require_once __DIR__ . '/membership/class-checkout.php';
+require_once __DIR__ . '/membership/class-surecart-products.php';
+
 // Blocks
 require_once __DIR__ . '/blocks/class-block-context.php';
 require_once __DIR__ . '/blocks/class-block-types.php';

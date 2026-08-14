@@ -267,7 +267,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 		$items = self::citems( $content, 'membership', 'tiers', $default );
 		return array_map(
 			static function ( array $t ): array {
-				return array(
+				$tier = array(
 					'eyebrow'     => (string) ( $t['eyebrow'] ?? '' ),
 					'name'        => (string) ( $t['name'] ?? '' ),
 					'price'       => (string) ( $t['price'] ?? '' ),
@@ -275,11 +275,46 @@ final class Blueworx_Clubhouse_Page_Renderer {
 					'features'    => self::lines( $t['features'] ?? array() ),
 					'recommended' => (bool) ( $t['featured'] ?? ( $t['recommended'] ?? false ) ),
 					'cta_label'   => (string) ( $t['cta_label'] ?? '' ),
-					'cta_href'    => (string) ( $t['cta_href'] ?? '' ),
+					'cta_href'    => (string) ( $t['cta_href'] ?? Blueworx_Clubhouse_Links::url( 'contact' ) ),
 				);
+
+				// A tier connected to a real price shows what that price charges and
+				// sells it. Anything missing — no shop, no such price, no checkout
+				// page — leaves the tier exactly as the club typed it, which is how
+				// every site behaved before this existed.
+				$price_id = (string) ( $t['price_id'] ?? '' );
+				if ( '' === $price_id ) {
+					return $tier;
+				}
+				$price = Blueworx_Clubhouse_Products_Source::get()?->price( $price_id );
+				if ( null === $price ) {
+					return $tier;
+				}
+				$checkout = Blueworx_Clubhouse_Checkout::url( $price_id );
+				if ( '' === $checkout ) {
+					// Deliberately all-or-nothing: showing the shop's price beside a
+					// contact link would advertise a price the visitor cannot pay.
+					return $tier;
+				}
+
+				$tier['price']    = $price['amount'];
+				$tier['period']   = $price['period'];
+				$tier['cta_href'] = $checkout;
+				return $tier;
 			},
 			$items
 		);
+	}
+
+	/**
+	 * membership_tiers() for tests. The tier list is the one piece of this
+	 * renderer with logic worth testing on its own — everything else is markup
+	 * assembly covered by the page tests.
+	 *
+	 * @return array<int,array<string,mixed>>
+	 */
+	public static function membership_tiers_for_test( ?Blueworx_Clubhouse_Content_Store $content ): array {
+		return self::membership_tiers( $content );
 	}
 
 	/**
