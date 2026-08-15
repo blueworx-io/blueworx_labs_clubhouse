@@ -791,7 +791,13 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'cta_primary'        => self::cget( $content, 'about', 'hero', 'cta_primary', Blueworx_Clubhouse_Cta::JOIN ),
 				'cta_primary_href'   => self::cget( $content, 'about', 'hero', 'cta_primary_href', Blueworx_Clubhouse_Links::url( 'membership' ) ),
 				'cta_secondary'      => self::cget( $content, 'about', 'hero', 'cta_secondary', 'Meet the committee' ),
-				'cta_secondary_href' => self::cget( $content, 'about', 'hero', 'cta_secondary_href', Blueworx_Clubhouse_Links::url( 'contact' ) ),
+				// The committee is further down this same page, so the button that
+				// offers to introduce them now goes there instead of to the contact
+				// form (issue #164). A club that has switched that section off gets
+				// the contact page back, because the anchor would point at nothing.
+				'cta_secondary_href' => self::cget( $content, 'about', 'hero', 'cta_secondary_href', $visibility->is_section_visible( 'about', 'committee' )
+					? '#' . Blueworx_Clubhouse_Link_Catalogue::anchor_id( 'about', 'committee' )
+					: Blueworx_Clubhouse_Links::url( 'contact' ) ),
 				'image'              => self::media_src( (string) self::cget( $content, 'about', 'hero', 'image', '' ) ),
 				'image_alt'          => $club . ' members on the terrace',
 				'image_caption'      => '',
@@ -839,7 +845,10 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'eyebrow'   => self::cget( $content, 'about', 'facilities', 'eyebrow', 'The facilities' ),
 				'heading'   => self::cget( $content, 'about', 'facilities', 'heading', 'Five pitches, four courts, one clubhouse' ),
 				'image'     => self::media_src( (string) self::cget( $content, 'about', 'facilities', 'image', '' ) ), 'image_alt' => $club . ' grounds from the air',
-				'cta_label' => self::cget( $content, 'about', 'facilities', 'cta_label', 'Book a visit' ), 'cta_href' => self::cget( $content, 'about', 'facilities', 'cta_href', Blueworx_Clubhouse_Links::url( 'contact' ) ),
+				// "Book a visit" over a contact form promised a booking nothing here
+				// can take. The destination is right — arranging a look round is a
+				// conversation — so the label is what changes.
+				'cta_label' => self::cget( $content, 'about', 'facilities', 'cta_label', 'Arrange a visit' ), 'cta_href' => self::cget( $content, 'about', 'facilities', 'cta_href', Blueworx_Clubhouse_Links::url( 'contact' ) ),
 			) ) );
 		}
 		if ( $visibility->is_section_visible( 'about', 'committee' ) ) {
