@@ -5,6 +5,10 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.68.1
+
+- **The About page's buttons now go where they say.** "Meet the committee" jumps to the committee further down the page instead of the contact form, and "Book a visit" — which led to a contact form that takes no bookings — now reads "Arrange a visit".
+
 ## 0.68.0
 
 - **Booking now reads as one journey instead of two unrelated pages.** Book a court lists what you can book, where and with whom; the calendar shows when it is free. Each now says what the other is for and links to it, and the Bookings page no longer offers to pick a time it cannot show you.
