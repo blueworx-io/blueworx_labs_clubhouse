@@ -377,7 +377,7 @@ final class Blueworx_Clubhouse_Content_Catalogue {
 			array( 'tab' => 'calendar', 'label' => 'Calendar', 'sections' => array(
 				array( 'key' => 'hero', 'label' => 'Hero', 'type' => 'fields', 'store_page' => 'calendar', 'fields' => self::hero_filter_fields() ),
 				array( 'key' => 'booking', 'label' => 'Bookings', 'type' => 'fields', 'store_page' => 'calendar',
-					'note' => 'The Bookings calendar, above the fixtures. Switch the section off under Site setup → Visibility to drop it.',
+					'note' => 'The Bookings calendar, above the fixtures — this is the "when" half of booking. The link beside the heading goes to the Bookings page, which is the what, where and who; a member seeing free slots with no idea what they are is how this got raised.',
 					'fields' => self::booking_slot_fields() ),
 				array( 'key' => 'schedule', 'label' => 'Schedule', 'type' => 'fields', 'store_page' => 'calendar',
 					'fields' => array( self::f_text( 'heading', 'Heading' ), self::f_area( 'eyebrow', 'Intro' ) ),
@@ -442,6 +442,10 @@ final class Blueworx_Clubhouse_Content_Catalogue {
 			self::f_text( 'eyebrow', 'Eyebrow' ),
 			self::f_text( 'heading', 'Heading' ),
 			self::f_shortcode( 'shortcode', 'Shortcode' ),
+			// The way across to the other half of booking. Both halves or
+			// neither: a label with no link renders nothing.
+			self::f_text( 'link_label', 'Link label' ),
+			self::f_url( 'link_href', 'Link' ),
 		);
 	}
 }

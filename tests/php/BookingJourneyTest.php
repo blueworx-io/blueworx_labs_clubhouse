@@ -86,7 +86,7 @@ final class BookingJourneyTest extends TestCase {
 	public function test_the_calendar_says_what_the_other_page_is_for(): void {
 		// "Book a court" beside a month grid, with no hint that sessions, courts
 		// and coaches are listed elsewhere, is where the confusion started.
-		$this->assertStringContainsString( 'sessions, courts and coaches', $this->calendar() );
+		$this->assertStringContainsString( 'Sessions, courts and coaches', $this->calendar() );
 	}
 
 	public function test_a_club_without_latepoint_is_offered_neither(): void {

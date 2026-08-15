@@ -1551,9 +1551,15 @@ final class Blueworx_Clubhouse_Page_Renderer {
 		if ( Blueworx_Clubhouse_Integrations::section_available( 'calendar', 'booking' )
 			&& $visibility->is_section_visible( 'calendar', 'booking' ) ) {
 			$out .= self::anchored( 'calendar', 'booking', Blueworx_Clubhouse_Sections::shortcode_block( array(
-				'eyebrow'   => self::cget( $content, 'calendar', 'booking', 'eyebrow', 'Court bookings' ),
-				'heading'   => self::cget( $content, 'calendar', 'booking', 'heading', 'Book a court' ),
-				'shortcode' => self::cget( $content, 'calendar', 'booking', 'shortcode', '[latepoint_calendar view="month"]' ),
+				'eyebrow'    => self::cget( $content, 'calendar', 'booking', 'eyebrow', 'Court bookings' ),
+				'heading'    => self::cget( $content, 'calendar', 'booking', 'heading', 'Book a court' ),
+				'shortcode'  => self::cget( $content, 'calendar', 'booking', 'shortcode', '[latepoint_calendar view="month"]' ),
+				// The other half of the same journey. This grid answers "when";
+				// the Bookings page answers what, where and who, and a member
+				// looking at a month of free slots has no way to find out what
+				// any of them are without it (issue #136).
+				'link_label' => self::cget( $content, 'calendar', 'booking', 'link_label', 'Sessions, courts and coaches' ),
+				'link_href'  => self::cget( $content, 'calendar', 'booking', 'link_href', Blueworx_Clubhouse_Links::url( 'booking' ) ),
 			) ) );
 		}
 		if ( $visibility->is_section_visible( 'calendar', 'schedule' ) ) {
@@ -1795,9 +1801,12 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'eyebrow'            => self::cget( $content, 'booking', 'hero', 'eyebrow', 'Court bookings' ),
 				'title_lead'         => self::cget( $content, 'booking', 'hero', 'title_lead', 'Book your ' ),
 				'title_highlight'    => self::cget( $content, 'booking', 'hero', 'title_highlight', 'time on court.' ),
-				'lede'               => self::cget( $content, 'booking', 'hero', 'lede', 'Pick a session, a court and a time — members book online in a couple of taps.' ),
-				'cta_primary'        => self::cget( $content, 'booking', 'hero', 'cta_primary', Blueworx_Clubhouse_Cta::JOIN ),
-				'cta_primary_href'   => self::cget( $content, 'booking', 'hero', 'cta_primary_href', Blueworx_Clubhouse_Links::url( 'membership' ) ),
+				// It used to say "pick a session, a court and a time" above three
+				// lists that offer no times at all — the times are on the
+				// Calendar, which the button below now goes to.
+				'lede'               => self::cget( $content, 'booking', 'hero', 'lede', 'See what the club runs, where you play and who you book with. Times and free slots are on the calendar.' ),
+				'cta_primary'        => self::cget( $content, 'booking', 'hero', 'cta_primary', 'See what is free' ),
+				'cta_primary_href'   => self::cget( $content, 'booking', 'hero', 'cta_primary_href', Blueworx_Clubhouse_Links::url( 'calendar' ) . '#' . Blueworx_Clubhouse_Link_Catalogue::anchor_id( 'calendar', 'booking' ) ),
 				'cta_secondary'      => self::cget( $content, 'booking', 'hero', 'cta_secondary', 'Contact the club' ),
 				'cta_secondary_href' => self::cget( $content, 'booking', 'hero', 'cta_secondary_href', Blueworx_Clubhouse_Links::url( 'contact' ) ),
 				'image'              => self::media_src( (string) self::cget( $content, 'booking', 'hero', 'image', '' ) ),
