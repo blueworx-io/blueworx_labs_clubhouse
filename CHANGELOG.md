@@ -5,6 +5,10 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.68.0
+
+- **Booking now reads as one journey instead of two unrelated pages.** Book a court lists what you can book, where and with whom; the calendar shows when it is free. Each now says what the other is for and links to it, and the Bookings page no longer offers to pick a time it cannot show you.
+
 ## 0.67.1
 
 - Recorded what the team is working on next, in the repo rather than in someone's head. No change to the plugin itself.

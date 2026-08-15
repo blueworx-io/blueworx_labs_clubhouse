@@ -49,12 +49,21 @@ final class Blueworx_Clubhouse_Sections {
 		}
 		$eyebrow = (string) ( $data['eyebrow'] ?? '' );
 		$heading = (string) ( $data['heading'] ?? '' );
-		$head    = '';
-		if ( '' !== $eyebrow || '' !== $heading ) {
+		// A way out to the other half of the same journey — the Calendar's month
+		// view and the Bookings page's lists are one system split in two, and
+		// each has to say so. Both halves or neither, the rule the event cards
+		// and the CTA band already follow.
+		$label = trim( (string) ( $data['link_label'] ?? '' ) );
+		$href  = trim( (string) ( $data['link_href'] ?? '' ) );
+		$link  = '' !== $label && '' !== $href
+			? '<a class="ch-btn ch-btn--ghost" href="' . self::e( $href ) . '">' . self::e( $label ) . '</a>'
+			: '';
+		$head  = '';
+		if ( '' !== $eyebrow || '' !== $heading || '' !== $link ) {
 			$head = '<div class="ch-sec__head"><div>'
 				. ( '' !== $eyebrow ? '<span class="ch-eyebrow">' . self::e( $eyebrow ) . '</span>' : '' )
 				. ( '' !== $heading ? '<h2 class="ch-sec__title ch-sec__title--sm">' . self::e( $heading ) . '</h2>' : '' )
-				. '</div></div>';
+				. '</div>' . $link . '</div>';
 		}
 		return '<section class="ch-sec"><div class="ch-wrap">' . $head
 			. '<div class="ch-shortcode">' . $html . '</div>'
