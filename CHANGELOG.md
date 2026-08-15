@@ -5,6 +5,10 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.68.2
+
+- **Every upcoming event now offers a way to take part.** One of the three shipped without a button, so it looked broken next to the other two. Past events still carry none, which now reads as deliberate because they all agree.
+
 ## 0.68.0
 
 - **Booking now reads as one journey instead of two unrelated pages.** Book a court lists what you can book, where and with whom; the calendar shows when it is free. Each now says what the other is for and links to it, and the Bookings page no longer offers to pick a time it cannot show you.

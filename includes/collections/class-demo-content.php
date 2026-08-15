@@ -66,7 +66,12 @@ final class Blueworx_Clubhouse_Demo_Content {
 		return array(
 			array( 'title' => 'Club Open Day', 'tag' => 'Open day', 'date' => 'Sat 26 Jul', 'detail' => '10:00–14:00 · Clubhouse & grounds — all welcome.', 'cta_label' => 'Register interest', 'cta_href' => Blueworx_Clubhouse_Links::url( 'contact' ), 'status' => 'upcoming' ),
 			array( 'title' => 'Summer Football Camp', 'tag' => 'Junior football', 'date' => '4–8 Aug', 'detail' => 'Ages 5–12 · a week of coaching and games.', 'cta_label' => 'Book a place', 'cta_href' => Blueworx_Clubhouse_Links::url( 'contact' ), 'status' => 'upcoming' ),
-			array( 'title' => 'Annual Awards Night', 'tag' => 'Social', 'date' => 'Fri 12 Sep', 'detail' => '19:00 · Clubhouse function room.', 'cta_label' => '', 'cta_href' => '', 'status' => 'upcoming' ),
+			// Every upcoming event carries an action. This one shipped without
+			// one, so two cards had a button and the third looked broken rather
+			// than different (issue #165). Past events keep none — there is
+			// nothing left to do about an event that has happened, and all of
+			// them agree on that, which is what makes it read as deliberate.
+			array( 'title' => 'Annual Awards Night', 'tag' => 'Social', 'date' => 'Fri 12 Sep', 'detail' => '19:00 · Clubhouse function room.', 'cta_label' => 'Book a place', 'cta_href' => Blueworx_Clubhouse_Links::url( 'contact' ), 'status' => 'upcoming' ),
 			array( 'title' => 'Summer BBQ & Family Day', 'tag' => 'Social', 'date' => 'Jun 2026', 'detail' => '', 'cta_label' => '', 'cta_href' => '', 'status' => 'past' ),
 			array( 'title' => 'Spring Sevens Rugby Festival', 'tag' => 'Tournament', 'date' => 'May 2026', 'detail' => '', 'cta_label' => '', 'cta_href' => '', 'status' => 'past' ),
 			array( 'title' => 'Annual General Meeting', 'tag' => 'Club', 'date' => 'Apr 2026', 'detail' => '', 'cta_label' => '', 'cta_href' => '', 'status' => 'past' ),
