@@ -369,7 +369,11 @@ final class Blueworx_Clubhouse_Content_Controller {
 				$values = array();
 				if ( ! empty( $section['fields'] ) ) {
 					foreach ( $section['fields'] as $field_def ) {
-						$values[ $field_def['key'] ] = $content_store->get( $store_page, $section_key, $field_def['key'], '' );
+						// null, not '': the screen has to tell "never saved" from
+						// "saved empty" so a switch nobody has touched can draw its
+						// declared default. Every other field type casts to string,
+						// so null reads the same as '' for them.
+						$values[ $field_def['key'] ] = $content_store->get( $store_page, $section_key, $field_def['key'], null );
 					}
 				}
 

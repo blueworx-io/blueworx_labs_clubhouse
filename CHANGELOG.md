@@ -5,6 +5,10 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.70.3
+
+- **Saving Club Pages no longer switches the cookie notice and announcement bar off.** Both are on until a club turns them off, but the editing screen drew their switches as off on a site that had never touched them — so one save wrote that back and both disappeared, without anyone choosing it. The switches now show what the site is really doing, and saving changes nothing you did not change.
+
 ## 0.70.2
 
 - **Give new members a welcome pack on their account dashboard.** Write it once under Club Pages → Global → Welcome pack — the gate code, where to park, who to ask — and anyone who reaches the dashboard sees it. Leave it empty and nothing is shown, and it has its own on/off switch like every other section. It uses the dashboard's own plain styling rather than the club look, because that page belongs to the shop.

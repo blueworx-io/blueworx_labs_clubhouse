@@ -26,8 +26,18 @@ final class Blueworx_Clubhouse_Content_Catalogue {
 	private static function f_image( string $key, string $label ): array {
 		return array( 'key' => $key, 'label' => $label, 'type' => 'image' );
 	}
-	private static function f_toggle( string $key, string $label ): array {
-		return array( 'key' => $key, 'label' => $label, 'type' => 'toggle' );
+	/**
+	 * A switch, and what it means on a site that has never touched it.
+	 *
+	 * The default is declared here because the editing screen has to know it.
+	 * Without it an unset switch drew as off while the page it controls was on,
+	 * and saving the tab wrote that mistake back — which is how one save on the
+	 * Global tab used to switch the cookie notice and announcement bar off.
+	 *
+	 * Kept in step with the renderer's own fallback by a test.
+	 */
+	private static function f_toggle( string $key, string $label, bool $default = false ): array {
+		return array( 'key' => $key, 'label' => $label, 'type' => 'toggle', 'default' => $default );
 	}
 	/**
 	 * A slot for another plugin's shortcode. Unlike every other field type this
@@ -225,7 +235,7 @@ final class Blueworx_Clubhouse_Content_Catalogue {
 					'fields' => array(
 						self::f_text( 'join', 'Menu CTA label', 'e.g. Join the Club' ),
 						self::f_url( 'join_href', 'Menu CTA link' ),
-						self::f_toggle( 'banner_show', 'Show announcement bar' ),
+						self::f_toggle( 'banner_show', 'Show announcement bar', true ),
 						self::f_text( 'banner', 'Announcement text' ),
 						self::f_url( 'banner_href', 'Announcement link' ),
 					) ),
@@ -248,7 +258,7 @@ final class Blueworx_Clubhouse_Content_Catalogue {
 				array( 'key' => 'cookies', 'label' => 'Cookie notice', 'type' => 'fields', 'store_page' => 'global',
 					'note' => 'Shown once per visitor, at the foot of every page, until they dismiss it. It says what this site uses cookies for — it does not withhold anything, because the shop and its payment provider set theirs as soon as those pages load. If you run a dedicated consent plugin, switch this off and let that one do the job.',
 					'fields' => array(
-						self::f_toggle( 'show', 'Show the cookie notice' ),
+						self::f_toggle( 'show', 'Show the cookie notice', true ),
 						self::f_area( 'text', 'Notice text', 3 ),
 						self::f_text( 'link_label', 'Link label' ),
 						self::f_url( 'link_href', 'Link' ),

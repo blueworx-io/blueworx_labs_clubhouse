@@ -84,6 +84,54 @@ final class ContentCatalogueTest extends TestCase {
 		$this->assertSame( 'auto', $byKey['activity'] ); // genuinely derived stays auto
 	}
 
+	/**
+	 * A switch's default has to say what the site actually does with it unset.
+	 *
+	 * These two default to on in Page_Renderer. The editing screen used not to
+	 * know that, drew both as off on a site that had never touched them, and a
+	 * save then wrote that back — one visit to Club Pages switched the cookie
+	 * notice and the announcement bar off.
+	 *
+	 * @return array<string,bool> "section.field" => default
+	 */
+	private function toggle_defaults(): array {
+		$out = array();
+		foreach ( Blueworx_Clubhouse_Content_Catalogue::pages() as $page ) {
+			foreach ( $page['sections'] as $section ) {
+				foreach ( (array) ( $section['fields'] ?? array() ) as $field ) {
+					if ( 'toggle' === ( $field['type'] ?? '' ) ) {
+						$out[ $section['key'] . '.' . $field['key'] ] = (bool) ( $field['default'] ?? false );
+					}
+				}
+			}
+		}
+		return $out;
+	}
+
+	public function test_the_switches_that_are_on_by_default_say_so(): void {
+		$defaults = $this->toggle_defaults();
+
+		$this->assertTrue( $defaults['header.banner_show'], 'the announcement bar is on until switched off' );
+		$this->assertTrue( $defaults['cookies.show'], 'the cookie notice is on until switched off' );
+	}
+
+	/** Every switch declares one, so the screen never has to guess. */
+	public function test_every_switch_declares_a_default(): void {
+		foreach ( Blueworx_Clubhouse_Content_Catalogue::pages() as $page ) {
+			foreach ( $page['sections'] as $section ) {
+				foreach ( (array) ( $section['fields'] ?? array() ) as $field ) {
+					if ( 'toggle' === ( $field['type'] ?? '' ) ) {
+						$this->assertArrayHasKey(
+							'default',
+							$field,
+							$section['key'] . '.' . $field['key'] . ' has no declared default'
+						);
+					}
+				}
+			}
+		}
+	}
+
 	/** The Global tab is the sitewide chrome only — every Home section moved to its own tab. */
 	public function test_global_tab_holds_only_sitewide_sections(): void {
 		$pages = Blueworx_Clubhouse_Content_Catalogue::pages();
