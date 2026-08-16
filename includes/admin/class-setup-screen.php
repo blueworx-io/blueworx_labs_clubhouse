@@ -48,8 +48,44 @@ final class Blueworx_Clubhouse_Setup_Screen {
 		return $out;
 	}
 
+	/**
+	 * The Menu tab, if this screen is showing one. It carries its own form —
+	 * it saves through the content plumbing, not the setup one — so it is
+	 * rendered as a sibling of the setup form rather than nested inside it.
+	 *
+	 * @param array<string,mixed> $menu
+	 */
+	private static function menu_panel( array $menu ): string {
+		return Blueworx_Clubhouse_Menu_Panel::render( array_merge(
+			$menu,
+			array( 'panel_class' => 'clubhouse-panel', 'panel_attr' => 'data-panel="menu"' )
+		) );
+	}
+
+	/**
+	 * A Content Editor can edit the menu but nothing else on this screen, so
+	 * they get the Menu tab on its own: the screen they are sent to is the same
+	 * screen, with only the part they are allowed to touch on it.
+	 *
+	 * @param array<string,mixed> $model
+	 */
+	private static function menu_only( array $model ): string {
+		$out  = '<div class="wrap clubhouse-wrap">';
+		$out .= '<div class="clubhouse-setup">';
+		$out .= self::header( $model['progress'], (string) ( $model['role_tags'] ?? '' ) );
+		$out .= self::notices( $model['notices'] );
+		$out .= '<div class="clubhouse-tabs" role="tablist">'
+			. '<button type="button" class="clubhouse-tab is-active" data-tab="menu" role="tab" aria-selected="true">Menu</button></div>';
+		$out .= self::menu_panel( (array) $model['menu'] );
+		return $out . '</div></div>';
+	}
+
 	/** @param array<string,mixed> $model */
 	public static function render( array $model ): string {
+		$menu = is_array( $model['menu'] ?? null ) ? $model['menu'] : null;
+		if ( false === ( $model['can_setup'] ?? true ) ) {
+			return null !== $menu ? self::menu_only( $model ) : '';
+		}
 		$active_tokens = $model['look_tokens'][ $model['active_slug'] ] ?? array();
 
 		$out  = '<div class="wrap clubhouse-wrap">';
@@ -68,6 +104,9 @@ final class Blueworx_Clubhouse_Setup_Screen {
 		$out .= '<button type="button" class="clubhouse-tab is-active" data-tab="look" role="tab" aria-selected="true">Base Look &amp; Branding</button>';
 		$out .= '<button type="button" class="clubhouse-tab" data-tab="visibility" role="tab" aria-selected="false">Visibility</button>';
 		$out .= '<button type="button" class="clubhouse-tab" data-tab="members" role="tab" aria-selected="false">Members</button>';
+		if ( null !== $menu ) {
+			$out .= '<button type="button" class="clubhouse-tab" data-tab="menu" role="tab" aria-selected="false">Menu</button>';
+		}
 		if ( $can_demo ) {
 			$out .= '<button type="button" class="clubhouse-tab" data-tab="demo" role="tab" aria-selected="false">Demo Mode</button>';
 		}
@@ -87,6 +126,10 @@ final class Blueworx_Clubhouse_Setup_Screen {
 
 		$out .= self::save_bar( $model['progress'] );
 		$out .= '</form>';
+
+		if ( null !== $menu ) {
+			$out .= self::menu_panel( $menu );
+		}
 
 		// JSON island for the live re-skin.
 		$json = json_encode( $model['look_tokens'], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT );

@@ -5,6 +5,10 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.69.0
+
+- **The menu builder moved to the Clubhouse screen.** Arranging the header menu now sits with the rest of the site-wide settings, as its own tab, instead of being tucked inside Club Pages. Content Editors can still reach it — the screen shows them the Menu tab and nothing else.
+
 ## 0.68.9
 
 - **The Calendar page says when a club has no fixtures.** Before, the fixtures list simply vanished, leaving a page titled "Fixtures & results" showing nothing but the court-booking grid — which read as if the bookings were the fixtures. It now says there are none yet, and the sport filters stay hidden until there is more than one sport to choose between.

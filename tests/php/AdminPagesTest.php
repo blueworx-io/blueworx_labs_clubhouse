@@ -21,8 +21,11 @@ final class AdminPagesTest extends TestCase {
 		}
 		$this->assertCount( 6, $by_slug );
 
+		// The Clubhouse screen is REGISTERED with the content capability, because
+		// the menu builder on it belongs to the Content Editor (issue #144). The
+		// setup tabs themselves are still gated on CAPABILITY inside the screen.
 		$this->assertSame(
-			Blueworx_Clubhouse_Setup_Controller::CAPABILITY,
+			Blueworx_Clubhouse_Setup_Controller::MENU_CAPABILITY,
 			$by_slug[ Blueworx_Clubhouse_Setup_Controller::PAGE_SLUG ]['cap']
 		);
 		$this->assertSame(
@@ -88,18 +91,28 @@ final class AdminPagesTest extends TestCase {
 	 * exists for. It is now locked with edit_clubhouse_content, which both roles
 	 * hold.
 	 *
-	 * Setup stays shut: it configures the site. Import stays shut too — it
-	 * replaces every page's content wholesale AND can switch sections off, which
-	 * is a Visibility change this role is not allowed to make by hand.
+	 * The Clubhouse screen itself opens to this role since the menu builder moved
+	 * onto it (issue #144) — but only the Menu tab renders, because every setup
+	 * tab is gated on manage_clubhouse, which this role does not hold. Import
+	 * stays shut — it replaces every page's content wholesale AND can switch
+	 * sections off, which is a Visibility change this role is not allowed to make
+	 * by hand. Search & sharing, which also hangs off the Clubhouse menu, stays
+	 * shut on its own capability.
 	 */
 	public function test_the_content_editor_can_edit_content_but_not_configure_the_site(): void {
 		$editor = Blueworx_Clubhouse_Owner_Capabilities::EDITOR_ROLE;
 
 		$this->assertTrue( Blueworx_Clubhouse_Admin_Pages::role_can( $editor, Blueworx_Clubhouse_Content_Controller::PAGE_SLUG ), 'Club Pages' );
 		$this->assertTrue( Blueworx_Clubhouse_Admin_Pages::role_can( $editor, Blueworx_Clubhouse_Collection_Types::CONTENT_SLUG ), 'Collections' );
+		$this->assertTrue( Blueworx_Clubhouse_Admin_Pages::role_can( $editor, Blueworx_Clubhouse_Setup_Controller::PAGE_SLUG ), 'Clubhouse — for the Menu tab' );
 
-		$this->assertFalse( Blueworx_Clubhouse_Admin_Pages::role_can( $editor, Blueworx_Clubhouse_Setup_Controller::PAGE_SLUG ), 'Setup' );
 		$this->assertFalse( Blueworx_Clubhouse_Admin_Pages::role_can( $editor, Blueworx_Clubhouse_Import_Controller::PAGE_SLUG ), 'Import' );
+		$this->assertFalse( Blueworx_Clubhouse_Admin_Pages::role_can( $editor, Blueworx_Clubhouse_Seo_Controller::PAGE_SLUG ), 'Search & sharing' );
+
+		// The screen opening is not the same as the screen configuring: setup
+		// itself is still behind the capability the role does not hold.
+		$caps = Blueworx_Clubhouse_Owner_Capabilities::editor_capabilities();
+		$this->assertArrayNotHasKey( Blueworx_Clubhouse_Owner_Capabilities::SETUP_CAP, $caps );
 	}
 
 	/**
@@ -146,33 +159,52 @@ final class AdminPagesTest extends TestCase {
 	 * report must say so rather than reporting the capability alone.
 	 */
 	public function test_the_menu_allowlist_is_the_second_gate(): void {
-		// The Content Editor's allowlist has no clubhouse-setup entry.
-		$this->assertNotContains(
-			Blueworx_Clubhouse_Setup_Controller::PAGE_SLUG,
-			Blueworx_Clubhouse_Owner_Capabilities::editor_menu_allowlist()
-		);
-
-		// Hand it the capability anyway; the allowlist still refuses.
+		// A role holding a page's capability but without that page's top-level
+		// menu still cannot reach it. Club Pages is on no allowlist here.
 		$caps = array(
 			Blueworx_Clubhouse_Owner_Capabilities::EDITOR_ROLE => array(
-				Blueworx_Clubhouse_Owner_Capabilities::SETUP_CAP => true,
+				Blueworx_Clubhouse_Content_Controller::CAPABILITY => true,
 			),
 		);
+		$this->assertTrue(
+			Blueworx_Clubhouse_Admin_Pages::role_can(
+				Blueworx_Clubhouse_Owner_Capabilities::EDITOR_ROLE,
+				Blueworx_Clubhouse_Content_Controller::PAGE_SLUG,
+				$caps
+			),
+			'on the menu and holding the cap — reachable'
+		);
+
+		// Search & sharing hangs off the Clubhouse menu, which this role now has
+		// (the Menu tab lives there), and it is STILL out of reach: the
+		// capability gate has not been weakened by opening the menu item.
 		$this->assertFalse(
 			Blueworx_Clubhouse_Admin_Pages::role_can(
 				Blueworx_Clubhouse_Owner_Capabilities::EDITOR_ROLE,
-				Blueworx_Clubhouse_Setup_Controller::PAGE_SLUG,
-				$caps
+				Blueworx_Clubhouse_Seo_Controller::PAGE_SLUG
 			)
+		);
+		$this->assertContains(
+			Blueworx_Clubhouse_Setup_Controller::PAGE_SLUG,
+			Blueworx_Clubhouse_Owner_Capabilities::editor_menu_allowlist(),
+			'the menu item itself is open, for the Menu tab'
 		);
 	}
 
 	/** Tags are role display labels, in seniority order — administrator first. */
 	public function test_access_labels_are_display_names_senior_first(): void {
+		// All three reach the Clubhouse screen now — the Content Editor for the
+		// Menu tab on it, and nothing else.
 		$labels = Blueworx_Clubhouse_Admin_Pages::access_labels( Blueworx_Clubhouse_Setup_Controller::PAGE_SLUG );
 		$this->assertSame(
-			array( 'Administrator', Blueworx_Clubhouse_Owner_Capabilities::DISPLAY ),
+			array( 'Administrator', Blueworx_Clubhouse_Owner_Capabilities::DISPLAY, Blueworx_Clubhouse_Owner_Capabilities::EDITOR_DISPLAY ),
 			$labels
+		);
+
+		// Search & sharing, on the same menu, stays owner-and-above.
+		$this->assertSame(
+			array( 'Administrator', Blueworx_Clubhouse_Owner_Capabilities::DISPLAY ),
+			Blueworx_Clubhouse_Admin_Pages::access_labels( Blueworx_Clubhouse_Seo_Controller::PAGE_SLUG )
 		);
 
 		$collections = Blueworx_Clubhouse_Admin_Pages::access_labels( Blueworx_Clubhouse_Collection_Types::CONTENT_SLUG );

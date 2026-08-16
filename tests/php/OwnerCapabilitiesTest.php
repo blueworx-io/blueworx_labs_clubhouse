@@ -152,10 +152,24 @@ final class OwnerCapabilitiesTest extends TestCase {
 		);
 	}
 
-	public function test_the_content_editor_menu_excludes_setup_and_both_integrations(): void {
+	/**
+	 * Clubhouse is on this list so the role can reach the menu builder, which
+	 * moved onto that screen (issue #144). It still holds no manage_clubhouse,
+	 * so the screen shows it the Menu tab and nothing else. Both integrations
+	 * stay off the list.
+	 */
+	public function test_the_content_editor_menu_excludes_both_integrations(): void {
+		$allowed = Blueworx_Clubhouse_Owner_Capabilities::editor_menu_allowlist();
 		$this->assertSame(
-			array( 'index.php', 'clubhouse-site-content', 'clubhouse-content', 'edit.php', 'upload.php', 'users.php', 'profile.php' ),
-			Blueworx_Clubhouse_Owner_Capabilities::editor_menu_allowlist()
+			array( 'index.php', 'clubhouse-setup', 'clubhouse-site-content', 'clubhouse-content', 'edit.php', 'upload.php', 'users.php', 'profile.php' ),
+			$allowed
+		);
+		$this->assertNotContains( 'sc-dashboard', $allowed );
+		$this->assertNotContains( 'latepoint', $allowed );
+		$this->assertArrayNotHasKey(
+			Blueworx_Clubhouse_Owner_Capabilities::SETUP_CAP,
+			Blueworx_Clubhouse_Owner_Capabilities::editor_capabilities(),
+			'reaching the screen is not the same as being able to configure it'
 		);
 	}
 

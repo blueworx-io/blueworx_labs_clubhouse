@@ -158,9 +158,9 @@ final class Blueworx_Clubhouse_Guide {
 				array(
 					'title' => 'The menu',
 					'body'  => array( 'The menu across the top of your site is yours to arrange — you choose which pages appear, in what order, and what each one is called.' ),
-					'steps' => array( 'Open Club Pages.', 'Go to the Menu panel.', 'Add, rename, reorder or remove items, then save.' ),
+					'steps' => array( 'Open Clubhouse.', 'Go to the Menu tab.', 'Add, rename, reorder or remove items, then save.' ),
 					'state' => '',
-					'url'   => $content_url,
+					'url'   => (string) ( $site['setup_url'] ?? '' ),
 				),
 				array(
 					'title' => 'Bringing in an existing site',
