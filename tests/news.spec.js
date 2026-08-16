@@ -60,6 +60,25 @@ test('@preview an article offers more to read', async ({ page }) => {
   await expect(page.locator('.ch-related .ch-postcard')).toHaveCount(3);
 });
 
+// The preview always opens the newest story, which is exactly the edge case
+// worth pinning in the browser: the half that has nowhere to go must be absent
+// rather than drawn as a dead link.
+test('@preview an article offers the story either side, and no dead half', async ({ page }) => {
+  await page.goto('?clubhouse_page=post');
+
+  const steps = page.locator('.ch-poststeps');
+  await expect(steps).toHaveCount(1);
+
+  const prev = steps.locator('.ch-poststep--prev');
+  await expect(prev).toBeVisible();
+  // Named, not a bare arrow — a reader should know what they are clicking.
+  await expect(prev.locator('.ch-poststep__title')).not.toBeEmpty();
+  await expect(prev).toHaveAttribute('href', /.+/);
+
+  // Newest story: there is nothing newer, so that half is not drawn.
+  await expect(steps.locator('.ch-poststep--next')).toHaveCount(0);
+});
+
 // The featured story was a white card and the five below it sat bare on the
 // page background, so the grid read as loose text. Their excerpts also ran to
 // whatever length the post had, which stretched every card in a row to match
@@ -149,6 +168,23 @@ test('@preview the news pages hold their layout on a phone', async ({ page }) =>
     );
     expect(overflow, `${slug} scrolls sideways`).toBeLessThanOrEqual(1);
   }
+});
+
+// The demo source can only prove the shape of the control. Whether real
+// WordPress finds the neighbours is a different question, and the fixture posts
+// global-setup seeds — one either side of a known story — are what answer it.
+test('@wordpress a real post links to the stories either side of it', async ({ page }) => {
+  await page.goto('/clubhouse-post-fixture/');
+
+  const steps = page.locator('.ch-poststeps');
+  await expect(steps).toHaveCount(1);
+
+  // Seeded dates put "older" before the fixture and "newer" after it.
+  await expect(steps.locator('.ch-poststep--prev .ch-poststep__title')).toHaveText('Clubhouse post older');
+  await expect(steps.locator('.ch-poststep--next .ch-poststep__title')).toHaveText('Clubhouse post newer');
+
+  await steps.locator('.ch-poststep--prev').click();
+  await expect(page.locator('.ch-posthead__title')).toHaveText('Clubhouse post older');
 });
 
 test('the news page is served in the clubhouse chrome', async ({ page }) => {

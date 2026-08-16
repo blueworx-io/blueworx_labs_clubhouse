@@ -5,6 +5,10 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.70.0
+
+- **Move straight from one news story to the next.** The foot of every post now offers the story either side of it, named rather than a bare arrow, so a reader can work along the club's news without going back to the index each time. The newest and oldest stories show only the half that leads somewhere.
+
 ## 0.69.6
 
 - **News cards now look like cards, and sit level with each other.** The lead story was a proper card while the ones below it sat bare on the background, and a single long summary stretched every card beside it. Summaries are now cut to three lines, so a row lines up whatever the club has written.

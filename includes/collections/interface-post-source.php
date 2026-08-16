@@ -55,4 +55,16 @@ interface Blueworx_Clubhouse_Post_Source {
 	 * @return array<int,array{id:int,title:string,href:string,excerpt:string,category:string,category_slug:string,date:string,read:string,image:string,image_alt:string}>
 	 */
 	public function related( int $limit ): array;
+
+	/**
+	 * The posts either side of the one being read, in publication order.
+	 *
+	 * 'previous' is the older story and 'next' the newer one, which is the order
+	 * a reader working back through a season expects. Either is null at the end
+	 * of the run — the oldest post has no previous, the newest has no next — so
+	 * the renderer can leave that half out rather than draw a dead link.
+	 *
+	 * @return array{previous:array{title:string,href:string}|null,next:array{title:string,href:string}|null}
+	 */
+	public function adjacent(): array;
 }
