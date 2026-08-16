@@ -21,13 +21,17 @@ final class Blueworx_Clubhouse_Seo_Screen {
 	}
 
 	/**
-	 * @param array{deferring_to:string,pages:array<int,array{label:string,url:string,status:string,checks:array<int,array{key:string,label:string,status:string,detail:string}>}>} $model
+	 * $role_tags is prebuilt markup from Access_Screen, empty for anyone but an
+	 * administrator — the controller decides that, so this class stays WP-free.
+	 *
+	 * @param array{deferring_to:string,role_tags?:string,pages:array<int,array{label:string,url:string,status:string,checks:array<int,array{key:string,label:string,status:string,detail:string}>}>} $model
 	 */
 	public static function render( array $model ): string {
 		$out  = '<div class="wrap clubhouse-wrap"><div class="clubhouse-setup">';
 		$out .= '<header class="clubhouse-head"><div class="clubhouse-head__titles">'
 			. '<p class="clubhouse-eyebrow">Clubhouse · Search &amp; sharing</p>'
-			. '<h1 class="clubhouse-head__h1">How your site looks in search</h1></div></header>';
+			. '<h1 class="clubhouse-head__h1">How your site looks in search</h1>'
+			. (string) ( $model['role_tags'] ?? '' ) . '</div></header>';
 
 		$out .= self::intro( (string) $model['deferring_to'] );
 
