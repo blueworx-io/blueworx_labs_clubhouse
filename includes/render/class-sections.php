@@ -1778,6 +1778,54 @@ final class Blueworx_Clubhouse_Sections {
 	}
 
 	/**
+	 * Share a story.
+	 *
+	 * Plain links to the share endpoints, not vendor buttons: an official share
+	 * widget is a third-party script on every article that reads the page and
+	 * the reader, in exchange for a button. These are ordinary anchors, so
+	 * nothing loads and nobody is tracked until a reader chooses to go.
+	 *
+	 * Facebook, WhatsApp and email are what a club audience actually uses — a
+	 * match report goes to a team group chat far more often than anywhere else.
+	 * Copy link covers everything else, which is why it is here instead of a
+	 * longer row of networks nobody at the club posts to.
+	 *
+	 * @param array{title:string,url:string} $data
+	 */
+	public static function post_share( array $data ): string {
+		$url   = trim( (string) $data['url'] );
+		$title = (string) $data['title'];
+		if ( '' === $url ) {
+			return '';
+		}
+
+		$targets = array(
+			array( 'Facebook', 'https://www.facebook.com/sharer/sharer.php?u=' . rawurlencode( $url ) ),
+			array( 'WhatsApp', 'https://wa.me/?text=' . rawurlencode( trim( $title . ' ' . $url ) ) ),
+			array( 'Email', 'mailto:?subject=' . rawurlencode( $title ) . '&body=' . rawurlencode( $url ) ),
+		);
+
+		$links = '';
+		foreach ( $targets as $target ) {
+			list( $label, $href ) = $target;
+			// nofollow because a share link is not the club endorsing the network.
+			$links .= '<a class="ch-share__link" href="' . self::e( $href ) . '" target="_blank" rel="noopener nofollow">'
+				. '<span class="ch-share__sr">Share this story on </span>' . self::e( $label ) . '</a>';
+		}
+
+		// Ships hidden and is revealed by script only once copying is actually
+		// available, rather than offering a button that looks live and silently
+		// does nothing — see assets/js/share.js.
+		$copy = '<button type="button" class="ch-share__link" hidden'
+			. ' data-clubhouse-copy="' . self::e( $url ) . '" data-copied-label="Link copied">Copy link</button>';
+
+		return '<section class="ch-sec ch-share"><div class="ch-wrap"><div class="ch-share__in">'
+			. '<span class="ch-share__k">Share this story</span>'
+			. '<div class="ch-share__links">' . $links . $copy . '</div>'
+			. '</div></div></section>';
+	}
+
+	/**
 	 * "Keep reading" — three more posts, or nothing at all on a site with only
 	 * one article, where an empty band would say the club has nothing else.
 	 *

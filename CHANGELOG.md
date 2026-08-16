@@ -5,6 +5,10 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.70.1
+
+- **Share a news story from the story itself.** Facebook, WhatsApp, email and copy link at the foot of every post, so a match report can go straight to a team group chat instead of being copied out of the address bar. These are ordinary links rather than the networks' own buttons, so nothing about your readers is sent anywhere until they choose to share.
+
 ## 0.69.1
 
 - **Import and the User guide moved to the Clubhouse menu.** They sit with the menu builder and the rest of the club tooling instead of being tucked under Club Pages. Who can open each one is unchanged.
