@@ -60,6 +60,16 @@ test('@preview an article offers more to read', async ({ page }) => {
   await expect(page.locator('.ch-related .ch-postcard')).toHaveCount(3);
 });
 
+// Every post on a real site drew one blank chip below the body, because an
+// untagged post reported one nameless tag rather than none.
+test('@preview an article never shows a tag chip with nothing in it', async ({ page }) => {
+  await page.goto('?clubhouse_page=post');
+
+  const tags = await page.locator('.ch-posttag').allTextContents();
+  expect(tags.length).toBeGreaterThan(0);
+  expect(tags.every((t) => t.trim() !== ''), `blank chips: ${JSON.stringify(tags)}`).toBe(true);
+});
+
 test('@preview the news pages hold their layout on a phone', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
 
