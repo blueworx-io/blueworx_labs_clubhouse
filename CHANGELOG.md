@@ -5,6 +5,10 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.68.5
+
+- **Save always sits in the same place.** On the Clubhouse admin screens the Save button slid to the left whenever the "unsaved changes" note was hidden, so it moved about depending on whether you had touched anything. It is now pinned to the right on every screen, and the menu builder’s Save matches the rest instead of looking like a stray WordPress button.
+
 ## 0.68.4
 
 - **The sport filters now sit with the fixtures they filter.** On the Calendar page they were up in the header, above the court-booking calendar they have no effect on. They now sit directly above the fixtures & results list, and stay there when the booking section is switched off.
