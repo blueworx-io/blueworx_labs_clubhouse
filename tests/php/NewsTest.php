@@ -208,6 +208,111 @@ final class NewsTest extends TestCase {
 		$this->assertStringContainsString( 'ch-share__links', $this->render_article() );
 	}
 
+	/**
+	 * Previous and next. The demo posts run newest first, so the newest story
+	 * has nothing after it and the oldest has nothing before it — the two ends
+	 * are where a naive control draws a link to nowhere.
+	 */
+	public function test_a_story_in_the_middle_offers_both_directions(): void {
+		$steps = ( new Blueworx_Clubhouse_Demo_Posts( 3 ) )->adjacent();
+
+		$this->assertNotNull( $steps['previous'] );
+		$this->assertNotNull( $steps['next'] );
+		$this->assertNotSame( '', $steps['previous']['title'] );
+		$this->assertNotSame( '', $steps['next']['href'] );
+	}
+
+	public function test_the_newest_story_has_no_next_and_the_oldest_no_previous(): void {
+		$posts  = new Blueworx_Clubhouse_Demo_Posts();
+		$newest = (int) $posts->recent( 1 )[0]['id'];
+		$all    = $posts->recent( 99 );
+		$oldest = (int) $all[ count( $all ) - 1 ]['id'];
+
+		$this->assertNull( ( new Blueworx_Clubhouse_Demo_Posts( $newest ) )->adjacent()['next'] );
+		$this->assertNotNull( ( new Blueworx_Clubhouse_Demo_Posts( $newest ) )->adjacent()['previous'] );
+
+		$this->assertNull( ( new Blueworx_Clubhouse_Demo_Posts( $oldest ) )->adjacent()['previous'] );
+		$this->assertNotNull( ( new Blueworx_Clubhouse_Demo_Posts( $oldest ) )->adjacent()['next'] );
+	}
+
+	/** 'previous' is the older story: working backwards through a season. */
+	public function test_previous_is_the_older_story(): void {
+		$posts = new Blueworx_Clubhouse_Demo_Posts();
+		$rows  = $posts->recent( 3 );
+		$steps = ( new Blueworx_Clubhouse_Demo_Posts( (int) $rows[1]['id'] ) )->adjacent();
+
+		$this->assertSame( $rows[2]['title'], $steps['previous']['title'] );
+		$this->assertSame( $rows[0]['title'], $steps['next']['title'] );
+	}
+
+	public function test_only_the_half_that_exists_is_drawn(): void {
+		$html = Blueworx_Clubhouse_Sections::post_steps(
+			array( 'previous' => array( 'title' => 'An older match', 'href' => '/older/' ), 'next' => null )
+		);
+
+		$this->assertStringContainsString( 'ch-poststep--prev', $html );
+		$this->assertStringNotContainsString( 'ch-poststep--next', $html );
+		$this->assertStringContainsString( 'An older match', $html );
+	}
+
+	/** A club with one story gets no control at all, not an empty band. */
+	public function test_a_lone_story_draws_no_control(): void {
+		$this->assertSame(
+			'',
+			Blueworx_Clubhouse_Sections::post_steps( array( 'previous' => null, 'next' => null ) )
+		);
+	}
+
+	public function test_the_control_escapes_the_titles_it_is_given(): void {
+		$html = Blueworx_Clubhouse_Sections::post_steps(
+			array(
+				'previous' => array( 'title' => 'Ladies 1s <script>alert(1)</script>', 'href' => '/a/' ),
+				'next'     => null,
+			)
+		);
+
+		$this->assertStringNotContainsString( '<script>', $html );
+		$this->assertStringContainsString( '&lt;script&gt;', $html );
+	}
+
+	/** The article carries the control, drawn once. */
+	public function test_the_article_offers_the_story_either_side(): void {
+		$html = $this->render_article();
+
+		$this->assertStringContainsString( 'ch-poststeps', $html );
+		$this->assertSame( 1, substr_count( $html, 'class="ch-sec ch-poststeps"' ) );
+	}
+
+	/**
+	 * An untagged post used to draw one blank chip: get_the_tags returns false,
+	 * and casting that to an array gives a one-element array rather than an
+	 * empty one. The row is only worth drawing when there is a word in it.
+	 */
+	public function test_a_post_with_no_tags_draws_no_tag_row(): void {
+		$html = Blueworx_Clubhouse_Sections::post_body(
+			array( 'html' => '<p>Body</p>', 'tags' => array() )
+		);
+		$this->assertStringNotContainsString( 'ch-posttag', $html );
+	}
+
+	/** A tag that is blank or only spaces is not a tag. */
+	public function test_blank_tags_never_become_chips(): void {
+		$html = Blueworx_Clubhouse_Sections::post_body(
+			array( 'html' => '<p>Body</p>', 'tags' => array( '', '   ' ) )
+		);
+		$this->assertStringNotContainsString( 'ch-posttag', $html );
+	}
+
+	/** Real tags still each get a chip. */
+	public function test_real_tags_still_draw_a_chip_each(): void {
+		$html = Blueworx_Clubhouse_Sections::post_body(
+			array( 'html' => '<p>Body</p>', 'tags' => array( 'Rugby', '1st XV' ) )
+		);
+		$this->assertSame( 2, substr_count( $html, 'class="ch-posttag"' ) );
+		$this->assertStringContainsString( '>Rugby<', $html );
+		$this->assertStringContainsString( '>1st XV<', $html );
+	}
+
 	/** Everything around the body is still escaped. */
 	public function test_the_article_furniture_is_escaped(): void {
 		$html = Blueworx_Clubhouse_Sections::post_head(

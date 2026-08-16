@@ -2076,6 +2076,9 @@ final class Blueworx_Clubhouse_Page_Renderer {
 		) );
 		$out .= '</article>';
 		// Outside the article: what to read next is not part of this story.
+		$out .= Blueworx_Clubhouse_Sections::post_steps(
+			null !== $source ? $source->adjacent() : array( 'previous' => null, 'next' => null )
+		);
 		$out .= Blueworx_Clubhouse_Sections::post_related( array(
 			'heading'    => 'Keep reading',
 			'link_label' => 'All news',

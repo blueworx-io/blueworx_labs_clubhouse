@@ -95,6 +95,104 @@ test('@preview copy link puts the story address on the clipboard', async ({ page
   expect(onClipboard).toBe(expected);
 });
 
+// The preview always opens the newest story, which is exactly the edge case
+// worth pinning in the browser: the half that has nowhere to go must be absent
+// rather than drawn as a dead link.
+test('@preview an article offers the story either side, and no dead half', async ({ page }) => {
+  await page.goto('?clubhouse_page=post');
+
+  const steps = page.locator('.ch-poststeps');
+  await expect(steps).toHaveCount(1);
+
+  const prev = steps.locator('.ch-poststep--prev');
+  await expect(prev).toBeVisible();
+  // Named, not a bare arrow — a reader should know what they are clicking.
+  await expect(prev.locator('.ch-poststep__title')).not.toBeEmpty();
+  await expect(prev).toHaveAttribute('href', /.+/);
+
+  // Newest story: there is nothing newer, so that half is not drawn.
+  await expect(steps.locator('.ch-poststep--next')).toHaveCount(0);
+});
+
+// The featured story was a white card and the five below it sat bare on the
+// page background, so the grid read as loose text. Their excerpts also ran to
+// whatever length the post had, which stretched every card in a row to match
+// the longest one.
+test('@preview the post cards are cards, and a row of them is level', async ({ page }) => {
+  await page.setViewportSize({ width: 1400, height: 1000 });
+  await page.goto('?clubhouse_page=news');
+  // The grid reveals on scroll; measuring it while it is still faded in gives
+  // heights that are real but a screenshot nobody would recognise.
+  await page.locator('.ch-newsgrid').scrollIntoViewIfNeeded();
+
+  const cards = page.locator('.ch-postcard__link');
+  await expect(cards.first()).toBeVisible();
+
+  const seen = await page.evaluate(() => {
+    const links = [...document.querySelectorAll('.ch-postcard__link')];
+    const cs = getComputedStyle(links[0]);
+    const rows = {};
+    for (const l of links) {
+      const box = l.getBoundingClientRect();
+      const top = Math.round(box.top);
+      (rows[top] ||= []).push(Math.round(box.height));
+    }
+    return {
+      background: cs.backgroundColor,
+      sectionBackground: getComputedStyle(document.querySelector('.ch-newsgrid')).backgroundColor,
+      borderWidth: parseFloat(cs.borderTopWidth),
+      radius: parseFloat(cs.borderTopLeftRadius),
+      clamp: getComputedStyle(document.querySelector('.ch-postcard__excerpt')).webkitLineClamp,
+      rows: Object.values(rows),
+    };
+  });
+
+  // Dressed like the featured card above it, not like bare text.
+  expect(seen.borderWidth, 'post cards have no border').toBeGreaterThan(0);
+  expect(seen.radius, 'post cards have square corners').toBeGreaterThan(0);
+  expect(seen.background).not.toBe(seen.sectionBackground);
+
+  expect(seen.clamp, 'excerpts are not cut to a fixed number of lines').toBe('3');
+
+  for (const heights of seen.rows) {
+    expect(new Set(heights).size, `cards in a row differ in height: ${heights}`).toBe(1);
+  }
+});
+
+// Every post on a real site drew one blank chip below the body, because an
+// untagged post reported one nameless tag rather than none.
+test('@preview an article never shows a tag chip with nothing in it', async ({ page }) => {
+  await page.goto('?clubhouse_page=post');
+
+  const tags = await page.locator('.ch-posttag').allTextContents();
+  expect(tags.length).toBeGreaterThan(0);
+  expect(tags.every((t) => t.trim() !== ''), `blank chips: ${JSON.stringify(tags)}`).toBe(true);
+});
+
+// The band used to reach for --space-14, a step the scale never defined. An
+// undefined custom property makes the whole padding-block invalid, so the
+// header lost its padding at both ends at once: the eyebrow sat on the nav and
+// the last line of the headline touched the bottom edge. Asserting the gaps
+// rather than the token keeps the test about what a reader sees.
+test('@preview the news header has room above and below it', async ({ page }) => {
+  await page.goto('?clubhouse_page=news');
+
+  const gaps = await page.evaluate(() => {
+    const band = document.querySelector('.ch-newshead');
+    const nav = document.querySelector('header.ch-nav');
+    const title = document.querySelector('.ch-newshead__title');
+    return {
+      above: band.getBoundingClientRect().top - nav.getBoundingClientRect().bottom,
+      inside: band.querySelector('.ch-eyebrow').getBoundingClientRect().top - band.getBoundingClientRect().top,
+      below: band.getBoundingClientRect().bottom - title.getBoundingClientRect().bottom,
+    };
+  });
+
+  expect(gaps.inside, 'the eyebrow sits flush against the top of the band').toBeGreaterThanOrEqual(24);
+  expect(gaps.below, 'the headline touches the bottom of the band').toBeGreaterThanOrEqual(24);
+  expect(gaps.above, 'the band has drifted away from the nav').toBeLessThanOrEqual(1);
+});
+
 test('@preview the news pages hold their layout on a phone', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
 
@@ -105,6 +203,23 @@ test('@preview the news pages hold their layout on a phone', async ({ page }) =>
     );
     expect(overflow, `${slug} scrolls sideways`).toBeLessThanOrEqual(1);
   }
+});
+
+// The demo source can only prove the shape of the control. Whether real
+// WordPress finds the neighbours is a different question, and the fixture posts
+// global-setup seeds — one either side of a known story — are what answer it.
+test('@wordpress a real post links to the stories either side of it', async ({ page }) => {
+  await page.goto('/clubhouse-post-fixture/');
+
+  const steps = page.locator('.ch-poststeps');
+  await expect(steps).toHaveCount(1);
+
+  // Seeded dates put "older" before the fixture and "newer" after it.
+  await expect(steps.locator('.ch-poststep--prev .ch-poststep__title')).toHaveText('Clubhouse post older');
+  await expect(steps.locator('.ch-poststep--next .ch-poststep__title')).toHaveText('Clubhouse post newer');
+
+  await steps.locator('.ch-poststep--prev').click();
+  await expect(page.locator('.ch-posthead__title')).toHaveText('Clubhouse post older');
 });
 
 test('the news page is served in the clubhouse chrome', async ({ page }) => {

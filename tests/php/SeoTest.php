@@ -189,4 +189,34 @@ final class SeoTest extends TestCase {
 		$this->assertFalse( Blueworx_Clubhouse_Seo_Head::defers_to( array() ) );
 		$this->assertFalse( Blueworx_Clubhouse_Seo_Head::defers_to( array( 'Some_Other_Plugin' ) ) );
 	}
+
+	/**
+	 * Search & sharing carries the same top-bar access chips as every other
+	 * ClubHouse page. It was one of the two screens that never asked for them.
+	 */
+	public function test_role_tags_render_in_the_top_bar_when_supplied(): void {
+		$html = Blueworx_Clubhouse_Seo_Screen::render(
+			array(
+				'deferring_to' => '',
+				'role_tags'    => Blueworx_Clubhouse_Access_Screen::role_tags( array( 'Administrator', 'ClubHouse - Owner' ) ),
+				'pages'        => array(),
+			)
+		);
+
+		$this->assertStringContainsString( 'class="clubhouse-roletags"', $html );
+		$this->assertMatchesRegularExpression( '/clubhouse-head__titles.*clubhouse-roletags.*<\/div>/s', $html );
+	}
+
+	public function test_no_role_tags_for_anyone_but_an_administrator(): void {
+		$bare = array( 'deferring_to' => '', 'pages' => array() );
+
+		$this->assertStringNotContainsString(
+			'clubhouse-roletag',
+			Blueworx_Clubhouse_Seo_Screen::render( array_merge( $bare, array( 'role_tags' => '' ) ) )
+		);
+		$this->assertStringNotContainsString(
+			'clubhouse-roletag',
+			Blueworx_Clubhouse_Seo_Screen::render( $bare )
+		);
+	}
 }
