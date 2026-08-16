@@ -1123,7 +1123,21 @@ final class Blueworx_Clubhouse_Sections {
 			. '<div class="ch-benefits" role="list">' . $cards . '</div></div></section>';
 	}
 
-	/** @param array{eyebrow:string,heading:string,people:array<int,array{name:string,role:string,email:string}>} $data */
+	/**
+	 * A person's photo when the club has set one, their initials when it has
+	 * not. The initials block is the intended look for a club with no
+	 * headshots, so it stays decorative (aria-hidden, the name is right below);
+	 * a real photo takes the person's name as its alt text.
+	 */
+	private static function person_avatar( array $p ): string {
+		$photo = (string) ( $p['photo'] ?? '' );
+		if ( '' !== $photo ) {
+			return '<img class="ch-person__avatar ch-person__photo" src="' . self::e( $photo ) . '" alt="' . self::e( $p['name'] ) . '">';
+		}
+		return '<div class="ch-person__avatar ch-avatar" aria-hidden="true">' . self::e( self::initials( $p['name'] ) ) . '</div>';
+	}
+
+	/** @param array{eyebrow:string,heading:string,people:array<int,array{name:string,role:string,email:string,photo?:string}>} $data */
 	public static function people_grid( array $data ): string {
 		if ( array() === $data['people'] ) {
 			return self::empty_section( $data );
@@ -1133,7 +1147,7 @@ final class Blueworx_Clubhouse_Sections {
 			$email = '' !== $p['email']
 				? '<a class="ch-person__email" href="mailto:' . self::e( $p['email'] ) . '">' . self::e( $p['email'] ) . '</a>' : '';
 			$people .= '<article class="ch-person" role="listitem">'
-				. '<div class="ch-person__avatar ch-avatar" aria-hidden="true">' . self::e( self::initials( $p['name'] ) ) . '</div>'
+				. self::person_avatar( $p )
 				. '<span class="ch-person__role">' . self::e( $p['role'] ) . '</span>'
 				. '<h3 class="ch-person__name">' . self::e( $p['name'] ) . '</h3>' . $email . '</article>';
 		}

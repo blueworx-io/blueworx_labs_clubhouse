@@ -857,7 +857,12 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'heading' => 'The committee',
 				'people'  => array_map(
 					static function ( array $p ): array {
-						return array( 'name' => $p['name'], 'role' => $p['committee_role'], 'email' => '' );
+						return array(
+							'name'  => $p['name'],
+							'role'  => $p['committee_role'],
+							'email' => '',
+							'photo' => self::media_src( (string) ( $p['photo'] ?? '' ) ),
+						);
 					},
 					array_values( array_filter( $collections->people(), static fn( $p ) => '' !== $p['committee_role'] ) )
 				),
@@ -1264,7 +1269,12 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'heading' => 'The directory',
 				'people'  => array_map(
 					static function ( array $p ): array {
-						return array( 'name' => $p['name'], 'role' => $p['directory_role'], 'email' => $p['email'] );
+						return array(
+							'name'  => $p['name'],
+							'role'  => $p['directory_role'],
+							'email' => $p['email'],
+							'photo' => self::media_src( (string) ( $p['photo'] ?? '' ) ),
+						);
 					},
 					array_values( array_filter( $collections->people(), static fn( $p ) => '' !== $p['directory_role'] ) )
 				),

@@ -40,7 +40,7 @@ final class Blueworx_Clubhouse_Collection_Types {
 		'clubhouse_fixture' => array( 'sport', 'match_date', 'kickoff_time', 'venue', 'home_team', 'away_team', 'score', 'outcome', 'result_summary' ),
 		'clubhouse_event'   => array( 'tag', 'date', 'detail', 'cta_label', 'cta_href', 'status' ),
 		'clubhouse_sponsor' => array( 'url' ),
-		'clubhouse_person'  => array( 'committee_role', 'directory_role', 'email' ),
+		'clubhouse_person'  => array( 'committee_role', 'directory_role', 'email', 'photo' ),
 	);
 
 	private const LABELS = array(
