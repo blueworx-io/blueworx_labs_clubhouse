@@ -262,14 +262,20 @@ button,input,select,textarea{font-family:inherit}
 .ch-newsgrid__bar .ch-filters{margin-top:0}
 .ch-newsgrid__count{font-size:12px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;color:var(--color-ink-soft)}
 .ch-posts{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:clamp(24px,3vw,36px)}
-.ch-postcard__link{display:flex;flex-direction:column;color:var(--color-ink);transition:transform .22s ease}
+/* The same card treatment as the featured story above and the sport cards
+   elsewhere, so the grid reads as a set of cards rather than loose text. The
+   media is pulled out to the card's edges by the padding it sits inside, and
+   overflow:hidden trims it to the corner radius. */
+.ch-postcard__link{display:flex;flex-direction:column;flex:1;padding:18px;background:var(--color-paper);border:1px solid var(--color-line);border-radius:var(--radius-lg);overflow:hidden;color:var(--color-ink);transition:transform .22s ease}
 .ch-postcard__link:hover{transform:translateY(-4px)}
-.ch-postcard__media{height:210px;margin-bottom:16px}
+.ch-postcard__media{height:210px;margin:-18px -18px 16px}
 .ch-postcard__meta{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:12px;margin-bottom:8px}
 .ch-postcard__cat{letter-spacing:.1em;text-transform:uppercase;font-weight:700;color:var(--color-secondary-deep)}
 .ch-postcard__date{color:var(--color-ink-soft)}
 .ch-postcard__title{font-family:var(--font-display);font-weight:800;font-size:22px;line-height:1.08;letter-spacing:-.01em;overflow-wrap:break-word}
-.ch-postcard__excerpt{margin-top:10px;font-size:15px;line-height:1.6;color:var(--color-ink-soft)}
+/* Cut to three lines. Without this the longest excerpt in a row set the height
+   of every card beside it, leaving the short ones with a block of dead space. */
+.ch-postcard__excerpt{margin-top:10px;font-size:15px;line-height:1.6;color:var(--color-ink-soft);display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;line-clamp:3;overflow:hidden}
 
 .ch-pager{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-top:var(--space-10);padding-top:26px;border-top:1px solid var(--color-line)}
 .ch-pager__nos{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
