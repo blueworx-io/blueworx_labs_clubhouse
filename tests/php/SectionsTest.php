@@ -72,8 +72,8 @@ final class SectionsTest extends TestCase {
 			'cta_primary_href'   => '?page=membership',
 			'cta_secondary'      => 'Take a tour',
 			'cta_secondary_href' => '#',
-			'image'              => '',
-			'image_alt'          => '',
+			'image'              => 'https://example.test/terrace.jpg',
+			'image_alt'          => 'The terrace on a match day',
 			'image_caption'      => 'Saturday, floodlights on',
 		) );
 		$this->assertStringContainsString( 'class="ch-hero"', $html );
