@@ -85,6 +85,10 @@ button,input,select,textarea{font-family:inherit}
 .ch-hero-filter__hl{color:var(--color-accent-deep)}
 .ch-hero-filter__lede{max-width:52ch;font-size:18px;color:var(--color-ink-soft);margin-top:16px}
 .ch-filters{display:flex;flex-wrap:wrap;gap:10px;margin-top:var(--space-6)}
+/* Pills inside a content section (the Calendar's fixtures list) sit between the
+   heading and the thing they filter, so they need the gap under them the hero
+   variant gets from the section boundary. */
+.ch-sec .ch-filters{margin-bottom:var(--space-8)}
 .ch-filter{display:inline-flex;align-items:center;min-height:44px;padding:0 20px;border:1.5px solid var(--color-line);border-radius:999px;color:var(--color-ink);font-weight:600;font-size:15px;transition:border-color .18s ease,background-color .18s ease,color .18s ease}
 /* Hover is the club's SECOND colour, the chosen state its first: the accent
    means "this is where you are", so the two states never read as the same

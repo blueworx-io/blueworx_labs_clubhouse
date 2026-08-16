@@ -5,6 +5,10 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.68.4
+
+- **The sport filters now sit with the fixtures they filter.** On the Calendar page they were up in the header, above the court-booking calendar they have no effect on. They now sit directly above the fixtures & results list, and stay there when the booking section is switched off.
+
 ## 0.68.3
 
 - **The calendar's dates are readable again.** The booking calendar printed a large faded month name across the first week's date squares, clipped mid-word. That decoration is now hidden; the calendar itself is untouched.
