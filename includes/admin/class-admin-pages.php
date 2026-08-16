@@ -49,16 +49,19 @@ final class Blueworx_Clubhouse_Admin_Pages {
 			array(
 				'slug'        => Blueworx_Clubhouse_Setup_Controller::PAGE_SLUG,
 				'label'       => 'Clubhouse Setup',
-				'cap'         => Blueworx_Clubhouse_Setup_Controller::CAPABILITY,
+				// Registered with the content capability, not manage_clubhouse:
+				// the Menu tab on this screen belongs to the Content Editor. Every
+				// setup tab is still gated on CAPABILITY inside the screen.
+				'cap'         => Blueworx_Clubhouse_Setup_Controller::MENU_CAPABILITY,
 				'menu'        => Blueworx_Clubhouse_Setup_Controller::PAGE_SLUG,
-				'description' => 'Base look, branding and page visibility.',
+				'description' => 'Base look, branding, page visibility and the header menu.',
 			),
 			array(
 				'slug'        => Blueworx_Clubhouse_Content_Controller::PAGE_SLUG,
 				'label'       => 'Club Pages',
 				'cap'         => Blueworx_Clubhouse_Content_Controller::CAPABILITY,
 				'menu'        => Blueworx_Clubhouse_Content_Controller::PAGE_SLUG,
-				'description' => 'The words and images on every page, and the header menu.',
+				'description' => 'The words and images on every page.',
 			),
 			array(
 				'slug'        => Blueworx_Clubhouse_Import_Controller::PAGE_SLUG,

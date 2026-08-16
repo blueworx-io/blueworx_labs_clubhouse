@@ -17,6 +17,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 final class Blueworx_Clubhouse_Setup_Controller {
 
 	public const CAPABILITY = Blueworx_Clubhouse_Owner_Capabilities::SETUP_CAP; // manage_clubhouse — owner + admin.
+
+	// The menu builder lives on this screen (issue #144), and editing the menu is
+	// a Content Editor's job. So the menu ITEM is opened to the content
+	// capability while every setup tab stays behind CAPABILITY: a Content Editor
+	// reaching this page sees the Menu tab and nothing else.
+	public const MENU_CAPABILITY = Blueworx_Clubhouse_Owner_Capabilities::CONTENT_CAP;
 	public const PAGE_SLUG  = 'clubhouse-setup';
 	public const NONCE      = 'clubhouse_setup_save';
 	// Set true on any setup save — marks the Visibility section "reviewed" for progress.
@@ -188,7 +194,7 @@ final class Blueworx_Clubhouse_Setup_Controller {
 		add_menu_page(
 			'Clubhouse Setup',
 			'Clubhouse',
-			self::CAPABILITY,
+			self::MENU_CAPABILITY,
 			self::PAGE_SLUG,
 			array( self::class, 'render_page' ),
 			Blueworx_Clubhouse_Admin_Menu_Icons::data_uri( self::PAGE_SLUG ),
@@ -215,24 +221,53 @@ final class Blueworx_Clubhouse_Setup_Controller {
 	}
 
 	public static function render_page(): void {
-		if ( ! current_user_can( self::CAPABILITY ) ) {
+		$can_setup = current_user_can( self::CAPABILITY );
+		$can_menu  = current_user_can( self::MENU_CAPABILITY );
+		if ( ! $can_setup && ! $can_menu ) {
 			return;
 		}
 		$storage  = new Blueworx_Clubhouse_Options_Storage();
-		$can_demo = current_user_can( 'manage_options' ); // demo mode is admin-only.
+		$can_demo = $can_setup && current_user_can( 'manage_options' ); // demo mode is admin-only.
 		$notices  = array();
-		if ( isset( $_POST['clubhouse_setup_submit'] ) ) {
+		if ( $can_setup && isset( $_POST['clubhouse_setup_submit'] ) ) {
 			check_admin_referer( self::NONCE );
 			$notices = self::handle_save( wp_unslash( $_POST ), $storage, $can_demo );
 		}
-		echo self::screen_html( $storage, $notices, $can_demo ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped within Setup_Screen.
+		// The menu builder saves through the content plumbing it has always used,
+		// nonce and all — it moved screen, not owner.
+		if ( $can_menu && isset( $_POST['clubhouse_content_submit'] ) ) {
+			check_admin_referer( Blueworx_Clubhouse_Content_Controller::NONCE );
+			$notices = Blueworx_Clubhouse_Content_Controller::handle_save( wp_unslash( $_POST ), $storage );
+		}
+		echo self::screen_html( $storage, $notices, $can_demo, $can_menu, $can_setup ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped within Setup_Screen.
+	}
+
+	/**
+	 * The Menu tab's own model. Built here rather than in build_model() because
+	 * the link targets read the club's collections, which the owner dashboard
+	 * and the tests have no reason to pay for.
+	 *
+	 * @return array<string,mixed>
+	 */
+	private static function menu_model( Blueworx_Clubhouse_Storage $storage, string $action_url ): array {
+		return array(
+			'tree'        => ( new Blueworx_Clubhouse_Menu( $storage ) )->tree(),
+			'targets'     => Blueworx_Clubhouse_Link_Catalogue::targets( new Blueworx_Clubhouse_WP_Collections() ),
+			'action_url'  => $action_url,
+			'nonce_field' => wp_nonce_field( Blueworx_Clubhouse_Content_Controller::NONCE, '_wpnonce', true, false ),
+		);
 	}
 
 	/** Render the Setup screen HTML for a storage + notices — shared by the page and the owner dashboard. */
-	public static function screen_html( Blueworx_Clubhouse_Storage $storage, array $notices, bool $can_demo = false ): string {
+	public static function screen_html( Blueworx_Clubhouse_Storage $storage, array $notices, bool $can_demo = false, bool $with_menu = false, bool $can_setup = true ): string {
 		$nonce_field = wp_nonce_field( self::NONCE, '_wpnonce', true, false );
 		$action_url  = admin_url( 'admin.php?page=' . self::PAGE_SLUG );
-		return Blueworx_Clubhouse_Setup_Screen::render( self::build_model( $storage, $notices, $nonce_field, $action_url, $can_demo ) );
+		$model       = self::build_model( $storage, $notices, $nonce_field, $action_url, $can_demo );
+
+		$model['can_setup'] = $can_setup;
+		$model['menu']      = $with_menu ? self::menu_model( $storage, $action_url ) : null;
+
+		return Blueworx_Clubhouse_Setup_Screen::render( $model );
 	}
 
 	/**

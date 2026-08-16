@@ -273,7 +273,11 @@ final class OwnerRoleTest extends TestCase {
 		$this->assertSame( $all, Blueworx_Clubhouse_Owner_Role::limit_editable_roles( $all ) );
 	}
 
-	public function test_the_content_editor_menu_drops_setup_and_both_integrations(): void {
+	/**
+	 * Clubhouse stays on this role's menu — the menu builder lives there now
+	 * (issue #144) — while both integrations are removed.
+	 */
+	public function test_the_content_editor_menu_drops_both_integrations(): void {
 		$GLOBALS['menu'] = array(
 			array( '', 'read', 'index.php' ),
 			array( '', 'manage_clubhouse', 'clubhouse-setup' ),
@@ -286,9 +290,9 @@ final class OwnerRoleTest extends TestCase {
 		$GLOBALS['wp_stub_current_user'] = (object) array( 'roles' => array( 'clubhouse_content_editor' ) );
 		Blueworx_Clubhouse_Owner_Role::lock_menu();
 		$removed = array_map( static fn( $c ) => $c['args'][0], wp_stub_calls( 'remove_menu_page' ) );
-		$this->assertContains( 'clubhouse-setup', $removed );
 		$this->assertContains( 'sc-dashboard', $removed );
 		$this->assertContains( 'latepoint', $removed );
+		$this->assertNotContains( 'clubhouse-setup', $removed );
 		$this->assertNotContains( 'clubhouse-site-content', $removed );
 		$this->assertNotContains( 'clubhouse-content', $removed );
 		$this->assertNotContains( 'edit.php', $removed );

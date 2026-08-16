@@ -381,16 +381,21 @@ final class Blueworx_Clubhouse_Owner_Capabilities {
 	}
 
 	/**
-	 * The Content Editor's menu: the Owner's, minus Clubhouse Setup and minus both
-	 * integrations. Removing the menus is presentation only — the reason the editor
-	 * cannot reach SureCart or LatePoint is that it holds neither manage_clubhouse
-	 * nor any integration cap, and is never lent manage_options.
+	 * The Content Editor's menu: the Owner's, minus both integrations. Removing
+	 * the menus is presentation only — the reason the editor cannot reach
+	 * SureCart or LatePoint is that it holds neither manage_clubhouse nor any
+	 * integration cap, and is never lent manage_options.
+	 *
+	 * Clubhouse is on the list because the menu builder moved onto that screen
+	 * (issue #144) and arranging the menu is this role's job. It still holds no
+	 * manage_clubhouse, so the screen shows it the Menu tab and nothing else.
 	 *
 	 * @return array<int,string>
 	 */
 	public static function editor_menu_allowlist(): array {
 		return array(
 			'index.php',              // Dashboard.
+			'clubhouse-setup',        // Clubhouse — the Menu tab only, for this role.
 			'clubhouse-site-content', // Club Pages.
 			'clubhouse-content',      // Collections.
 			'edit.php',               // Posts.

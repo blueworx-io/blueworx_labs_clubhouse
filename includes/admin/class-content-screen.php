@@ -117,18 +117,14 @@ final class Blueworx_Clubhouse_Content_Screen {
 		$out .= self::page_tabs( $catalogue, $action_url );
 		$out .= self::links_datalist( $model['menu_targets'] );
 
-		// The Menu tab is not a catalogue page — it edits the nav tree, not
-		// section content — so it renders through its own panel rather than
-		// page_block(). It still posts through the same form plumbing.
-		$out .= Blueworx_Clubhouse_Menu_Panel::render( array(
-			'tree'        => $model['menu_tree'],
-			'targets'     => $model['menu_targets'],
-			'action_url'  => $action_url,
-			'nonce_field' => (string) $model['nonce_field'],
-		) );
-
+		// The menu builder moved to the Clubhouse screen (issue #144): it edits
+		// the nav tree, not a page's content, and it now sits beside the other
+		// site-wide settings. The link datalist above stays — the page blocks
+		// use it too.
+		$first = true;
 		foreach ( $catalogue as $page ) {
-			$out .= self::page_block( $page, false, $action_url, (string) $model['nonce_field'] );
+			$out  .= self::page_block( $page, $first, $action_url, (string) $model['nonce_field'] );
+			$first = false;
 		}
 
 		$out .= '</div></div>';
@@ -169,13 +165,15 @@ final class Blueworx_Clubhouse_Content_Screen {
 
 	/** @param array<int,array{tab:string,label:string,vis_page:string,sections:array<int,array<string,mixed>>}> $catalogue */
 	private static function page_tabs( array $catalogue, string $action_url ): string {
-		$out  = '<nav class="clubhouse-pagetabs" role="tablist">';
-		$out .= '<a class="clubhouse-pagetab is-active" href="' . self::esc_url( self::tab_href( $action_url, 'menu' ) ) . '" data-tab="menu" role="tab" aria-selected="true">Menu</a>';
+		$out   = '<nav class="clubhouse-pagetabs" role="tablist">';
+		$first = true;
 		foreach ( $catalogue as $page ) {
-			$tab  = (string) $page['tab'];
-			$href = self::tab_href( $action_url, $tab );
-			$out .= '<a class="clubhouse-pagetab" href="' . self::esc_url( $href ) . '" data-tab="' . self::esc( $tab ) . '" role="tab" aria-selected="false">'
+			$tab   = (string) $page['tab'];
+			$href  = self::tab_href( $action_url, $tab );
+			$cls   = $first ? 'clubhouse-pagetab is-active' : 'clubhouse-pagetab';
+			$out  .= '<a class="' . $cls . '" href="' . self::esc_url( $href ) . '" data-tab="' . self::esc( $tab ) . '" role="tab" aria-selected="' . ( $first ? 'true' : 'false' ) . '">'
 				. self::esc( (string) $page['label'] ) . '</a>';
+			$first = false;
 		}
 		return $out . '</nav>';
 	}

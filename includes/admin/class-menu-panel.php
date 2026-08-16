@@ -6,7 +6,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * The Menu tab of the Club Pages screen: the nav tree as a list of rows, each
+ * The Menu tab of the Clubhouse screen: the nav tree as a list of rows, each
  * a label, a target picker and the buttons that move it.
  *
  * Order and nesting live in the field names (menu[0][children][1][label]), so
@@ -23,12 +23,19 @@ final class Blueworx_Clubhouse_Menu_Panel {
 	}
 
 	/**
-	 * @param array{tree:array<int,array<string,mixed>>,targets:array<int,array{target:string,label:string,group:string,url:string}>,action_url:string,nonce_field:string} $model
+	 * The two screens tab in different ways — Club Pages uses
+	 * `.clubhouse-pagepanel[data-pagepanel]`, the Clubhouse screen
+	 * `.clubhouse-panel[data-panel]` — so the host names the shell it needs and
+	 * the panel's contents stay identical wherever it is shown.
+	 *
+	 * @param array{tree:array<int,array<string,mixed>>,targets:array<int,array{target:string,label:string,group:string,url:string}>,action_url:string,nonce_field:string,panel_class?:string,panel_attr?:string} $model
 	 */
 	public static function render( array $model ): string {
-		$tree = $model['tree'];
+		$tree  = $model['tree'];
+		$class = (string) ( $model['panel_class'] ?? 'clubhouse-pagepanel is-active' );
+		$attr  = (string) ( $model['panel_attr'] ?? 'data-pagepanel="menu"' );
 
-		$out  = '<section class="clubhouse-pagepanel is-active" id="clubhouse-tab-menu" data-pagepanel="menu" role="tabpanel">';
+		$out  = '<section class="' . self::esc( $class ) . '" id="clubhouse-tab-menu" ' . $attr . ' role="tabpanel">';
 		$out .= '<form method="post" action="' . self::esc( (string) $model['action_url'] ) . '" class="clubhouse-form">';
 		$out .= (string) $model['nonce_field'];
 		$out .= '<input type="hidden" name="clubhouse_content_tab" value="menu">';
