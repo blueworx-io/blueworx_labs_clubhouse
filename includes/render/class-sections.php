@@ -1746,6 +1746,12 @@ final class Blueworx_Clubhouse_Sections {
 	public static function post_body( array $data ): string {
 		$tags = '';
 		foreach ( $data['tags'] as $tag ) {
+			// A chip with no word in it is a blob on the page, not a tag. Skipping
+			// them here means the row disappears when every tag is blank, rather
+			// than shrinking to an empty strip.
+			if ( '' === trim( (string) $tag ) ) {
+				continue;
+			}
 			$tags .= '<span class="ch-posttag">' . self::e( (string) $tag ) . '</span>';
 		}
 		$tag_row = '' !== $tags ? '<div class="ch-posttags">' . $tags . '</div>' : '';

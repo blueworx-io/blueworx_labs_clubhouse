@@ -19,7 +19,7 @@
  * loads later its values win. These exist so the base is self-sufficient and a
  * look that omits the scale still renders.
  */
-:root{--space-2:8px;--space-3:12px;--space-4:16px;--space-6:24px;--space-8:32px;--space-10:40px;--space-12:48px;--space-16:64px;--space-20:80px;--flow-lg:88px;--flow-sm:24px}
+:root{--space-2:8px;--space-3:12px;--space-4:16px;--space-6:24px;--space-8:32px;--space-10:40px;--space-12:48px;--space-14:56px;--space-16:64px;--space-20:80px;--flow-lg:88px;--flow-sm:24px}
 
 /*
  * Form controls do not inherit typography from body — the UA stylesheet gives

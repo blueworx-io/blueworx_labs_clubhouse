@@ -9,6 +9,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **News cards now look like cards, and sit level with each other.** The lead story was a proper card while the ones below it sat bare on the background, and a single long summary stretched every card beside it. Summaries are now cut to three lines, so a row lines up whatever the club has written.
 
+## 0.69.5
+
+- **Pages no longer scroll sideways on a normal laptop window.** Between roughly 900px and 1230px wide the menu was too big for the window but still tried to sit across the top, dragging every page off to the right. The menu now folds into the button it already uses on smaller screens while there is still room for it, in all three looks.
+
+## 0.69.4
+
+- **Search & sharing and the User guide now say who can reach them.** Every other Clubhouse screen shows an administrator which roles can open the page they are on; those two were silent. Nobody's access changed — the two screens simply now report it like the rest.
+
+## 0.69.3
+
+- **No more stray blank tag under every news post.** A small empty pill sat below the body of every post on the site. An untagged post was reporting one nameless tag instead of none, and the page dutifully drew a chip for it.
+
+## 0.69.2
+
+- **The News page header has room to breathe again.** Its heading sat jammed against the menu bar with the second line touching the bottom edge of the dark band, on every club site and in every look. The band had asked for a spacing step that was never added to the scale, which quietly threw away the padding at both ends at once.
+
 ## 0.69.1
 
 - **Import and the User guide moved to the Clubhouse menu.** They sit with the menu builder and the rest of the club tooling instead of being tucked under Club Pages. Who can open each one is unchanged.

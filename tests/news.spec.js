@@ -105,6 +105,40 @@ test('@preview the post cards are cards, and a row of them is level', async ({ p
   }
 });
 
+// Every post on a real site drew one blank chip below the body, because an
+// untagged post reported one nameless tag rather than none.
+test('@preview an article never shows a tag chip with nothing in it', async ({ page }) => {
+  await page.goto('?clubhouse_page=post');
+
+  const tags = await page.locator('.ch-posttag').allTextContents();
+  expect(tags.length).toBeGreaterThan(0);
+  expect(tags.every((t) => t.trim() !== ''), `blank chips: ${JSON.stringify(tags)}`).toBe(true);
+});
+
+// The band used to reach for --space-14, a step the scale never defined. An
+// undefined custom property makes the whole padding-block invalid, so the
+// header lost its padding at both ends at once: the eyebrow sat on the nav and
+// the last line of the headline touched the bottom edge. Asserting the gaps
+// rather than the token keeps the test about what a reader sees.
+test('@preview the news header has room above and below it', async ({ page }) => {
+  await page.goto('?clubhouse_page=news');
+
+  const gaps = await page.evaluate(() => {
+    const band = document.querySelector('.ch-newshead');
+    const nav = document.querySelector('header.ch-nav');
+    const title = document.querySelector('.ch-newshead__title');
+    return {
+      above: band.getBoundingClientRect().top - nav.getBoundingClientRect().bottom,
+      inside: band.querySelector('.ch-eyebrow').getBoundingClientRect().top - band.getBoundingClientRect().top,
+      below: band.getBoundingClientRect().bottom - title.getBoundingClientRect().bottom,
+    };
+  });
+
+  expect(gaps.inside, 'the eyebrow sits flush against the top of the band').toBeGreaterThanOrEqual(24);
+  expect(gaps.below, 'the headline touches the bottom of the band').toBeGreaterThanOrEqual(24);
+  expect(gaps.above, 'the band has drifted away from the nav').toBeLessThanOrEqual(1);
+});
+
 test('@preview the news pages hold their layout on a phone', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
 
