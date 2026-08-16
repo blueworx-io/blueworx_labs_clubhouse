@@ -276,7 +276,12 @@ final class Blueworx_Clubhouse_Sections {
 		$caption = '' !== $data['image_caption']
 			? '<div class="ch-hero__pill"><i class="ch-hero__pill-dot"></i>' . self::e( $data['image_caption'] ) . '</div>'
 			: '';
-		$has_media = '' !== $data['image'] || '' !== $data['image_alt'] || '' !== $data['image_caption'];
+		// Only an actual image earns the picture box. Alt text and a caption are
+		// descriptions OF an image, and the renderer fills alt in by default, so
+		// treating either as "there is media here" reserved a tall empty frame
+		// with a placeholder glyph in it on every page whose hero image had not
+		// been set — About, Membership and Book a court in the demo (issue #108).
+		$has_media = '' !== $data['image'];
 		$media     = $has_media
 			? '<div class="ch-hero__media">' . self::media( $data['image'], $data['image_alt'], '' ) . $caption . '</div>'
 			: '';
