@@ -346,3 +346,14 @@ button,input,select,textarea{font-family:inherit}
 .ch-related{padding-block:var(--space-12)}
 .ch-postcard{display:flex;min-width:0}
 .ch-postcard--sm .ch-postcard__excerpt{display:none}
+
+/* LatePoint prints a large faded month name behind the first week of its month
+   grid — its own decoration, from its own stylesheet. It is absolutely
+   positioned across several day cells and clipped mid-word, so it reads as
+   text printed over the dates rather than as a watermark, and it makes the
+   first row hard to read (issue #100).
+   This hides that one ornament and nothing else. It is the single deliberate
+   exception to "the vendor styles its own UI" — everything else about
+   LatePoint's booking screens is left exactly as LatePoint draws it. Scoped to
+   the shortcode wrapper so it can only ever affect a block this plugin placed. */
+.ch-shortcode .os-day-month{display:none}
