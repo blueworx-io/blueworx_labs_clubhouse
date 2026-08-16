@@ -147,6 +147,20 @@ final class Blueworx_Clubhouse_Block_Addresses {
 	}
 
 	/**
+	 * Addresses whose block carries no anchor id of its own.
+	 *
+	 * The Home tier grid has never had one: it is the Membership page's tiers
+	 * shown a second time, and an owner links to the tiers on the page that
+	 * sells them. Stamping one on now would be a new id in the markup, which is
+	 * exactly what the parity check exists to catch.
+	 *
+	 * @return array<int,string>
+	 */
+	public static function unanchored(): array {
+		return array( 'home/tiers' );
+	}
+
+	/**
 	 * Addresses whose content renders inside another address's block rather than
 	 * as a section of its own — folded address => the address it renders inside.
 	 * `home/quick_tiles` renders inside `home/hero`'s home_hero block, and

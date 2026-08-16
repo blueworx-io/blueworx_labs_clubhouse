@@ -427,7 +427,20 @@ final class Blueworx_Clubhouse_Frontend {
 		if ( $is_article ) {
 			return Blueworx_Clubhouse_Page_Renderer::post( $ctx->branding, $ctx->visibility, $ctx->collections, $logo_url, $ctx->content );
 		}
-		return Blueworx_Clubhouse_Page_Map::render( $slug, $ctx->branding, $ctx->visibility, $ctx->collections, $logo_url, $ctx->content, self::current_filter(), self::current_item() );
+		return Blueworx_Clubhouse_Page_Map::render( $slug, $ctx->branding, $ctx->visibility, $ctx->collections, $logo_url, $ctx->content, self::current_filter(), self::current_item(), self::composer() );
+	}
+
+	/**
+	 * The club's blocks and what each page is built from. Reads the same
+	 * options everything else does, so a page composed in the admin screens is
+	 * the page a visitor gets.
+	 */
+	public static function composer(): Blueworx_Clubhouse_Page_Composer {
+		$storage = new Blueworx_Clubhouse_Options_Storage();
+		return new Blueworx_Clubhouse_Page_Composer(
+			new Blueworx_Clubhouse_Block_Library( $storage ),
+			new Blueworx_Clubhouse_Page_Composition( $storage )
+		);
 	}
 
 	/**

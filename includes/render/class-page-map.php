@@ -98,6 +98,15 @@ final class Blueworx_Clubhouse_Page_Map {
 		return '';
 	}
 
+	/**
+	 * The key a page is known by everywhere except its URL — where Home's slug
+	 * is empty. Content addresses, visibility and block compositions all use
+	 * the key, so this is the one place the two spellings meet.
+	 */
+	public static function page_key( string $slug ): string {
+		return '' === $slug ? 'home' : $slug;
+	}
+
 	public static function has( string $slug ): bool {
 		foreach ( self::pages() as $page ) {
 			if ( $page['slug'] === $slug ) {
@@ -115,7 +124,8 @@ final class Blueworx_Clubhouse_Page_Map {
 		string $logo_url = '',
 		?Blueworx_Clubhouse_Content_Store $content = null,
 		string $filter = '',
-		string $item = ''
+		string $item = '',
+		?Blueworx_Clubhouse_Page_Composer $composer = null
 	): string {
 		// A sport or a team named on the Sports or Teams URL gets its own page.
 		// Falls through to the listing when the name matches nothing, so a stale
@@ -134,6 +144,13 @@ final class Blueworx_Clubhouse_Page_Map {
 				$method = $page['method'];
 				break;
 			}
+		}
+		// A composed site builds its pages from its own blocks. One that has not
+		// been composed yet — the moment between an update landing and its
+		// upgrade routine running — falls through to the page methods below,
+		// which produce the same page.
+		if ( null !== $composer && $composer->is_ready() ) {
+			return $composer->page( self::page_key( $slug ), $branding, $visibility, $collections, $logo_url, $filter );
 		}
 		// $filter is consumed only by the filtered pages (sports/teams/events/
 		// calendar); the other page methods accept it as an ignored trailing arg.

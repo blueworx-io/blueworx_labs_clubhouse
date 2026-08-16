@@ -41,6 +41,11 @@ require_once __DIR__ . '/blocks/class-block-types.php';
 require_once __DIR__ . '/blocks/class-block-addresses.php';
 require_once __DIR__ . '/blocks/class-block-library.php';
 require_once __DIR__ . '/blocks/class-page-composition.php';
+require_once __DIR__ . '/blocks/class-block-content.php';
+require_once __DIR__ . '/blocks/class-page-state.php';
+require_once __DIR__ . '/blocks/class-block-defaults.php';
+require_once __DIR__ . '/blocks/class-block-renderers.php';
+require_once __DIR__ . '/blocks/class-block-seeder.php';
 
 // Theme
 require_once __DIR__ . '/theme/interface-base-look.php';
@@ -59,6 +64,7 @@ require_once __DIR__ . '/looks/class-floodlight.php';
 // Render
 require_once __DIR__ . '/render/class-sections.php';
 require_once __DIR__ . '/render/class-page-renderer.php';
+require_once __DIR__ . '/render/class-page-composer.php';
 require_once __DIR__ . '/render/class-page-map.php';
 require_once __DIR__ . '/render/class-fixture-projection.php';
 
