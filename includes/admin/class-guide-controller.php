@@ -29,15 +29,15 @@ final class Blueworx_Clubhouse_Guide_Controller {
 	}
 
 	/**
-	 * Hangs off Club Pages, not Setup.
-	 *
-	 * The Content Editor role holds the capability this page is locked with, but
-	 * Clubhouse Setup is stripped from that role's menu — a guide parented there
-	 * would be invisible to exactly the person most likely to need it.
+	 * Hangs off Clubhouse (issue #145), where the rest of the club's tooling now
+	 * lives. That menu used to be stripped from the Content Editor's menu, which
+	 * is why the guide was parented at Club Pages instead; it no longer is — the
+	 * role reaches the Clubhouse screen for the menu builder — so the guide is
+	 * still visible to exactly the person most likely to need it.
 	 */
 	public static function add_menu(): void {
 		add_submenu_page(
-			Blueworx_Clubhouse_Content_Controller::PAGE_SLUG,
+			Blueworx_Clubhouse_Setup_Controller::PAGE_SLUG,
 			'User guide',
 			'User guide',
 			self::CAPABILITY,

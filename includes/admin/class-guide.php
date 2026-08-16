@@ -169,9 +169,9 @@ final class Blueworx_Clubhouse_Guide {
 						'It replaces the content on every page it recognises, so it is meant for setting a site up rather than for '
 						. 'small changes later on. You are shown what it is going to do before anything changes.',
 					),
-					'steps' => array(),
+					'steps' => array( 'Open Clubhouse, then Import.' ),
 					'state' => '',
-					'url'   => $content_url,
+					'url'   => (string) ( $site['setup_url'] ?? '' ),
 				),
 			),
 		);

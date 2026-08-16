@@ -7,7 +7,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Pure HTML for the Club Pages → Import screen, in three states: offer the
+ * Pure HTML for the Clubhouse → Import screen, in three states: offer the
  * prompt and an upload; review a parsed plan; report what an apply did. Makes
  * no WordPress calls and reads no request data — the controller hands it a
  * finished model. Every value is escaped here; the only raw markup emitted is

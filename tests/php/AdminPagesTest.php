@@ -43,14 +43,15 @@ final class AdminPagesTest extends TestCase {
 	}
 
 	/**
-	 * Import is a submenu of Club Pages, so the allowlist that decides whether
-	 * it is reachable is its PARENT's. Keyed to the parent slug or a role with
-	 * Club Pages on its menu would be reported as unable to reach Import.
+	 * Import is a submenu of Clubhouse (issue #145), so the allowlist that
+	 * decides whether it is reachable is its PARENT's. Keyed to the parent slug
+	 * or a role with Clubhouse on its menu would be reported as unable to reach
+	 * Import.
 	 */
 	public function test_import_hangs_off_its_parents_menu(): void {
 		$import = Blueworx_Clubhouse_Admin_Pages::find( Blueworx_Clubhouse_Import_Controller::PAGE_SLUG );
 		$this->assertNotNull( $import );
-		$this->assertSame( Blueworx_Clubhouse_Content_Controller::PAGE_SLUG, $import['menu'] );
+		$this->assertSame( Blueworx_Clubhouse_Setup_Controller::PAGE_SLUG, $import['menu'] );
 	}
 
 	public function test_an_unknown_slug_is_not_a_clubhouse_page(): void {
@@ -116,15 +117,21 @@ final class AdminPagesTest extends TestCase {
 	}
 
 	/**
-	 * The guide hangs off Club Pages rather than Setup, and this is why: the
-	 * Content Editor holds the capability it is locked with, but Setup is stripped
-	 * from that role's menu — parented there, the guide would be invisible to the
-	 * role most likely to need it.
+	 * The guide moved to Clubhouse with Import (issue #145). It could not have
+	 * gone there before: Clubhouse was stripped from the Content Editor's menu,
+	 * and the guide parented there would have been invisible to the role most
+	 * likely to need it. That menu is open to the role now, so this asserts the
+	 * guide is still reachable — the reason for the old parent, not the parent.
 	 */
 	public function test_the_content_editor_can_open_the_user_guide(): void {
 		$guide = Blueworx_Clubhouse_Admin_Pages::find( Blueworx_Clubhouse_Guide_Controller::PAGE_SLUG );
 		$this->assertNotNull( $guide );
-		$this->assertSame( Blueworx_Clubhouse_Content_Controller::PAGE_SLUG, $guide['menu'] );
+		$this->assertSame( Blueworx_Clubhouse_Setup_Controller::PAGE_SLUG, $guide['menu'] );
+		$this->assertContains(
+			$guide['menu'],
+			Blueworx_Clubhouse_Owner_Capabilities::editor_menu_allowlist(),
+			'the guide is only reachable if its parent menu is'
+		);
 		$this->assertTrue(
 			Blueworx_Clubhouse_Admin_Pages::role_can(
 				Blueworx_Clubhouse_Owner_Capabilities::EDITOR_ROLE,

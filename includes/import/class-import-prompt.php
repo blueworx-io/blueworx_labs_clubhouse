@@ -234,7 +234,7 @@ JSON;
 
 When the club asks for the file, output **one JSON code block and nothing else
 inside it**, and tell them to save it as `clubhouse-import.json` and upload it
-at Club Pages → Import in their ClubHouse admin.
+at Clubhouse → Import in their ClubHouse admin.
 
 Rules for the file:
 
