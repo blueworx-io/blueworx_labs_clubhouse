@@ -5,6 +5,10 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.70.2
+
+- **Give new members a welcome pack on their account dashboard.** Write it once under Club Pages → Global → Welcome pack — the gate code, where to park, who to ask — and anyone who reaches the dashboard sees it. Leave it empty and nothing is shown, and it has its own on/off switch like every other section. It uses the dashboard's own plain styling rather than the club look, because that page belongs to the shop.
+
 ## 0.69.1
 
 - **Import and the User guide moved to the Clubhouse menu.** They sit with the menu builder and the rest of the club tooling instead of being tucked under Club Pages. Who can open each one is unchanged.

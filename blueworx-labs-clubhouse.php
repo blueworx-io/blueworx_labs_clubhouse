@@ -3,7 +3,7 @@
  * Plugin Name:       Blueworx Labs | Clubhouse
  * Plugin URI:        https://github.com/blueworx-io/blueworx_labs_clubhouse
  * Description:        Blueworx Labs Clubhouse WordPress plugin.
- * Version:           0.69.1
+ * Version:           0.70.2
  * Requires at least: 6.0
  * Requires PHP:      8.2
  * Author:            Blueworx
@@ -21,7 +21,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'BLUEWORX_LABS_CLUBHOUSE_VERSION', '0.69.1' );
+define( 'BLUEWORX_LABS_CLUBHOUSE_VERSION', '0.70.2' );
 define( 'BLUEWORX_LABS_CLUBHOUSE_FILE', __FILE__ );
 define( 'BLUEWORX_LABS_CLUBHOUSE_DIR', plugin_dir_path( __FILE__ ) );
 define( 'BLUEWORX_LABS_CLUBHOUSE_URL', plugin_dir_url( __FILE__ ) );
@@ -60,6 +60,7 @@ require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/collections/class-collectio
 function blueworx_labs_clubhouse_init() {
 	Blueworx_Clubhouse_Frontend::register();
 	Blueworx_Clubhouse_External_Chrome::register();
+	Blueworx_Clubhouse_Welcome_Pack::register();
 	Blueworx_Clubhouse_Auth::register();
 	Blueworx_Clubhouse_Seo_Head::register();
 	Blueworx_Clubhouse_Admin_Menu_Icons::register();

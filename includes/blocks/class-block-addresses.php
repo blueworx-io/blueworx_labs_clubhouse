@@ -32,6 +32,12 @@ final class Blueworx_Clubhouse_Block_Addresses {
 				// Rendered by the footer block, like the footer's own newsletter
 				// column — it is not a block anyone places on a page.
 				'cookies' => 'footer',
+				// Prose in shape — a heading and paragraphs — but never placed on
+				// a clubhouse page: it renders on the shop's customer dashboard,
+				// which this plugin does not own. It is here because it is an
+				// address a visibility toggle controls, which is what this map
+				// enumerates, and a migration must not try to seed it onto a page.
+				'welcome' => 'prose',
 			),
 			'home' => array(
 				'hero'        => 'home_hero',

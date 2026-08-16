@@ -88,7 +88,9 @@ final class ContentCatalogueTest extends TestCase {
 	public function test_global_tab_holds_only_sitewide_sections(): void {
 		$pages = Blueworx_Clubhouse_Content_Catalogue::pages();
 		$global = array_values( array_filter( $pages, static fn( $p ) => 'global' === $p['tab'] ) )[0];
-		$this->assertSame( array( 'header', 'footer', 'cookies' ), array_map( static fn( $s ) => $s['key'], $global['sections'] ) );
+		// The welcome pack is sitewide in the same sense the others are: it belongs
+		// to no clubhouse page, and renders on the shop's customer dashboard.
+		$this->assertSame( array( 'header', 'footer', 'welcome', 'cookies' ), array_map( static fn( $s ) => $s['key'], $global['sections'] ) );
 		foreach ( $global['sections'] as $s ) {
 			$this->assertSame( 'global', $s['store_page'], $s['key'] );
 		}
