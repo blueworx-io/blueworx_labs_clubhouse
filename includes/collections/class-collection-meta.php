@@ -34,6 +34,10 @@ final class Blueworx_Clubhouse_Collection_Meta {
 			array( 'key' => 'committee_role', 'label' => 'Committee role', 'type' => 'text' ),
 			array( 'key' => 'directory_role', 'label' => 'Directory role', 'type' => 'text' ),
 			array( 'key' => 'email',          'label' => 'Email',          'type' => 'email' ),
+			// Optional. Without one the card shows the person's initials, which
+			// is a deliberate look rather than a missing picture — a club that
+			// has no headshots should not end up with rows of broken frames.
+			array( 'key' => 'photo',          'label' => 'Photo',          'type' => 'media' ),
 		),
 		'clubhouse_sponsor' => array(
 			array( 'key' => 'url', 'label' => 'Website URL', 'type' => 'url' ),

@@ -117,6 +117,7 @@ final class Blueworx_Clubhouse_Collection_Mappers {
 			'committee_role' => self::m( $post, 'committee_role' ),
 			'directory_role' => self::m( $post, 'directory_role' ),
 			'email'          => self::m( $post, 'email' ),
+			'photo'          => self::m( $post, 'photo' ),
 		);
 	}
 }
