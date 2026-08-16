@@ -325,7 +325,7 @@ final class Blueworx_Clubhouse_Content_Screen {
 		foreach ( $fields as $field_def ) {
 			$fkey  = (string) $field_def['key'];
 			$name  = 'field[' . $store_page . '][' . $section_key . '][' . $fkey . ']';
-			$value = $values[ $fkey ] ?? '';
+			$value = $values[ $fkey ] ?? null;
 			$out  .= self::field_row( $field_def, $name, $value );
 		}
 		$out .= '</div>';
@@ -352,7 +352,13 @@ final class Blueworx_Clubhouse_Content_Screen {
 		$type  = (string) $field_def['type'];
 
 		if ( 'toggle' === $type ) {
-			$checked = ( true === $value || '1' === $value || 1 === $value ) ? ' checked' : '';
+			// null means the club has never touched this switch, so what it draws
+			// is the catalogue's declared default — which is what the page is
+			// actually doing. Drawing it off regardless used to misreport a live
+			// cookie notice as switched off, and saving the tab then wrote that
+			// back and turned it off for real.
+			$state   = null === $value ? (bool) ( $field_def['default'] ?? false ) : $value;
+			$checked = ( true === $state || '1' === $state || 1 === $state ) ? ' checked' : '';
 			return '<label class="clubhouse-field clubhouse-field--toggle">'
 				. '<input type="checkbox" id="' . self::esc( $id ) . '" name="' . self::esc( $name ) . '" value="1"' . $checked . '>'
 				. '<span class="clubhouse-field__label">' . self::esc( $label ) . '</span></label>';
@@ -435,7 +441,7 @@ final class Blueworx_Clubhouse_Content_Screen {
 		foreach ( $loop_fields as $field_def ) {
 			$fkey  = (string) $field_def['key'];
 			$name  = 'item[' . $store_page . '][' . $section_key . '][' . $idx . '][' . $fkey . ']';
-			$value = $item[ $fkey ] ?? '';
+			$value = $item[ $fkey ] ?? null;
 			$out  .= self::field_row( $field_def, $name, $value );
 		}
 		$remove_name = 'clubhouse_content_remove[' . $store_page . '][' . $section_key . ']';

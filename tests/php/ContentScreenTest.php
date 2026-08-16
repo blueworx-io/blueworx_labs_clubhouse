@@ -43,6 +43,60 @@ final class ContentScreenTest extends TestCase {
 		$this->assertDoesNotMatchRegularExpression( '/font-family:\s*[\'"]?(Syne|Inter|Fraunces|Bricolage)/i', $without_style );
 	}
 
+	/**
+	 * A switch nobody has touched must draw the state the site is actually in.
+	 *
+	 * It used to draw off regardless, so a live cookie notice showed as switched
+	 * off — and because saving a tab writes every field at the value shown, one
+	 * save turned it off for real.
+	 */
+	public function test_an_untouched_switch_draws_its_declared_default(): void {
+		$on = Blueworx_Clubhouse_Content_Screen::field_html(
+			array( 'key' => 'show', 'label' => 'Show the cookie notice', 'type' => 'toggle', 'default' => true ),
+			null,
+			'field[global][cookies][show]'
+		);
+		$this->assertStringContainsString( 'checked', $on );
+
+		$off = Blueworx_Clubhouse_Content_Screen::field_html(
+			array( 'key' => 'featured', 'label' => 'Most popular', 'type' => 'toggle', 'default' => false ),
+			null,
+			'field[membership][tiers][featured]'
+		);
+		$this->assertStringNotContainsString( 'checked', $off );
+	}
+
+	/** Once a club has chosen, the choice wins over the default — both ways. */
+	public function test_a_stored_choice_beats_the_default(): void {
+		$field = array( 'key' => 'show', 'label' => 'Show the cookie notice', 'type' => 'toggle', 'default' => true );
+
+		$this->assertStringNotContainsString(
+			'checked',
+			Blueworx_Clubhouse_Content_Screen::field_html( $field, false, 'field[global][cookies][show]' ),
+			'switching it off has to stick'
+		);
+		$this->assertStringContainsString(
+			'checked',
+			Blueworx_Clubhouse_Content_Screen::field_html( $field, true, 'field[global][cookies][show]' )
+		);
+	}
+
+	/**
+	 * The screen as a whole, not just one field: on a site with nothing stored,
+	 * both sitewide switches draw on.
+	 */
+	public function test_a_fresh_site_shows_its_sitewide_switches_on(): void {
+		$html = Blueworx_Clubhouse_Content_Screen::render( $this->model() );
+
+		foreach ( array( 'field[global][header][banner_show]', 'field[global][cookies][show]' ) as $name ) {
+			$this->assertMatchesRegularExpression(
+				'/name="' . preg_quote( $name, '/' ) . '" value="1" checked/',
+				$html,
+				$name . ' draws as off on a site that has never touched it'
+			);
+		}
+	}
+
 	public function test_linkout_section_renders_manage_button(): void {
 		$html = Blueworx_Clubhouse_Content_Screen::render( $this->model() );
 		$this->assertStringContainsString( 'Manage sports', $html );
