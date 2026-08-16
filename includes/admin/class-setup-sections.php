@@ -31,6 +31,11 @@ final class Blueworx_Clubhouse_Setup_Sections {
 			'sponsors'    => 'Sponsors',
 			'social'      => 'Social',
 			'footer'      => 'Footer',
+			// Sitewide rather than Home, like the header, footer and cookie notice
+			// above it: those live here too because the visibility inventory is
+			// keyed by the pages this plugin serves, and none of the four belong
+			// to one page.
+			'welcome'     => 'Welcome pack',
 		),
 		'about' => array(
 			'hero'         => 'Hero',

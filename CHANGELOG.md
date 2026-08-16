@@ -9,6 +9,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Saving Club Pages no longer switches the cookie notice and announcement bar off.** Both are on until a club turns them off, but the editing screen drew their switches as off on a site that had never touched them — so one save wrote that back and both disappeared, without anyone choosing it. The switches now show what the site is really doing, and saving changes nothing you did not change.
 
+## 0.70.2
+
+- **Give new members a welcome pack on their account dashboard.** Write it once under Club Pages → Global → Welcome pack — the gate code, where to park, who to ask — and anyone who reaches the dashboard sees it. Leave it empty and nothing is shown, and it has its own on/off switch like every other section. It uses the dashboard's own plain styling rather than the club look, because that page belongs to the shop.
+
+## 0.70.1
+
+- **Share a news story from the story itself.** Facebook, WhatsApp, email and copy link at the foot of every post, so a match report can go straight to a team group chat instead of being copied out of the address bar. These are ordinary links rather than the networks' own buttons, so nothing about your readers is sent anywhere until they choose to share.
+
+## 0.70.0
+
+- **Move straight from one news story to the next.** The foot of every post now offers the story either side of it, named rather than a bare arrow, so a reader can work along the club's news without going back to the index each time. The newest and oldest stories show only the half that leads somewhere.
+
+## 0.69.6
+
+- **News cards now look like cards, and sit level with each other.** The lead story was a proper card while the ones below it sat bare on the background, and a single long summary stretched every card beside it. Summaries are now cut to three lines, so a row lines up whatever the club has written.
+
+## 0.69.5
+
+- **Pages no longer scroll sideways on a normal laptop window.** Between roughly 900px and 1230px wide the menu was too big for the window but still tried to sit across the top, dragging every page off to the right. The menu now folds into the button it already uses on smaller screens while there is still room for it, in all three looks.
+
+## 0.69.4
+
+- **Search & sharing and the User guide now say who can reach them.** Every other Clubhouse screen shows an administrator which roles can open the page they are on; those two were silent. Nobody's access changed — the two screens simply now report it like the rest.
+
+## 0.69.3
+
+- **No more stray blank tag under every news post.** A small empty pill sat below the body of every post on the site. An untagged post was reporting one nameless tag instead of none, and the page dutifully drew a chip for it.
+
+## 0.69.2
+
+- **The News page header has room to breathe again.** Its heading sat jammed against the menu bar with the second line touching the bottom edge of the dark band, on every club site and in every look. The band had asked for a spacing step that was never added to the scale, which quietly threw away the padding at both ends at once.
+
 ## 0.69.1
 
 - **Import and the User guide moved to the Clubhouse menu.** They sit with the menu builder and the rest of the club tooling instead of being tucked under Club Pages. Who can open each one is unchanged.

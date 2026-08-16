@@ -247,6 +247,14 @@ final class Blueworx_Clubhouse_Content_Catalogue {
 						self::f_area( 'newsletter_lede', 'Newsletter blurb', 2 ),
 						self::f_shortcode( 'newsletter_shortcode', 'Newsletter signup shortcode (SureForms)' ),
 					) ),
+				array( 'key' => 'welcome', 'label' => 'Welcome pack', 'type' => 'fields', 'store_page' => 'global',
+					'note' => 'Shown to a member on their account dashboard once they have joined — the practical things a new member needs: how to get in, where to park, who to ask. Leave the body empty and nothing is shown at all. It renders in the dashboard\'s own plain styling rather than the club look, because that page belongs to the shop.',
+					'fields' => array(
+						self::f_text( 'heading', 'Heading', 'e.g. Welcome to the club' ),
+						self::f_area( 'body', 'Welcome pack', 8, 'A blank line starts a new paragraph.' ),
+						self::f_text( 'link_label', 'Link label', 'e.g. Read the full handbook' ),
+						self::f_url( 'link_href', 'Link' ),
+					) ),
 				array( 'key' => 'cookies', 'label' => 'Cookie notice', 'type' => 'fields', 'store_page' => 'global',
 					'note' => 'Shown once per visitor, at the foot of every page, until they dismiss it. It says what this site uses cookies for — it does not withhold anything, because the shop and its payment provider set theirs as soon as those pages load. If you run a dedicated consent plugin, switch this off and let that one do the job.',
 					'fields' => array(

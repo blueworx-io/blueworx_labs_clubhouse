@@ -173,6 +173,39 @@ final class Blueworx_Clubhouse_Demo_Posts implements Blueworx_Clubhouse_Post_Sou
 		return $out;
 	}
 
+	public function adjacent(): array {
+		$rows = array_values( $this->all() );
+		$at   = null;
+		foreach ( $rows as $i => $row ) {
+			if ( (int) $row['id'] === $this->current_id ) {
+				$at = $i;
+				break;
+			}
+		}
+		if ( null === $at ) {
+			return array( 'previous' => null, 'next' => null );
+		}
+		// all() is newest first, so the row after this one is the older story.
+		return array(
+			'previous' => self::step( $rows[ $at + 1 ] ?? null ),
+			'next'     => self::step( $rows[ $at - 1 ] ?? null ),
+		);
+	}
+
+	/**
+	 * @param array<string,mixed>|null $row
+	 * @return array{title:string,href:string}|null
+	 */
+	private static function step( ?array $row ): ?array {
+		if ( null === $row ) {
+			return null;
+		}
+		return array(
+			'title' => (string) $row['title'],
+			'href'  => (string) $row['href'],
+		);
+	}
+
 	/** Post body markup, in the shapes the article stylesheet has to cope with. */
 	private function body(): string {
 		return '<p>It came down to eighty-two minutes and a kick from thirty-eight metres out. Riverside had clawed back a '

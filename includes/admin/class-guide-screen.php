@@ -21,12 +21,18 @@ final class Blueworx_Clubhouse_Guide_Screen {
 		return htmlspecialchars( $v, ENT_QUOTES, 'UTF-8' );
 	}
 
-	/** @param array{club:string,intro:string,chapters:array<int,array<string,mixed>>} $model */
+	/**
+	 * $role_tags is prebuilt markup from Access_Screen, empty for anyone but an
+	 * administrator — the controller decides that, so this class stays WP-free.
+	 *
+	 * @param array{club:string,intro:string,role_tags?:string,chapters:array<int,array<string,mixed>>} $model
+	 */
 	public static function render( array $model ): string {
 		$out  = '<div class="wrap clubhouse-wrap"><div class="clubhouse-setup">';
 		$out .= '<header class="clubhouse-head"><div class="clubhouse-head__titles">'
 			. '<p class="clubhouse-eyebrow">Clubhouse · User guide</p>'
-			. '<h1 class="clubhouse-head__h1">How ClubHouse works</h1></div></header>';
+			. '<h1 class="clubhouse-head__h1">How ClubHouse works</h1>'
+			. (string) ( $model['role_tags'] ?? '' ) . '</div></header>';
 		$out .= '<p class="clubhouse-step__lede">' . self::esc( (string) $model['intro'] ) . '</p>';
 
 		$out .= self::contents( $model['chapters'] );

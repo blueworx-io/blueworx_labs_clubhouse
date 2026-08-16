@@ -67,7 +67,7 @@ a{color:inherit;text-decoration:none}
 .ch-nav__links{display:flex;gap:clamp(14px,1.7vw,28px);font-size:15px;font-weight:500;color:var(--color-ink-soft)}
 .ch-nav__link{display:inline-block;padding:8px 0;white-space:nowrap}
 .ch-nav__link:hover{color:var(--color-ink)}
-@media(max-width:900px){.ch-nav__links{display:none}}
+@media(max-width:1260px){.ch-nav__links{display:none}}
 
 /* Submenu — opens on :hover and :focus-within, so it needs no JavaScript and
    stays reachable by keyboard (tabbing into a child keeps focus inside the
@@ -99,7 +99,7 @@ a{color:inherit;text-decoration:none}
 .ch-nav__drawer-join{width:100%;margin-bottom:8px}
 .ch-nav__drawer-login{margin-top:6px;border-top:1px solid var(--color-line);padding-top:10px}
 .ch-nav__drawer-join{display:none}
-@media(max-width:900px){.ch-nav__disc{display:block}.ch-nav__in{gap:12px}.ch-nav__cta{gap:8px}.ch-brand{min-width:0}}
+@media(max-width:1260px){.ch-nav__disc{display:block}.ch-nav__in{gap:12px}.ch-nav__cta{gap:8px}.ch-brand{min-width:0}}
 @media(max-width:520px){.ch-nav__cta .ch-btn--ink{display:none}.ch-nav__disc[open] .ch-nav__drawer-join{display:inline-flex}.ch-brand{font-size:20px}.ch-brand__mark{width:30px;height:30px;font-size:15px}}
 
 .ch-banner{background:var(--color-paper);color:var(--color-ink);border-bottom:1px solid var(--color-line)}
@@ -109,7 +109,7 @@ a{color:inherit;text-decoration:none}
 .ch-nav__cta{display:flex;gap:10px;align-items:center}
 /* Active link — full-contrast ink with a glowing accent underline (signal beyond colour). */
 .ch-nav__links .ch-nav__link--active{color:var(--color-ink);font-weight:700;text-decoration:underline;text-decoration-color:var(--color-accent-deep);text-decoration-thickness:2px;text-underline-offset:6px}
-@media(max-width:900px){.ch-nav__cta .ch-btn--ghost{display:none}}
+@media(max-width:1260px){.ch-nav__cta .ch-btn--ghost{display:none}}
 
 /* Media — grayscale base + a low-opacity accent overlay = a restrained duotone that
    re-themes with the accent. Empty slots keep their own icon (a different selector,

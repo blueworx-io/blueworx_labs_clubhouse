@@ -39,7 +39,10 @@ final class ContentScreenTest extends TestCase {
 		$this->assertStringNotContainsString( ' style="', $html );
 
 		$without_style = (string) preg_replace( '#<style>.*?</style>#s', '', $html );
-		$this->assertDoesNotMatchRegularExpression( '/#[0-9a-fA-F]{3,6}\b/', $without_style );
+		// Not preceded by '&': an escaped apostrophe is the character reference
+		// &#039;, which the bare pattern read as a three-digit colour. Any
+		// catalogue note containing an apostrophe used to fail this.
+		$this->assertDoesNotMatchRegularExpression( '/(?<!&)#[0-9a-fA-F]{3,6}\b/', $without_style );
 		$this->assertDoesNotMatchRegularExpression( '/font-family:\s*[\'"]?(Syne|Inter|Fraunces|Bricolage)/i', $without_style );
 	}
 
