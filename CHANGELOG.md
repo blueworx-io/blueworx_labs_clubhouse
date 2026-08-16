@@ -5,6 +5,10 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.68.6
+
+- **The sponsors band disappears when there are no sponsors.** A club with none used to get the heading and a "Become a sponsor" button over an empty strip, which advertised the absence. Sponsors you add in the admin still show as before.
+
 ## 0.68.5
 
 - **Save always sits in the same place.** On the Clubhouse admin screens the Save button slid to the left whenever the "unsaved changes" note was hidden, so it moved about depending on whether you had touched anything. It is now pinned to the right on every screen, and the menu builder’s Save matches the rest instead of looking like a stray WordPress button.
