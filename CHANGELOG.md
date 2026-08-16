@@ -5,6 +5,10 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.69.4
+
+- **Search & sharing and the User guide now say who can reach them.** Every other Clubhouse screen shows an administrator which roles can open the page they are on; those two were silent. Nobody's access changed — the two screens simply now report it like the rest.
+
 ## 0.69.1
 
 - **Import and the User guide moved to the Clubhouse menu.** They sit with the menu builder and the rest of the club tooling instead of being tucked under Club Pages. Who can open each one is unchanged.

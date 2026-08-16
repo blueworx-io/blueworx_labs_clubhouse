@@ -146,4 +146,31 @@ final class GuideTest extends TestCase {
 		$this->assertSame( 0, substr_count( $html, '<details class="clubhouse-guide-entry">' ) );
 		$this->assertGreaterThan( 0, substr_count( $html, '<details class="clubhouse-guide-entry" open>' ) );
 	}
+
+	/**
+	 * The guide carries the same top-bar access chips as every other ClubHouse
+	 * page. It was one of the two screens that never asked for them.
+	 */
+	public function test_role_tags_render_in_the_top_bar_when_supplied(): void {
+		$model              = Blueworx_Clubhouse_Guide::build( $this->site() );
+		$model['role_tags'] = Blueworx_Clubhouse_Access_Screen::role_tags( array( 'Administrator', 'ClubHouse - Owner' ) );
+		$html               = Blueworx_Clubhouse_Guide_Screen::render( $model );
+
+		$this->assertStringContainsString( 'class="clubhouse-roletags"', $html );
+		$this->assertMatchesRegularExpression( '/clubhouse-head__titles.*clubhouse-roletags.*<\/div>/s', $html );
+	}
+
+	/**
+	 * Asserted on the container, not the chip: the guide dresses its own
+	 * contents links and "Live" badges in clubhouse-roletag too, so the chip
+	 * class alone would never be absent.
+	 */
+	public function test_no_role_tags_for_anyone_but_an_administrator(): void {
+		$model              = Blueworx_Clubhouse_Guide::build( $this->site() );
+		$model['role_tags'] = '';
+		$this->assertStringNotContainsString( 'clubhouse-roletags', Blueworx_Clubhouse_Guide_Screen::render( $model ) );
+
+		unset( $model['role_tags'] );
+		$this->assertStringNotContainsString( 'clubhouse-roletags', Blueworx_Clubhouse_Guide_Screen::render( $model ) );
+	}
 }
