@@ -5,6 +5,10 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.69.4
+
+- **Search & sharing and the User guide now say who can reach them.** Every other Clubhouse screen shows an administrator which roles can open the page they are on; those two were silent. Nobody's access changed — the two screens simply now report it like the rest.
+
 ## 0.69.3
 
 - **No more stray blank tag under every news post.** A small empty pill sat below the body of every post on the site. An untagged post was reporting one nameless tag instead of none, and the page dutifully drew a chip for it.
