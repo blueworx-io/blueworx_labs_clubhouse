@@ -5,6 +5,10 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.69.6
+
+- **News cards now look like cards, and sit level with each other.** The lead story was a proper card while the ones below it sat bare on the background, and a single long summary stretched every card beside it. Summaries are now cut to three lines, so a row lines up whatever the club has written.
+
 ## 0.69.1
 
 - **Import and the User guide moved to the Clubhouse menu.** They sit with the menu builder and the rest of the club tooling instead of being tucked under Club Pages. Who can open each one is unchanged.
