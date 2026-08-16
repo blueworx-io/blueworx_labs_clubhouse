@@ -1549,8 +1549,11 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'title_lead'      => self::cget( $content, 'calendar', 'hero', 'title_lead', 'Every game, ' ),
 				'title_highlight' => self::cget( $content, 'calendar', 'hero', 'title_highlight', 'all season.' ),
 				'lede'            => self::cget( $content, 'calendar', 'hero', 'lede', 'Match days across all ' . self::number_word( count( $collections->sports() ) ) . ' sports, with results as they come in.' ),
-				'filter_label'    => 'Filter fixtures by sport',
-				'filters'         => self::filter_pills( 'calendar', $labels, $filter ),
+				// No pills here: on this page they filter the fixtures list far
+				// below, not the booking calendar that follows the hero. They
+				// render with the schedule instead (issue #147).
+				'filter_label'    => '',
+				'filters'         => array(),
 			) ) );
 		}
 		// LatePoint's booking calendar, above the fixtures: a member looking at the
@@ -1575,6 +1578,8 @@ final class Blueworx_Clubhouse_Page_Renderer {
 			$out .= self::anchored( 'calendar', 'schedule', Blueworx_Clubhouse_Sections::calendar_months( array(
 				'eyebrow'    => self::cget( $content, 'calendar', 'schedule', 'eyebrow', 'The schedule' ),
 				'heading'    => self::cget( $content, 'calendar', 'schedule', 'heading', 'Fixtures & results' ),
+				'filter_label' => 'Filter fixtures by sport',
+				'filters'      => self::filter_pills( 'calendar', $labels, $filter ),
 				'empty_text' => '' !== $filter ? 'No fixtures match that filter.' : '',
 				'months'     => Blueworx_Clubhouse_Fixture_Projection::calendar_months( self::filter_rows( $fixtures, $filter, $pick ) ),
 			) ) );

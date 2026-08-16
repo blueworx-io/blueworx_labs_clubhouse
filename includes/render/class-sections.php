@@ -364,20 +364,34 @@ final class Blueworx_Clubhouse_Sections {
 	}
 
 	/**
-	 * @param array{eyebrow:string,title_lead:string,title_highlight:string,lede:string,
-	 *   filter_label:string,filters:array<int,array{label:string,href:string,active:bool}>} $data
+	 * The pill row, or nothing when there is nothing to filter by. Shared so a
+	 * page can put the pills wherever the thing they filter actually is: in the
+	 * hero on Sports and Teams, directly above the fixtures list on Calendar.
+	 *
+	 * @param array<int,array{label:string,href:string,active:bool}> $filters
 	 */
-	public static function hero_filter( array $data ): string {
+	private static function filter_nav( array $filters, string $label ): string {
+		if ( array() === $filters ) {
+			return '';
+		}
 		$pills = '';
-		foreach ( $data['filters'] as $f ) {
+		foreach ( $filters as $f ) {
 			$on     = ! empty( $f['active'] ) ? ' ch-filter--on' : '';
 			$pills .= '<a class="ch-filter' . $on . '" href="' . self::e( $f['href'] ) . '"'
 				. ( ! empty( $f['active'] ) ? ' aria-current="page"' : '' ) . '>' . self::e( $f['label'] ) . '</a>';
 		}
+		return '<nav class="ch-filters" aria-label="' . self::e( $label ) . '">' . $pills . '</nav>';
+	}
+
+	/**
+	 * @param array{eyebrow:string,title_lead:string,title_highlight:string,lede:string,
+	 *   filter_label:string,filters:array<int,array{label:string,href:string,active:bool}>} $data
+	 */
+	public static function hero_filter( array $data ): string {
 		return '<section class="ch-hero-filter"><div class="ch-wrap">'
 			. self::hero_head( 'ch-hero-filter', $data )
 			. '<p class="ch-hero-filter__lede">' . self::e( $data['lede'] ) . '</p>'
-			. '<nav class="ch-filters" aria-label="' . self::e( $data['filter_label'] ) . '">' . $pills . '</nav>'
+			. self::filter_nav( $data['filters'], $data['filter_label'] )
 			// Inside the section, not after it: as a sibling in <main> the script
 			// would sit between this section and the next, breaking the adjacent-
 			// sibling rule that tightens the gap below the pill row.
@@ -429,7 +443,11 @@ final class Blueworx_Clubhouse_Sections {
 	 * where the section sits behind a filter and vanishing entirely would leave
 	 * the reader wondering whether the filter worked.
 	 *
-	 * @param array{eyebrow?:string,heading?:string,empty_text?:string} $data
+	 * `after_head` is already-built markup the caller wants kept with the
+	 * section when everything else has gone — the filter pills, so a filter that
+	 * matches nothing can still be cleared.
+	 *
+	 * @param array{eyebrow?:string,heading?:string,empty_text?:string,after_head?:string} $data
 	 */
 	private static function empty_section( array $data ): string {
 		$text = (string) ( $data['empty_text'] ?? '' );
@@ -439,6 +457,7 @@ final class Blueworx_Clubhouse_Sections {
 		return '<section class="ch-sec"><div class="ch-wrap">'
 			. '<span class="ch-eyebrow">' . self::e( (string) ( $data['eyebrow'] ?? '' ) ) . '</span>'
 			. '<h2 class="ch-sec__title">' . self::e( (string) ( $data['heading'] ?? '' ) ) . '</h2>'
+			. (string) ( $data['after_head'] ?? '' )
 			. '<p class="ch-empty">' . self::e( $text ) . '</p></div></section>';
 	}
 
@@ -1413,13 +1432,24 @@ final class Blueworx_Clubhouse_Sections {
 	}
 
 	/**
+	 * The fixtures list, with its own filter pills directly above it when the
+	 * page passes any. On Calendar the pills used to sit in the hero, above the
+	 * booking calendar they have no effect on (issue #147); they belong with the
+	 * list they narrow. They ride along into the empty state too, or a filter
+	 * that matches nothing would leave no way back to "All".
+	 *
 	 * @param array{eyebrow:string,heading:string,
+	 *   filters?:array<int,array{label:string,href:string,active:bool}>,filter_label?:string,
 	 *   months:array<int,array{label:string,rows:array<int,array{date:string,competition:string,
 	 *   matchup:string,detail:string,outcome:string}>}>} $data
 	 */
 	public static function calendar_months( array $data ): string {
+		$filters = self::filter_nav(
+			(array) ( $data['filters'] ?? array() ),
+			(string) ( $data['filter_label'] ?? '' )
+		);
 		if ( array() === $data['months'] ) {
-			return self::empty_section( $data );
+			return self::empty_section( array_merge( $data, array( 'after_head' => $filters ) ) );
 		}
 		$months = '';
 		foreach ( $data['months'] as $m ) {
@@ -1445,6 +1475,7 @@ final class Blueworx_Clubhouse_Sections {
 		return '<section class="ch-sec"><div class="ch-wrap">'
 			. '<span class="ch-eyebrow">' . self::e( $data['eyebrow'] ) . '</span>'
 			. '<h2 class="ch-sec__title">' . self::e( $data['heading'] ) . '</h2>'
+			. $filters
 			. '<div class="ch-cal">' . $months . '</div></div></section>';
 	}
 
