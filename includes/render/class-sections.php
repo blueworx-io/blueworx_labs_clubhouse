@@ -1014,8 +1014,17 @@ final class Blueworx_Clubhouse_Sections {
 
 	/** @param array{eyebrow:string,heading:string,link_label:string,link_href:string,names:array<int,string>} $data */
 	public static function sponsors( array $data ): string {
+		// A club that has entered no sponsors gets no band. The heading and the
+		// "Become a sponsor" button over an empty strip announced that the club
+		// has no partners, which is worse than saying nothing (issue #163). A
+		// sponsor saved without a name counts as none: it would only ever render
+		// as a blank tile.
+		$names = array_values( array_filter( array_map( 'trim', $data['names'] ), static fn( string $n ): bool => '' !== $n ) );
+		if ( array() === $names ) {
+			return '';
+		}
 		$tiles = '';
-		foreach ( $data['names'] as $name ) {
+		foreach ( $names as $name ) {
 			$tiles .= '<div class="ch-sponsors__tile" role="listitem">' . self::e( $name ) . '</div>';
 		}
 		$cta = '' !== $data['link_href']
