@@ -57,7 +57,11 @@ final class Blueworx_Clubhouse_Guide_Controller {
 		if ( ! current_user_can( self::CAPABILITY ) ) {
 			return;
 		}
-		echo Blueworx_Clubhouse_Guide_Screen::render( Blueworx_Clubhouse_Guide::build( self::site() ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped within Guide_Screen.
+		// The chapters are built from the site; the access chips are about who is
+		// reading, so they are merged in here rather than threaded through Guide.
+		$model              = Blueworx_Clubhouse_Guide::build( self::site() );
+		$model['role_tags'] = Blueworx_Clubhouse_Access_Controller::role_tags_for( self::PAGE_SLUG );
+		echo Blueworx_Clubhouse_Guide_Screen::render( $model ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped within Guide_Screen.
 	}
 
 	/**

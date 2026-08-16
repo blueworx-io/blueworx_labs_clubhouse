@@ -52,7 +52,7 @@ final class Blueworx_Clubhouse_Seo_Controller {
 		echo Blueworx_Clubhouse_Seo_Screen::render( self::build_model() ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped within Seo_Screen.
 	}
 
-	/** @return array{deferring_to:string,pages:array<int,array<string,mixed>>} */
+	/** @return array{deferring_to:string,role_tags:string,pages:array<int,array<string,mixed>>} */
 	public static function build_model(): array {
 		$ctx      = Blueworx_Clubhouse_Frontend::context();
 		$logo_url = Blueworx_Clubhouse_Frontend::resolve_logo( $ctx->branding->get_logo() );
@@ -107,6 +107,7 @@ final class Blueworx_Clubhouse_Seo_Controller {
 
 		return array(
 			'deferring_to' => self::rival_name(),
+			'role_tags'    => Blueworx_Clubhouse_Access_Controller::role_tags_for( self::PAGE_SLUG ),
 			'pages'        => $pages,
 		);
 	}

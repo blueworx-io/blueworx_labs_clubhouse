@@ -74,10 +74,15 @@ final class Blueworx_Clubhouse_WP_Posts implements Blueworx_Clubhouse_Post_Sourc
 		// would render the post differently from everywhere else on the site.
 		$row['html']          = (string) apply_filters( 'the_content', $post->post_content );
 		$row['image_caption'] = (string) wp_get_attachment_caption( (int) get_post_thumbnail_id( $post ) );
-		$row['tags']          = array_map(
+		// get_the_tags returns false for an untagged post and a WP_Error for a
+		// taxonomy that does not exist. Casting either to an array gives one
+		// junk element rather than none — which is how every untagged post ended
+		// up drawing a single blank tag chip.
+		$tags                 = get_the_tags( $post );
+		$row['tags']          = is_array( $tags ) ? array_map(
 			static fn( $tag ): string => (string) $tag->name,
-			(array) get_the_tags( $post ) ?: array()
-		);
+			$tags
+		) : array();
 		$row['author']        = $this->author( (int) $post->post_author );
 		return $row;
 	}
