@@ -33,6 +33,7 @@ require_once __DIR__ . '/membership/class-products-source.php';
 require_once __DIR__ . '/membership/class-checkout.php';
 require_once __DIR__ . '/membership/class-surecart-products.php';
 require_once __DIR__ . '/membership/class-shop-pages.php';
+require_once __DIR__ . '/membership/class-welcome-pack.php';
 
 // Blocks
 require_once __DIR__ . '/blocks/class-block-context.php';

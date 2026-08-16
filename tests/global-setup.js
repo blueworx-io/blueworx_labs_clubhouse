@@ -55,7 +55,20 @@ $id = $existing instanceof WP_Post ? $existing->ID : wp_insert_post( array(
 ) );
 if ( is_int( $id ) && $id > 0 ) {
 	update_post_meta( $id, '_wp_page_template', 'pages/template-surecart-dashboard.php' );
+	// Register that page as the customer dashboard, which is the option the
+	// welcome pack keys off. CI has no SureCart to write it, and the option IS
+	// the contract — SureCart's own PageService builds the same name.
+	update_option( 'surecart_dashboard_page_id', $id );
 }
+
+// A welcome pack for that dashboard to carry, written through the plugin's own
+// store rather than a hand-built option, so the fixture cannot drift from how
+// the admin screen saves.
+$store = new Blueworx_Clubhouse_Content_Store( new Blueworx_Clubhouse_Options_Storage() );
+$store->set( 'global', 'welcome', 'heading', 'Welcome to the club' );
+$store->set( 'global', 'welcome', 'body', "The gate code is on your membership card.\n\nParking is behind the pitch." );
+$store->set( 'global', 'welcome', 'link_label', 'Read the handbook' );
+$store->set( 'global', 'welcome', 'link_href', 'https://club.example/handbook' );
 
 // A real blog post, for the news story a visitor opens from the News page. It
 // carries no template slug and belongs to no plugin — exactly the page that
