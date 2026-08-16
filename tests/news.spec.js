@@ -60,6 +60,41 @@ test('@preview an article offers more to read', async ({ page }) => {
   await expect(page.locator('.ch-related .ch-postcard')).toHaveCount(3);
 });
 
+test('@preview an article can be shared, without loading anyone else’s script', async ({ page }) => {
+  const foreign = [];
+  page.on('request', (r) => {
+    const host = new URL(r.url()).host;
+    if (host && !host.startsWith('127.0.0.1') && !host.startsWith('localhost')) foreign.push(r.url());
+  });
+
+  await page.goto('?clubhouse_page=post');
+
+  const share = page.locator('.ch-share');
+  await expect(share).toHaveCount(1);
+  for (const name of ['Facebook', 'WhatsApp', 'Email']) {
+    await expect(share.getByRole('link', { name: new RegExp(name) })).toHaveAttribute('href', /.+/);
+  }
+
+  // The row is plain anchors, so opening the article reaches nobody but us.
+  expect(foreign, `article loaded third-party requests: ${foreign.join(', ')}`).toEqual([]);
+});
+
+test('@preview copy link puts the story address on the clipboard', async ({ page, context }) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+  await page.goto('?clubhouse_page=post');
+
+  const copy = page.locator('.ch-share [data-clubhouse-copy]');
+  // Ships hidden and is only revealed once copying is actually available.
+  await expect(copy).toBeVisible();
+
+  const expected = await copy.getAttribute('data-clubhouse-copy');
+  await copy.click();
+
+  await expect(copy).toHaveText('Link copied');
+  const onClipboard = await page.evaluate(() => navigator.clipboard.readText());
+  expect(onClipboard).toBe(expected);
+});
+
 // The preview always opens the newest story, which is exactly the edge case
 // worth pinning in the browser: the half that has nowhere to go must be absent
 // rather than drawn as a dead link.

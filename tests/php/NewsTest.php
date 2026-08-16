@@ -154,6 +154,60 @@ final class NewsTest extends TestCase {
 		$this->assertStringContainsString( '<blockquote><p>Quote</p></blockquote>', $html );
 	}
 
+	/** @return string */
+	private function share( array $over = array() ): string {
+		return Blueworx_Clubhouse_Sections::post_share(
+			array_merge( array( 'title' => '1st XV promoted', 'url' => 'https://club.example/news/promoted/' ), $over )
+		);
+	}
+
+	public function test_a_story_can_be_shared_to_the_places_a_club_uses(): void {
+		$html = $this->share();
+
+		$this->assertStringContainsString( 'facebook.com/sharer', $html );
+		$this->assertStringContainsString( 'wa.me', $html );
+		$this->assertStringContainsString( 'mailto:', $html );
+		$this->assertStringContainsString( 'Copy link', $html );
+	}
+
+	/** The story's own address, encoded, is what each of them carries. */
+	public function test_every_share_target_carries_the_story_url(): void {
+		$html    = $this->share();
+		$encoded = rawurlencode( 'https://club.example/news/promoted/' );
+
+		$this->assertSame( 3, substr_count( $html, $encoded ) );
+		$this->assertStringContainsString( 'data-clubhouse-copy="https://club.example/news/promoted/"', $html );
+	}
+
+	/**
+	 * The whole point of hand-rolled links: no vendor button, so no third-party
+	 * script reads the page or the reader before they choose to share.
+	 */
+	public function test_sharing_pulls_in_no_third_party_script(): void {
+		$this->assertStringNotContainsString( '<script', $this->share() );
+		$this->assertStringNotContainsString( '<iframe', $this->share() );
+	}
+
+	/** Offering a button that cannot work is worse than not offering one. */
+	public function test_copy_link_ships_hidden_for_script_to_reveal(): void {
+		$this->assertMatchesRegularExpression( '/<button[^>]*\shidden/', $this->share() );
+	}
+
+	public function test_a_story_with_no_address_gets_no_share_row(): void {
+		$this->assertSame( '', $this->share( array( 'url' => '' ) ) );
+		$this->assertSame( '', $this->share( array( 'url' => '   ' ) ) );
+	}
+
+	public function test_the_share_row_escapes_the_title_it_is_given(): void {
+		$html = $this->share( array( 'title' => 'Ladies 1s "<script>alert(1)</script>"' ) );
+
+		$this->assertStringNotContainsString( '<script>', $html );
+	}
+
+	public function test_the_article_offers_a_way_to_share_it(): void {
+		$this->assertStringContainsString( 'ch-share__links', $this->render_article() );
+	}
+
 	/**
 	 * Previous and next. The demo posts run newest first, so the newest story
 	 * has nothing after it and the oldest has nothing before it — the two ends

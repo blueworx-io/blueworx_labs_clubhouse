@@ -66,7 +66,8 @@ final class Blueworx_Clubhouse_Page_Renderer {
 			. '<link rel="stylesheet" href="' . $base . '">'
 			. '<link rel="stylesheet" href="' . $sheet . '">'
 			. '<style>' . $css . '</style>'
-			. '</head><body>' . $body . self::inline_script( 'reveal.js' ) . self::inline_script( 'cookie-notice.js' ) . '</body></html>';
+			. '</head><body>' . $body . self::inline_script( 'reveal.js' ) . self::inline_script( 'cookie-notice.js' )
+			. self::inline_script( 'share.js' ) . '</body></html>';
 	}
 
 	/**
@@ -2068,6 +2069,10 @@ final class Blueworx_Clubhouse_Page_Renderer {
 		$out .= Blueworx_Clubhouse_Sections::post_author( array(
 			'label'  => 'Written by',
 			'author' => (array) $post['author'],
+		) );
+		$out .= Blueworx_Clubhouse_Sections::post_share( array(
+			'title' => (string) $post['title'],
+			'url'   => (string) $post['href'],
 		) );
 		$out .= '</article>';
 		// Outside the article: what to read next is not part of this story.
