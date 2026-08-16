@@ -80,6 +80,11 @@ final class Blueworx_Clubhouse_Import_Applier {
 			}
 		}
 
+		// Everything above wrote to the content store; the site renders from
+		// blocks. Project the import onto them, or an owner would import a whole
+		// site and see none of it.
+		Blueworx_Clubhouse_Content_Controller::sync_blocks( $storage, $store, new Blueworx_Clubhouse_Visibility( $storage ) );
+
 		return array( 'rows' => $rows, 'images_needed' => $needed, 'warnings' => $warnings );
 	}
 

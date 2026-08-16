@@ -27,6 +27,7 @@ define( 'BLUEWORX_LABS_CLUBHOUSE_DIR', plugin_dir_path( __FILE__ ) );
 define( 'BLUEWORX_LABS_CLUBHOUSE_URL', plugin_dir_url( __FILE__ ) );
 
 require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/bootstrap.php';
+require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/blocks/class-blocks-installer.php';
 require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/frontend/class-clubhouse-context.php';
 require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/frontend/class-frontend.php';
 require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/frontend/class-external-chrome.php';
@@ -69,6 +70,7 @@ function blueworx_labs_clubhouse_init() {
 	Blueworx_Clubhouse_Demo_Controller::register();
 	Blueworx_Clubhouse_Collection_Meta_Boxes::register();
 	Blueworx_Clubhouse_Owner_Role::register();
+	Blueworx_Clubhouse_Blocks_Installer::register();
 	Blueworx_Clubhouse_Import_Controller::register();
 	Blueworx_Clubhouse_Access_Controller::register();
 	Blueworx_Clubhouse_Seo_Controller::register();
@@ -86,6 +88,7 @@ register_activation_hook(
 		Blueworx_Clubhouse_Collection_Types::register();
 		Blueworx_Clubhouse_Collection_Seeder::seed();
 		Blueworx_Clubhouse_Owner_Role::activate();
+		Blueworx_Clubhouse_Blocks_Installer::install();
 		flush_rewrite_rules();
 	}
 );

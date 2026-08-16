@@ -45,6 +45,79 @@ final class Blueworx_Clubhouse_Block_Seeder {
 		$this->build( $content, $visibility );
 	}
 
+	/**
+	 * Bring an already-composed site back into step with the old screens.
+	 *
+	 * Interim, and deliberately so: until the page and block screens exist, the
+	 * Club Pages and Setup screens are still where a club edits its site, and
+	 * they write to the content store and the visibility toggles. This projects
+	 * a save onto the blocks the front end renders, so an owner's change shows
+	 * up on the site. It creates and deletes nothing — a site that has not been
+	 * composed yet is left alone — and it goes away with the screens it serves.
+	 */
+	public function sync( Blueworx_Clubhouse_Content_Store $content, Blueworx_Clubhouse_Visibility $visibility ): void {
+		if ( ! $this->composition->is_configured() ) {
+			return;
+		}
+
+		$by_address = array();
+		foreach ( $this->library->all() as $id => $block ) {
+			$key = (string) ( $block['defaults_key'] ?? '' );
+			if ( '' !== $key ) {
+				$by_address[ $key ] = (string) $id;
+			}
+		}
+
+		$onpage = array();
+		foreach ( array_keys( Blueworx_Clubhouse_Block_Addresses::map() ) as $address ) {
+			$address = (string) $address;
+			if ( ! isset( $by_address[ $address ] ) ) {
+				continue;
+			}
+			$id = $by_address[ $address ];
+
+			$this->library->set_content( $id, $this->content_for( $address, $content ) );
+			$settings = self::settings_for( $address, $visibility );
+			if ( array() !== $settings ) {
+				$this->library->set_settings( $id, $settings );
+			}
+
+			$page = explode( '/', $address, 2 )[0];
+			if ( 'global' === $page ) {
+				continue;
+			}
+			if ( self::on_page( $address, $visibility ) ) {
+				$onpage[ $page ][] = $id;
+			}
+		}
+
+		foreach ( $onpage as $page => $ids ) {
+			$this->composition->set_blocks( (string) $page, $ids );
+		}
+		foreach ( $this->pages() as $page ) {
+			if ( ! isset( $onpage[ $page ] ) ) {
+				$this->composition->set_blocks( $page, array() );
+			}
+			$this->composition->set_enabled( $page, $visibility->is_page_visible( $page ) );
+		}
+	}
+
+	/**
+	 * Every page a block can sit on.
+	 *
+	 * @return array<int,string>
+	 */
+	private function pages(): array {
+		$pages = array();
+		foreach ( array_keys( Blueworx_Clubhouse_Block_Addresses::map() ) as $address ) {
+			$page = explode( '/', (string) $address, 2 )[0];
+			if ( 'global' !== $page && ! in_array( $page, $pages, true ) ) {
+				$pages[] = $page;
+			}
+		}
+		return $pages;
+	}
+
 	private function build( ?Blueworx_Clubhouse_Content_Store $content, ?Blueworx_Clubhouse_Visibility $visibility ): void {
 		$folds  = Blueworx_Clubhouse_Block_Addresses::folds();
 		$made   = array();
@@ -102,11 +175,7 @@ final class Blueworx_Clubhouse_Block_Seeder {
 		foreach ( $onpage as $page => $ids ) {
 			$this->composition->set_blocks( (string) $page, $ids );
 		}
-		foreach ( array_keys( Blueworx_Clubhouse_Block_Addresses::map() ) as $address ) {
-			$page = explode( '/', (string) $address, 2 )[0];
-			if ( 'global' === $page ) {
-				continue;
-			}
+		foreach ( $this->pages() as $page ) {
 			$this->composition->set_enabled( $page, null === $visibility || $visibility->is_page_visible( $page ) );
 		}
 	}
