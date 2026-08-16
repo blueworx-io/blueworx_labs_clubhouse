@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Search & sharing and the User guide now say who can reach them.** Every other Clubhouse screen shows an administrator which roles can open the page they are on; those two were silent. Nobody's access changed — the two screens simply now report it like the rest.
 
+## 0.69.3
+
+- **No more stray blank tag under every news post.** A small empty pill sat below the body of every post on the site. An untagged post was reporting one nameless tag instead of none, and the page dutifully drew a chip for it.
+
+## 0.69.2
+
+- **The News page header has room to breathe again.** Its heading sat jammed against the menu bar with the second line touching the bottom edge of the dark band, on every club site and in every look. The band had asked for a spacing step that was never added to the scale, which quietly threw away the padding at both ends at once.
+
 ## 0.69.1
 
 - **Import and the User guide moved to the Clubhouse menu.** They sit with the menu builder and the rest of the club tooling instead of being tucked under Club Pages. Who can open each one is unchanged.
