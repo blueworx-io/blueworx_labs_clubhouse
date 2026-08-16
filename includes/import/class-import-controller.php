@@ -7,7 +7,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * WordPress surface for the AI content import: the Club Pages → Import
+ * WordPress surface for the AI content import: the Clubhouse → Import
  * submenu, the prompt download, and the upload → preview → apply flow.
  *
  * handle_request() takes the request arrays and a Storage rather than reading
@@ -45,7 +45,7 @@ final class Blueworx_Clubhouse_Import_Controller {
 
 	public static function add_menu(): void {
 		add_submenu_page(
-			Blueworx_Clubhouse_Content_Controller::PAGE_SLUG,
+			Blueworx_Clubhouse_Setup_Controller::PAGE_SLUG,
 			'Import',
 			'Import',
 			self::CAPABILITY,
@@ -55,12 +55,12 @@ final class Blueworx_Clubhouse_Import_Controller {
 	}
 
 	/**
-	 * As a submenu of Club Pages, WordPress names this page's hook after its
-	 * parent's slug ('club-content'), not 'toplevel_page_…' — Content_Controller's
-	 * own hook only matches its own, unrelated top-level page.
+	 * A submenu's hook is named after its PARENT, not 'toplevel_page_…', so
+	 * matching on this page's own slug within the hook is what survives the page
+	 * being reparented — which it has been once already (issue #145).
 	 */
 	public static function enqueue( string $hook ): void {
-		if ( 'club-content_page_' . self::PAGE_SLUG !== $hook ) {
+		if ( false === strpos( $hook, self::PAGE_SLUG ) ) {
 			return;
 		}
 		wp_enqueue_style( 'clubhouse-admin-content', BLUEWORX_LABS_CLUBHOUSE_URL . 'assets/css/admin-content.css', array(), BLUEWORX_LABS_CLUBHOUSE_VERSION );
