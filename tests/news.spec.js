@@ -60,6 +60,16 @@ test('@preview an article offers more to read', async ({ page }) => {
   await expect(page.locator('.ch-related .ch-postcard')).toHaveCount(3);
 });
 
+// Every post on a real site drew one blank chip below the body, because an
+// untagged post reported one nameless tag rather than none.
+test('@preview an article never shows a tag chip with nothing in it', async ({ page }) => {
+  await page.goto('?clubhouse_page=post');
+
+  const tags = await page.locator('.ch-posttag').allTextContents();
+  expect(tags.length).toBeGreaterThan(0);
+  expect(tags.every((t) => t.trim() !== ''), `blank chips: ${JSON.stringify(tags)}`).toBe(true);
+});
+
 // The band used to reach for --space-14, a step the scale never defined. An
 // undefined custom property makes the whole padding-block invalid, so the
 // header lost its padding at both ends at once: the eyebrow sat on the nav and

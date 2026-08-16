@@ -154,6 +154,36 @@ final class NewsTest extends TestCase {
 		$this->assertStringContainsString( '<blockquote><p>Quote</p></blockquote>', $html );
 	}
 
+	/**
+	 * An untagged post used to draw one blank chip: get_the_tags returns false,
+	 * and casting that to an array gives a one-element array rather than an
+	 * empty one. The row is only worth drawing when there is a word in it.
+	 */
+	public function test_a_post_with_no_tags_draws_no_tag_row(): void {
+		$html = Blueworx_Clubhouse_Sections::post_body(
+			array( 'html' => '<p>Body</p>', 'tags' => array() )
+		);
+		$this->assertStringNotContainsString( 'ch-posttag', $html );
+	}
+
+	/** A tag that is blank or only spaces is not a tag. */
+	public function test_blank_tags_never_become_chips(): void {
+		$html = Blueworx_Clubhouse_Sections::post_body(
+			array( 'html' => '<p>Body</p>', 'tags' => array( '', '   ' ) )
+		);
+		$this->assertStringNotContainsString( 'ch-posttag', $html );
+	}
+
+	/** Real tags still each get a chip. */
+	public function test_real_tags_still_draw_a_chip_each(): void {
+		$html = Blueworx_Clubhouse_Sections::post_body(
+			array( 'html' => '<p>Body</p>', 'tags' => array( 'Rugby', '1st XV' ) )
+		);
+		$this->assertSame( 2, substr_count( $html, 'class="ch-posttag"' ) );
+		$this->assertStringContainsString( '>Rugby<', $html );
+		$this->assertStringContainsString( '>1st XV<', $html );
+	}
+
 	/** Everything around the body is still escaped. */
 	public function test_the_article_furniture_is_escaped(): void {
 		$html = Blueworx_Clubhouse_Sections::post_head(
