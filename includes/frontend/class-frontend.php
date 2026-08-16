@@ -337,6 +337,16 @@ final class Blueworx_Clubhouse_Frontend {
 			BLUEWORX_LABS_CLUBHOUSE_VERSION,
 			true
 		);
+		// Reveals the "Copy link" button on a story's share row, which ships
+		// hidden so it is never offered where it could not work — see
+		// assets/js/share.js.
+		wp_enqueue_script(
+			'clubhouse-share',
+			BLUEWORX_LABS_CLUBHOUSE_URL . 'assets/js/share.js',
+			array(),
+			BLUEWORX_LABS_CLUBHOUSE_VERSION,
+			true
+		);
 	}
 
 	/**

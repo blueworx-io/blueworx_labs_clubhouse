@@ -73,14 +73,38 @@ $store->set( 'global', 'welcome', 'link_href', 'https://club.example/handbook' )
 // A real blog post, for the news story a visitor opens from the News page. It
 // carries no template slug and belongs to no plugin — exactly the page that
 // used to render as bare theme output with no header, footer or way back.
-$post = get_page_by_path( 'clubhouse-post-fixture', OBJECT, 'post' );
-$post_id = $post instanceof WP_Post ? $post->ID : wp_insert_post( array(
-	'post_type'    => 'post',
-	'post_status'  => 'publish',
-	'post_name'    => 'clubhouse-post-fixture',
-	'post_title'   => 'Clubhouse post fixture',
-	'post_content' => '<p id="post-content">POST CONTENT</p>',
-) );
+// Three posts with fixed dates: the fixture a visitor opens, and one story
+// either side of it so the previous/next control has real neighbours to find.
+// The dates are re-applied on every run rather than only at creation — a
+// fixture left over from an earlier run carries that run's date, which would
+// silently put it at the wrong end of the order.
+$post_id = 0;
+foreach ( array(
+	array( 'clubhouse-post-older', 'Clubhouse post older', '2026-06-01 12:00:00', '<p>Neighbour.</p>' ),
+	array( 'clubhouse-post-fixture', 'Clubhouse post fixture', '2026-06-15 12:00:00', '<p id="post-content">POST CONTENT</p>' ),
+	array( 'clubhouse-post-newer', 'Clubhouse post newer', '2026-06-29 12:00:00', '<p>Neighbour.</p>' ),
+) as $fixture ) {
+	list( $slug, $title, $when, $body ) = $fixture;
+	$row  = get_page_by_path( $slug, OBJECT, 'post' );
+	$args = array(
+		'post_type'     => 'post',
+		'post_status'   => 'publish',
+		'post_name'     => $slug,
+		'post_title'    => $title,
+		'post_content'  => $body,
+		'post_date'     => $when,
+		'post_date_gmt' => $when,
+	);
+	if ( $row instanceof WP_Post ) {
+		$args['ID'] = $row->ID;
+		$id         = wp_update_post( $args );
+	} else {
+		$id = wp_insert_post( $args );
+	}
+	if ( 'clubhouse-post-fixture' === $slug ) {
+		$post_id = is_int( $id ) ? $id : 0;
+	}
+}
 
 echo ( get_option( 'clubhouse_demo_active' ) && is_int( $id ) && $id > 0 && is_int( $post_id ) && $post_id > 0 ) ? "on" : "off";
 `

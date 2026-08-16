@@ -19,7 +19,7 @@
  * loads later its values win. These exist so the base is self-sufficient and a
  * look that omits the scale still renders.
  */
-:root{--space-2:8px;--space-3:12px;--space-4:16px;--space-6:24px;--space-8:32px;--space-10:40px;--space-12:48px;--space-16:64px;--space-20:80px;--flow-lg:88px;--flow-sm:24px}
+:root{--space-2:8px;--space-3:12px;--space-4:16px;--space-6:24px;--space-8:32px;--space-10:40px;--space-12:48px;--space-14:56px;--space-16:64px;--space-20:80px;--flow-lg:88px;--flow-sm:24px}
 
 /*
  * Form controls do not inherit typography from body — the UA stylesheet gives
@@ -262,14 +262,20 @@ button,input,select,textarea{font-family:inherit}
 .ch-newsgrid__bar .ch-filters{margin-top:0}
 .ch-newsgrid__count{font-size:12px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;color:var(--color-ink-soft)}
 .ch-posts{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:clamp(24px,3vw,36px)}
-.ch-postcard__link{display:flex;flex-direction:column;color:var(--color-ink);transition:transform .22s ease}
+/* The same card treatment as the featured story above and the sport cards
+   elsewhere, so the grid reads as a set of cards rather than loose text. The
+   media is pulled out to the card's edges by the padding it sits inside, and
+   overflow:hidden trims it to the corner radius. */
+.ch-postcard__link{display:flex;flex-direction:column;flex:1;padding:18px;background:var(--color-paper);border:1px solid var(--color-line);border-radius:var(--radius-lg);overflow:hidden;color:var(--color-ink);transition:transform .22s ease}
 .ch-postcard__link:hover{transform:translateY(-4px)}
-.ch-postcard__media{height:210px;margin-bottom:16px}
+.ch-postcard__media{height:210px;margin:-18px -18px 16px}
 .ch-postcard__meta{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:12px;margin-bottom:8px}
 .ch-postcard__cat{letter-spacing:.1em;text-transform:uppercase;font-weight:700;color:var(--color-secondary-deep)}
 .ch-postcard__date{color:var(--color-ink-soft)}
 .ch-postcard__title{font-family:var(--font-display);font-weight:800;font-size:22px;line-height:1.08;letter-spacing:-.01em;overflow-wrap:break-word}
-.ch-postcard__excerpt{margin-top:10px;font-size:15px;line-height:1.6;color:var(--color-ink-soft)}
+/* Cut to three lines. Without this the longest excerpt in a row set the height
+   of every card beside it, leaving the short ones with a block of dead space. */
+.ch-postcard__excerpt{margin-top:10px;font-size:15px;line-height:1.6;color:var(--color-ink-soft);display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;line-clamp:3;overflow:hidden}
 
 .ch-pager{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-top:var(--space-10);padding-top:26px;border-top:1px solid var(--color-line)}
 .ch-pager__nos{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
@@ -352,6 +358,28 @@ button,input,select,textarea{font-family:inherit}
 .ch-newsgrid{padding-block:var(--space-12)}
 .ch-postbody{padding-block:0}
 .ch-postauthor{padding-block:0}
+/* Share row. Sits on the article's own text column so it reads as part of the
+   piece rather than a band under it. */
+.ch-share{padding-block:var(--space-8) 0}
+.ch-share__in{max-width:760px;margin-inline:auto;display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding-top:22px;border-top:1px solid var(--color-line)}
+.ch-share__k{font-size:12px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;color:var(--color-ink-soft)}
+.ch-share__links{display:flex;gap:8px;flex-wrap:wrap}
+.ch-share__link{display:inline-flex;align-items:center;min-height:44px;padding:10px 16px;border:1px solid var(--color-line);border-radius:999px;background:var(--color-paper);color:var(--color-ink);font-size:14px;font-weight:600;cursor:pointer}
+.ch-share__link:hover{border-color:var(--color-accent-deep);color:var(--color-accent-deep)}
+/* The visible label is the network name; the full sentence is for a screen
+   reader, where "Facebook" on its own is not an instruction. */
+.ch-share__sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+/* Previous / next. Two columns when both exist; when only one does it keeps
+   its side, so "next" never slides left into the place "previous" occupies on
+   every other story. */
+.ch-poststeps{padding-block:var(--space-10)}
+.ch-poststeps__in{max-width:760px;margin-inline:auto;display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.ch-poststep{display:flex;flex-direction:column;gap:6px;padding:18px 20px;background:var(--color-paper);border:1px solid var(--color-line);border-radius:var(--radius-lg);color:var(--color-ink);transition:transform .2s ease}
+.ch-poststep:hover{transform:translateY(-2px)}
+.ch-poststep--next{grid-column:2;text-align:right}
+.ch-poststep__k{font-size:12px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;color:var(--color-accent-deep)}
+.ch-poststep__title{font-family:var(--font-display);font-weight:800;font-size:18px;line-height:1.15;overflow-wrap:break-word}
+@media(max-width:640px){.ch-poststeps__in{grid-template-columns:1fr}.ch-poststep--next{grid-column:1;text-align:left}}
 .ch-related{padding-block:var(--space-12)}
 .ch-postcard{display:flex;min-width:0}
 .ch-postcard--sm .ch-postcard__excerpt{display:none}

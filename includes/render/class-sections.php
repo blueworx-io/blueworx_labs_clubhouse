@@ -1746,6 +1746,12 @@ final class Blueworx_Clubhouse_Sections {
 	public static function post_body( array $data ): string {
 		$tags = '';
 		foreach ( $data['tags'] as $tag ) {
+			// A chip with no word in it is a blob on the page, not a tag. Skipping
+			// them here means the row disappears when every tag is blank, rather
+			// than shrinking to an empty strip.
+			if ( '' === trim( (string) $tag ) ) {
+				continue;
+			}
 			$tags .= '<span class="ch-posttag">' . self::e( (string) $tag ) . '</span>';
 		}
 		$tag_row = '' !== $tags ? '<div class="ch-posttags">' . $tags . '</div>' : '';
@@ -1775,6 +1781,93 @@ final class Blueworx_Clubhouse_Sections {
 			. '<p class="ch-postauthor__name">' . self::e( (string) $a['name'] ) . '</p>'
 			. '<p class="ch-postauthor__bio">' . self::e( (string) $a['bio'] ) . '</p>'
 			. '</div></div></div></section>';
+	}
+
+	/**
+	 * Share a story.
+	 *
+	 * Plain links to the share endpoints, not vendor buttons: an official share
+	 * widget is a third-party script on every article that reads the page and
+	 * the reader, in exchange for a button. These are ordinary anchors, so
+	 * nothing loads and nobody is tracked until a reader chooses to go.
+	 *
+	 * Facebook, WhatsApp and email are what a club audience actually uses — a
+	 * match report goes to a team group chat far more often than anywhere else.
+	 * Copy link covers everything else, which is why it is here instead of a
+	 * longer row of networks nobody at the club posts to.
+	 *
+	 * @param array{title:string,url:string} $data
+	 */
+	public static function post_share( array $data ): string {
+		$url   = trim( (string) $data['url'] );
+		$title = (string) $data['title'];
+		if ( '' === $url ) {
+			return '';
+		}
+
+		$targets = array(
+			array( 'Facebook', 'https://www.facebook.com/sharer/sharer.php?u=' . rawurlencode( $url ) ),
+			array( 'WhatsApp', 'https://wa.me/?text=' . rawurlencode( trim( $title . ' ' . $url ) ) ),
+			array( 'Email', 'mailto:?subject=' . rawurlencode( $title ) . '&body=' . rawurlencode( $url ) ),
+		);
+
+		$links = '';
+		foreach ( $targets as $target ) {
+			list( $label, $href ) = $target;
+			// nofollow because a share link is not the club endorsing the network.
+			$links .= '<a class="ch-share__link" href="' . self::e( $href ) . '" target="_blank" rel="noopener nofollow">'
+				. '<span class="ch-share__sr">Share this story on </span>' . self::e( $label ) . '</a>';
+		}
+
+		// Ships hidden and is revealed by script only once copying is actually
+		// available, rather than offering a button that looks live and silently
+		// does nothing — see assets/js/share.js.
+		$copy = '<button type="button" class="ch-share__link" hidden'
+			. ' data-clubhouse-copy="' . self::e( $url ) . '" data-copied-label="Link copied">Copy link</button>';
+
+		return '<section class="ch-sec ch-share"><div class="ch-wrap"><div class="ch-share__in">'
+			. '<span class="ch-share__k">Share this story</span>'
+			. '<div class="ch-share__links">' . $links . $copy . '</div>'
+			. '</div></div></section>';
+	}
+
+	/**
+	 * Previous and next, so a reader can work along the news rather than going
+	 * back to the index between every story.
+	 *
+	 * Each half is drawn only when there is a story there: the oldest post has
+	 * no previous and the newest has no next, and half a control is better than
+	 * a link that goes nowhere. When neither exists — a club with one story —
+	 * nothing is drawn at all.
+	 *
+	 * The titles are shown rather than bare arrows, because "Previous" alone
+	 * asks a reader to click to find out what it is.
+	 *
+	 * @param array{previous:array{title:string,href:string}|null,next:array{title:string,href:string}|null} $data
+	 */
+	public static function post_steps( array $data ): string {
+		$prev = self::post_step( $data['previous'] ?? null, 'prev', 'Previous story' );
+		$next = self::post_step( $data['next'] ?? null, 'next', 'Next story' );
+		if ( '' === $prev && '' === $next ) {
+			return '';
+		}
+		return '<nav class="ch-sec ch-poststeps" aria-label="More stories">'
+			. '<div class="ch-wrap"><div class="ch-poststeps__in">' . $prev . $next . '</div></div></nav>';
+	}
+
+	/**
+	 * One half of the previous/next control.
+	 *
+	 * @param array{title:string,href:string}|null $step
+	 */
+	private static function post_step( ?array $step, string $dir, string $label ): string {
+		if ( null === $step ) {
+			return '';
+		}
+		return '<a class="ch-poststep ch-poststep--' . self::e( $dir ) . '" href="' . self::e( (string) $step['href'] ) . '">'
+			. '<span class="ch-poststep__k">' . self::e( $label ) . '</span>'
+			. '<span class="ch-poststep__title">' . self::e( (string) $step['title'] ) . '</span>'
+			. '</a>';
 	}
 
 	/**
