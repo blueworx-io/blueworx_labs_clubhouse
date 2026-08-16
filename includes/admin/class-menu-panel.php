@@ -59,7 +59,10 @@ final class Blueworx_Clubhouse_Menu_Panel {
 		$out .= '</ol>';
 		$out .= '<p><button type="submit" class="button" name="clubhouse_menu_add" value="1">Add item</button></p>';
 		$out .= '</div></div></div>';
-		$out .= '<div class="clubhouse-savebar"><button type="submit" class="button button-primary" name="clubhouse_content_submit" value="1">Save menu</button></div>';
+		// The same save bar as every other Clubhouse screen: its own button, not
+		// WordPress's, and pinned right so Save is always in the same place.
+		$out .= '<div class="clubhouse-bar">'
+			. '<button type="submit" name="clubhouse_content_submit" value="1" class="clubhouse-btn clubhouse-btn--primary">Save menu</button></div>';
 		$out .= '</form></section>';
 		return $out;
 	}

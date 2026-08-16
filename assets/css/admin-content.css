@@ -162,8 +162,11 @@ textarea.clubhouse-input { resize: vertical; }
    rather than `fixed`: it still occupies flow space at the end of the form, so the
    last field is never trapped underneath. z-index keeps it above panel content;
    the opaque paper background stops text showing through as it passes under. */
-.clubhouse-bar { position: sticky; bottom: 0; z-index: 20; margin-top: auto; display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 16px var(--pad); background: var(--color-paper); border-top: 1px solid var(--color-line); box-shadow: 0 -8px 20px -14px rgb(0 0 0 / .35); }
-.clubhouse-bar__hint { margin: 0; font-size: 13px; color: var(--color-ink-soft); }
+/* Save sits right, always. With space-between the button slid left whenever
+   the unsaved-changes hint was hidden, so it moved depending on whether you
+   had touched anything. flex-end pins it; the hint pushes itself left. */
+.clubhouse-bar { position: sticky; bottom: 0; z-index: 20; margin-top: auto; display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: 16px; padding: 16px var(--pad); background: var(--color-paper); border-top: 1px solid var(--color-line); box-shadow: 0 -8px 20px -14px rgb(0 0 0 / .35); }
+.clubhouse-bar__hint { margin: 0 auto 0 0; font-size: 13px; color: var(--color-ink-soft); }
 
 @media (max-width: 782px) {
 	.clubhouse-content { min-height: calc(100vh - 46px); } /* taller mobile admin bar */
