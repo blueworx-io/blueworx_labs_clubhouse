@@ -5,6 +5,10 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.69.5
+
+- **Pages no longer scroll sideways on a normal laptop window.** Between roughly 900px and 1230px wide the menu was too big for the window but still tried to sit across the top, dragging every page off to the right. The menu now folds into the button it already uses on smaller screens while there is still room for it, in all three looks.
+
 ## 0.69.4
 
 - **Search & sharing and the User guide now say who can reach them.** Every other Clubhouse screen shows an administrator which roles can open the page they are on; those two were silent. Nobody's access changed — the two screens simply now report it like the rest.
