@@ -352,6 +352,17 @@ button,input,select,textarea{font-family:inherit}
 .ch-newsgrid{padding-block:var(--space-12)}
 .ch-postbody{padding-block:0}
 .ch-postauthor{padding-block:0}
+/* Previous / next. Two columns when both exist; when only one does it keeps
+   its side, so "next" never slides left into the place "previous" occupies on
+   every other story. */
+.ch-poststeps{padding-block:var(--space-10)}
+.ch-poststeps__in{max-width:760px;margin-inline:auto;display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.ch-poststep{display:flex;flex-direction:column;gap:6px;padding:18px 20px;background:var(--color-paper);border:1px solid var(--color-line);border-radius:var(--radius-lg);color:var(--color-ink);transition:transform .2s ease}
+.ch-poststep:hover{transform:translateY(-2px)}
+.ch-poststep--next{grid-column:2;text-align:right}
+.ch-poststep__k{font-size:12px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;color:var(--color-accent-deep)}
+.ch-poststep__title{font-family:var(--font-display);font-weight:800;font-size:18px;line-height:1.15;overflow-wrap:break-word}
+@media(max-width:640px){.ch-poststeps__in{grid-template-columns:1fr}.ch-poststep--next{grid-column:1;text-align:left}}
 .ch-related{padding-block:var(--space-12)}
 .ch-postcard{display:flex;min-width:0}
 .ch-postcard--sm .ch-postcard__excerpt{display:none}
