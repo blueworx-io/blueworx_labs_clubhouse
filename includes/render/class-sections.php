@@ -376,7 +376,10 @@ final class Blueworx_Clubhouse_Sections {
 	 * @param array<int,array{label:string,href:string,active:bool}> $filters
 	 */
 	private static function filter_nav( array $filters, string $label ): string {
-		if ( array() === $filters ) {
+		// One pill is always "All", and "All" on its own filters nothing — it
+		// offers a choice between everything and everything. A club with no
+		// fixtures entered got exactly that above an empty list.
+		if ( count( $filters ) < 2 ) {
 			return '';
 		}
 		$pills = '';

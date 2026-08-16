@@ -1590,7 +1590,15 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'heading'    => self::cget( $content, 'calendar', 'schedule', 'heading', 'Fixtures & results' ),
 				'filter_label' => 'Filter fixtures by sport',
 				'filters'      => self::filter_pills( 'calendar', $labels, $filter ),
-				'empty_text' => '' !== $filter ? 'No fixtures match that filter.' : '',
+				// Unlike the other filtered lists, this one says so when the club
+				// has entered no fixtures at all. The page is titled "Fixtures &
+				// results" and, with the schedule silently absent, the only thing
+				// left on it was the court-booking grid — which read as the club
+				// having no fixtures ever, or worse, as the bookings BEING the
+				// fixtures (issue #99).
+				'empty_text' => '' !== $filter
+					? 'No fixtures match that filter.'
+					: 'No fixtures listed yet — check back soon.',
 				'months'     => Blueworx_Clubhouse_Fixture_Projection::calendar_months( self::filter_rows( $fixtures, $filter, $pick ) ),
 			) ) );
 		}
