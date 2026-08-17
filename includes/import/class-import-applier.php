@@ -23,24 +23,22 @@ final class Blueworx_Clubhouse_Import_Applier {
 	 * @param bool $sync_sections Switch page sections on or off to match what the
 	 *                            file supplied — see Import_Sections. Opt-in: the
 	 *                            owner ticks it on the preview screen.
-	 * @return array{rows:array<int,array{label:string,detail:string}>,images_needed:array<int,array{label:string,page:string,section:string,field:string,index:int}>,warnings:array<int,string>}
+	 * @return array{rows:array<int,array{label:string,detail:string}>,images_needed:array<int,array{label:string,block:string,field:string,index:int}>,warnings:array<int,string>}
 	 */
 	public static function apply( Blueworx_Clubhouse_Import_Plan $plan, Blueworx_Clubhouse_Storage $storage, bool $sync_sections = false ): array {
-		$store    = new Blueworx_Clubhouse_Content_Store( $storage );
+		$library  = new Blueworx_Clubhouse_Block_Library( $storage );
 		$needed   = array();
 		$warnings = array();
 
 		// Items first: a loop-item image has to have an item to be written into.
 		foreach ( $plan->items() as $page => $sections ) {
 			foreach ( $sections as $section => $items ) {
-				$store->set_items( (string) $page, (string) $section, $items );
+				self::write( $library, (string) $page . '/' . (string) $section, array( 'items' => $items ) );
 			}
 		}
 		foreach ( $plan->fields() as $page => $sections ) {
 			foreach ( $sections as $section => $fields ) {
-				foreach ( $fields as $field => $value ) {
-					$store->set( (string) $page, (string) $section, (string) $field, $value );
-				}
+				self::write( $library, (string) $page . '/' . (string) $section, $fields );
 			}
 		}
 
@@ -57,12 +55,12 @@ final class Blueworx_Clubhouse_Import_Applier {
 			$id = self::sideload( $image['url'], $image['alt'] );
 			if ( 0 === $id ) {
 				$warnings[] = sprintf( 'Could not fetch the image at %s — %s is still empty.', $image['url'], $image['label'] );
-				$needed[]   = self::needed_entry( $image );
+				$needed[]   = self::needed_entry( $library, $image );
 				continue;
 			}
-			if ( ! self::place_image( $store, $image, $id ) ) {
+			if ( ! self::place_image( $library, $image, $id ) ) {
 				$warnings[] = sprintf( 'Fetched the image for %s but could not place it.', $image['label'] );
-				$needed[]   = self::needed_entry( $image );
+				$needed[]   = self::needed_entry( $library, $image );
 				continue;
 			}
 			++$fetched;
@@ -80,12 +78,31 @@ final class Blueworx_Clubhouse_Import_Applier {
 			}
 		}
 
-		// Everything above wrote to the content store; the site renders from
-		// blocks. Project the import onto them, or an owner would import a whole
-		// site and see none of it.
-		Blueworx_Clubhouse_Content_Controller::sync_blocks( $storage, $store, new Blueworx_Clubhouse_Visibility( $storage ) );
-
 		return array( 'rows' => $rows, 'images_needed' => $needed, 'warnings' => $warnings );
+	}
+
+	/**
+	 * Write some of an address's content onto the block that holds it.
+	 *
+	 * Merged rather than replaced, so importing a heading does not blank the
+	 * lede beside it, and so the cookie notice and the footer can share one
+	 * block without one import wiping the other. An address whose block this
+	 * site has not got — deleted, or never composed — is skipped rather than
+	 * recreated: an import is not the place to put a block back.
+	 *
+	 * @param array<string,mixed> $values
+	 */
+	private static function write( Blueworx_Clubhouse_Block_Library $library, string $address, array $values ): void {
+		$id = $library->by_address( Blueworx_Clubhouse_Block_Addresses::host( $address ) );
+		if ( '' === $id ) {
+			return;
+		}
+		$prefix  = Blueworx_Clubhouse_Block_Addresses::prefix( $address );
+		$content = (array) $library->get( $id )['content'];
+		foreach ( $values as $key => $value ) {
+			$content[ 'items' === (string) $key ? 'items' : $prefix . (string) $key ] = $value;
+		}
+		$library->set_content( $id, $content );
 	}
 
 	/**
@@ -265,43 +282,55 @@ final class Blueworx_Clubhouse_Import_Applier {
 	 *
 	 * @param array{page:string,section:string,field:string,url:string,alt:string,label:string,index:int} $image
 	 */
-	private static function place_image( Blueworx_Clubhouse_Content_Store $store, array $image, int $id ): bool {
+	private static function place_image( Blueworx_Clubhouse_Block_Library $library, array $image, int $id ): bool {
+		$address = (string) $image['page'] . '/' . (string) $image['section'];
+		$block   = $library->by_address( Blueworx_Clubhouse_Block_Addresses::host( $address ) );
+		if ( '' === $block ) {
+			return false;
+		}
+		$content = (array) $library->get( $block )['content'];
+
 		// A plan stored before 'index' existed (a transient can outlive an
 		// upgrade by up to an hour) has no such key; default it to -1 so it
 		// keeps behaving as a section-level image rather than warning three
 		// times and silently dropping the fetch.
 		$index = $image['index'] ?? -1;
 		if ( $index < 0 ) {
-			$store->set( $image['page'], $image['section'], $image['field'], $id );
+			$content[ Blueworx_Clubhouse_Block_Addresses::prefix( $address ) . (string) $image['field'] ] = $id;
+			$library->set_content( $block, $content );
 			return true;
 		}
-		$items = $store->get_items( $image['page'], $image['section'] );
+
+		$items = is_array( $content['items'] ?? null ) ? array_values( $content['items'] ) : array();
 		if ( ! array_key_exists( $index, $items ) ) {
 			return false;
 		}
 		$items[ $index ][ $image['field'] ] = $id;
-		$store->set_items( $image['page'], $image['section'], $items );
+		$content['items']                   = $items;
+		$library->set_content( $block, $content );
 		return true;
 	}
 
 	/**
-	 * Keep 'index' alongside the label/page/section/field: a loop-item image
-	 * (index >= 0) lives at items[index][field], not at the section field
-	 * place_image() uses for a section-level image (index < 0) — the same
-	 * distinction place_image() itself branches on just above. Dropping it
-	 * here would leave a stuck "still needed" entry for a loop-item image
-	 * with no way to ever tell it has since been filled.
+	 * A picture the import could not fetch, recorded so the Blocks screen can
+	 * offer the owner the block that is still missing it.
+	 *
+	 * Keep 'index' alongside the block and field: a loop-item image (index >= 0)
+	 * lives at items[index][field], not at the content field place_image() uses
+	 * for a section-level image (index < 0) — the same distinction place_image()
+	 * itself branches on just above. Dropping it here would leave a stuck "still
+	 * needed" entry with no way to ever tell it has since been filled.
 	 *
 	 * @param array{page:string,section:string,field:string,url:string,alt:string,label:string,index:int} $image
-	 * @return array{label:string,page:string,section:string,field:string,index:int}
+	 * @return array{label:string,block:string,field:string,index:int}
 	 */
-	private static function needed_entry( array $image ): array {
+	private static function needed_entry( Blueworx_Clubhouse_Block_Library $library, array $image ): array {
+		$address = (string) $image['page'] . '/' . (string) $image['section'];
 		return array(
-			'label'   => $image['label'],
-			'page'    => $image['page'],
-			'section' => $image['section'],
-			'field'   => $image['field'],
-			'index'   => $image['index'] ?? -1,
+			'label' => $image['label'],
+			'block' => $library->by_address( Blueworx_Clubhouse_Block_Addresses::host( $address ) ),
+			'field' => Blueworx_Clubhouse_Block_Addresses::prefix( $address ) . (string) $image['field'],
+			'index' => $image['index'] ?? -1,
 		);
 	}
 

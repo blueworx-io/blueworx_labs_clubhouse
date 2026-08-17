@@ -26,7 +26,6 @@ final class Blueworx_Clubhouse_Setup_Controller {
 	public const PAGE_SLUG  = 'clubhouse-setup';
 	public const NONCE      = 'clubhouse_setup_save';
 	// Set true on any setup save — marks the Visibility section "reviewed" for progress.
-	public const VIS_SAVED_KEY = 'setup_visibility_saved';
 
 	/**
 	 * The preset swatches offered by every colour picker on this screen.
@@ -67,7 +66,6 @@ final class Blueworx_Clubhouse_Setup_Controller {
 		$notices  = array();
 		$registry = Blueworx_Clubhouse_Frontend::registry( $storage );
 		$branding = new Blueworx_Clubhouse_Branding( $storage );
-		$vis      = new Blueworx_Clubhouse_Visibility( $storage );
 
 		// 1. Look.
 		if ( isset( $post['clubhouse_look'] ) ) {
@@ -151,22 +149,7 @@ final class Blueworx_Clubhouse_Setup_Controller {
 			$auth->set_post_logout( sanitize_text_field( (string) $post['clubhouse_post_logout'] ) );
 		}
 
-		// 4. Visibility — a checkbox is present only when ticked; absence = hidden.
-		$pages    = isset( $post['clubhouse_page'] ) && is_array( $post['clubhouse_page'] ) ? $post['clubhouse_page'] : array();
-		$sections = isset( $post['clubhouse_section'] ) && is_array( $post['clubhouse_section'] ) ? $post['clubhouse_section'] : array();
-		foreach ( Blueworx_Clubhouse_Setup_Sections::inventory() as $page ) {
-			$vis->set_page_visible( $page['page'], isset( $pages[ $page['page'] ] ) );
-			foreach ( $page['sections'] as $section ) {
-				$skey = $page['page'] . '.' . $section['key'];
-				$vis->set_section_visible( $page['page'], $section['key'], isset( $sections[ $skey ] ) );
-			}
-		}
-
-		// The site renders from blocks, so a page or section switched here has to
-		// reach them — otherwise the toggle would move and the page would not.
-		Blueworx_Clubhouse_Content_Controller::sync_blocks( $storage, new Blueworx_Clubhouse_Content_Store( $storage ), $vis );
-
-		// 5. Warn if the stored accent is now illegible for the active look.
+		// 4. Warn if the stored accent is now illegible for the active look.
 		if ( ! Blueworx_Clubhouse_Color_Engine::accent_is_legible_for( $active, $branding->get_accent() ) ) {
 			$notices[] = array( 'type' => 'warning', 'text' => 'Your saved accent colour is low-contrast on the selected look. Choose a new accent for best legibility.' );
 		}
@@ -177,13 +160,10 @@ final class Blueworx_Clubhouse_Setup_Controller {
 			( new Blueworx_Clubhouse_Demo_State( $storage ) )->set( isset( $post['clubhouse_demo_active'] ) );
 		}
 
-		// 6. Mark the Visibility section reviewed (saving with the defaults counts).
-		$storage->set( self::VIS_SAVED_KEY, true );
-
-		// 7. Bust the composed :root cache so the new look/accent take effect.
+		// 5. Bust the composed :root cache so the new look/accent take effect.
 		( new Blueworx_Clubhouse_Theme_Cache( $storage ) )->invalidate();
 
-		// 8. Confirm the save to the owner (green success notice at the top).
+		// 6. Confirm the save to the owner (green success notice at the top).
 		$notices[] = array( 'type' => 'success', 'text' => 'Your changes have been saved.' );
 
 		return $notices;
@@ -240,8 +220,8 @@ final class Blueworx_Clubhouse_Setup_Controller {
 		// The menu builder saves through the content plumbing it has always used,
 		// nonce and all — it moved screen, not owner.
 		if ( $can_menu && isset( $_POST['clubhouse_content_submit'] ) ) {
-			check_admin_referer( Blueworx_Clubhouse_Content_Controller::NONCE );
-			$notices = Blueworx_Clubhouse_Content_Controller::handle_save( wp_unslash( $_POST ), $storage );
+			check_admin_referer( Blueworx_Clubhouse_Menu_Controller::NONCE );
+			$notices = Blueworx_Clubhouse_Menu_Controller::handle_save( wp_unslash( $_POST ), $storage );
 		}
 		echo self::screen_html( $storage, $notices, $can_demo, $can_menu, $can_setup ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped within Setup_Screen.
 	}
@@ -258,7 +238,7 @@ final class Blueworx_Clubhouse_Setup_Controller {
 			'tree'        => ( new Blueworx_Clubhouse_Menu( $storage ) )->tree(),
 			'targets'     => Blueworx_Clubhouse_Link_Catalogue::targets( new Blueworx_Clubhouse_WP_Collections() ),
 			'action_url'  => $action_url,
-			'nonce_field' => wp_nonce_field( Blueworx_Clubhouse_Content_Controller::NONCE, '_wpnonce', true, false ),
+			'nonce_field' => wp_nonce_field( Blueworx_Clubhouse_Menu_Controller::NONCE, '_wpnonce', true, false ),
 		);
 	}
 
@@ -281,7 +261,6 @@ final class Blueworx_Clubhouse_Setup_Controller {
 	public static function build_model( Blueworx_Clubhouse_Storage $storage, array $notices, string $nonce_field, string $action_url, bool $can_demo = false ): array {
 		$registry    = Blueworx_Clubhouse_Frontend::registry( $storage );
 		$branding    = new Blueworx_Clubhouse_Branding( $storage );
-		$vis         = new Blueworx_Clubhouse_Visibility( $storage );
 		$active_slug = (string) $storage->get( 'active_base_look', '' );
 		$active_look = $registry->active();
 
@@ -309,15 +288,6 @@ final class Blueworx_Clubhouse_Setup_Controller {
 		$plugin_url = defined( 'BLUEWORX_LABS_CLUBHOUSE_URL' ) ? BLUEWORX_LABS_CLUBHOUSE_URL : '';
 		$theming    = self::look_theming( $registry, $branding, $plugin_url );
 
-		$pages_state    = array();
-		$sections_state = array();
-		foreach ( Blueworx_Clubhouse_Setup_Sections::inventory() as $page ) {
-			$pages_state[ $page['page'] ] = $vis->is_page_visible( $page['page'] );
-			foreach ( $page['sections'] as $section ) {
-				$sections_state[ $page['page'] . '.' . $section['key'] ] = $vis->is_section_visible( $page['page'], $section['key'] );
-			}
-		}
-
 		$auth = new Blueworx_Clubhouse_Auth_Settings( $storage );
 
 		return array(
@@ -331,7 +301,7 @@ final class Blueworx_Clubhouse_Setup_Controller {
 				// exactly when a blank "after signing in" starts meaning it.
 				'dashboard_url' => Blueworx_Clubhouse_Shop_Pages::url( 'dashboard' ),
 			),
-			'progress'      => Blueworx_Clubhouse_Setup_Progress::compute( $branding, $active_look ?? new Blueworx_Clubhouse_Court_Side(), '' !== $active_slug, (bool) $storage->get( self::VIS_SAVED_KEY, false ) ),
+			'progress'      => Blueworx_Clubhouse_Setup_Progress::compute( $branding, $active_look ?? new Blueworx_Clubhouse_Court_Side(), '' !== $active_slug ),
 			'looks'         => $looks,
 			'color_palette' => self::PALETTE,
 			'branding'      => array(
@@ -353,8 +323,6 @@ final class Blueworx_Clubhouse_Setup_Controller {
 				'linkedin'            => $branding->get_linkedin_url(),
 				'x'                   => $branding->get_x_url(),
 			),
-			'inventory'     => Blueworx_Clubhouse_Setup_Sections::inventory(),
-			'visibility'    => array( 'pages' => $pages_state, 'sections' => $sections_state ),
 			'active_slug'   => null !== $active_look ? $active_look->slug() : '',
 			'look_tokens'   => $theming['tokens'],
 			'font_face_css' => $theming['faces'],

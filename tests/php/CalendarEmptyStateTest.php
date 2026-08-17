@@ -16,14 +16,7 @@ use PHPUnit\Framework\TestCase;
 final class CalendarEmptyStateTest extends TestCase {
 
 	private function calendar( Blueworx_Clubhouse_Collections $collections, string $filter = '' ): string {
-		return Blueworx_Clubhouse_Page_Renderer::calendar(
-			new Blueworx_Clubhouse_Branding( new Blueworx_Clubhouse_Fake_Storage() ),
-			new Blueworx_Clubhouse_Visibility( new Blueworx_Clubhouse_Fake_Storage() ),
-			$collections,
-			'',
-			null,
-			$filter
-		);
+		return Blueworx_Clubhouse_Test_Site::page( 'calendar', null, $filter, $collections );
 	}
 
 	public function test_a_club_with_no_fixtures_is_told_so(): void {

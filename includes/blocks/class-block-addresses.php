@@ -161,6 +161,31 @@ final class Blueworx_Clubhouse_Block_Addresses {
 	}
 
 	/**
+	 * The block that holds an address's content.
+	 *
+	 * Most addresses have a block of their own. Three do not: Home's quick tiles
+	 * and its find-us columns are stored on the blocks they render inside, and
+	 * the cookie notice's wording is stored on the footer. Anything writing
+	 * content at an address — the seeder, the import — has to ask here first, or
+	 * it writes to a block nobody renders.
+	 */
+	public static function host( string $address ): string {
+		if ( 'global/cookies' === $address ) {
+			return 'global/footer';
+		}
+		return (string) ( self::folds()[ $address ] ?? $address );
+	}
+
+	/**
+	 * The prefix an address's field keys take on its host block. Only the cookie
+	 * notice has one, so its wording sits alongside the footer's own without the
+	 * two colliding on 'text' or 'link_label'.
+	 */
+	public static function prefix( string $address ): string {
+		return 'global/cookies' === $address ? 'cookie_' : '';
+	}
+
+	/**
 	 * Addresses whose content renders inside another address's block rather than
 	 * as a section of its own — folded address => the address it renders inside.
 	 * `home/quick_tiles` renders inside `home/hero`'s home_hero block, and

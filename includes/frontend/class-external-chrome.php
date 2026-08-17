@@ -220,12 +220,13 @@ final class Blueworx_Clubhouse_External_Chrome {
 		if ( null === $ctx->look ) {
 			return $html;
 		}
+		Blueworx_Clubhouse_Link_Catalogue::set_composer( $ctx->composer );
 		$logo_url = Blueworx_Clubhouse_Frontend::resolve_logo( $ctx->branding->get_logo() );
-		$club     = $ctx->branding->get_club_name();
-		$header   = Blueworx_Clubhouse_Page_Renderer::chrome_header( $club, $ctx->visibility, $ctx->collections, $logo_url, $ctx->content )
+		// No nav item is marked active: the page being dressed is not one of ours.
+		$header   = $ctx->composer->chrome_header( '', $ctx->branding, $ctx->visibility, $ctx->collections, $logo_url )
 			. self::open_content();
 		$footer   = self::close_content()
-			. Blueworx_Clubhouse_Page_Renderer::chrome_footer( $club, $ctx->visibility, $ctx->branding, $ctx->content );
+			. $ctx->composer->chrome_footer( $ctx->branding, $ctx->visibility, $ctx->collections );
 		return self::inject( $html, $header, $footer );
 	}
 }

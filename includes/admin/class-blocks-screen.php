@@ -12,7 +12,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * model; this class makes no WordPress calls, reads no request data and touches
  * no storage.
  *
- * The individual field controls are drawn by Content_Screen::field_html — the
+ * The individual field controls are drawn by Field_Controls — the
  * same markup, the same media picker and the same link suggestions Club Pages
  * has always had, which is what makes this screen feel like the one it replaces
  * rather than a second, poorer editor.
@@ -67,12 +67,28 @@ final class Blueworx_Clubhouse_Blocks_Screen {
 			. 'A block used on more than one page is edited once, and every page using it follows.</p>';
 	}
 
-	/** @param array<int,array{type:string,text:string}> $notices */
+	/**
+	 * A notice may carry links — the import's list of pictures it could not
+	 * fetch names the blocks that are still missing one, so an owner can go
+	 * straight to each rather than hunt for it.
+	 *
+	 * @param array<int,array{type:string,text:string,links?:array<int,array{label:string,url:string}>}> $notices
+	 */
 	private static function notices( array $notices ): string {
 		$out = '';
 		foreach ( $notices as $notice ) {
 			$out .= '<div class="notice notice-' . self::esc( (string) $notice['type'] ) . ' is-dismissible"><p>'
-				. self::esc( (string) $notice['text'] ) . '</p></div>';
+				. self::esc( (string) $notice['text'] ) . '</p>';
+			$links = is_array( $notice['links'] ?? null ) ? $notice['links'] : array();
+			if ( array() !== $links ) {
+				$out .= '<ul>';
+				foreach ( $links as $link ) {
+					$out .= '<li><a href="' . self::esc( (string) $link['url'] ) . '">'
+						. self::esc( (string) $link['label'] ) . '</a></li>';
+				}
+				$out .= '</ul>';
+			}
+			$out .= '</div>';
 		}
 		return $out;
 	}
@@ -197,7 +213,7 @@ final class Blueworx_Clubhouse_Blocks_Screen {
 		$out = '<div class="clubhouse-fields">';
 		foreach ( $block['fields'] as $field ) {
 			$key  = (string) $field['key'];
-			$out .= Blueworx_Clubhouse_Content_Screen::field_html(
+			$out .= Blueworx_Clubhouse_Field_Controls::render(
 				$field,
 				$block['content'][ $key ] ?? null,
 				'field[' . $key . ']'
@@ -219,7 +235,7 @@ final class Blueworx_Clubhouse_Blocks_Screen {
 			$out .= '<div class="clubhouse-loop__item">';
 			foreach ( $loop['fields'] as $field ) {
 				$key  = (string) $field['key'];
-				$out .= Blueworx_Clubhouse_Content_Screen::field_html(
+				$out .= Blueworx_Clubhouse_Field_Controls::render(
 					$field,
 					is_array( $item ) ? ( $item[ $key ] ?? null ) : null,
 					'item[' . (int) $index . '][' . $key . ']'

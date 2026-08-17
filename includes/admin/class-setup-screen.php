@@ -102,7 +102,6 @@ final class Blueworx_Clubhouse_Setup_Screen {
 		$can_demo = (bool) ( $model['can_demo'] ?? false );
 		$out .= '<div class="clubhouse-tabs" role="tablist">';
 		$out .= '<button type="button" class="clubhouse-tab is-active" data-tab="look" role="tab" aria-selected="true">Base Look &amp; Branding</button>';
-		$out .= '<button type="button" class="clubhouse-tab" data-tab="visibility" role="tab" aria-selected="false">Visibility</button>';
 		$out .= '<button type="button" class="clubhouse-tab" data-tab="members" role="tab" aria-selected="false">Members</button>';
 		if ( null !== $menu ) {
 			$out .= '<button type="button" class="clubhouse-tab" data-tab="menu" role="tab" aria-selected="false">Menu</button>';
@@ -115,8 +114,6 @@ final class Blueworx_Clubhouse_Setup_Screen {
 		$out .= '<section class="clubhouse-panel is-active" data-panel="look" role="tabpanel">'
 			. self::look_area( $model['looks'], $model['look_tokens'] )
 			. self::branding_area( $model['branding'] ) . '</section>';
-		$out .= '<section class="clubhouse-panel" data-panel="visibility" role="tabpanel">'
-			. self::visibility_area( $model['inventory'], $model['visibility'] ) . '</section>';
 		$out .= '<section class="clubhouse-panel" data-panel="members" role="tabpanel">'
 			. self::members_area( $model['members'] ?? array() ) . '</section>';
 		if ( $can_demo ) {
@@ -313,54 +310,6 @@ final class Blueworx_Clubhouse_Setup_Screen {
 			. '<span class="clubhouse-media__actions"><button type="button" class="clubhouse-btn clubhouse-btn--sm" data-media-pick>Choose ' . self::esc( strtolower( $label ) ) . '</button>'
 			. '<button type="button" class="clubhouse-btn-link" data-media-clear>Remove</button></span></span>'
 			. '</div></div>';
-	}
-
-	/**
-	 * @param array<int,array{page:string,label:string,sections:array<int,array{key:string,label:string}>}> $inventory
-	 * @param array{pages:array<string,bool>,sections:array<string,bool>} $visibility
-	 */
-	private static function visibility_area( array $inventory, array $visibility ): string {
-		$out  = '<div class="clubhouse-step"><p class="clubhouse-step__k">Visibility</p><h2 class="clubhouse-step__h">What visitors see</h2>';
-		$out .= '<p class="clubhouse-step__lede">Everything is shown by default. Switch off any page or the sections within it.</p>';
-
-		// Sub-tab nav — one per page, counts from live state.
-		$out .= '<div class="clubhouse-vistabs" role="tablist">';
-		$first = true;
-		foreach ( $inventory as $page ) {
-			$shown = 0;
-			foreach ( $page['sections'] as $section ) {
-				if ( $visibility['sections'][ $page['page'] . '.' . $section['key'] ] ?? true ) {
-					$shown++;
-				}
-			}
-			$total    = count( $page['sections'] );
-			$cls      = $first ? ' is-active' : '';
-			$selected = $first ? 'true' : 'false';
-			$out     .= '<button type="button" class="clubhouse-vistab' . $cls . '" data-vistab="' . self::esc( $page['page'] ) . '" role="tab" aria-selected="' . $selected . '">'
-				. self::esc( $page['label'] ) . ' <span class="clubhouse-vistab__count">' . $shown . '/' . $total . '</span></button>';
-			$first = false;
-		}
-		$out .= '</div>';
-
-		// Sub-panels.
-		$first = true;
-		foreach ( $inventory as $page ) {
-			$page_on = ( $visibility['pages'][ $page['page'] ] ?? true );
-			$cls     = $first ? ' is-active' : '';
-			$out .= '<div class="clubhouse-vispanel' . $cls . '" data-vispanel="' . self::esc( $page['page'] ) . '" role="tabpanel">';
-			$out .= '<div class="clubhouse-vispanel__head"><span class="clubhouse-vispanel__title">' . self::esc( $page['label'] ) . ' sections</span>';
-			$out .= self::toggle( 'clubhouse_page[' . $page['page'] . ']', 'Page shown', $page_on ) . '</div>';
-			$out .= '<div class="clubhouse-toggle-grid">';
-			foreach ( $page['sections'] as $section ) {
-				$skey = $page['page'] . '.' . $section['key'];
-				$on   = ( $visibility['sections'][ $skey ] ?? true );
-				$out .= self::toggle( 'clubhouse_section[' . $skey . ']', $section['label'], $on );
-			}
-			$out .= '</div></div>';
-			$first = false;
-		}
-		$out .= '</div>';
-		return $out;
 	}
 
 	private static function toggle( string $name, string $label, bool $on ): string {

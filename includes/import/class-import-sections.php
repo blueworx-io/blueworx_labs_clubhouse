@@ -7,12 +7,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Works out which sections an import should switch on and which it should
- * switch off, so an owner who imports their own content is not left with demo
+ * Works out which blocks an import should put on a page and which it should
+ * take off, so an owner who imports their own content is not left with demo
  * sections still showing beneath it.
  *
- * Pure: it reads the plan and the catalogue and returns a list of visibility
- * changes. Nothing here writes — the applier does that.
+ * changes() is pure: it reads the plan and the catalogue and says what the file
+ * covered. Only switching_off() and apply() go near the club's own blocks.
  *
  * Two rules keep it from over-reaching:
  *
@@ -34,14 +34,14 @@ final class Blueworx_Clubhouse_Import_Sections {
 	private const CHROME_STORE_PAGE = 'global';
 
 	/**
-	 * The visibility page that owns the catalogue's "Global" tab. The tab holds
-	 * every Home-page section, so its visibility keys live under 'home' —
-	 * Setup_Sections::MAP is the authority and lists them there.
+	 * The page that owns the catalogue's "Global" tab. The tab holds every
+	 * Home-page section, so its entries are keyed under 'home'.
 	 */
 	private const GLOBAL_TAB_PAGE = 'home';
 
 	/**
-	 * Every visibility change this plan implies, in catalogue order.
+	 * Every block move this plan implies, in catalogue order. `visible` is
+	 * whether the file covered that section, not whether the site shows it.
 	 *
 	 * @return array<int,array{page:string,section:string,label:string,visible:bool}>
 	 */
@@ -114,18 +114,24 @@ final class Blueworx_Clubhouse_Import_Sections {
 	}
 
 	/**
-	 * The sections an import would actually switch off — the ones showing today
-	 * that the file has no content for. Named for a human, for the preview:
-	 * switching a section on is self-evident from the content rows above it,
-	 * switching one off is not, and a section the owner already hid is not news.
+	 * The blocks an import would actually take off a page — the ones showing
+	 * today that the file has no content for. Named for a human, for the
+	 * preview: putting a block on a page is self-evident from the content rows
+	 * above it, taking one off is not, and a block the owner had already removed
+	 * is not news.
 	 *
 	 * @return array<int,string>
 	 */
 	public static function switching_off( Blueworx_Clubhouse_Import_Plan $plan, Blueworx_Clubhouse_Storage $storage ): array {
-		$visibility = new Blueworx_Clubhouse_Visibility( $storage );
-		$labels     = array();
+		$library     = new Blueworx_Clubhouse_Block_Library( $storage );
+		$composition = new Blueworx_Clubhouse_Page_Composition( $storage );
+		$labels      = array();
 		foreach ( self::changes( $plan ) as $change ) {
-			if ( ! $change['visible'] && $visibility->is_section_visible( $change['page'], $change['section'] ) ) {
+			$id = self::block_for( $change, $library );
+			if ( '' === $id || $change['visible'] ) {
+				continue;
+			}
+			if ( in_array( $change['page'], $composition->uses( $id ), true ) ) {
 				$labels[] = $change['label'];
 			}
 		}
@@ -133,27 +139,73 @@ final class Blueworx_Clubhouse_Import_Sections {
 	}
 
 	/**
-	 * Write the changes. Returns how many sections were switched on and off,
-	 * counting only real changes so the result never claims to have moved a
-	 * toggle that was already where the import wanted it.
+	 * Write the changes: a block whose section the file filled goes onto its
+	 * page, one it did not comes off. The block stays in the library either way,
+	 * so a club's words survive an import that did not mention them.
+	 *
+	 * Counts only real moves, so the result never claims to have changed a page
+	 * that was already the way the import wanted it.
 	 *
 	 * @return array{on:int,off:int}
 	 */
 	public static function apply( Blueworx_Clubhouse_Import_Plan $plan, Blueworx_Clubhouse_Storage $storage ): array {
-		$visibility = new Blueworx_Clubhouse_Visibility( $storage );
-		$on         = 0;
-		$off        = 0;
+		$library     = new Blueworx_Clubhouse_Block_Library( $storage );
+		$composition = new Blueworx_Clubhouse_Page_Composition( $storage );
+		$on          = 0;
+		$off         = 0;
 		foreach ( self::changes( $plan ) as $change ) {
-			if ( $visibility->is_section_visible( $change['page'], $change['section'] ) === $change['visible'] ) {
+			$id = self::block_for( $change, $library );
+			if ( '' === $id ) {
 				continue;
 			}
-			$visibility->set_section_visible( $change['page'], $change['section'], $change['visible'] );
+			$page = $change['page'];
+			if ( in_array( $page, $composition->uses( $id ), true ) === $change['visible'] ) {
+				continue;
+			}
 			if ( $change['visible'] ) {
+				$composition->add( $page, $id );
 				++$on;
 				continue;
 			}
+			$composition->remove( $page, $id );
 			++$off;
 		}
+
+		// The Home tier grid has never had a switch of its own: it appears with
+		// the membership band above it and goes with it, which is how the page
+		// has always behaved.
+		foreach ( self::changes( $plan ) as $change ) {
+			if ( 'home' !== $change['page'] || 'membership' !== $change['section'] ) {
+				continue;
+			}
+			$tiers = $library->by_address( 'home/tiers' );
+			if ( '' === $tiers || in_array( 'home', $composition->uses( $tiers ), true ) === $change['visible'] ) {
+				continue;
+			}
+			if ( $change['visible'] ) {
+				$composition->add( 'home', $tiers );
+				continue;
+			}
+			$composition->remove( 'home', $tiers );
+		}
+
 		return array( 'on' => $on, 'off' => $off );
+	}
+
+	/**
+	 * The block a change moves, or '' when this site has none for it.
+	 *
+	 * A folded address has no block of its own — Home's find-us columns are part
+	 * of the closing band — so it cannot be moved on or off a page separately
+	 * and is skipped here.
+	 *
+	 * @param array{page:string,section:string,label:string,visible:bool} $change
+	 */
+	private static function block_for( array $change, Blueworx_Clubhouse_Block_Library $library ): string {
+		$address = $change['page'] . '/' . $change['section'];
+		if ( Blueworx_Clubhouse_Block_Addresses::host( $address ) !== $address ) {
+			return '';
+		}
+		return $library->by_address( $address );
 	}
 }

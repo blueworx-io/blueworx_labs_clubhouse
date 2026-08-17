@@ -11,24 +11,12 @@ use PHPUnit\Framework\TestCase;
  */
 final class LegalPagesTest extends TestCase {
 
-	private function branding(): Blueworx_Clubhouse_Branding {
-		return new Blueworx_Clubhouse_Branding( new Blueworx_Clubhouse_Fake_Storage() );
+	private function privacy( ?Blueworx_Clubhouse_Fake_Storage $storage = null ): string {
+		return Blueworx_Clubhouse_Test_Site::page( 'privacy', $storage );
 	}
 
-	private function visibility(): Blueworx_Clubhouse_Visibility {
-		return new Blueworx_Clubhouse_Visibility( new Blueworx_Clubhouse_Fake_Storage() );
-	}
-
-	private function collections(): Blueworx_Clubhouse_Collections {
-		return new Blueworx_Clubhouse_Demo_Collections();
-	}
-
-	private function privacy( ?Blueworx_Clubhouse_Content_Store $content = null ): string {
-		return Blueworx_Clubhouse_Page_Renderer::privacy( $this->branding(), $this->visibility(), $this->collections(), '', $content );
-	}
-
-	private function terms( ?Blueworx_Clubhouse_Content_Store $content = null ): string {
-		return Blueworx_Clubhouse_Page_Renderer::terms( $this->branding(), $this->visibility(), $this->collections(), '', $content );
+	private function terms( ?Blueworx_Clubhouse_Fake_Storage $storage = null ): string {
+		return Blueworx_Clubhouse_Test_Site::page( 'terms', $storage );
 	}
 
 	public function test_both_pages_are_pages_this_site_serves(): void {
@@ -64,11 +52,11 @@ final class LegalPagesTest extends TestCase {
 	}
 
 	public function test_a_club_can_replace_the_wording_entirely(): void {
-		$content = new Blueworx_Clubhouse_Content_Store( new Blueworx_Clubhouse_Fake_Storage() );
-		$content->set_items( 'privacy', 'body', array(
+		$storage = new Blueworx_Clubhouse_Fake_Storage();
+		Blueworx_Clubhouse_Test_Site::write( $storage, 'privacy/body', array( 'items' => array(
 			array( 'heading' => 'Our policy', 'body' => "First para.\n\nSecond para." ),
-		) );
-		$html = $this->privacy( $content );
+		) ) );
+		$html = $this->privacy( $storage );
 		$this->assertStringContainsString( 'Our policy', $html );
 		$this->assertStringNotContainsString( 'ADD:', $html );
 		// Blank lines become paragraphs; that is the whole of the formatting.
@@ -80,11 +68,11 @@ final class LegalPagesTest extends TestCase {
 	public function test_pasted_markup_is_escaped_rather_than_rendered(): void {
 		// The one page a club is most likely to paste something into from
 		// elsewhere, so it is also the one that must not honour what it pastes.
-		$content = new Blueworx_Clubhouse_Content_Store( new Blueworx_Clubhouse_Fake_Storage() );
-		$content->set_items( 'privacy', 'body', array(
+		$storage = new Blueworx_Clubhouse_Fake_Storage();
+		Blueworx_Clubhouse_Test_Site::write( $storage, 'privacy/body', array( 'items' => array(
 			array( 'heading' => 'X', 'body' => '<script>alert(1)</script>' ),
-		) );
-		$this->assertStringNotContainsString( '<script>', $this->privacy( $content ) );
+		) ) );
+		$this->assertStringNotContainsString( '<script>', $this->privacy( $storage ) );
 	}
 
 	public function test_the_footer_links_to_both_pages_from_every_page(): void {
@@ -102,7 +90,7 @@ final class LegalPagesTest extends TestCase {
 		$vis     = new Blueworx_Clubhouse_Visibility( $storage );
 		$vis->set_page_visible( 'terms', false );
 
-		$html = Blueworx_Clubhouse_Page_Renderer::privacy( $this->branding(), $vis, $this->collections(), '', null );
+		$html = $this->privacy( $storage );
 		$this->assertStringContainsString( '>Privacy<', $html );
 		$this->assertStringNotContainsString( '>Terms<', $html );
 	}
@@ -126,9 +114,9 @@ final class LegalPagesTest extends TestCase {
 	public function test_a_club_can_switch_the_cookie_notice_off_by_emptying_it(): void {
 		// Clubs running a real consent plugin need this out of the way, and an
 		// empty text is the plainest way to ask for that.
-		$content = new Blueworx_Clubhouse_Content_Store( new Blueworx_Clubhouse_Fake_Storage() );
-		$content->set( 'global', 'cookies', 'show', '0' );
-		$this->assertStringNotContainsString( 'ch-cookie', $this->privacy( $content ) );
+		$storage = new Blueworx_Clubhouse_Fake_Storage();
+		Blueworx_Clubhouse_Test_Site::write( $storage, 'global/cookies', array( 'show' => '0' ) );
+		$this->assertStringNotContainsString( 'ch-cookie', $this->privacy( $storage ) );
 	}
 
 	public function test_an_empty_document_renders_nothing_rather_than_an_empty_section(): void {

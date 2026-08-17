@@ -12,8 +12,8 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * handle_request() takes the request arrays and a Storage rather than reading
  * superglobals, so the whole flow is unit-testable without WordPress, mirroring
- * Setup_Controller and Content_Controller. The capability and nonce checks live
- * in the thin WP entry points either side of it.
+ * Setup_Controller. The capability and nonce checks live in the thin WP entry
+ * points either side of it.
  *
  * @package BlueworxLabsClubhouse
  */
@@ -175,9 +175,11 @@ final class Blueworx_Clubhouse_Import_Controller {
 		}
 
 		$plan    = $parsed['plan'];
+		$shared  = Blueworx_Clubhouse_Import_Preview::shared_pages( $storage );
 		$summary = Blueworx_Clubhouse_Import_Preview::summary(
 			$plan,
-			Blueworx_Clubhouse_Import_Applier::demo_counts( array_keys( $plan->collections() ) )
+			Blueworx_Clubhouse_Import_Applier::demo_counts( array_keys( $plan->collections() ) ),
+			$shared
 		);
 
 		set_transient( self::plan_key(), $plan->to_array(), self::PLAN_TTL );
@@ -216,13 +218,13 @@ final class Blueworx_Clubhouse_Import_Controller {
 	/**
 	 * Merge, never replace: the prompt actively encourages importing a tab at a
 	 * time, so a later, unrelated import must not wipe an earlier one's
-	 * still-outstanding image list. De-duplicated on page|section|field|index —
-	 * the same identity Content_Controller::clear_filled_images() keys on when it
-	 * later drops an entry the owner has since filled in.
+	 * still-outstanding image list. De-duplicated on block|field|index — the same
+	 * identity Blocks_Controller keys on when it later drops an entry the owner
+	 * has since filled in.
 	 *
-	 * @param array<int,array{label:string,page:string,section:string,field:string,index:int}> $existing
-	 * @param array<int,array{label:string,page:string,section:string,field:string,index:int}> $new
-	 * @return array<int,array{label:string,page:string,section:string,field:string,index:int}>
+	 * @param array<int,array{label:string,block:string,field:string,index:int}> $existing
+	 * @param array<int,array{label:string,block:string,field:string,index:int}> $new
+	 * @return array<int,array{label:string,block:string,field:string,index:int}>
 	 */
 	private static function merge_images_needed( array $existing, array $new ): array {
 		$merged = array();
@@ -232,8 +234,7 @@ final class Blueworx_Clubhouse_Import_Controller {
 				continue;
 			}
 			$key = implode( '|', array(
-				(string) ( $entry['page'] ?? '' ),
-				(string) ( $entry['section'] ?? '' ),
+				(string) ( $entry['block'] ?? '' ),
 				(string) ( $entry['field'] ?? '' ),
 				(string) ( $entry['index'] ?? -1 ),
 			) );

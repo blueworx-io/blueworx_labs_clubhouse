@@ -370,7 +370,6 @@ final class Blueworx_Clubhouse_Owner_Capabilities {
 			'index.php',              // Dashboard.
 			'clubhouse-setup',        // Clubhouse.
 			'clubhouse-pages',        // Content — pages and blocks.
-			'clubhouse-site-content', // Club Pages.
 			'clubhouse-content',      // Collections.
 			self::SURECART_MENU,      // SureCart.
 			self::LATEPOINT_MENU,     // LatePoint.
@@ -397,7 +396,7 @@ final class Blueworx_Clubhouse_Owner_Capabilities {
 		return array(
 			'index.php',              // Dashboard.
 			'clubhouse-setup',        // Clubhouse — the Menu tab only, for this role.
-			'clubhouse-site-content', // Club Pages.
+			'clubhouse-pages',        // Content — pages and blocks.
 			'clubhouse-content',      // Collections.
 			'edit.php',               // Posts.
 			'upload.php',             // Media.

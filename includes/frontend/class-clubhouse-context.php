@@ -22,6 +22,6 @@ final class Blueworx_Clubhouse_Clubhouse_Context {
 		public readonly Blueworx_Clubhouse_Theme_Cache $cache,
 		public readonly Blueworx_Clubhouse_Collections $collections,
 		public readonly Blueworx_Clubhouse_Base_Look_Registry $registry,
-		public readonly ?Blueworx_Clubhouse_Content_Store $content = null
+		public readonly Blueworx_Clubhouse_Page_Composer $composer
 	) {}
 }

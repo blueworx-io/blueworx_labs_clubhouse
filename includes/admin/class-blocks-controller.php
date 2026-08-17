@@ -20,7 +20,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 final class Blueworx_Clubhouse_Blocks_Controller {
 
-	public const CAPABILITY = Blueworx_Clubhouse_Owner_Capabilities::SETUP_CAP;
+	public const CAPABILITY = Blueworx_Clubhouse_Owner_Capabilities::CONTENT_CAP;
 	public const PAGE_SLUG  = 'clubhouse-blocks';
 	public const NONCE      = 'clubhouse_blocks_save';
 
@@ -138,11 +138,6 @@ final class Blueworx_Clubhouse_Blocks_Controller {
 		}
 
 		$library->set_content( $id, $content );
-
-		// Written back to the old store as well, so the next Club Pages or Setup
-		// save — both of which still project that store onto the blocks — does not
-		// undo what was just typed here. Goes with that projection (issue #207).
-		Blueworx_Clubhouse_Block_Seeder::project( $library->get( $id ), new Blueworx_Clubhouse_Content_Store( $storage ) );
 
 		if ( array() === $notices ) {
 			$used      = $composition->uses( $id );
@@ -288,6 +283,12 @@ final class Blueworx_Clubhouse_Blocks_Controller {
 			$block_id = '';
 		}
 
+		// The link picker offers this club's own blocks, so a URL field can point
+		// at a block the owner made rather than only the ones shipped.
+		Blueworx_Clubhouse_Link_Catalogue::set_composer( new Blueworx_Clubhouse_Page_Composer( $library, $composition ) );
+
+		$notices = array_merge( self::images_needed( $storage, $library, $action_url ), $notices );
+
 		return array(
 			'groups'         => self::groups( $blocks, $composition, $block_id, $action_url ),
 			'current'        => '' === $block_id ? null : self::current( $blocks[ $block_id ], $composition ),
@@ -302,6 +303,83 @@ final class Blueworx_Clubhouse_Blocks_Controller {
 			'font_face_css'  => Blueworx_Clubhouse_Page_Renderer::font_face_css( $look, $plugin_url ),
 			'role_tags'      => '',
 		);
+	}
+
+	/**
+	 * The pictures an import could not fetch, as a notice linking to each block
+	 * still waiting for one. Read from the same storage key the importer writes,
+	 * so the list survives until an owner actually supplies the files.
+	 *
+	 * An entry whose block has since been deleted is dropped: there is nothing
+	 * left to send anybody to.
+	 *
+	 * @return array<int,array{type:string,text:string,links:array<int,array{label:string,url:string}>}>
+	 */
+	private static function images_needed(
+		Blueworx_Clubhouse_Storage $storage,
+		Blueworx_Clubhouse_Block_Library $library,
+		string $action_url
+	): array {
+		$needed = $storage->get( Blueworx_Clubhouse_Import_Controller::IMAGES_NEEDED_KEY, array() );
+		if ( ! is_array( $needed ) || array() === $needed ) {
+			return array();
+		}
+
+		$links = array();
+		$left  = array();
+		foreach ( $needed as $entry ) {
+			if ( ! is_array( $entry ) ) {
+				continue;
+			}
+			$id    = (string) ( $entry['block'] ?? '' );
+			$block = '' === $id ? null : $library->get( $id );
+			if ( null === $block ) {
+				continue;
+			}
+			if ( '' !== self::stored_image( $block, (string) ( $entry['field'] ?? '' ), (int) ( $entry['index'] ?? -1 ) ) ) {
+				continue;
+			}
+			$left[]  = $entry;
+			$links[] = array(
+				'label' => (string) ( $entry['label'] ?? $block['name'] ),
+				'url'   => $action_url . '&block=' . rawurlencode( $id ),
+			);
+		}
+		$storage->set( Blueworx_Clubhouse_Import_Controller::IMAGES_NEEDED_KEY, array_values( $left ) );
+
+		if ( array() === $links ) {
+			return array();
+		}
+		$count = count( $links );
+		return array( array(
+			'type'  => 'warning',
+			'text'  => sprintf(
+				'%d %s from your import could not be fetched. Add %s whenever you have the files:',
+				$count,
+				1 === $count ? 'picture' : 'pictures',
+				1 === $count ? 'it' : 'them'
+			),
+			'links' => $links,
+		) );
+	}
+
+	/**
+	 * What a block currently holds at an image slot. Branches on the index the
+	 * same way the applier placed it: a block-level image (index < 0) is a plain
+	 * content field, a repeated item's image lives at items[index][field].
+	 * Reading the wrong one would leave an entry that could never clear.
+	 *
+	 * @param array<string,mixed> $block
+	 */
+	private static function stored_image( array $block, string $field, int $index ): string {
+		$content = (array) $block['content'];
+		if ( $index < 0 ) {
+			$value = $content[ $field ] ?? '';
+		} else {
+			$items = is_array( $content['items'] ?? null ) ? array_values( $content['items'] ) : array();
+			$value = $items[ $index ][ $field ] ?? '';
+		}
+		return '0' === (string) $value ? '' : (string) $value;
 	}
 
 	/**

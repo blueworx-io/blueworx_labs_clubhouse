@@ -85,21 +85,19 @@ final class Blueworx_Clubhouse_Guide_Controller {
 			);
 		}
 
-		// Keyed by page so the section inventory can be matched to the page map
-		// without either of them having to know the other's order.
-		$sections_by_page = array();
-		foreach ( Blueworx_Clubhouse_Setup_Sections::inventory() as $entry ) {
-			$sections_by_page[ (string) $entry['page'] ] = (array) $entry['sections'];
-		}
+		// Each page as it is actually built: the blocks on it, in the order the
+		// site renders them. A block an owner has taken off a page is simply not
+		// listed, which is what "not on this page" now means.
+		$composer = Blueworx_Clubhouse_Frontend::composer();
 
 		$pages = array();
 		foreach ( Blueworx_Clubhouse_Page_Map::available() as $page ) {
-			$key      = '' === (string) $page['slug'] ? 'home' : (string) $page['slug'];
+			$key      = Blueworx_Clubhouse_Page_Map::page_key( (string) $page['slug'] );
 			$sections = array();
-			foreach ( $sections_by_page[ $key ] ?? array() as $section ) {
+			foreach ( $composer->blocks_for( $key ) as $block ) {
 				$sections[] = array(
-					'label'   => (string) $section['label'],
-					'visible' => $visibility->is_section_visible( $key, (string) $section['key'] ),
+					'label'   => (string) $block['name'],
+					'visible' => true,
 				);
 			}
 			$pages[] = array(
@@ -117,7 +115,6 @@ final class Blueworx_Clubhouse_Guide_Controller {
 			'screens'     => self::screens(),
 			'collections' => self::collections(),
 			'setup_url'   => admin_url( 'admin.php?page=' . Blueworx_Clubhouse_Setup_Controller::PAGE_SLUG ),
-			'content_url' => admin_url( 'admin.php?page=' . Blueworx_Clubhouse_Content_Controller::PAGE_SLUG ),
 			'pages_url'   => admin_url( 'admin.php?page=' . Blueworx_Clubhouse_Pages_Controller::PAGE_SLUG ),
 			'blocks_url'  => admin_url( 'admin.php?page=' . Blueworx_Clubhouse_Blocks_Controller::PAGE_SLUG ),
 		);
