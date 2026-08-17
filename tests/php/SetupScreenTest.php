@@ -17,9 +17,9 @@ final class SetupScreenTest extends TestCase {
 			'action_url'    => 'https://club.test/wp-admin/admin.php?page=clubhouse-setup',
 			'notices'       => array( array( 'type' => 'error', 'text' => 'That accent is too low-contrast.' ) ),
 			'progress'      => array(
-				'items'     => array( 'look' => true, 'accent' => false, 'club_name' => true, 'logo_favicon' => false, 'social' => false, 'visibility' => false ),
+				'items'     => array( 'look' => true, 'accent' => false, 'club_name' => true, 'logo_favicon' => false, 'social' => false ),
 				'completed' => 2,
-				'total'     => 6,
+				'total'     => 5,
 			),
 			'looks'         => array(
 				array( 'slug' => 'court-side', 'name' => 'Court Side', 'description' => 'Bright & playful.', 'active' => true ),
@@ -39,8 +39,6 @@ final class SetupScreenTest extends TestCase {
 				'linkedin' => 'https://linkedin.com/company/riverside',
 				'x' => 'https://x.com/riverside',
 			),
-			'inventory'     => Blueworx_Clubhouse_Setup_Sections::inventory(),
-			'visibility'    => array( 'pages' => array( 'events' => false ), 'sections' => array( 'home.ticker' => false ) ),
 		);
 	}
 
@@ -48,14 +46,13 @@ final class SetupScreenTest extends TestCase {
 		$html = Blueworx_Clubhouse_Setup_Screen::render( $this->model() );
 		$this->assertStringContainsString( 'name="_wpnonce" value="NONCE123"', $html );
 		$this->assertStringContainsString( 'action="https://club.test/wp-admin/admin.php?page=clubhouse-setup"', $html );
-		$this->assertStringContainsString( '2 of 6', $html );
+		$this->assertStringContainsString( '2 of 5', $html );
 	}
 
 	public function test_owner_sees_two_tabs_and_no_demo(): void {
 		// Default model has can_demo unset/false — the owner view.
 		$html = Blueworx_Clubhouse_Setup_Screen::render( $this->model() );
 		$this->assertStringContainsString( 'data-tab="look"', $html );
-		$this->assertStringContainsString( 'data-tab="visibility"', $html );
 		$this->assertStringNotContainsString( 'data-tab="demo"', $html );
 		$this->assertStringNotContainsString( 'clubhouse_demo_active', $html );
 	}
@@ -91,21 +88,6 @@ final class SetupScreenTest extends TestCase {
 		$this->assertStringContainsString( 'name="clubhouse_favicon"', $html );
 		$this->assertStringContainsString( 'name="clubhouse_linkedin"', $html );
 		$this->assertStringContainsString( 'value="https://linkedin.com/company/riverside"', $html );
-	}
-
-	public function test_renders_a_toggle_per_section_plus_per_page(): void {
-		$html = Blueworx_Clubhouse_Setup_Screen::render( $this->model() );
-		// Counted from the live inventory rather than pinned: the Booking page is
-		// only in it when LatePoint is installed, so a literal would encode which
-		// integrations the test machine happens to have.
-		$expected = array_sum( array_map(
-			static fn( array $p ): int => count( $p['sections'] ),
-			Blueworx_Clubhouse_Setup_Sections::inventory()
-		) );
-		$this->assertSame( $expected, substr_count( $html, 'name="clubhouse_section[' ) );
-		$this->assertSame( count( Blueworx_Clubhouse_Setup_Sections::inventory() ), substr_count( $html, 'name="clubhouse_page[' ) );
-		$this->assertStringContainsString( 'name="clubhouse_section[home.hero]" value="1" checked', $html );
-		$this->assertStringContainsString( 'name="clubhouse_section[home.ticker]" value="1">', $html );
 	}
 
 	public function test_save_button_is_never_disabled(): void {
