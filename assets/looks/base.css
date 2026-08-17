@@ -347,8 +347,17 @@ button,input,select,textarea{font-family:inherit}
 .ch-posts--sm .ch-postcard__title{font-size:19px}
 .ch-main--article{display:block}
 
+/* The filters belong to the story list, not to the featured card, but a full
+   section gap above them read as a broken layout: the pills floated in empty
+   space with the card above and their own rule line below. Tightened to the
+   in-section gap so the row sits under the featured story as one page rather
+   than two. Two classes, so it beats each look's `.ch-main > * + *` flow rule
+   whichever order the stylesheets load in. */
+.ch-featured + .ch-newsgrid{margin-top:var(--space-10)}
+
 @media(max-width:640px){
 .ch-featured{margin-top:-24px}
+.ch-featured + .ch-newsgrid{margin-top:var(--space-8)}
 .ch-newshead{padding-block:var(--space-10) calc(var(--space-12) + 24px)}
 }
 
