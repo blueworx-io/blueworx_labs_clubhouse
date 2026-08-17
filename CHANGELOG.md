@@ -5,6 +5,10 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.72.0
+
+- **A screen for arranging a page.** Content → Pages lists your pages down the side and shows what the chosen one is built from, top to bottom. Take a block off a page without deleting it, put an existing one on so both pages show the same words, or make a new one of any kind. The page's own on/off switch lives here too. The header and footer are pinned top and bottom, because they are on every page.
+
 ## 0.71.0
 
 - **Every page is now built from a library of blocks.** Until now each page was a fixed recipe written into the plugin and all you could do was switch a section off. Your pages are now assembled from named blocks instead, which is what makes editing something once and reusing it possible. Your site is unchanged — every page renders exactly as it did, your words and your switched-off sections carried over on update, and Club Pages still edits everything. The screens for arranging pages and managing the block library come next.

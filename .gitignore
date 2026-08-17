@@ -12,5 +12,8 @@ composer.lock
 .playwright-mcp/
 /*.png
 
-# Disposable local WordPress test instance (foundation wp-test-env.mjs)
+# Disposable local WordPress test instances (foundation wp-test-env.mjs).
+# .wp-smoke is the second one, kept for upgrade checks that need a site with
+# real saved content on the previous version.
 .wp-test/
+.wp-smoke/

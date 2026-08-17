@@ -64,6 +64,13 @@ final class Blueworx_Clubhouse_Admin_Pages {
 				'description' => 'The words and images on every page.',
 			),
 			array(
+				'slug'        => Blueworx_Clubhouse_Pages_Controller::PAGE_SLUG,
+				'label'       => 'Content',
+				'cap'         => Blueworx_Clubhouse_Pages_Controller::CAPABILITY,
+				'menu'        => Blueworx_Clubhouse_Pages_Controller::PAGE_SLUG,
+				'description' => 'What each page is built from, and the blocks it is built from.',
+			),
+			array(
 				'slug'        => Blueworx_Clubhouse_Import_Controller::PAGE_SLUG,
 				'label'       => 'Import',
 				'cap'         => Blueworx_Clubhouse_Import_Controller::CAPABILITY,
