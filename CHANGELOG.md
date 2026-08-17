@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## 0.73.2
 
-- Internal only: the repo's own priority list now reflects what has shipped. Nothing changes on a site.
+- Internal only: the repo's own priority list now reflects what has shipped, and the two new screens' browser tests no longer depend on the order they run in. Nothing changes on a site.
 
 ## 0.73.1
 
