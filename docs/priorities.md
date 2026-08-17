@@ -8,7 +8,27 @@ it current: when an issue closes, strike it here.
 
 ---
 
-## 1. The page builder — the whole list
+## The running order
+
+Do these in this order. The only ordering that truly matters is the smoke test
+before the screens — the rest is a chain because each step's output is the next
+step's input.
+
+| # | Do | Why here |
+| --- | --- | --- |
+| 1 | Merge PR #203 | Everything else sits on top of it. |
+| 2 | [#208](../../issues/208) Smoke-test the migration on real WordPress | The only unproven part of what is already built. If it mangles a club's saved content, both screens would be built on a broken foundation. An hour with a test install. |
+| 3 | [#204](../../issues/204) Content → Pages screen | The bigger screen, and the first thing that lets an owner do something they cannot do today. Its Edit links can land on the old editor until step 4. |
+| 4 | [#205](../../issues/205) Content → Blocks screen | Gives those Edit links a home, and stops Club Pages being the only way to change a block's words. |
+| 5 | [#206](../../issues/206) Repoint import, guide and link picker | Only worth doing once both screens exist, so guide links point at their final home and the import preview can name the pages a shared block affects. |
+| 6 | [#207](../../issues/207) Delete the old path | Last, and only when nothing needs it. Budget the time for rewriting the page tests that call the old methods — that is the bulk of it, not the deletion. |
+
+**Alongside, whenever it suits:** [#209](../../issues/209) the real purchase, as
+soon as there is a live shop to try it on, and [#210](../../issues/210) the
+privacy and terms wording, which is the club's to write. Neither blocks the
+builder; both block a real launch, so do not let them drift to the end.
+
+## 1. The page builder
 
 Spec: `docs/superpowers/specs/2026-08-13-page-composition-and-block-library-design.md`.
 
