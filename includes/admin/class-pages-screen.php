@@ -24,9 +24,29 @@ final class Blueworx_Clubhouse_Pages_Screen {
 		return htmlspecialchars( $v, ENT_QUOTES, 'UTF-8' );
 	}
 
+	/**
+	 * The active look's tokens, emitted raw inside a <style> block rather than
+	 * escaped — a style element is raw text, and entity-escaping would corrupt
+	 * quoted font-family names. Values are server-composed look tokens; the two
+	 * characters that could close the block early are stripped as a belt.
+	 *
+	 * @param array<string,string> $tokens
+	 */
+	private static function css_tokens( array $tokens ): string {
+		$out = '';
+		foreach ( $tokens as $name => $value ) {
+			$out .= str_replace( array( '<', '}' ), '', (string) $name )
+				. ':' . str_replace( array( '<', '}' ), '', (string) $value ) . ';';
+		}
+		return $out;
+	}
+
 	/** @param array<string,mixed> $model */
 	public static function render( array $model ): string {
-		$out  = '<div class="wrap clubhouse-wrap"><div class="clubhouse-setup">';
+		$out  = '<div class="wrap clubhouse-wrap">';
+		$out .= '<style>' . (string) ( $model['font_face_css'] ?? '' )
+			. '.clubhouse-setup{' . self::css_tokens( (array) ( $model['tokens'] ?? array() ) ) . '}</style>';
+		$out .= '<div class="clubhouse-setup">';
 		$out .= self::head( (string) ( $model['role_tags'] ?? '' ) );
 		$out .= self::notices( $model['notices'] );
 		$out .= '<div class="clubhouse-pages">';

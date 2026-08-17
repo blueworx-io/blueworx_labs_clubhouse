@@ -203,3 +203,6 @@ body.toplevel_page_clubhouse-setup #wpfooter { display: none; }
   .clubhouse-pages { grid-template-columns: 1fr; }
   .clubhouse-pages__list { position: static; flex-direction: row; flex-wrap: wrap; }
 }
+/* A link acting as a button: WordPress underlines every admin link, which makes
+   an Edit pill read as a link inside a button rather than a button. */
+a.clubhouse-btn { text-decoration: none; display: inline-block; }

@@ -160,9 +160,65 @@ final class Blueworx_Clubhouse_Pages_Controller {
 			return array();
 		}
 		$name = self::page_label( $page ) . ' ' . Blueworx_Clubhouse_Block_Types::get( $type )['label'];
-		$id   = $library->add( $type, $name );
+		$id   = $library->add( $type, $name, '', self::position_for( $type, $page, $library, $composition ) );
 		$composition->add( $page, $id );
 		return array( self::notice( sprintf( '"%s" is on this page. Add its words under Content → Blocks.', $name ) ) );
+	}
+
+	/**
+	 * Where a new block of this type belongs on this page.
+	 *
+	 * A block's type has a rank saying roughly how far down a page its kind
+	 * belongs — a hero near the top, a call-to-action band near the bottom. That
+	 * rank cannot be used as the position directly: a migrated page numbers its
+	 * blocks 10, 20, 30 in the order it already had them, so any rank at all
+	 * would put a new block last, and "New hero" would drop a hero under the
+	 * footer's shoulder rather than at the top.
+	 *
+	 * So the rank decides the neighbours rather than the number. The new block
+	 * goes after the last block on the page whose kind belongs above it, halfway
+	 * between that block and the next — leaving room to do the same again.
+	 */
+	private static function position_for(
+		string $type,
+		string $page,
+		Blueworx_Clubhouse_Block_Library $library,
+		Blueworx_Clubhouse_Page_Composition $composition
+	): int {
+		$rank = Blueworx_Clubhouse_Block_Types::rank( $type );
+
+		$on_page = array();
+		foreach ( $composition->blocks( $page ) as $id ) {
+			$block = $library->get( $id );
+			if ( null !== $block ) {
+				$on_page[] = array(
+					'position' => (int) $block['position'],
+					'rank'     => Blueworx_Clubhouse_Block_Types::rank( (string) $block['type'] ),
+				);
+			}
+		}
+		if ( array() === $on_page ) {
+			return $rank;
+		}
+		usort( $on_page, static fn( array $a, array $b ): int => $a['position'] <=> $b['position'] );
+
+		$after = null;
+		$before = null;
+		foreach ( $on_page as $index => $block ) {
+			if ( $block['rank'] <= $rank ) {
+				$after  = $block['position'];
+				$before = $on_page[ $index + 1 ]['position'] ?? null;
+			}
+		}
+		if ( null === $after ) {
+			// Nothing on the page belongs above it — it goes first, and a page whose
+			// first block is already at 1 keeps it there rather than going negative.
+			return max( 1, $on_page[0]['position'] - 5 );
+		}
+		if ( null === $before ) {
+			return $after + 5;
+		}
+		return intdiv( $after + $before, 2 );
 	}
 
 	/** @return array{type:string,text:string} */
@@ -186,6 +242,15 @@ final class Blueworx_Clubhouse_Pages_Controller {
 		$library     = new Blueworx_Clubhouse_Block_Library( $storage );
 		$composition = new Blueworx_Clubhouse_Page_Composition( $storage );
 		$visibility  = new Blueworx_Clubhouse_Visibility( $storage );
+
+		// The active look's tokens, so this screen is skinned like the rest of the
+		// Clubhouse admin rather than falling back to unstyled browser defaults.
+		// Only the active look, unlike Setup and Club Pages: there is no look
+		// picker here, so nothing needs the other looks' tokens to preview with.
+		$registry   = Blueworx_Clubhouse_Frontend::registry( $storage );
+		$branding   = new Blueworx_Clubhouse_Branding( $storage );
+		$look       = $registry->active();
+		$plugin_url = defined( 'BLUEWORX_LABS_CLUBHOUSE_URL' ) ? BLUEWORX_LABS_CLUBHOUSE_URL : '';
 
 		$current = self::page_key( $page );
 		if ( '' === $current ) {
@@ -216,6 +281,8 @@ final class Blueworx_Clubhouse_Pages_Controller {
 			'pinned_bottom' => self::pinned( 'footer', $library ),
 			'picker'        => self::picker( $library ),
 			'blocks_url'    => str_replace( self::PAGE_SLUG, 'clubhouse-blocks', $action_url ),
+			'tokens'        => Blueworx_Clubhouse_Theme_Css::compose( $look, $branding ),
+			'font_face_css' => Blueworx_Clubhouse_Page_Renderer::font_face_css( $look, $plugin_url ),
 			'notices'       => $notices,
 			'nonce_field'   => $nonce_field,
 			'action_url'    => $action_url,

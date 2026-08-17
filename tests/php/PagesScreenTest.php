@@ -191,7 +191,40 @@ final class PagesScreenTest extends TestCase {
 		}
 		$this->assertNotNull( $added );
 		$this->assertSame( 'About FAQ', $added['name'] );
-		$this->assertSame( Blueworx_Clubhouse_Block_Types::rank( 'faq' ), $added['position'] );
+	}
+
+	/**
+	 * A new block goes where its kind belongs, not at the bottom.
+	 *
+	 * A migrated page numbers its blocks 10, 20, 30, so a block taking its type's
+	 * rank as its position — every rank being far larger — would always land
+	 * last, and "New hero" would put a hero under the call-to-action band.
+	 */
+	public function test_a_new_block_lands_where_its_kind_belongs(): void {
+		$storage = $this->seeded();
+		Blueworx_Clubhouse_Pages_Controller::handle_post(
+			array( 'clubhouse_pages_page' => 'about', 'clubhouse_pages_add' => 'new:hero' ),
+			$storage
+		);
+
+		$names = array_column( $this->model( $storage, 'about' )['rows'], 'name' );
+		$this->assertSame( 'About Hero', $names[1], 'a new hero belongs under the page\'s existing hero, not last' );
+		$this->assertNotSame( 'About Hero', end( $names ) );
+	}
+
+	public function test_a_new_block_on_an_empty_page_takes_its_types_rank(): void {
+		$storage = $this->seeded();
+		( new Blueworx_Clubhouse_Page_Composition( $storage ) )->set_blocks( 'about', array() );
+
+		Blueworx_Clubhouse_Pages_Controller::handle_post(
+			array( 'clubhouse_pages_page' => 'about', 'clubhouse_pages_add' => 'new:faq' ),
+			$storage
+		);
+
+		$rows = $this->model( $storage, 'about' )['rows'];
+		$this->assertCount( 1, $rows );
+		$block = ( new Blueworx_Clubhouse_Block_Library( $storage ) )->get( $rows[0]['id'] );
+		$this->assertSame( Blueworx_Clubhouse_Block_Types::rank( 'faq' ), $block['position'] );
 	}
 
 	public function test_a_block_id_that_is_not_in_the_library_is_ignored(): void {
