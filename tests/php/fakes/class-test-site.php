@@ -44,6 +44,23 @@ final class Blueworx_Clubhouse_Test_Site {
 		);
 	}
 
+	/**
+	 * The single-article screen, which wears the same chrome as everything else
+	 * but is not a composed page — it is whichever post News::source() is on.
+	 */
+	public static function article(
+		?Blueworx_Clubhouse_Storage $storage = null,
+		?Blueworx_Clubhouse_Collections $collections = null
+	): string {
+		$storage = $storage ?? new Blueworx_Clubhouse_Fake_Storage();
+		return Blueworx_Clubhouse_Page_Renderer::post(
+			new Blueworx_Clubhouse_Branding( $storage ),
+			new Blueworx_Clubhouse_Visibility( $storage ),
+			$collections ?? new Blueworx_Clubhouse_Demo_Collections(),
+			self::composer( $storage )
+		);
+	}
+
 	/** Just the <main>, for a test about the page rather than the chrome. */
 	public static function main( string $html ): string {
 		$open  = strpos( $html, '<main' );
@@ -74,6 +91,54 @@ final class Blueworx_Clubhouse_Test_Site {
 				$composition->remove( $page, $id );
 			}
 		}
+	}
+
+	/**
+	 * Write content the way a club held it before blocks, for a test about the
+	 * migration. Nothing in the plugin writes here any more — Content_Store is
+	 * read-only and the Visibility tab has gone — so a test that needs an
+	 * old-shaped site has to lay one down itself.
+	 *
+	 * @param array<string,mixed> $fields
+	 */
+	public static function legacy_content( Blueworx_Clubhouse_Storage $storage, string $page, string $section, array $fields ): void {
+		$key             = 'content_' . $page;
+		$all             = (array) $storage->get( $key, array() );
+		$all[ $section ] = array_merge( (array) ( $all[ $section ] ?? array() ), $fields );
+		$storage->set( $key, $all );
+	}
+
+	/** A section the club had switched off on the old Setup screen's Visibility tab. */
+	public static function legacy_section_off( Blueworx_Clubhouse_Storage $storage, string $page, string $section ): void {
+		$state = (array) $storage->get( 'visibility', array() );
+		$state['sections'][ $page . '.' . $section ] = false;
+		$storage->set( 'visibility', $state );
+	}
+
+	/**
+	 * Read a field back off the block that holds an address — the other half of
+	 * write(), for a test checking what a save or an import actually stored.
+	 */
+	public static function read( Blueworx_Clubhouse_Storage $storage, string $address, string $field, mixed $default = null ): mixed {
+		$content = self::content( $storage, $address );
+		$key     = Blueworx_Clubhouse_Block_Addresses::prefix( $address ) . $field;
+		return array_key_exists( $key, $content ) ? $content[ $key ] : $default;
+	}
+
+	/** A repeating section's stored rows. @return array<int,array<string,mixed>> */
+	public static function items( Blueworx_Clubhouse_Storage $storage, string $address ): array {
+		$items = self::content( $storage, $address )['items'] ?? array();
+		return is_array( $items ) ? array_values( $items ) : array();
+	}
+
+	/** Everything stored on the block that holds an address. @return array<string,mixed> */
+	public static function content( Blueworx_Clubhouse_Storage $storage, string $address ): array {
+		$library = new Blueworx_Clubhouse_Block_Library( $storage );
+		$id      = $library->by_address( Blueworx_Clubhouse_Block_Addresses::host( $address ) );
+		if ( '' === $id ) {
+			return array();
+		}
+		return (array) $library->get( $id )['content'];
 	}
 
 	/**

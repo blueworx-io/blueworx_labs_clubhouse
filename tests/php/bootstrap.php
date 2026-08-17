@@ -40,6 +40,7 @@ require_once __DIR__ . '/wp-stubs.php';
 
 require dirname( __DIR__, 2 ) . '/includes/bootstrap.php';
 
+require_once dirname( __DIR__, 2 ) . '/includes/blocks/class-blocks-installer.php';
 require_once dirname( __DIR__, 2 ) . '/includes/frontend/class-clubhouse-context.php';
 require_once dirname( __DIR__, 2 ) . '/includes/frontend/class-frontend.php';
 require_once dirname( __DIR__, 2 ) . '/includes/frontend/class-demo-mode.php';

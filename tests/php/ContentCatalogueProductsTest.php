@@ -73,7 +73,7 @@ final class ContentCatalogueProductsTest extends TestCase {
 
 	public function test_a_vanished_product_is_shown_as_such_rather_than_as_not_connected(): void {
 		$field = $this->price_field( new Blueworx_Clubhouse_Demo_Products() );
-		$html  = Blueworx_Clubhouse_Content_Screen::field_html( $field, 'price_vanished', 'tier-0-price_id' );
+		$html  = Blueworx_Clubhouse_Field_Controls::render( $field, 'price_vanished', 'tier-0-price_id' );
 
 		// The stale value is still the selected one...
 		$this->assertStringContainsString( 'value="price_vanished"', $html );
@@ -84,7 +84,7 @@ final class ContentCatalogueProductsTest extends TestCase {
 
 	public function test_a_normal_value_gains_no_extra_option(): void {
 		$field = $this->price_field( new Blueworx_Clubhouse_Demo_Products() );
-		$html  = Blueworx_Clubhouse_Content_Screen::field_html( $field, 'price_adult_monthly', 'tier-0-price_id' );
+		$html  = Blueworx_Clubhouse_Field_Controls::render( $field, 'price_adult_monthly', 'tier-0-price_id' );
 		$this->assertSame( 4, substr_count( $html, '<option ' ) );
 	}
 }

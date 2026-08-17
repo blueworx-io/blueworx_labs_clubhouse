@@ -19,7 +19,7 @@ final class AdminPagesTest extends TestCase {
 		foreach ( Blueworx_Clubhouse_Admin_Pages::all() as $page ) {
 			$by_slug[ $page['slug'] ] = $page;
 		}
-		$this->assertCount( 8, $by_slug );
+		$this->assertCount( 7, $by_slug );
 
 		// The Clubhouse screen is REGISTERED with the content capability, because
 		// the menu builder on it belongs to the Content Editor (issue #144). The
@@ -29,8 +29,8 @@ final class AdminPagesTest extends TestCase {
 			$by_slug[ Blueworx_Clubhouse_Setup_Controller::PAGE_SLUG ]['cap']
 		);
 		$this->assertSame(
-			Blueworx_Clubhouse_Content_Controller::CAPABILITY,
-			$by_slug[ Blueworx_Clubhouse_Content_Controller::PAGE_SLUG ]['cap']
+			Blueworx_Clubhouse_Pages_Controller::CAPABILITY,
+			$by_slug[ Blueworx_Clubhouse_Pages_Controller::PAGE_SLUG ]['cap']
 		);
 		$this->assertSame(
 			Blueworx_Clubhouse_Import_Controller::CAPABILITY,
@@ -68,7 +68,7 @@ final class AdminPagesTest extends TestCase {
 				$page['slug']
 			);
 		}
-		$this->assertCount( 8, Blueworx_Clubhouse_Admin_Pages::pages_for_role( 'administrator' ) );
+		$this->assertCount( 7, Blueworx_Clubhouse_Admin_Pages::pages_for_role( 'administrator' ) );
 	}
 
 	/**
@@ -77,7 +77,7 @@ final class AdminPagesTest extends TestCase {
 	 */
 	public function test_the_owner_reaches_every_page(): void {
 		$this->assertCount(
-			8,
+			7,
 			Blueworx_Clubhouse_Admin_Pages::pages_for_role( Blueworx_Clubhouse_Owner_Capabilities::ROLE )
 		);
 	}
@@ -103,7 +103,7 @@ final class AdminPagesTest extends TestCase {
 	public function test_the_content_editor_can_edit_content_but_not_configure_the_site(): void {
 		$editor = Blueworx_Clubhouse_Owner_Capabilities::EDITOR_ROLE;
 
-		$this->assertTrue( Blueworx_Clubhouse_Admin_Pages::role_can( $editor, Blueworx_Clubhouse_Content_Controller::PAGE_SLUG ), 'Club Pages' );
+		$this->assertTrue( Blueworx_Clubhouse_Admin_Pages::role_can( $editor, Blueworx_Clubhouse_Pages_Controller::PAGE_SLUG ), 'Content — Pages' );
 		$this->assertTrue( Blueworx_Clubhouse_Admin_Pages::role_can( $editor, Blueworx_Clubhouse_Collection_Types::CONTENT_SLUG ), 'Collections' );
 		$this->assertTrue( Blueworx_Clubhouse_Admin_Pages::role_can( $editor, Blueworx_Clubhouse_Setup_Controller::PAGE_SLUG ), 'Clubhouse — for the Menu tab' );
 
@@ -170,13 +170,13 @@ final class AdminPagesTest extends TestCase {
 		// menu still cannot reach it. Club Pages is on no allowlist here.
 		$caps = array(
 			Blueworx_Clubhouse_Owner_Capabilities::EDITOR_ROLE => array(
-				Blueworx_Clubhouse_Content_Controller::CAPABILITY => true,
+				Blueworx_Clubhouse_Pages_Controller::CAPABILITY => true,
 			),
 		);
 		$this->assertTrue(
 			Blueworx_Clubhouse_Admin_Pages::role_can(
 				Blueworx_Clubhouse_Owner_Capabilities::EDITOR_ROLE,
-				Blueworx_Clubhouse_Content_Controller::PAGE_SLUG,
+				Blueworx_Clubhouse_Pages_Controller::PAGE_SLUG,
 				$caps
 			),
 			'on the menu and holding the cap — reachable'
