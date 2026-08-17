@@ -30,7 +30,7 @@ final class Blueworx_Clubhouse_Guide {
 	 *   pages:array<int,array{key:string,label:string,visible:bool,sections:array<int,array{label:string,visible:bool}>}>,
 	 *   screens:array<int,array{label:string,description:string,url:string}>,
 	 *   collections:array<int,array{plural:string,count:int,url:string}>,
-	 *   setup_url:string,content_url:string} $site
+	 *   setup_url:string,content_url:string,pages_url?:string,blocks_url?:string} $site
 	 * @return array{club:string,intro:string,chapters:array<int,array<string,mixed>>}
 	 */
 	public static function build( array $site ): array {
@@ -144,16 +144,33 @@ final class Blueworx_Clubhouse_Guide {
 			'lede'    => 'Everything a visitor reads is editable without touching the design.',
 			'entries' => array(
 				array(
-					'title' => 'Editing a page',
-					'body'  => array( 'Club Pages holds the words and pictures for every page, grouped the same way the pages are.' ),
+					'title' => 'Changing what a page says',
+					'body'  => array(
+						'Your site is built from blocks — a hero, a photograph band, a set of questions and answers. Blocks holds the words and pictures inside each one.',
+						'A block can be on more than one page. Edit it once and every page using it follows, which is how the same tiers can show on Home and on Membership without being typed twice. The form tells you when a block is shared before you start.',
+					),
 					'steps' => array(
-						'Open Club Pages.',
-						'Pick the page across the top, then the section down the side.',
+						'Open Content, then Blocks.',
+						'Pick the block down the side — its name says which page it belongs to.',
 						'Change the wording, or choose a picture from your media library.',
 						'Save. The change is live immediately — there is nothing to publish.',
 					),
 					'state' => '',
-					'url'   => $content_url,
+					'url'   => (string) ( $site['blocks_url'] ?? $content_url ),
+				),
+				array(
+					'title' => 'Rearranging a page',
+					'body'  => array(
+						'Pages shows what each page of your site is made of, top to bottom. You can take a block off a page without deleting it, put one you already have onto another page, or add a new one.',
+						'The header and footer are pinned top and bottom, because they are on every page. Whether a page is on the site at all is a switch on the same screen.',
+					),
+					'steps' => array(
+						'Open Content, then Pages.',
+						'Pick the page down the side.',
+						'Remove a block, or choose one from the picker and add it.',
+					),
+					'state' => '',
+					'url'   => (string) ( $site['pages_url'] ?? $content_url ),
 				),
 				array(
 					'title' => 'The menu',

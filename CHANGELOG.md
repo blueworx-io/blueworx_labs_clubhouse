@@ -5,6 +5,11 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.73.1
+
+- **Words edited under Blocks now stick.** Saving Club Pages or Setup used to put the old wording back over anything typed on the new Blocks screen, because both screens were still writing to the same site from different ends. They now keep each other in step, so whichever one you reach for, your words survive.
+- **The user guide points at the new screens.** Its content chapter now explains blocks and shared blocks, and its links go to Content → Pages and Content → Blocks rather than the old editor.
+
 ## 0.73.0
 
 - **A screen for the words themselves.** Content → Blocks lists every block your site is built from, grouped by kind, each saying which pages use it. Open one and edit its words the same way you always have — and if it is on more than one page, it says so before you start, because changing it changes all of them. Make a new block, rename one, or duplicate one when a shared block has to differ on a single page. Deleting a block that is in use asks first and names the pages.

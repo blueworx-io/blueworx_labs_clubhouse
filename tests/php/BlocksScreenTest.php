@@ -131,6 +131,91 @@ final class BlocksScreenTest extends TestCase {
 		$this->assertSame( $before, ( new Blueworx_Clubhouse_Page_Composition( $storage ) )->uses( 'about-hero' ) );
 	}
 
+	/**
+	 * Two editors, one site. Until the old path goes (issue #207), Club Pages and
+	 * Setup still project the content store onto the blocks on every save — so a
+	 * block edited here has to reach that store too, or the next save anywhere
+	 * else would quietly put the old words back.
+	 */
+	public function test_words_saved_here_survive_a_club_pages_save(): void {
+		$storage = $this->seeded();
+		$this->post(
+			array( 'clubhouse_blocks_block' => 'about-history', 'field' => array( 'heading' => 'Ninety years by the weir' ) ),
+			$storage
+		);
+
+		// Somebody now saves the old screen, which reprojects the store.
+		( new Blueworx_Clubhouse_Block_Seeder(
+			new Blueworx_Clubhouse_Block_Library( $storage ),
+			new Blueworx_Clubhouse_Page_Composition( $storage )
+		) )->sync(
+			new Blueworx_Clubhouse_Content_Store( $storage ),
+			new Blueworx_Clubhouse_Visibility( $storage )
+		);
+
+		$this->assertSame(
+			'Ninety years by the weir',
+			( new Blueworx_Clubhouse_Block_Library( $storage ) )->get( 'about-history' )['content']['heading']
+		);
+	}
+
+	public function test_repeated_items_survive_a_club_pages_save(): void {
+		$storage = $this->seeded();
+		$this->post(
+			array(
+				'clubhouse_blocks_block' => 'membership-faq',
+				'item'                   => array( array( 'question' => 'When do you train?', 'answer' => 'Tuesdays.' ) ),
+			),
+			$storage
+		);
+
+		( new Blueworx_Clubhouse_Block_Seeder(
+			new Blueworx_Clubhouse_Block_Library( $storage ),
+			new Blueworx_Clubhouse_Page_Composition( $storage )
+		) )->sync(
+			new Blueworx_Clubhouse_Content_Store( $storage ),
+			new Blueworx_Clubhouse_Visibility( $storage )
+		);
+
+		$items = ( new Blueworx_Clubhouse_Block_Library( $storage ) )->get( 'membership-faq' )['content']['items'];
+		$this->assertCount( 1, $items );
+		$this->assertSame( 'When do you train?', $items[0]['question'] );
+	}
+
+	/**
+	 * The home hero's quick tiles are stored at their own address and folded onto
+	 * the hero block, so writing back has to unfold them again.
+	 */
+	public function test_folded_items_go_back_to_the_address_they_came_from(): void {
+		$storage = $this->seeded();
+		$this->post(
+			array(
+				'clubhouse_blocks_block' => 'home-hero',
+				'item'                   => array( array( 'label' => 'Join the club' ) ),
+			),
+			$storage
+		);
+
+		$this->assertSame(
+			'Join the club',
+			( new Blueworx_Clubhouse_Content_Store( $storage ) )->get_items( 'home', 'quick_tiles' )[0]['label']
+		);
+	}
+
+	/** The cookie notice is stored on its own, but edited on the footer block. */
+	public function test_the_cookie_notice_goes_back_to_the_cookie_notice(): void {
+		$storage = $this->seeded();
+		$this->post(
+			array( 'clubhouse_blocks_block' => 'footer', 'field' => array( 'cookie_text' => 'We use a couple of cookies.' ) ),
+			$storage
+		);
+
+		$this->assertSame(
+			'We use a couple of cookies.',
+			( new Blueworx_Clubhouse_Content_Store( $storage ) )->get( 'global', 'cookies', 'text' )
+		);
+	}
+
 	// -- Repeated items -------------------------------------------------------
 
 	public function test_adding_and_removing_a_repeated_item(): void {

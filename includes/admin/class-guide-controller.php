@@ -118,6 +118,8 @@ final class Blueworx_Clubhouse_Guide_Controller {
 			'collections' => self::collections(),
 			'setup_url'   => admin_url( 'admin.php?page=' . Blueworx_Clubhouse_Setup_Controller::PAGE_SLUG ),
 			'content_url' => admin_url( 'admin.php?page=' . Blueworx_Clubhouse_Content_Controller::PAGE_SLUG ),
+			'pages_url'   => admin_url( 'admin.php?page=' . Blueworx_Clubhouse_Pages_Controller::PAGE_SLUG ),
+			'blocks_url'  => admin_url( 'admin.php?page=' . Blueworx_Clubhouse_Blocks_Controller::PAGE_SLUG ),
 		);
 	}
 

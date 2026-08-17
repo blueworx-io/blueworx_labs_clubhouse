@@ -139,6 +139,11 @@ final class Blueworx_Clubhouse_Blocks_Controller {
 
 		$library->set_content( $id, $content );
 
+		// Written back to the old store as well, so the next Club Pages or Setup
+		// save — both of which still project that store onto the blocks — does not
+		// undo what was just typed here. Goes with that projection (issue #207).
+		Blueworx_Clubhouse_Block_Seeder::project( $library->get( $id ), new Blueworx_Clubhouse_Content_Store( $storage ) );
+
 		if ( array() === $notices ) {
 			$used      = $composition->uses( $id );
 			$notices[] = self::notice(
