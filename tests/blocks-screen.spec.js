@@ -26,6 +26,7 @@ async function openPage(page, slug) {
 const save = () => '.clubhouse-bar button:has-text("Save")';
 
 test('editing a block once changes every page showing it @wordpress', async ({ page }) => {
+  test.slow(); // several full page loads against a single-threaded PHP server
   await loginAsAdmin(page);
 
   // Share the About history block onto Membership, from the Pages screen — the
@@ -33,12 +34,14 @@ test('editing a block once changes every page showing it @wordpress', async ({ p
   await openPage(page, 'membership');
   await page.selectOption('#clubhouse-pages-add', { label: 'About · History' });
   await page.click('button:has-text("Add to this page")', { force: true });
+  await page.waitForLoadState('domcontentloaded');
 
   await openBlock(page, 'about-history');
   await expect(page.locator('.clubhouse-help--strong')).toContainText('About, Membership');
 
   await page.fill('input[name="field[heading]"]', 'Ninety years by the weir');
   await page.click(save(), { force: true });
+  await page.waitForLoadState('domcontentloaded');
   await expect(page.locator('.notice-success')).toContainText('all of them have changed');
 
   // Visited rather than fetched: PHP's built-in server is single-threaded, and
@@ -52,13 +55,16 @@ test('editing a block once changes every page showing it @wordpress', async ({ p
   // Put it back: off Membership, and the heading restored.
   await openPage(page, 'membership');
   await page.click('tr:has(.clubhouse-table__name:text-is("About · History")) button:has-text("Remove")', { force: true });
+  await page.waitForLoadState('domcontentloaded');
 });
 
 test('a block in use cannot be deleted without being told which pages go with it @wordpress', async ({ page }) => {
+  test.slow(); // several full page loads against a single-threaded PHP server
   await loginAsAdmin(page);
   await openBlock(page, 'about-committee');
 
   await page.click('.clubhouse-bar button:has-text("Delete")', { force: true });
+  await page.waitForLoadState('domcontentloaded');
   await expect(page.locator('.clubhouse-step--warn')).toContainText('It is on About');
 
   // Nothing has happened yet — the block and its page are as they were.
@@ -69,15 +75,22 @@ test('a block in use cannot be deleted without being told which pages go with it
 });
 
 test('duplicating a block breaks the link so one page can differ @wordpress', async ({ page }) => {
+  test.slow(); // several full page loads against a single-threaded PHP server
   await loginAsAdmin(page);
   await openBlock(page, 'about-history');
 
   await page.click('.clubhouse-bar button:has-text("Duplicate")', { force: true });
+  await page.waitForLoadState('domcontentloaded');
   await expect(page.locator('.notice-success')).toContainText('is a copy of');
   await expect(page.locator('input[name="clubhouse_blocks_name"]')).toHaveValue(/copy/);
   await expect(page.locator('.clubhouse-blocks__used')).toContainText('Not on any page yet');
 
-  // Tidy up: the copy is on no page, so deleting it asks nothing.
+  // Tidy up: the copy is on no page, so deleting it asks nothing. Reopened by
+  // its own id first — a retry re-runs against whatever the failed attempt left,
+  // and deleting "whichever block is on screen" is not something to guess at.
+  const id = await page.locator('input[name="clubhouse_blocks_block"]').first().inputValue();
+  await openBlock(page, id);
   await page.click('.clubhouse-bar button:has-text("Delete")', { force: true });
+  await page.waitForLoadState('domcontentloaded');
   await expect(page.locator('.notice-success')).toContainText('is deleted');
 });

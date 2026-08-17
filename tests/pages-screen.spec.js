@@ -35,29 +35,50 @@ function blockRow(page, name) {
 
 async function removeBlock(page, name) {
   await page.click(`tr:has(.clubhouse-table__name:text-is("${name}")) button:has-text("Remove")`, { force: true });
+  // Every button here posts and reloads. Waiting for that to land keeps the next
+  // step off a DOM that is about to be replaced.
+  await page.waitForLoadState('domcontentloaded');
 }
 
 test('taking a block off a page removes it from the site but keeps it @wordpress', async ({ page }) => {
+  test.slow(); // several full page loads against a single-threaded PHP server
   await loginAsAdmin(page);
   await openPages(page);
 
   // A named block rather than "whichever is first": the point is that this one
   // comes off and goes back, and a shifting target hides a failure.
+  //
+  // Put back first if a previous attempt left it off. A retry re-runs against
+  // the WordPress instance the failed attempt left behind, so a spec that only
+  // passes on a pristine site is a spec that cannot be retried.
   const target = 'About · Committee';
+  if (!(await blockRow(page, target).count())) {
+    await page.selectOption('#clubhouse-pages-add', { label: target });
+    await page.click('button:has-text("Add to this page")', { force: true });
+    await page.waitForLoadState('domcontentloaded');
+  }
   await expect(blockRow(page, target)).toBeVisible();
 
   await removeBlock(page, target);
   await expect(page.locator('.notice-success')).toContainText('still in your blocks');
   await expect(blockRow(page, target)).toHaveCount(0);
-  expect(await (await page.request.get('/about/')).text()).not.toContain('about.committee');
+
+  // Visited rather than fetched: PHP's built-in server is single-threaded, and a
+  // side request issued while the admin page is still settling can wait on a
+  // connection that is not coming.
+  await page.goto('/about/', { waitUntil: 'domcontentloaded' });
+  await expect(page.locator('body')).not.toContainText('about.committee');
 
   // Off the page, not gone: the picker still offers it back.
+  await openPages(page);
   await page.selectOption('#clubhouse-pages-add', { label: target });
   await page.click('button:has-text("Add to this page")', { force: true });
+  await page.waitForLoadState('domcontentloaded');
   await expect(blockRow(page, target)).toBeVisible();
 });
 
 test('a page switched off leaves the site, and comes back @wordpress', async ({ page }) => {
+  test.slow(); // several full page loads against a single-threaded PHP server
   await loginAsAdmin(page);
   await openPages(page);
 
@@ -65,25 +86,41 @@ test('a page switched off leaves the site, and comes back @wordpress', async ({ 
 
   await page.uncheck('input[name="clubhouse_page_enabled"]', { force: true });
   await page.click(save, { force: true });
+  await page.waitForLoadState('domcontentloaded');
   await expect(page.locator('.clubhouse-pages__page[aria-current="page"]')).toContainText('Off the site');
 
   // The front end follows: the address no longer serves the club's About page.
   // Asserted on the title rather than the markup — the plugin still enqueues its
   // chrome onto whatever WordPress falls back to, so the body is not empty.
-  expect(await (await page.request.get('/about/')).text()).not.toContain('<title>About');
+  await page.goto('/about/', { waitUntil: 'domcontentloaded' });
+  await expect(page).not.toHaveTitle(/^About/);
 
+  await openPages(page);
   await page.check('input[name="clubhouse_page_enabled"]', { force: true });
   await page.click(save, { force: true });
+  await page.waitForLoadState('domcontentloaded');
   await expect(page.locator('.clubhouse-pages__page[aria-current="page"]')).not.toContainText('Off the site');
-  expect(await (await page.request.get('/about/')).text()).toContain('<title>About');
+
+  await page.goto('/about/', { waitUntil: 'domcontentloaded' });
+  await expect(page).toHaveTitle(/^About/);
 });
 
 test('a new block lands where its kind belongs, not at the bottom @wordpress', async ({ page }) => {
+  test.slow(); // several full page loads against a single-threaded PHP server
   await loginAsAdmin(page);
   await openPages(page);
 
+  // Start from a page with no leftover. A retry re-runs this spec against the
+  // WordPress instance the failed attempt left behind, so anything this spec
+  // creates has to be cleared first or the second attempt fails on the first's
+  // mess rather than on the thing being tested.
+  while (await blockRow(page, 'About Hero').count()) {
+    await removeBlock(page, 'About Hero');
+  }
+
   await page.selectOption('#clubhouse-pages-add', 'new:hero');
   await page.click('button:has-text("Add to this page")', { force: true });
+  await page.waitForLoadState('domcontentloaded');
   await expect(page.locator('.notice-success')).toContainText('Content → Blocks');
 
   // Straight after the page's own hero — not last, which is where a type's rank
