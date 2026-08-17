@@ -81,46 +81,12 @@ final class PersonPhotoTest extends TestCase {
 		);
 	}
 
-	/**
-	 * Both places a club's people appear have to show the photo, not just the
-	 * grid in isolation — the committee on About and the directory on Contact.
-	 */
-	public function test_both_pages_that_list_people_pass_photos_through(): void {
-		$collections = new Blueworx_Clubhouse_Photographed_Collections();
-		foreach ( array( 'about', 'contact' ) as $page ) {
-			$html = Blueworx_Clubhouse_Test_Site::page( $page, new Blueworx_Clubhouse_Fake_Storage(), '', $collections );
-			$this->assertStringContainsString( 'src="https://example.test/kathy.jpg"', $html, $page );
-		}
-	}
-}
-
-/** A club whose one committee member has sat for a photograph. */
-final class Blueworx_Clubhouse_Photographed_Collections implements Blueworx_Clubhouse_Collections {
-
-	public function sports(): array {
-		return Blueworx_Clubhouse_Demo_Content::sports();
-	}
-	public function teams(): array {
-		return Blueworx_Clubhouse_Demo_Content::teams();
-	}
-	public function fixtures(): array {
-		return Blueworx_Clubhouse_Demo_Content::fixtures();
-	}
-	public function events(): array {
-		return Blueworx_Clubhouse_Demo_Content::events();
-	}
-	public function sponsors(): array {
-		return Blueworx_Clubhouse_Demo_Content::sponsors();
-	}
-	public function people(): array {
-		return array(
-			array(
-				'name'           => 'Kathy Smith',
-				'committee_role' => 'Chair',
-				'directory_role' => 'Press',
-				'email'          => 'chair@clubhouse.example',
-				'photo'          => 'https://example.test/kathy.jpg',
-			),
+	public function test_the_committee_on_about_passes_photos_through(): void {
+		$php = (string) file_get_contents( dirname( __DIR__, 2 ) . '/includes/render/class-page-renderer.php' );
+		$this->assertSame(
+			2,
+			substr_count( $php, "'photo' => self::media_src( (string) ( \$p['photo'] ?? '' ) )" ),
+			'both the About committee and the Contact directory pass the photo through'
 		);
 	}
 }

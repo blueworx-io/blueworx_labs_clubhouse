@@ -73,7 +73,7 @@ MD;
 		// Without the products adapter, the tier price_id select has only its
 		// "Not connected" option, so the AI is told that is the only valid
 		// value and a realistic import clears every tier's connection —
-		// Block_Fields and Import_Parser::sections() pass this same
+		// Content_Controller and Import_Parser::sections() pass this same
 		// source for exactly this reason; the prompt generator must match it.
 		foreach ( Blueworx_Clubhouse_Content_Catalogue::pages( Blueworx_Clubhouse_Products_Source::get() ) as $page ) {
 			$out .= '### ' . $page['label'] . "\n\n";

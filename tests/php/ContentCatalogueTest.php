@@ -19,40 +19,28 @@ final class ContentCatalogueTest extends TestCase {
 	}
 
 	/**
-	 * Lockstep: the catalogue and the block address map have to name the same
-	 * things. A catalogue entry with no address is a form for content nothing
-	 * renders; an address with no catalogue entry is a block nobody can edit.
-	 *
-	 * Checked with every integration present, because the catalogue hides the
-	 * LatePoint sections when LatePoint is absent and the address map never does.
-	 * The Home tier grid is the one deliberate exception — it is the Membership
-	 * page's tiers shown a second time, edited once on the Membership tab.
+	 * Lockstep: every catalogue section key must exist in the visibility inventory
+	 * for the same page, and vice-versa. Compared as a union per visibility page,
+	 * because Global and Home are two tabs over one page — between them they must
+	 * still account for exactly the inventory's keys, no more and no fewer.
 	 */
-	public function test_section_keys_match_the_block_addresses_exactly(): void {
-		Blueworx_Clubhouse_Integrations::set_detector( static fn( string $tag ): bool => true );
-		try {
-			$addresses = array_keys( Blueworx_Clubhouse_Block_Addresses::map() );
-			$catalogue = array();
-			foreach ( Blueworx_Clubhouse_Content_Catalogue::pages() as $page ) {
-				foreach ( $page['sections'] as $s ) {
-					$catalogue[] = (string) $s['store_page'] . '/' . (string) $s['key'];
-				}
+	public function test_section_keys_match_visibility_inventory_exactly(): void {
+		$inv = array();
+		foreach ( Blueworx_Clubhouse_Setup_Sections::inventory() as $p ) {
+			$inv[ $p['page'] ] = array_column( $p['sections'], 'key' );
+			sort( $inv[ $p['page'] ] );
+		}
+		$seen = array();
+		foreach ( Blueworx_Clubhouse_Content_Catalogue::pages() as $page ) {
+			$vis_page = 'global' === $page['tab'] ? 'home' : $page['tab'];
+			foreach ( $page['sections'] as $s ) {
+				$seen[ $vis_page ][] = $s['key'];
 			}
-			sort( $addresses );
-			sort( $catalogue );
-
-			$this->assertSame(
-				array( 'home/tiers' ),
-				array_values( array_diff( $addresses, $catalogue ) ),
-				'an address has no editable fields'
-			);
-			$this->assertSame(
-				array(),
-				array_values( array_diff( $catalogue, $addresses ) ),
-				'a catalogue section renders nowhere'
-			);
-		} finally {
-			Blueworx_Clubhouse_Integrations::set_detector( null );
+		}
+		$this->assertSame( array_keys( $inv ), array_keys( $seen ), 'a visibility page has no catalogue tab, or vice-versa' );
+		foreach ( $seen as $vis_page => $keys ) {
+			sort( $keys );
+			$this->assertSame( $inv[ $vis_page ], $keys, "Section keys diverge for {$vis_page}" );
 		}
 	}
 

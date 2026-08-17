@@ -181,35 +181,3 @@ body.toplevel_page_clubhouse-setup #wpfooter { display: none; }
 .clubhouse-guide-entry[open] .clubhouse-guide-entry__head { margin-bottom: 8px; }
 .clubhouse-guide-steps { margin: 10px 0 10px 20px; padding: 0; list-style: decimal; color: var(--color-ink-soft); }
 .clubhouse-guide-steps li { margin: 4px 0; }
-
-/* ---- Content → Pages: the site's pages down the side, one page's blocks beside them ---- */
-/*
- * Two columns on a desk, stacked on a narrow screen. The list is a nav of
- * links rather than tabs, because choosing a page is a change of address —
- * an owner can bookmark the page they edit most, and the back button works.
- */
-.clubhouse-pages { display: grid; grid-template-columns: minmax(180px, 220px) 1fr; gap: 24px; align-items: start; }
-.clubhouse-pages__list { display: flex; flex-direction: column; gap: 2px; position: sticky; top: 46px; }
-.clubhouse-pages__page { display: block; padding: 10px 14px; border-radius: var(--radius-md); color: var(--color-ink); text-decoration: none; font-weight: 600; }
-.clubhouse-pages__page:hover, .clubhouse-pages__page:focus { background: var(--color-accent-wash); color: var(--color-ink); }
-.clubhouse-pages__page.is-current { background: var(--color-accent); color: var(--color-paper); }
-.clubhouse-pages__page.is-current .clubhouse-table__sub { color: var(--color-paper); }
-.clubhouse-pages__main { min-width: 0; }
-/* Each row's Remove is its own form, so the buttons have to sit side by side
-   rather than stack the way block-level forms otherwise would. */
-.clubhouse-pages__main .clubhouse-form { display: inline; }
-
-@media (max-width: 782px) {
-  .clubhouse-pages { grid-template-columns: 1fr; }
-  .clubhouse-pages__list { position: static; flex-direction: row; flex-wrap: wrap; }
-}
-/* A link acting as a button: WordPress underlines every admin link, which makes
-   an Edit pill read as a link inside a button rather than a button. */
-a.clubhouse-btn { text-decoration: none; display: inline-block; }
-/* The blocks library: the same side list as Pages, with a heading per kind and
-   the "make one" control at its foot. */
-.clubhouse-blocks__kind { margin: 14px 0 4px; }
-.clubhouse-blocks__kind:first-child { margin-top: 0; }
-.clubhouse-blocks__new { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--color-line); }
-.clubhouse-help--strong { color: var(--color-ink); font-weight: 600; }
-.clubhouse-step--warn { border: 1px solid var(--color-secondary-deep); }

@@ -67,14 +67,19 @@ final class PartialItemTest extends TestCase {
 	 */
 	public function test_a_partial_row_leaves_the_rest_of_the_page_standing(): void {
 		$storage = new Blueworx_Clubhouse_Fake_Storage();
-		Blueworx_Clubhouse_Test_Site::write( $storage, 'about/values', array(
-			'items' => array(
-				array( 'title' => 'Half a card' ),
-				array( 'title' => 'A whole one', 'description' => 'With both keys.' ),
-			),
+		$content = new Blueworx_Clubhouse_Content_Store( $storage );
+		$content->set_items( 'about', 'values', array(
+			array( 'title' => 'Half a card' ),
+			array( 'title' => 'A whole one', 'description' => 'With both keys.' ),
 		) );
 
-		$html = Blueworx_Clubhouse_Test_Site::page( 'about', $storage );
+		$html = Blueworx_Clubhouse_Page_Renderer::about(
+			new Blueworx_Clubhouse_Branding( $storage ),
+			new Blueworx_Clubhouse_Visibility( $storage ),
+			new Blueworx_Clubhouse_Demo_Collections(),
+			'',
+			$content
+		);
 
 		$this->assertStringContainsString( 'Half a card', $html );
 		$this->assertStringContainsString( 'A whole one', $html );

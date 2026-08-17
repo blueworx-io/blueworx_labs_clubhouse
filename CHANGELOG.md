@@ -5,6 +5,11 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.76.0
+
+- **Club Pages is back, and it is where you edit your site again.** The Pages and Blocks screens have gone: building a page out of blocks did not turn out to be a better way to run a club site. Everything you have written is exactly where it was, your site looks the same, and the Visibility tab is back under Setup for taking a section off a page.
+- Everything else from the last few releases stays: a page switched off still returns a proper "not found", one half-written item still leaves a gap rather than taking the page down, and the privacy and terms pages still carry example wording clearly labelled as an example.
+
 ## 0.75.0
 
 - **Fixed: every page of a live site went down.** The last release broke the front end on real WordPress — every address returned an error. Caught before it reached anyone; the browser tests now cover it.

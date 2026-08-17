@@ -27,12 +27,16 @@ final class BookingPageTest extends TestCase {
 		);
 	}
 
+	private function branding(): Blueworx_Clubhouse_Branding {
+		return new Blueworx_Clubhouse_Branding( new Blueworx_Clubhouse_Fake_Storage() );
+	}
+
 	private function visibility(): Blueworx_Clubhouse_Visibility {
 		return new Blueworx_Clubhouse_Visibility( new Blueworx_Clubhouse_Fake_Storage() );
 	}
 
-	private function page( string $page, ?Blueworx_Clubhouse_Fake_Storage $storage = null ): string {
-		return Blueworx_Clubhouse_Test_Site::page( $page, $storage ?? new Blueworx_Clubhouse_Fake_Storage() );
+	private function collections(): Blueworx_Clubhouse_Collections {
+		return new Blueworx_Clubhouse_Demo_Collections();
 	}
 
 	// ---- Availability ----
@@ -67,10 +71,12 @@ final class BookingPageTest extends TestCase {
 	// ---- Front end ----
 
 	public function test_no_page_links_to_booking_without_latepoint(): void {
-		$this->assertStringNotContainsString( 'Bookings', $this->page( 'home' ) );
+		$html = Blueworx_Clubhouse_Page_Renderer::home( $this->branding(), $this->visibility(), $this->collections() );
+		$this->assertStringNotContainsString( 'Bookings', $html );
 
 		$this->withLatePoint();
-		$this->assertStringContainsString( 'Bookings', $this->page( 'home' ), 'nav and footer pick it up' );
+		$html = Blueworx_Clubhouse_Page_Renderer::home( $this->branding(), $this->visibility(), $this->collections() );
+		$this->assertStringContainsString( 'Bookings', $html, 'nav and footer pick it up' );
 	}
 
 	/**
@@ -81,7 +87,7 @@ final class BookingPageTest extends TestCase {
 		$this->withLatePoint();
 		// No expander, so each slot shows its shortcode as text — which is exactly
 		// what lets this assert the shortcodes reach the page verbatim.
-		$html = $this->page( 'booking' );
+		$html = Blueworx_Clubhouse_Page_Renderer::booking( $this->branding(), $this->visibility(), $this->collections() );
 
 		$this->assertStringContainsString( '[latepoint_resources items=&quot;services&quot; columns=&quot;3&quot;]', $html );
 		$this->assertStringContainsString( '[latepoint_resources items=&quot;locations&quot; columns=&quot;3&quot;]', $html );
@@ -95,17 +101,18 @@ final class BookingPageTest extends TestCase {
 		Blueworx_Clubhouse_Shortcodes::set_expander(
 			static fn( string $t ): string => '<div class="lp">' . strlen( $t ) . '</div>'
 		);
-		$html = $this->page( 'booking' );
+		$html = Blueworx_Clubhouse_Page_Renderer::booking( $this->branding(), $this->visibility(), $this->collections() );
 		$this->assertSame( 3, substr_count( $html, '<div class="lp">' ) );
 	}
 
-	/** Each slot is a block of its own, so taking one off the page drops it. */
-	public function test_a_slot_taken_off_the_page_drops_out(): void {
+	/** Each slot is individually switchable, like every other section. */
+	public function test_a_switched_off_slot_drops_out(): void {
 		$this->withLatePoint();
 		$storage = new Blueworx_Clubhouse_Fake_Storage();
-		Blueworx_Clubhouse_Test_Site::without( $storage, 'booking/agents' );
+		$vis     = new Blueworx_Clubhouse_Visibility( $storage );
+		$vis->set_section_visible( 'booking', 'agents', false );
 
-		$html = $this->page( 'booking', $storage );
+		$html = Blueworx_Clubhouse_Page_Renderer::booking( $this->branding(), $vis, $this->collections() );
 		$this->assertStringNotContainsString( 'items=&quot;agents&quot;', $html );
 		$this->assertSame( 2, substr_count( $html, 'class="ch-shortcode"' ) );
 	}
@@ -118,12 +125,12 @@ final class BookingPageTest extends TestCase {
 	 * itself, not just on the page being reachable.
 	 */
 	public function test_the_calendar_page_shows_the_booking_calendar_only_with_latepoint(): void {
-		$html = $this->page( 'calendar' );
+		$html = Blueworx_Clubhouse_Page_Renderer::calendar( $this->branding(), $this->visibility(), $this->collections() );
 		$this->assertStringNotContainsString( 'latepoint_calendar', $html );
 		$this->assertStringContainsString( 'ch-cal', $html, 'the fixtures schedule still renders' );
 
 		$this->withLatePoint();
-		$html = $this->page( 'calendar' );
+		$html = Blueworx_Clubhouse_Page_Renderer::calendar( $this->branding(), $this->visibility(), $this->collections() );
 		$this->assertStringContainsString( '[latepoint_calendar view=&quot;month&quot;]', $html );
 		$this->assertStringContainsString( 'ch-cal', $html, 'and still renders alongside it' );
 	}
@@ -131,7 +138,7 @@ final class BookingPageTest extends TestCase {
 	/** Booking sits above the fixtures: deciding when to play comes before results. */
 	public function test_the_booking_calendar_renders_above_the_fixtures_schedule(): void {
 		$this->withLatePoint();
-		$html = $this->page( 'calendar' );
+		$html = Blueworx_Clubhouse_Page_Renderer::calendar( $this->branding(), $this->visibility(), $this->collections() );
 		$this->assertLessThan(
 			strpos( $html, 'ch-cal__month' ),
 			strpos( $html, 'class="ch-shortcode"' ),
@@ -139,18 +146,26 @@ final class BookingPageTest extends TestCase {
 		);
 	}
 
-	public function test_the_booking_calendar_can_be_taken_off_on_its_own(): void {
+	public function test_the_booking_calendar_can_be_switched_off_on_its_own(): void {
 		$this->withLatePoint();
-		$storage = new Blueworx_Clubhouse_Fake_Storage();
-		Blueworx_Clubhouse_Test_Site::without( $storage, 'calendar/booking' );
+		$vis = new Blueworx_Clubhouse_Visibility( new Blueworx_Clubhouse_Fake_Storage() );
+		$vis->set_section_visible( 'calendar', 'booking', false );
 
-		$html = $this->page( 'calendar', $storage );
+		$html = Blueworx_Clubhouse_Page_Renderer::calendar( $this->branding(), $vis, $this->collections() );
 		$this->assertStringNotContainsString( 'latepoint_calendar', $html );
 		$this->assertStringContainsString( 'ch-cal', $html );
 	}
 
-	/** Its content fields disappear from the block editor when LatePoint does. */
+	/** Its toggle and its content fields both disappear when LatePoint does. */
 	public function test_the_booking_calendar_section_is_hidden_from_the_admin_without_latepoint(): void {
+		$keys = static function (): array {
+			foreach ( Blueworx_Clubhouse_Setup_Sections::inventory() as $page ) {
+				if ( 'calendar' === $page['page'] ) {
+					return array_column( $page['sections'], 'key' );
+				}
+			}
+			return array();
+		};
 		$fields = static function (): array {
 			foreach ( Blueworx_Clubhouse_Content_Catalogue::pages() as $page ) {
 				if ( 'calendar' === $page['tab'] ) {
@@ -160,9 +175,11 @@ final class BookingPageTest extends TestCase {
 			return array();
 		};
 
+		$this->assertNotContains( 'booking', $keys(), 'no visibility toggle' );
 		$this->assertNotContains( 'booking', $fields(), 'no content fields' );
 
 		$this->withLatePoint();
+		$this->assertContains( 'booking', $keys() );
 		$this->assertContains( 'booking', $fields() );
 	}
 
@@ -176,9 +193,10 @@ final class BookingPageTest extends TestCase {
 	public function test_clearing_a_shortcode_restores_its_default_rather_than_dropping_it(): void {
 		$this->withLatePoint();
 		$storage = new Blueworx_Clubhouse_Fake_Storage();
-		Blueworx_Clubhouse_Test_Site::write( $storage, 'booking/agents', array( 'shortcode' => '' ) );
+		$content = new Blueworx_Clubhouse_Content_Store( $storage );
+		$content->set( 'booking', 'agents', 'shortcode', '' );
 
-		$html = $this->page( 'booking', $storage );
+		$html = Blueworx_Clubhouse_Page_Renderer::booking( $this->branding(), $this->visibility(), $this->collections(), '', $content );
 		$this->assertStringContainsString( '[latepoint_resources items=&quot;agents&quot; columns=&quot;3&quot;]', $html );
 		$this->assertSame( 3, substr_count( $html, 'class="ch-shortcode"' ) );
 	}
@@ -187,22 +205,20 @@ final class BookingPageTest extends TestCase {
 	public function test_a_whitespace_shortcode_renders_no_band(): void {
 		$this->withLatePoint();
 		$storage = new Blueworx_Clubhouse_Fake_Storage();
-		Blueworx_Clubhouse_Test_Site::write( $storage, 'booking/agents', array( 'shortcode' => '   ' ) );
+		$content = new Blueworx_Clubhouse_Content_Store( $storage );
+		$content->set( 'booking', 'agents', 'shortcode', '   ' );
 
-		$html = $this->page( 'booking', $storage );
+		$html = Blueworx_Clubhouse_Page_Renderer::booking( $this->branding(), $this->visibility(), $this->collections(), '', $content );
 		$this->assertSame( 2, substr_count( $html, 'class="ch-shortcode"' ) );
 	}
 
 	public function test_a_club_can_retune_a_shortcode_without_a_release(): void {
 		$this->withLatePoint();
 		$storage = new Blueworx_Clubhouse_Fake_Storage();
-		Blueworx_Clubhouse_Test_Site::write(
-			$storage,
-			'booking/services',
-			array( 'shortcode' => '[latepoint_resources items="services" columns="2"]' )
-		);
+		$content = new Blueworx_Clubhouse_Content_Store( $storage );
+		$content->set( 'booking', 'services', 'shortcode', '[latepoint_resources items="services" columns="2"]' );
 
-		$html = $this->page( 'booking', $storage );
+		$html = Blueworx_Clubhouse_Page_Renderer::booking( $this->branding(), $this->visibility(), $this->collections(), '', $content );
 		$this->assertStringContainsString( 'columns=&quot;2&quot;', $html );
 	}
 
@@ -214,6 +230,32 @@ final class BookingPageTest extends TestCase {
 
 		$this->withLatePoint();
 		$this->assertContains( 'booking', $tabs() );
+	}
+
+	/**
+	 * The catalogue and the visibility inventory are held in lockstep by
+	 * ContentCatalogueTest. That guard has to hold in BOTH integration states, or
+	 * installing LatePoint would desynchronise the two.
+	 */
+	public function test_catalogue_and_inventory_stay_in_lockstep_with_latepoint_present(): void {
+		$this->withLatePoint();
+		$inv = array();
+		foreach ( Blueworx_Clubhouse_Setup_Sections::inventory() as $p ) {
+			$inv[ $p['page'] ] = array_column( $p['sections'], 'key' );
+			sort( $inv[ $p['page'] ] );
+		}
+		$seen = array();
+		foreach ( Blueworx_Clubhouse_Content_Catalogue::pages() as $page ) {
+			$vis_page = 'global' === $page['tab'] ? 'home' : $page['tab'];
+			foreach ( $page['sections'] as $s ) {
+				$seen[ $vis_page ][] = $s['key'];
+			}
+		}
+		$this->assertSame( array_keys( $inv ), array_keys( $seen ) );
+		foreach ( $seen as $vis_page => $keys ) {
+			sort( $keys );
+			$this->assertSame( $inv[ $vis_page ], $keys, "Section keys diverge for {$vis_page}" );
+		}
 	}
 
 	public function test_every_booking_slot_exposes_an_editable_shortcode_field(): void {

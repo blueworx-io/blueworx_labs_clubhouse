@@ -6,13 +6,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * The content a club wrote before its site was built from blocks, keyed
- * page -> section -> field. One storage entry per page.
- *
- * Read-only, and read by exactly one thing: the migration that turns those
- * words into blocks the first time a site is composed. Nothing writes here any
- * more, and nothing renders from it. The options themselves are left in place
- * rather than deleted, so a migration that went wrong can still be looked at.
+ * Stores singular content for template pages, keyed page -> section -> field.
+ * One storage entry per page keeps reads to a single autoloaded option.
  *
  * @package BlueworxLabsClubhouse
  */
@@ -42,6 +37,18 @@ final class Blueworx_Clubhouse_Content_Store {
 		return array_key_exists( $field, $fields ) ? $fields[ $field ] : $default;
 	}
 
+	public function set( string $page, string $section, string $field, mixed $value ): void {
+		$all = $this->storage->get( $this->page_key( $page ), array() );
+		if ( ! is_array( $all ) ) {
+			$all = array();
+		}
+		if ( ! isset( $all[ $section ] ) || ! is_array( $all[ $section ] ) ) {
+			$all[ $section ] = array();
+		}
+		$all[ $section ][ $field ] = $value;
+		$this->storage->set( $this->page_key( $page ), $all );
+	}
+
 	private const ITEMS_KEY = 'items';
 
 	/** @return array<int,array<string,mixed>> */
@@ -50,4 +57,8 @@ final class Blueworx_Clubhouse_Content_Store {
 		return is_array( $val ) ? array_values( $val ) : array();
 	}
 
+	/** @param array<int,array<string,mixed>> $items */
+	public function set_items( string $page, string $section, array $items ): void {
+		$this->set( $page, $section, self::ITEMS_KEY, array_values( $items ) );
+	}
 }

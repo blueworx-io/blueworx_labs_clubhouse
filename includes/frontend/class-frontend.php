@@ -210,8 +210,23 @@ final class Blueworx_Clubhouse_Frontend {
 			return;
 		}
 		flush_rewrite_rules();
+		self::drop_block_data();
 		// Autoload off: read once per upgrade, never on a normal request.
 		update_option( self::REWRITE_VERSION_OPTION, $running, false );
+	}
+
+	/**
+	 * Remove what the withdrawn block builder left behind.
+	 *
+	 * Pages are built from the club's content again, so these two options are
+	 * read by nothing. They are autoloaded, so leaving them would cost every
+	 * page load on every site for the sake of data no screen can reach. Nothing
+	 * a club wrote lives only here: the content store is where the words are,
+	 * and it is untouched.
+	 */
+	private static function drop_block_data(): void {
+		delete_option( 'clubhouse_blocks' );
+		delete_option( 'clubhouse_page_composition' );
 	}
 
 	public static function register_rewrites(): void {
@@ -347,7 +362,7 @@ final class Blueworx_Clubhouse_Frontend {
 			new Blueworx_Clubhouse_Theme_Cache( $storage ),
 			new Blueworx_Clubhouse_WP_Collections(),
 			$registry,
-			self::composer()
+			new Blueworx_Clubhouse_Content_Store( $storage )
 		);
 	}
 
@@ -466,36 +481,11 @@ final class Blueworx_Clubhouse_Frontend {
 
 		$ctx      = self::context();
 		$logo_url = self::resolve_logo( $ctx->branding->get_logo() );
-		// So a menu item pointing at a block resolves against the blocks this
-		// club actually has, not the ones the plugin ships.
-		Blueworx_Clubhouse_Link_Catalogue::set_composer( $ctx->composer );
 
 		if ( $is_article ) {
-			return Blueworx_Clubhouse_Page_Renderer::post( $ctx->branding, $ctx->visibility, $ctx->collections, $ctx->composer, $logo_url );
+			return Blueworx_Clubhouse_Page_Renderer::post( $ctx->branding, $ctx->visibility, $ctx->collections, $logo_url, $ctx->content );
 		}
-		return Blueworx_Clubhouse_Page_Map::render( $slug, $ctx->branding, $ctx->visibility, $ctx->collections, $ctx->composer, $logo_url, self::current_filter(), self::current_item() );
-	}
-
-	/**
-	 * The club's blocks and what each page is built from. Reads the same
-	 * options everything else does, so a page composed in the admin screens is
-	 * the page a visitor gets.
-	 *
-	 * A site that has never been composed is composed here, on the spot. The
-	 * upgrade routine normally does it, but that runs on an admin request, and
-	 * a club whose first visitor after an update arrives before its owner does
-	 * must not be served a site with no pages on it.
-	 */
-	public static function composer(): Blueworx_Clubhouse_Page_Composer {
-		$storage     = new Blueworx_Clubhouse_Options_Storage();
-		$composition = new Blueworx_Clubhouse_Page_Composition( $storage );
-		if ( ! $composition->is_configured() ) {
-			Blueworx_Clubhouse_Blocks_Installer::install();
-		}
-		return new Blueworx_Clubhouse_Page_Composer(
-			new Blueworx_Clubhouse_Block_Library( $storage ),
-			$composition
-		);
+		return Blueworx_Clubhouse_Page_Map::render( $slug, $ctx->branding, $ctx->visibility, $ctx->collections, $logo_url, $ctx->content, self::current_filter(), self::current_item() );
 	}
 
 	/**

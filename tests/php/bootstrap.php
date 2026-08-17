@@ -40,7 +40,6 @@ require_once __DIR__ . '/wp-stubs.php';
 
 require dirname( __DIR__, 2 ) . '/includes/bootstrap.php';
 
-require_once dirname( __DIR__, 2 ) . '/includes/blocks/class-blocks-installer.php';
 require_once dirname( __DIR__, 2 ) . '/includes/frontend/class-clubhouse-context.php';
 require_once dirname( __DIR__, 2 ) . '/includes/frontend/class-frontend.php';
 require_once dirname( __DIR__, 2 ) . '/includes/frontend/class-demo-mode.php';
@@ -48,12 +47,10 @@ require_once dirname( __DIR__, 2 ) . '/includes/frontend/class-external-chrome.p
 require_once dirname( __DIR__, 2 ) . '/includes/frontend/class-seo-head.php';
 require_once dirname( __DIR__, 2 ) . '/includes/admin/class-admin-menu-icons.php';
 require_once dirname( __DIR__, 2 ) . '/includes/admin/class-setup-controller.php';
-require_once dirname( __DIR__, 2 ) . '/includes/admin/class-menu-controller.php';
+require_once dirname( __DIR__, 2 ) . '/includes/admin/class-content-controller.php';
 require_once dirname( __DIR__, 2 ) . '/includes/admin/class-demo-controller.php';
 require_once dirname( __DIR__, 2 ) . '/includes/admin/class-owner-role.php';
 require_once dirname( __DIR__, 2 ) . '/includes/admin/class-access-controller.php';
-require_once dirname( __DIR__, 2 ) . '/includes/admin/class-pages-controller.php';
-require_once dirname( __DIR__, 2 ) . '/includes/admin/class-blocks-controller.php';
 require_once dirname( __DIR__, 2 ) . '/includes/admin/class-seo-controller.php';
 require_once dirname( __DIR__, 2 ) . '/includes/admin/class-guide-controller.php';
 require_once dirname( __DIR__, 2 ) . '/includes/admin/class-shop-pages-controller.php';

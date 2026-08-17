@@ -52,10 +52,9 @@ final class SponsorsBandTest extends TestCase {
 
 	/** The home page drops the section rather than emitting an empty wrapper. */
 	public function test_the_home_page_omits_the_band_when_the_club_has_no_sponsors(): void {
-		$body = Blueworx_Clubhouse_Test_Site::page(
-			'home',
-			new Blueworx_Clubhouse_Fake_Storage(),
-			'',
+		$body = Blueworx_Clubhouse_Page_Renderer::home(
+			new Blueworx_Clubhouse_Branding( new Blueworx_Clubhouse_Fake_Storage() ),
+			new Blueworx_Clubhouse_Visibility( new Blueworx_Clubhouse_Fake_Storage() ),
 			new Blueworx_Clubhouse_Sponsorless_Collections()
 		);
 		$this->assertStringNotContainsString( 'ch-sponsors', $body );

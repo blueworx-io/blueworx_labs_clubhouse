@@ -10,8 +10,7 @@ const { test, expect } = require('@playwright/test');
 
 const SCREENS = [
   { slug: 'clubhouse-setup', name: 'Clubhouse Setup' },
-  { slug: 'clubhouse-pages', name: 'Content' },
-  { slug: 'clubhouse-blocks', name: 'Blocks' },
+  { slug: 'clubhouse-site-content', name: 'Clubhouse Content' },
   { slug: 'clubhouse-import', name: 'Import' },
   { slug: 'clubhouse-seo', name: 'Search & sharing' },
   { slug: 'clubhouse-guide', name: 'User guide' },
@@ -26,7 +25,7 @@ async function loginAsAdmin(page) {
 }
 
 test('every clubhouse screen tells an administrator who can reach it @wordpress', async ({ page }) => {
-  // Six wp-admin screens in one test, one of them the guide, which builds
+  // Five wp-admin screens in one test, one of them the guide, which builds
   // itself from every live registry. Against the single-threaded PHP dev
   // server that does not fit the default limit under load — it timed out
   // mid-sweep while passing on its own. Covering every screen is the point of
@@ -40,7 +39,7 @@ test('every clubhouse screen tells an administrator who can reach it @wordpress'
 
     const chips = page.locator('.clubhouse-head .clubhouse-roletags');
     await expect(chips, `${screen.name} shows no access chips`).toHaveCount(1);
-    // Administrator can reach all six, so it is the one label common to every
+    // Administrator can reach all five, so it is the one label common to every
     // screen — the rest differ by page and are not worth pinning here.
     await expect(chips, screen.name).toContainText('Administrator');
   }

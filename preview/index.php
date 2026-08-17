@@ -114,19 +114,9 @@ function blueworx_clubhouse_preview_document(): string {
 	$raw_item = $_GET[ Blueworx_Clubhouse_Links::ITEM_PARAM ] ?? '';
 	$item     = is_string( $raw_item ) ? trim( (string) preg_replace( '/[^a-z0-9]+/', '-', strtolower( $raw_item ) ), '-' ) : '';
 	$collections = new Blueworx_Clubhouse_Demo_Collections();
-	// The preview builds its pages from blocks, exactly as a live site does.
-	// Nothing is stored between requests here, so the library is seeded on the
-	// spot — which is also the fresh-install path, and so gets exercised on
-	// every preview load.
-	$library     = new Blueworx_Clubhouse_Block_Library( $storage );
-	$composition = new Blueworx_Clubhouse_Page_Composition( $storage );
-	if ( ! $composition->is_configured() ) {
-		( new Blueworx_Clubhouse_Block_Seeder( $library, $composition ) )->seed();
-	}
-	$composer = new Blueworx_Clubhouse_Page_Composer( $library, $composition );
-	$body     = 'post' === $page
-		? Blueworx_Clubhouse_Page_Renderer::post( $branding, $visibility, $collections, $composer )
-		: Blueworx_Clubhouse_Page_Map::render( $slug, $branding, $visibility, $collections, $composer, '', $filter, $item );
+	$body        = 'post' === $page
+		? Blueworx_Clubhouse_Page_Renderer::post( $branding, $visibility, $collections, '', null, $filter )
+		: Blueworx_Clubhouse_Page_Map::render( $slug, $branding, $visibility, $collections, '', null, $filter, $item );
 	$palettes  = blueworx_clubhouse_preview_palettes( $registry->active() );
 	$switcher   = '<div class="ch-switcher" data-ch-palettes=\''
 		. htmlspecialchars( json_encode( $palettes ), ENT_QUOTES, 'UTF-8' ) . '\'></div>'

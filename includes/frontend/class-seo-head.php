@@ -144,11 +144,12 @@ final class Blueworx_Clubhouse_Seo_Head {
 	 * to ask an owner for better copy.
 	 */
 	public static function description( Blueworx_Clubhouse_Clubhouse_Context $ctx, string $page, string $club ): string {
-		$hero       = self::hero_content( $ctx, $page );
-		$field      = static fn( string $key ): string => (string) ( $hero[ $key ] ?? '' );
 		$candidates = array(
-			$field( 'lede' ),
-			trim( $field( 'title_lead' ) . ' ' . $field( 'title_highlight' ) ),
+			(string) $ctx->content->get( $page, 'hero', 'lede', '' ),
+			trim(
+				(string) $ctx->content->get( $page, 'hero', 'title_lead', '' ) . ' '
+				. (string) $ctx->content->get( $page, 'hero', 'title_highlight', '' )
+			),
 			(string) get_bloginfo( 'description' ),
 			$club,
 		);
@@ -158,26 +159,6 @@ final class Blueworx_Clubhouse_Seo_Head {
 			}
 		}
 		return '';
-	}
-
-	/**
-	 * What the club has written on this page's hero block, if it has a hero and
-	 * has written anything. The words a visitor reads first are the honest
-	 * description of the page, which is why the chain above starts here.
-	 *
-	 * Only what the club typed, not the shipped defaults: a description lifted
-	 * from placeholder copy is the same sentence on every clubhouse site, which
-	 * is worse for a search engine than the club's name on its own.
-	 *
-	 * @return array<string,mixed>
-	 */
-	private static function hero_content( Blueworx_Clubhouse_Clubhouse_Context $ctx, string $page ): array {
-		foreach ( $ctx->composer->blocks_for( $page ) as $block ) {
-			if ( str_ends_with( (string) ( $block['defaults_key'] ?? '' ), '/hero' ) ) {
-				return (array) ( $block['content'] ?? array() );
-			}
-		}
-		return array();
 	}
 
 	private static function slug(): string {

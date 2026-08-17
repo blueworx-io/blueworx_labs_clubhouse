@@ -54,23 +54,14 @@ final class Blueworx_Clubhouse_Admin_Pages {
 				// setup tab is still gated on CAPABILITY inside the screen.
 				'cap'         => Blueworx_Clubhouse_Setup_Controller::MENU_CAPABILITY,
 				'menu'        => Blueworx_Clubhouse_Setup_Controller::PAGE_SLUG,
-				'description' => 'Base look, branding, members and the header menu.',
+				'description' => 'Base look, branding, page visibility and the header menu.',
 			),
 			array(
-				'slug'        => Blueworx_Clubhouse_Pages_Controller::PAGE_SLUG,
-				'label'       => 'Content',
-				'cap'         => Blueworx_Clubhouse_Pages_Controller::CAPABILITY,
-				'menu'        => Blueworx_Clubhouse_Pages_Controller::PAGE_SLUG,
-				'description' => 'What each page is built from.',
-			),
-			array(
-				'slug'        => Blueworx_Clubhouse_Blocks_Controller::PAGE_SLUG,
-				'label'       => 'Blocks',
-				'cap'         => Blueworx_Clubhouse_Blocks_Controller::CAPABILITY,
-				// A submenu of Content, so its menu is its parent's — the same rule
-				// Import and the guide follow under Clubhouse.
-				'menu'        => Blueworx_Clubhouse_Pages_Controller::PAGE_SLUG,
-				'description' => 'The words and images in every block, edited once for every page using it.',
+				'slug'        => Blueworx_Clubhouse_Content_Controller::PAGE_SLUG,
+				'label'       => 'Club Pages',
+				'cap'         => Blueworx_Clubhouse_Content_Controller::CAPABILITY,
+				'menu'        => Blueworx_Clubhouse_Content_Controller::PAGE_SLUG,
+				'description' => 'The words and images on every page.',
 			),
 			array(
 				'slug'        => Blueworx_Clubhouse_Import_Controller::PAGE_SLUG,

@@ -24,30 +24,34 @@ final class Blueworx_Clubhouse_Page_Map {
 	 *
 	 * A 'requires' key names the shortcode tag whose presence the page depends on.
 	 *
-	 * @return array<int,array{slug:string,label:string,requires?:string}>
+	 * @return array<int,array{slug:string,label:string,method:string,requires?:string}>
 	 */
 	public static function pages(): array {
 		return array(
-			array( 'slug' => '',           'label' => 'Home' ),
-			array( 'slug' => 'about',      'label' => 'About' ),
-			array( 'slug' => 'membership', 'label' => 'Membership' ),
-			array( 'slug' => 'contact',    'label' => 'Contact' ),
-			array( 'slug' => 'login',      'label' => 'Log in' ),
-			array( 'slug' => 'news',       'label' => 'News' ),
-			array( 'slug' => 'sports',     'label' => 'Sports' ),
-			array( 'slug' => 'teams',      'label' => 'Teams' ),
-			array( 'slug' => 'events',     'label' => 'Events' ),
-			array( 'slug' => 'calendar',   'label' => 'Calendar' ),
+			array( 'slug' => '',           'label' => 'Home',       'method' => 'home' ),
+			array( 'slug' => 'about',      'label' => 'About',      'method' => 'about' ),
+			array( 'slug' => 'membership', 'label' => 'Membership', 'method' => 'membership' ),
+			array( 'slug' => 'contact',    'label' => 'Contact',    'method' => 'contact' ),
+			array( 'slug' => 'login',      'label' => 'Log in',     'method' => 'login' ),
+			// 'blog' is the internal key; the URL and the label say News, which is
+			// what a club calls it. Renamed here would break stored content and
+			// visibility addresses for no gain.
+			array( 'slug' => 'news',       'label' => 'News',       'method' => 'blog' ),
+			array( 'slug' => 'sports',     'label' => 'Sports',     'method' => 'sports' ),
+			array( 'slug' => 'teams',      'label' => 'Teams',      'method' => 'teams' ),
+			array( 'slug' => 'events',     'label' => 'Events',     'method' => 'events' ),
+			array( 'slug' => 'calendar',   'label' => 'Calendar',   'method' => 'calendar' ),
 			array(
 				'slug'     => 'booking',
 				'label'    => 'Bookings',
+				'method'   => 'booking',
 				'requires' => Blueworx_Clubhouse_Integrations::LATEPOINT_TAG,
 			),
 			// Last, and linked from the footer rather than the nav: nobody comes to
 			// a club site to read the terms, but a site whose forms collect names,
 			// emails and phone numbers has to have somewhere to point at.
-			array( 'slug' => 'privacy',    'label' => 'Privacy' ),
-			array( 'slug' => 'terms',      'label' => 'Terms' ),
+			array( 'slug' => 'privacy',    'label' => 'Privacy',    'method' => 'privacy' ),
+			array( 'slug' => 'terms',      'label' => 'Terms',      'method' => 'terms' ),
 		);
 	}
 
@@ -60,7 +64,7 @@ final class Blueworx_Clubhouse_Page_Map {
 	 * Stored content and visibility for a filtered-out page are untouched, so
 	 * installing the integration later brings the page back exactly as it was.
 	 *
-	 * @return array<int,array{slug:string,label:string,requires?:string}>
+	 * @return array<int,array{slug:string,label:string,method:string,requires?:string}>
 	 */
 	public static function available(): array {
 		return array_values(
@@ -94,15 +98,6 @@ final class Blueworx_Clubhouse_Page_Map {
 		return '';
 	}
 
-	/**
-	 * The key a page is known by everywhere except its URL — where Home's slug
-	 * is empty. Content addresses, visibility and block compositions all use
-	 * the key, so this is the one place the two spellings meet.
-	 */
-	public static function page_key( string $slug ): string {
-		return '' === $slug ? 'home' : $slug;
-	}
-
 	public static function has( string $slug ): bool {
 		foreach ( self::pages() as $page ) {
 			if ( $page['slug'] === $slug ) {
@@ -117,8 +112,8 @@ final class Blueworx_Clubhouse_Page_Map {
 		Blueworx_Clubhouse_Branding $branding,
 		Blueworx_Clubhouse_Visibility $visibility,
 		Blueworx_Clubhouse_Collections $collections,
-		Blueworx_Clubhouse_Page_Composer $composer,
 		string $logo_url = '',
+		?Blueworx_Clubhouse_Content_Store $content = null,
 		string $filter = '',
 		string $item = ''
 	): string {
@@ -127,12 +122,29 @@ final class Blueworx_Clubhouse_Page_Map {
 		// or mistyped link lands somewhere useful instead of on an empty page.
 		if ( '' !== $item && in_array( $slug, array( 'sports', 'teams' ), true ) ) {
 			$detail = 'sports' === $slug
-				? Blueworx_Clubhouse_Page_Renderer::sport_page( $item, $branding, $visibility, $collections, $composer, $logo_url )
-				: Blueworx_Clubhouse_Page_Renderer::team_page( $item, $branding, $visibility, $collections, $composer, $logo_url );
+				? Blueworx_Clubhouse_Page_Renderer::sport_page( $item, $branding, $visibility, $collections, $logo_url, $content )
+				: Blueworx_Clubhouse_Page_Renderer::team_page( $item, $branding, $visibility, $collections, $logo_url, $content );
 			if ( '' !== $detail ) {
 				return $detail;
 			}
 		}
-		return $composer->page( self::page_key( $slug ), $branding, $visibility, $collections, $logo_url, $filter );
+		$method = 'home';
+		foreach ( self::pages() as $page ) {
+			if ( $page['slug'] === $slug ) {
+				$method = $page['method'];
+				break;
+			}
+		}
+		// $filter is consumed only by the filtered pages (sports/teams/events/
+		// calendar); the other page methods accept it as an ignored trailing arg.
+		return call_user_func(
+			array( Blueworx_Clubhouse_Page_Renderer::class, $method ),
+			$branding,
+			$visibility,
+			$collections,
+			$logo_url,
+			$content,
+			$filter
+		);
 	}
 }

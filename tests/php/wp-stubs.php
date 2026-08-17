@@ -40,7 +40,6 @@ function wp_stub_reset(): void {
 	$GLOBALS['wp_stub_users']         = array();
 	$GLOBALS['wp_stub_query_vars']    = array();
 	$GLOBALS['wp_stub_transients']    = array();
-	$GLOBALS['wp_stub_bloginfo']      = array();
 	$GLOBALS['wp_stub_sideload_next'] = 500;
 	$GLOBALS['wp_stub_sideload_fail'] = array();
 	$GLOBALS['wp_stub_insert_fail']   = array();
@@ -97,15 +96,6 @@ if ( ! function_exists( 'wp_enqueue_script' ) ) {
 }
 if ( ! function_exists( 'wp_add_inline_style' ) ) {
 	function wp_add_inline_style( ...$a ) { wp_stub_record( 'wp_add_inline_style', $a ); }
-}
-if ( ! function_exists( 'get_bloginfo' ) ) {
-	// Only what the plugin asks for: the tagline, and the site language the
-	// locale meta is derived from. A test that wants a tagline sets
-	// $GLOBALS['wp_stub_bloginfo']['description'].
-	function get_bloginfo( string $show = '', string $filter = 'raw' ) {
-		$defaults = array( 'description' => '', 'language' => 'en-GB', 'name' => 'Test site' );
-		return $GLOBALS['wp_stub_bloginfo'][ $show ] ?? $defaults[ $show ] ?? '';
-	}
 }
 if ( ! function_exists( 'get_option' ) ) {
 	function get_option( string $key, $default = false ) {

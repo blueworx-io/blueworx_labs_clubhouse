@@ -142,7 +142,7 @@ final class Blueworx_Clubhouse_Import_Screen {
 		}
 
 		$out .= '<p class="description">These sections are showing demo content and would be switched off. '
-			. 'You can put any of them back on the page later under Content → Pages.</p><ul class="clubhouse-import__off">';
+			. 'You can switch any of them back on later under Clubhouse Setup.</p><ul class="clubhouse-import__off">';
 		foreach ( $off as $label ) {
 			$out .= '<li>' . self::esc( (string) $label ) . '</li>';
 		}
@@ -163,7 +163,7 @@ final class Blueworx_Clubhouse_Import_Screen {
 		if ( array() !== $needed ) {
 			$out .= '<div class="clubhouse-import__step">';
 			$out .= '<h2>Images still needed</h2>';
-			$out .= '<p>These picture slots are still empty. Add them under Content → Blocks whenever you have the images.</p><ul>';
+			$out .= '<p>These picture slots are still empty. Add them under Club Pages whenever you have the images.</p><ul>';
 			foreach ( $needed as $item ) {
 				$out .= '<li>' . self::esc( (string) ( $item['label'] ?? '' ) ) . '</li>';
 			}
