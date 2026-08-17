@@ -148,6 +148,9 @@ final class Blueworx_Clubhouse_Frontend {
 		// browser's default serif at line-height 1.
 		add_action( 'wp_enqueue_scripts', array( self::class, 'enqueue_assets' ), 20 );
 		add_action( 'wp_head', array( self::class, 'render_favicon' ) );
+		// Before template_include, so a page we decline to serve is marked 404
+		// while WordPress can still pick the theme's 404 template for it.
+		add_action( 'template_redirect', array( self::class, 'maybe_404' ) );
 		add_filter( 'template_include', array( self::class, 'filter_template' ) );
 		// The template used to print its own <title> and then call wp_head(), which
 		// prints WordPress's — so every clubhouse page shipped two titles and the
@@ -269,6 +272,46 @@ final class Blueworx_Clubhouse_Frontend {
 		// switched news off has said it does not want a news section, and leaving
 		// the articles reachable and clubhouse-dressed would contradict that.
 		return self::context()->visibility->is_page_visible( 'news' );
+	}
+
+	/**
+	 * Whether this URL is one of ours that we are declining to serve.
+	 *
+	 * The rewrite rules are registered for every page the plugin knows, present
+	 * integration or not, because they are cached until flushed (see
+	 * Page_Map::pages()). So a switched-off page still matches a rule, WordPress
+	 * still builds a perfectly valid query, and declining to render left it
+	 * answering 200 with whatever the theme falls back to — its blog index, on
+	 * the smoke-test install. Declining to render is not the same as saying the
+	 * page is not there.
+	 *
+	 * Only a URL that named one of our pages counts. The bare site root is left
+	 * alone even when Home is switched off: that address belongs to WordPress as
+	 * much as to us, and 404ing it would take the whole site down rather than
+	 * one page off it.
+	 */
+	public static function is_gone( mixed $query_var, ?Blueworx_Clubhouse_Visibility $visibility ): bool {
+		if ( ! is_string( $query_var ) || '' === $query_var || ! Blueworx_Clubhouse_Page_Map::has( $query_var ) ) {
+			return false;
+		}
+		return null === self::resolve_slug( false, $query_var, $visibility );
+	}
+
+	/**
+	 * Answer 404 for a page this site does not serve, so the URL behaves like it
+	 * does not exist — for a visitor and for a search engine.
+	 */
+	public static function maybe_404(): void {
+		$qv = function_exists( 'get_query_var' ) ? get_query_var( self::QUERY_VAR ) : '';
+		if ( ! self::is_gone( $qv, self::context()->visibility ) ) {
+			return;
+		}
+		global $wp_query;
+		if ( $wp_query instanceof WP_Query ) {
+			$wp_query->set_404();
+		}
+		status_header( 404 );
+		nocache_headers();
 	}
 
 	public static function filter_template( string $template ): string {

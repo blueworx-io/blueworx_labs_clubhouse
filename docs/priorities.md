@@ -1,9 +1,10 @@
 # What to work on next
 
-The standing priority order for this repo. **The page builder is done**; what is
-left is three things only a person can do, plus two small bugs.
+The standing priority order for this repo. **The page builder is done, and so
+are the bugs behind it.** One thing is left, and it is a person's: the legal
+wording each club has to write for itself.
 
-Written 14 August 2026, rewritten 17 August 2026 against main at v0.74.0. Keep
+Written 14 August 2026, rewritten 17 August 2026 against main at v0.75.0. Keep
 it current: when an issue closes, strike it here.
 
 ---
@@ -23,15 +24,18 @@ step's input.
 | 5 | ~~[#206](../../issues/206) Repoint import, guide and link picker~~ | **Done** — v0.74.0, alongside the deletion. |
 | 6 | ~~[#207](../../issues/207) Delete the old path~~ | **Done** — v0.74.0. |
 
-**What is left:** [#209](../../issues/209) the real purchase, as
-soon as there is a live shop to try it on, and [#210](../../issues/210) the
-privacy and terms wording, which is the club's to write. Neither blocks the
-builder; both block a real launch, so do not let them drift to the end.
+**What is left:** one thing, and it is a person's. Each club has to replace the
+example wording on its own privacy and terms pages before the site takes real
+sign-ups — see [#210](../../issues/210). Everything else on this list is done.
 
-**Two bugs the smoke test turned up**, neither caused by blocks and neither
-blocking the builder: [#211](../../issues/211), a hidden page answers 200 with
-the WordPress theme instead of 404, and [#212](../../issues/212), a content item
-missing a key takes the whole page down rather than leaving a gap.
+**The two bugs the smoke test turned up** are fixed in v0.75.0:
+~~[#211](../../issues/211)~~ a hidden page now answers 404, and
+~~[#212](../../issues/212)~~ a content item missing a key now leaves a gap
+rather than taking the page down.
+
+~~[#209](../../issues/209) One real purchase on a live shop~~ — closed, not
+planned. The link format stays confirmed against SureCart's source; the live
+checkout is untested by choice.
 
 ## 1. The page builder
 
@@ -53,12 +57,11 @@ else. The import and the link picker both address blocks now.
 
 ## 2. Not code, but blocking a real launch
 
-- [#209](../../issues/209) **One real purchase on a live SureCart shop.** The
-  link format is confirmed against SureCart's source; only an actual checkout
-  proves the basket prefills.
 - [#210](../../issues/210) **Write the privacy and terms wording.** Both pages
-  carry `ADD:` placeholders wherever only the club can answer, and they have to
-  go before the site takes real sign-ups.
+  now read as finished pages, but wherever only the club can answer they carry
+  worked examples opening "Example wording — replace this with your club's own."
+  Every one has to be replaced before the site takes real sign-ups. A wrong
+  policy is worse than an obviously unfinished one, so this is not optional.
 
 ## The rule
 

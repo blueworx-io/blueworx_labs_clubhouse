@@ -60,44 +60,30 @@ async function loginAsAdmin(page) {
   await expect(page.locator('#wpadminbar')).toBeVisible();
 }
 
-// Its own section toggle, like every other section, driven through the screen
-// an owner actually uses so the toggle being wired to the right address is part
-// of what is proved.
+// The pack's switch is a field on its own block, driven through the screen an
+// owner actually uses so the switch being wired to the right block is part of
+// what is proved.
 //
-// Setup → Visibility rather than the matching switch on Club Pages: that one
-// rides in the Global tab's content form, and saving it writes every other
-// field on that tab at its current value — which for a site that has never
-// edited them means writing empty over the defaults, switching the cookie
-// notice and announcement bar off as a side effect. Worth its own issue; not
-// something a test about the welcome pack should be doing to the site.
+// It has to be a field rather than a page toggle: the pack goes on no page of
+// this plugin's — it renders on the shop's dashboard — so there is no page to
+// take it off.
 async function setPackVisible(page, visible) {
-  await page.goto('/wp-admin/admin.php?page=clubhouse-setup', { waitUntil: 'domcontentloaded' });
-  // Two levels of tab, and force, for the reasons user-guide.spec.js documents.
-  await page.getByRole('tab', { name: 'Visibility' }).click({ force: true });
-  await page.locator('button.clubhouse-vistab[data-vistab="home"]').click({ force: true });
+  await page.goto('/wp-admin/admin.php?page=clubhouse-blocks&block=welcome', {
+    waitUntil: 'domcontentloaded',
+  });
 
-  // The checkbox is opacity:0 and 0×0 with the switch drawn beside it, so the
-  // input is driven directly. Clicking the visible switch is the more faithful
-  // gesture, but this one sits well down a long grid and wp-admin's chrome
-  // keeps reflowing after load, so a positional click lands on stale
-  // coordinates and silently misses.
-  const toggle = page.locator('input[name="clubhouse_section[home.welcome]"]');
-  const label = page.locator('label.clubhouse-toggle', { has: toggle });
-  await expect(label).toBeVisible();
-
+  const toggle = page.locator('input[name="field[show]"]');
+  await expect(toggle).toBeVisible();
   if ((await toggle.isChecked()) !== visible) {
-    // A real click event on the real switch, dispatched in the page rather than
-    // aimed at screen coordinates. The input is 0×0 with the switch drawn beside
-    // it, and wp-admin's chrome keeps reflowing after this screen loads, so a
-    // positional click either misses or never satisfies Playwright's stability
-    // wait — the problem menu-editor.spec.js documents. This still exercises the
-    // control an owner uses; only the aiming is different.
-    await label.evaluate((el) => el.click());
+    await toggle.click({ force: true });
   }
   expect(await toggle.isChecked()).toBe(visible);
 
-  await page.getByRole('button', { name: /save/i }).first().click({ force: true });
-  await expect(page.locator('.notice-success')).toBeVisible();
+  // force, for the reason menu-editor.spec.js documents: wp-admin's own chrome
+  // keeps reflowing after this screen loads, so Playwright's 'stable' wait never
+  // converges even though the control is provably where it says it is.
+  await page.getByRole('button', { name: 'Save', exact: true }).click({ force: true });
+  await expect(page.locator('.notice, .clubhouse-notice').first()).toBeVisible();
 }
 
 test('switching the welcome pack off takes it off the dashboard @wordpress', async ({ page }) => {

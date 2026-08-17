@@ -37,12 +37,26 @@ final class LegalPagesTest extends TestCase {
 		$this->assertStringContainsString( 'ico.org.uk', $html );
 	}
 
-	public function test_the_starter_text_marks_what_only_the_club_can_answer(): void {
-		// A generated policy that confidently describes data sharing nobody does
-		// is worse than an obviously unfinished one — only the second gets
-		// corrected. The markers are how an owner finds those lines.
-		$this->assertStringContainsString( 'ADD:', $this->privacy() );
-		$this->assertStringContainsString( 'ADD:', $this->terms() );
+	/**
+	 * The starter pages carry worked examples wherever only the club can answer,
+	 * and every one of them says so in the same words. A policy that confidently
+	 * describes data sharing nobody does is worse than an unfinished one — only
+	 * the second gets corrected — so the lead sentence is what keeps an example
+	 * from reading as a decision the club has made.
+	 */
+	public function test_every_worked_example_says_it_is_one(): void {
+		$lead = Blueworx_Clubhouse_Block_Defaults::EXAMPLE_LEAD;
+
+		// The counts are the point: a paragraph added later without the lead is a
+		// line an owner would ship believing their club had agreed to it.
+		$this->assertSame( 6, substr_count( $this->privacy(), $lead ), 'privacy' );
+		$this->assertSame( 4, substr_count( $this->terms(), $lead ), 'terms' );
+	}
+
+	/** No unfinished markers left on either page — an owner sees prose, not a brief. */
+	public function test_no_placeholder_markers_are_left_on_either_page(): void {
+		$this->assertStringNotContainsString( 'ADD:', $this->privacy() );
+		$this->assertStringNotContainsString( 'ADD:', $this->terms() );
 	}
 
 	public function test_the_terms_page_leaves_payments_and_refunds_to_the_club(): void {

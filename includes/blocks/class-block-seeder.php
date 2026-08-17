@@ -46,6 +46,61 @@ final class Blueworx_Clubhouse_Block_Seeder {
 	}
 
 	/**
+	 * Give an already-composed site the page-less blocks a later release added.
+	 *
+	 * A club composed on an earlier version has the blocks that version knew
+	 * about and nothing since. For a block that goes on a page that is fine —
+	 * where it belongs is the owner's decision, not an upgrade's. But the
+	 * welcome pack sits on no page at all, so an upgrade that does not create it
+	 * leaves the club with wording it cannot reach and a switch it cannot find.
+	 *
+	 * Only addresses this site has no block for are touched, so a club's own
+	 * edits and removals survive, and running it twice creates nothing new.
+	 */
+	public function adopt( Blueworx_Clubhouse_Content_Store $content, Blueworx_Clubhouse_Visibility $visibility ): void {
+		foreach ( Blueworx_Clubhouse_Block_Addresses::map() as $address => $entry ) {
+			$address = (string) $address;
+			if ( ! str_starts_with( $address, 'global/' ) || 'global/cookies' === $address ) {
+				continue;
+			}
+			if ( '' !== $this->library->by_address( $address ) ) {
+				continue;
+			}
+			$this->make( $address, $entry, $content, $visibility );
+		}
+	}
+
+	/**
+	 * One block for one address, carrying whatever the club had written there.
+	 *
+	 * @param array{type:string,position:int} $entry
+	 */
+	private function make(
+		string $address,
+		array $entry,
+		?Blueworx_Clubhouse_Content_Store $content,
+		?Blueworx_Clubhouse_Visibility $visibility
+	): string {
+		[ $page, $section ] = explode( '/', $address, 2 );
+
+		$id = $this->library->add(
+			$entry['type'],
+			self::name_for( $page, $section ),
+			$address,
+			$entry['position']
+		);
+
+		if ( null !== $content ) {
+			$this->library->set_content( $id, $this->content_for( $address, $content, $visibility ) );
+		}
+		$settings = self::settings_for( $address, $visibility );
+		if ( array() !== $settings ) {
+			$this->library->set_settings( $id, $settings );
+		}
+		return $id;
+	}
+
+	/**
 	 * Every page a block can sit on.
 	 *
 	 * @return array<int,string>
@@ -78,23 +133,9 @@ final class Blueworx_Clubhouse_Block_Seeder {
 				continue;
 			}
 
-			[ $page, $section ] = explode( '/', $address, 2 );
-
-			$id = $this->library->add(
-				$entry['type'],
-				self::name_for( $page, $section ),
-				$address,
-				$entry['position']
-			);
+			$page             = explode( '/', (string) $address, 2 )[0];
+			$id               = $this->make( (string) $address, $entry, $content, $visibility );
 			$made[ $address ] = $id;
-
-			if ( null !== $content ) {
-				$this->library->set_content( $id, $this->content_for( $address, $content, $visibility ) );
-			}
-			$settings = self::settings_for( $address, $visibility );
-			if ( array() !== $settings ) {
-				$this->library->set_settings( $id, $settings );
-			}
 
 			if ( 'global' === $page ) {
 				continue;

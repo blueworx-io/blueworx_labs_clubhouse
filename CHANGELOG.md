@@ -5,6 +5,14 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.75.0
+
+- **Fixed: every page of a live site went down.** The last release broke the front end on real WordPress — every address returned an error. Caught before it reached anyone; the browser tests now cover it.
+- **Fixed: the welcome pack was missing on existing sites.** A club that had already updated once never got the new welcome block, so its wording was unreachable. Updating now puts it back, wording and all.
+- **A page switched off now properly does not exist.** Its address used to answer as if all were well and show whatever WordPress had lying around. It now returns a proper "not found", for visitors and for search engines alike.
+- **One bad entry no longer takes a page down.** A half-written item — from an import, or hand-edited — used to white-screen the whole page. It now renders with the missing part blank and everything else intact.
+- **The privacy and terms pages read as finished pages.** Where only a club can answer, they carry example wording clearly labelled as an example. Replace every one before you take real sign-ups: they are a starting point, not a policy.
+
 ## 0.74.0
 
 - **One place to edit your site.** The old Club Pages screen has gone. Everything it did now lives under Content — Pages for what each page is built from, Blocks for the words and pictures in each block. Your site looks exactly as it did and nothing you have written is lost.

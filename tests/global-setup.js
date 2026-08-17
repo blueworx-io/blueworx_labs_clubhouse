@@ -61,14 +61,21 @@ if ( is_int( $id ) && $id > 0 ) {
 	update_option( 'surecart_dashboard_page_id', $id );
 }
 
-// A welcome pack for that dashboard to carry, written through the plugin's own
-// store rather than a hand-built option, so the fixture cannot drift from how
-// the admin screen saves.
-$store = new Blueworx_Clubhouse_Content_Store( new Blueworx_Clubhouse_Options_Storage() );
-$store->set( 'global', 'welcome', 'heading', 'Welcome to the club' );
-$store->set( 'global', 'welcome', 'body', "The gate code is on your membership card.\n\nParking is behind the pitch." );
-$store->set( 'global', 'welcome', 'link_label', 'Read the handbook' );
-$store->set( 'global', 'welcome', 'link_href', 'https://club.example/handbook' );
+// A welcome pack for that dashboard to carry, written onto the plugin's own
+// block rather than a hand-built option, so the fixture cannot drift from how
+// the Blocks screen saves. Composing first, because a site whose first admin
+// request has not happened yet has no blocks to write to.
+Blueworx_Clubhouse_Blocks_Installer::install();
+$library = new Blueworx_Clubhouse_Block_Library( new Blueworx_Clubhouse_Options_Storage() );
+$welcome = $library->by_address( Blueworx_Clubhouse_Welcome_Pack::ADDRESS );
+if ( '' !== $welcome ) {
+	$library->set_content( $welcome, array_merge( (array) $library->get( $welcome )['content'], array(
+		'heading'    => 'Welcome to the club',
+		'body'       => "The gate code is on your membership card.\n\nParking is behind the pitch.",
+		'link_label' => 'Read the handbook',
+		'link_href'  => 'https://club.example/handbook',
+	) ) );
+}
 
 // A real blog post, for the news story a visitor opens from the News page. It
 // carries no template slug and belongs to no plugin — exactly the page that

@@ -78,11 +78,8 @@ final class Blueworx_Clubhouse_Seo_Controller {
 				$ctx->branding,
 				$ctx->visibility,
 				$ctx->collections,
-				$logo_url,
-				$ctx->content,
-				'',
-				'',
-				Blueworx_Clubhouse_Frontend::composer()
+				$ctx->composer,
+				$logo_url
 			);
 
 			$url  = Blueworx_Clubhouse_Frontend::link_url( $key );

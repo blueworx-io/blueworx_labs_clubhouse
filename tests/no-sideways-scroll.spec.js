@@ -16,6 +16,12 @@ const LOOKS = ['court-side', 'floodlight', 'members-house'];
 
 for (const look of LOOKS) {
   test(`@preview ${look} never scrolls sideways at any width`, async ({ page }) => {
+    // Two pages at nineteen widths is thirty-eight navigations in one test, and
+    // on a loaded machine that does not fit the default limit — it timed out
+    // mid-run while passing on its own. The coverage is the point of the test,
+    // so the limit gives way rather than the width list.
+    test.slow();
+
     for (const slug of ['home', 'news']) {
       for (const width of WIDTHS) {
         await page.setViewportSize({ width, height: 800 });

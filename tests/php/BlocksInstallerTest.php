@@ -62,6 +62,39 @@ final class BlocksInstallerTest extends TestCase {
 	}
 
 	/**
+	 * A club composed on an earlier release has the blocks that release knew
+	 * about. The welcome pack came later and sits on no page, so nothing would
+	 * ever create it — leaving the club with wording it cannot reach and a
+	 * switch it cannot find.
+	 */
+	public function test_a_composed_site_still_gets_a_block_that_goes_on_no_page(): void {
+		$storage = new Blueworx_Clubhouse_Options_Storage();
+		Blueworx_Clubhouse_Test_Site::legacy_content( $storage, 'global', 'welcome', array( 'heading' => 'Welcome' ) );
+		Blueworx_Clubhouse_Blocks_Installer::install();
+
+		// The site as an earlier release left it: composed, with no welcome block.
+		$library = $this->library();
+		$library->delete( $library->by_address( Blueworx_Clubhouse_Welcome_Pack::ADDRESS ) );
+		$this->assertSame( '', $this->library()->by_address( Blueworx_Clubhouse_Welcome_Pack::ADDRESS ) );
+
+		Blueworx_Clubhouse_Blocks_Installer::install();
+
+		$this->assertNotSame( '', $this->library()->by_address( Blueworx_Clubhouse_Welcome_Pack::ADDRESS ) );
+		$this->assertSame( 'Welcome', Blueworx_Clubhouse_Test_Site::read( $storage, Blueworx_Clubhouse_Welcome_Pack::ADDRESS, 'heading' ) );
+	}
+
+	/** Adopting a late block must not put a page back the way the plugin ships it. */
+	public function test_adopting_leaves_the_clubs_own_pages_alone(): void {
+		Blueworx_Clubhouse_Blocks_Installer::install();
+		$id = $this->library()->by_address( 'about/committee' );
+		$this->composition()->remove( 'about', $id );
+
+		Blueworx_Clubhouse_Blocks_Installer::install();
+
+		$this->assertNotContains( $id, $this->composition()->blocks( 'about' ) );
+	}
+
+	/**
 	 * An in-place update never fires the activation hook, so the version stamp is
 	 * what makes the first admin request afterwards compose the site — and what
 	 * stops every request after that doing it again.
