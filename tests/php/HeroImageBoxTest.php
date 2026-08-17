@@ -77,11 +77,15 @@ final class HeroImageBoxTest extends TestCase {
 	 */
 	#[PHPUnit\Framework\Attributes\DataProvider( 'pages' )]
 	public function test_the_named_pages_no_longer_reserve_an_empty_frame( string $page ): void {
-		$body = Blueworx_Clubhouse_Page_Renderer::$page(
-			new Blueworx_Clubhouse_Branding( new Blueworx_Clubhouse_Fake_Storage() ),
-			new Blueworx_Clubhouse_Visibility( new Blueworx_Clubhouse_Fake_Storage() ),
-			new Blueworx_Clubhouse_Demo_Collections()
-		);
+		// Bookings only exists where LatePoint does, and a page that renders
+		// nothing would pass this vacuously.
+		Blueworx_Clubhouse_Integrations::set_detector( static fn( string $tag ): bool => true );
+		try {
+			$body = Blueworx_Clubhouse_Test_Site::page( $page );
+		} finally {
+			Blueworx_Clubhouse_Integrations::set_detector( null );
+		}
+		$this->assertStringContainsString( 'ch-hero', $body, "{$page} renders a hero at all" );
 		$this->assertStringNotContainsString( 'ch-hero__media', $body, "{$page} reserves no empty hero frame" );
 	}
 }

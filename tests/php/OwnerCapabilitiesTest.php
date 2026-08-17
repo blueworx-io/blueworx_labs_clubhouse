@@ -44,7 +44,6 @@ final class OwnerCapabilitiesTest extends TestCase {
 				'index.php',
 				'clubhouse-setup',
 				'clubhouse-pages',
-				'clubhouse-site-content',
 				'clubhouse-content',
 				'sc-dashboard',
 				'latepoint',
@@ -162,7 +161,7 @@ final class OwnerCapabilitiesTest extends TestCase {
 	public function test_the_content_editor_menu_excludes_both_integrations(): void {
 		$allowed = Blueworx_Clubhouse_Owner_Capabilities::editor_menu_allowlist();
 		$this->assertSame(
-			array( 'index.php', 'clubhouse-setup', 'clubhouse-site-content', 'clubhouse-content', 'edit.php', 'upload.php', 'users.php', 'profile.php' ),
+			array( 'index.php', 'clubhouse-setup', 'clubhouse-pages', 'clubhouse-content', 'edit.php', 'upload.php', 'users.php', 'profile.php' ),
 			$allowed
 		);
 		$this->assertNotContains( 'sc-dashboard', $allowed );

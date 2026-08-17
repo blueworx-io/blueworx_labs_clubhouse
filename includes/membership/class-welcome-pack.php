@@ -10,8 +10,8 @@ if ( ! defined( 'ABSPATH' ) ) {
  * The club's welcome pack, shown to a member on their dashboard.
  *
  * What a club wants here is the practical stuff a new member needs once they
- * have paid: how to get in, where to park, who to ask. It is written once in
- * Club Pages and read on the dashboard.
+ * have paid: how to get in, where to park, who to ask. It is written once on
+ * its own block, under Content → Blocks, and read on the dashboard.
  *
  * Why it renders plainly. The dashboard is SureCart's page, and this plugin
  * deliberately leaves commerce pages standing alone rather than wrapping them

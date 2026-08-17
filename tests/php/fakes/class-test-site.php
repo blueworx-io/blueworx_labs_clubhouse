@@ -44,6 +44,11 @@ final class Blueworx_Clubhouse_Test_Site {
 		);
 	}
 
+	/** The same, addressed by URL slug rather than page key — '' being Home. */
+	public static function slug( string $slug, ?Blueworx_Clubhouse_Storage $storage = null ): string {
+		return self::page( Blueworx_Clubhouse_Page_Map::page_key( $slug ), $storage );
+	}
+
 	/**
 	 * The single-article screen, which wears the same chrome as everything else
 	 * but is not a composed page — it is whichever post News::source() is on.

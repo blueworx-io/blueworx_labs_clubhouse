@@ -281,7 +281,7 @@ final class OwnerRoleTest extends TestCase {
 		$GLOBALS['menu'] = array(
 			array( '', 'read', 'index.php' ),
 			array( '', 'manage_clubhouse', 'clubhouse-setup' ),
-			array( '', 'manage_clubhouse', 'clubhouse-site-content' ),
+			array( '', 'edit_clubhouse_content', 'clubhouse-pages' ),
 			array( '', 'edit_posts', 'clubhouse-content' ),
 			array( '', 'manage_options', 'sc-dashboard' ),
 			array( '', 'manage_options', 'latepoint' ),
@@ -293,7 +293,7 @@ final class OwnerRoleTest extends TestCase {
 		$this->assertContains( 'sc-dashboard', $removed );
 		$this->assertContains( 'latepoint', $removed );
 		$this->assertNotContains( 'clubhouse-setup', $removed );
-		$this->assertNotContains( 'clubhouse-site-content', $removed );
+		$this->assertNotContains( 'clubhouse-pages', $removed );
 		$this->assertNotContains( 'clubhouse-content', $removed );
 		$this->assertNotContains( 'edit.php', $removed );
 	}

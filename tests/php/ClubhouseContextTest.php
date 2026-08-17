@@ -37,7 +37,7 @@ final class ClubhouseContextTest extends TestCase {
 			new Blueworx_Clubhouse_Theme_Cache( $s ),
 			new Blueworx_Clubhouse_Demo_Collections(),
 			Blueworx_Clubhouse_Frontend::registry( $s ),
-			new Blueworx_Clubhouse_Content_Store( $s )
+			Blueworx_Clubhouse_Test_Site::composer( $s )
 		);
 		$this->assertInstanceOf( Blueworx_Clubhouse_Page_Composer::class, $ctx->composer );
 	}

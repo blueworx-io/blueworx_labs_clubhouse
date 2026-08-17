@@ -5,6 +5,20 @@ use PHPUnit\Framework\TestCase;
 
 final class SectionAnchorTest extends TestCase {
 
+	/**
+	 * A block that renders nothing carries no id, so the News page needs stories
+	 * for its featured block to exist at all — the composer stamps an anchor onto
+	 * markup, where the old page methods stamped one whether or not there was any.
+	 */
+	protected function setUp(): void {
+		Blueworx_Clubhouse_News::set_source( new Blueworx_Clubhouse_Demo_Posts() );
+	}
+
+	protected function tearDown(): void {
+		Blueworx_Clubhouse_News::reset();
+		Blueworx_Clubhouse_Link_Catalogue::set_composer( null );
+	}
+
 	public function test_anchored_injects_the_id_into_the_root_tag(): void {
 		$out = Blueworx_Clubhouse_Page_Renderer::anchored( 'about', 'history', '<section class="ch-x">hi</section>' );
 		$this->assertSame( '<section id="ch-about-history" class="ch-x">hi</section>', $out );
@@ -57,9 +71,11 @@ final class SectionAnchorTest extends TestCase {
 		// carry — kept in lock-step with Link_Catalogue::has_no_anchor().
 		$expected_missing = array();
 
-		$branding    = new Blueworx_Clubhouse_Branding( new Blueworx_Clubhouse_Fake_Storage() );
-		$visibility  = new Blueworx_Clubhouse_Visibility( new Blueworx_Clubhouse_Fake_Storage() );
+		// One club, rendered and asked about — the catalogue has to describe the
+		// site it is pointed at, not the blocks the plugin happens to ship.
+		$storage     = new Blueworx_Clubhouse_Fake_Storage();
 		$collections = new Blueworx_Clubhouse_Demo_Collections();
+		Blueworx_Clubhouse_Link_Catalogue::set_composer( Blueworx_Clubhouse_Test_Site::composer( $storage ) );
 
 		$missing    = array();
 		$catalogued = array();
@@ -72,7 +88,7 @@ final class SectionAnchorTest extends TestCase {
 			if ( ! Blueworx_Clubhouse_Page_Map::is_available( $slug ) ) {
 				continue;
 			}
-			$html = Blueworx_Clubhouse_Page_Map::render( $slug, $branding, $visibility, $collections );
+			$html = Blueworx_Clubhouse_Test_Site::slug( $slug, $storage );
 			foreach ( $page['sections'] as $section ) {
 				$id           = Blueworx_Clubhouse_Link_Catalogue::anchor_id( $tab, (string) $section['key'] );
 				$catalogued[] = $id;
@@ -90,6 +106,18 @@ final class SectionAnchorTest extends TestCase {
 		// them. Two full sets, compared with assertSame, not a one-directional
 		// assertNotContains that a vacuously-empty $expected_missing would let
 		// pass regardless of what got dropped.
+		//
+		// A folded address is the exception, and the reason the two sets are not
+		// the same set: its markup is drawn by the block it renders inside and
+		// carries an id, but there is no block of its own to offer, so it is in
+		// the markup and not in the picker. That list is Block_Addresses', so
+		// this cannot drift from it.
+		$not_offered = array();
+		foreach ( array_keys( Blueworx_Clubhouse_Block_Addresses::folds() ) as $folded ) {
+			[ $page, $section ] = explode( '/', (string) $folded, 2 );
+			$not_offered[]      = Blueworx_Clubhouse_Link_Catalogue::anchor_id( $page, $section );
+		}
+
 		$offered = array();
 		foreach ( Blueworx_Clubhouse_Link_Catalogue::targets( $collections ) as $entry ) {
 			if ( 'Sections' === $entry['group'] && 0 === strpos( $entry['target'], 'anchor:' ) ) {
@@ -97,7 +125,7 @@ final class SectionAnchorTest extends TestCase {
 				$offered[]     = Blueworx_Clubhouse_Link_Catalogue::anchor_id( $tab, $key );
 			}
 		}
-		$expected_offered = array_values( array_diff( array_unique( $catalogued ), $expected_missing ) );
+		$expected_offered = array_values( array_diff( array_unique( $catalogued ), $expected_missing, $not_offered ) );
 		sort( $offered );
 		sort( $expected_offered );
 		$this->assertSame( $expected_offered, $offered, 'the catalogue must offer exactly every catalogued anchor minus the ones named as deliberately excluded' );
