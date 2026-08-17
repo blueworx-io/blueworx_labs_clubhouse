@@ -17,7 +17,12 @@ final class FrontEndLinkHygieneTest extends TestCase {
 	}
 
 	private function render( string $slug ): string {
-		return Blueworx_Clubhouse_Test_Site::slug( $slug );
+		return Blueworx_Clubhouse_Page_Map::render(
+			$slug,
+			new Blueworx_Clubhouse_Branding( new Blueworx_Clubhouse_Fake_Storage() ),
+			new Blueworx_Clubhouse_Visibility( new Blueworx_Clubhouse_Fake_Storage() ),
+			new Blueworx_Clubhouse_Demo_Collections()
+		);
 	}
 
 	public function test_no_dead_links_on_any_page(): void {

@@ -13,8 +13,11 @@ final class CtaLabelsTest extends TestCase {
 	 * the Task 4 link-hygiene guardrail, which renders every page.)
 	 */
 	public function test_retired_join_variants_do_not_appear_in_home_or_membership(): void {
+		$branding    = new Blueworx_Clubhouse_Branding( new Blueworx_Clubhouse_Fake_Storage() );
+		$visibility  = new Blueworx_Clubhouse_Visibility( new Blueworx_Clubhouse_Fake_Storage() );
+		$collections = new Blueworx_Clubhouse_Demo_Collections();
 		foreach ( array( '', 'membership' ) as $slug ) {
-			$html = Blueworx_Clubhouse_Test_Site::slug( $slug );
+			$html = Blueworx_Clubhouse_Page_Map::render( $slug, $branding, $visibility, $collections );
 			$this->assertStringNotContainsString( 'Explore membership', $html, "slug '$slug'" );
 			$this->assertStringNotContainsString( 'Choose your tier', $html, "slug '$slug'" );
 			$this->assertStringNotContainsString( 'Join the Club', $html, "capitalised variant, slug '$slug'" );

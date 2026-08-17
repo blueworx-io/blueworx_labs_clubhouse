@@ -18,3 +18,6 @@ Blueworx_Clubhouse_Owner_Role::uninstall();
 // The rewrite-version stamp is ours; a reinstall must flush again rather than
 // find a stale stamp claiming the cache is already current.
 delete_option( Blueworx_Clubhouse_Frontend::REWRITE_VERSION_OPTION );
+// Left by the withdrawn block builder. Harmless, but ours to clear up.
+delete_option( 'clubhouse_blocks' );
+delete_option( 'clubhouse_page_composition' );

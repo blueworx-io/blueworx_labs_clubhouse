@@ -11,8 +11,8 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * A static seam rather than a parameter threaded through every page method, for
  * the same reason Links is one: the renderer is shared by WordPress and the
- * preview, one optional dependency does not justify changing eleven signatures,
- * and those signatures are being replaced wholesale by the block rebuild.
+ * preview, and one optional dependency does not justify changing eleven page
+ * signatures.
  *
  * Null — nothing installed — is a first-class state: no shop, and every tier
  * falls back to the price its club typed.

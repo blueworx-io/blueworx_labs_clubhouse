@@ -13,10 +13,10 @@ final class ClubhouseContextTest extends TestCase {
 		$visibility = new Blueworx_Clubhouse_Visibility( $storage );
 		$cache      = new Blueworx_Clubhouse_Theme_Cache( $storage );
 		$collections = new Blueworx_Clubhouse_Demo_Collections();
-		$composer    = Blueworx_Clubhouse_Test_Site::composer( $storage );
+		$content     = new Blueworx_Clubhouse_Content_Store( $storage );
 
 		$ctx = new Blueworx_Clubhouse_Clubhouse_Context(
-			$look, $branding, $visibility, $cache, $collections, $registry, $composer
+			$look, $branding, $visibility, $cache, $collections, $registry, $content
 		);
 
 		$this->assertInstanceOf( Blueworx_Clubhouse_Court_Side::class, $ctx->look );
@@ -25,10 +25,10 @@ final class ClubhouseContextTest extends TestCase {
 		$this->assertSame( $cache, $ctx->cache );
 		$this->assertSame( $collections, $ctx->collections );
 		$this->assertSame( $registry, $ctx->registry );
-		$this->assertSame( $composer, $ctx->composer );
+		$this->assertSame( $content, $ctx->content );
 	}
 
-	public function test_context_dto_carries_the_composer(): void {
+	public function test_context_dto_carries_content_store(): void {
 		$s   = new Blueworx_Clubhouse_Fake_Storage();
 		$ctx = new Blueworx_Clubhouse_Clubhouse_Context(
 			null,
@@ -37,8 +37,8 @@ final class ClubhouseContextTest extends TestCase {
 			new Blueworx_Clubhouse_Theme_Cache( $s ),
 			new Blueworx_Clubhouse_Demo_Collections(),
 			Blueworx_Clubhouse_Frontend::registry( $s ),
-			Blueworx_Clubhouse_Test_Site::composer( $s )
+			new Blueworx_Clubhouse_Content_Store( $s )
 		);
-		$this->assertInstanceOf( Blueworx_Clubhouse_Page_Composer::class, $ctx->composer );
+		$this->assertInstanceOf( Blueworx_Clubhouse_Content_Store::class, $ctx->content );
 	}
 }

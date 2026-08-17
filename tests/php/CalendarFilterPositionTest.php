@@ -12,8 +12,27 @@ use PHPUnit\Framework\TestCase;
  */
 final class CalendarFilterPositionTest extends TestCase {
 
-	private function calendar( ?Blueworx_Clubhouse_Fake_Storage $storage = null, string $filter = '' ): string {
-		return Blueworx_Clubhouse_Test_Site::page( 'calendar', $storage, $filter );
+	private function branding(): Blueworx_Clubhouse_Branding {
+		return new Blueworx_Clubhouse_Branding( new Blueworx_Clubhouse_Fake_Storage() );
+	}
+
+	private function collections(): Blueworx_Clubhouse_Collections {
+		return new Blueworx_Clubhouse_Demo_Collections();
+	}
+
+	private function visibility(): Blueworx_Clubhouse_Visibility {
+		return new Blueworx_Clubhouse_Visibility( new Blueworx_Clubhouse_Fake_Storage() );
+	}
+
+	private function calendar( ?Blueworx_Clubhouse_Visibility $vis = null, string $filter = '' ): string {
+		return Blueworx_Clubhouse_Page_Renderer::calendar(
+			$this->branding(),
+			$vis ?? $this->visibility(),
+			$this->collections(),
+			'',
+			null,
+			$filter
+		);
 	}
 
 	/** The hero's own markup, minus the no-reload script that names the pill class. */
@@ -98,9 +117,9 @@ final class CalendarFilterPositionTest extends TestCase {
 	 * above the fixtures rather than floating up into the hero's place.
 	 */
 	public function test_layout_holds_with_the_booking_section_off(): void {
-		$storage = new Blueworx_Clubhouse_Fake_Storage();
-		Blueworx_Clubhouse_Test_Site::without( $storage, 'calendar/booking' );
-		$body = $this->calendar( $storage );
+		$vis = $this->visibility();
+		$vis->set_section_visible( 'calendar', 'booking', false );
+		$body = $this->calendar( $vis );
 		$this->assertLessThan(
 			(int) strpos( $body, 'class="ch-cal"' ),
 			(int) strpos( $body, '<nav class="ch-filters"' )
@@ -112,16 +131,16 @@ final class CalendarFilterPositionTest extends TestCase {
 	 * under them would filter a list that is not on the page.
 	 */
 	public function test_hiding_the_fixtures_hides_the_pills(): void {
-		$storage = new Blueworx_Clubhouse_Fake_Storage();
-		Blueworx_Clubhouse_Test_Site::without( $storage, 'calendar/schedule' );
-		$body = $this->calendar( $storage );
+		$vis = $this->visibility();
+		$vis->set_section_visible( 'calendar', 'schedule', false );
+		$body = $this->calendar( $vis );
 		$this->assertStringNotContainsString( '<nav class="ch-filters"', $body );
 	}
 
 	/** Sports and Teams keep their pills in the hero: there they filter what follows. */
 	public function test_sports_and_teams_keep_their_hero_pills(): void {
 		foreach ( array( 'sports', 'teams' ) as $page ) {
-			$body = Blueworx_Clubhouse_Test_Site::page( $page );
+			$body = Blueworx_Clubhouse_Page_Renderer::$page( $this->branding(), $this->visibility(), $this->collections() );
 			$hero = substr( $body, (int) strpos( $body, 'class="ch-hero-filter"' ) );
 			$hero = substr( $hero, 0, (int) strpos( $hero, '</section>' ) );
 			$this->assertStringContainsString( 'ch-filter', $hero, "{$page} keeps its hero pills" );

@@ -8,7 +8,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 /**
  * Pure sanitising for Content_Catalogue field values, by field type. Extracted
- * out of the old Club Pages screen so that the block editor and the AI import path
+ * from Content_Controller so that the admin editor and the AI import path
  * share one implementation — an imported file must be treated exactly like
  * form input, and a field type must decide its own sanitising in exactly one
  * place.

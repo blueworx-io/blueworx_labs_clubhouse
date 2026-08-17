@@ -35,19 +35,6 @@ require_once __DIR__ . '/membership/class-surecart-products.php';
 require_once __DIR__ . '/membership/class-shop-pages.php';
 require_once __DIR__ . '/membership/class-welcome-pack.php';
 
-// Blocks
-require_once __DIR__ . '/blocks/class-block-context.php';
-require_once __DIR__ . '/blocks/class-block-types.php';
-require_once __DIR__ . '/blocks/class-block-addresses.php';
-require_once __DIR__ . '/blocks/class-block-library.php';
-require_once __DIR__ . '/blocks/class-page-composition.php';
-require_once __DIR__ . '/blocks/class-block-content.php';
-require_once __DIR__ . '/blocks/class-block-fields.php';
-require_once __DIR__ . '/blocks/class-page-state.php';
-require_once __DIR__ . '/blocks/class-block-defaults.php';
-require_once __DIR__ . '/blocks/class-block-renderers.php';
-require_once __DIR__ . '/blocks/class-block-seeder.php';
-
 // Theme
 require_once __DIR__ . '/theme/interface-base-look.php';
 require_once __DIR__ . '/theme/class-base-look-registry.php';
@@ -65,22 +52,19 @@ require_once __DIR__ . '/looks/class-floodlight.php';
 // Render
 require_once __DIR__ . '/render/class-sections.php';
 require_once __DIR__ . '/render/class-page-renderer.php';
-require_once __DIR__ . '/render/class-page-composer.php';
 require_once __DIR__ . '/render/class-page-map.php';
 require_once __DIR__ . '/render/class-fixture-projection.php';
 
 // Admin (pure)
 require_once __DIR__ . '/admin/class-setup-progress.php';
-require_once __DIR__ . '/admin/class-menu-controller.php';
+require_once __DIR__ . '/admin/class-setup-sections.php';
 require_once __DIR__ . '/admin/class-setup-screen.php';
 require_once __DIR__ . '/admin/class-owner-capabilities.php';
 require_once __DIR__ . '/admin/class-content-catalogue.php';
-require_once __DIR__ . '/admin/class-field-controls.php';
+require_once __DIR__ . '/admin/class-content-screen.php';
 require_once __DIR__ . '/admin/class-menu-panel.php';
 require_once __DIR__ . '/admin/class-admin-pages.php';
 require_once __DIR__ . '/admin/class-access-screen.php';
-require_once __DIR__ . '/admin/class-pages-screen.php';
-require_once __DIR__ . '/admin/class-blocks-screen.php';
 require_once __DIR__ . '/admin/class-seo-screen.php';
 require_once __DIR__ . '/admin/class-guide.php';
 require_once __DIR__ . '/admin/class-guide-screen.php';

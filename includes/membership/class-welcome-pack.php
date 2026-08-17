@@ -10,8 +10,8 @@ if ( ! defined( 'ABSPATH' ) ) {
  * The club's welcome pack, shown to a member on their dashboard.
  *
  * What a club wants here is the practical stuff a new member needs once they
- * have paid: how to get in, where to park, who to ask. It is written once on
- * its own block, under Content → Blocks, and read on the dashboard.
+ * have paid: how to get in, where to park, who to ask. It is written once in
+ * Club Pages and read on the dashboard.
  *
  * Why it renders plainly. The dashboard is SureCart's page, and this plugin
  * deliberately leaves commerce pages standing alone rather than wrapping them
@@ -29,35 +29,9 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 final class Blueworx_Clubhouse_Welcome_Pack {
 
-	/** The address of the block the pack is written to and read from. */
-	public const ADDRESS = 'global/welcome';
-
-	/**
-	 * What the club has written, off its welcome block.
-	 *
-	 * The pack is a block like any other — editable under Content → Blocks — but
-	 * it is on no page's list, because it renders on the shop's dashboard rather
-	 * than anywhere this plugin lays out. A site not yet composed has no block
-	 * and gets an empty pack, which renders as nothing.
-	 *
-	 * @return array{show:bool,heading:string,body:string,link_label:string,link_href:string}
-	 */
-	public static function pack( Blueworx_Clubhouse_Block_Library $library ): array {
-		$content = array();
-		foreach ( $library->all() as $block ) {
-			if ( self::ADDRESS === (string) ( $block['defaults_key'] ?? '' ) ) {
-				$content = (array) ( $block['content'] ?? array() );
-				break;
-			}
-		}
-		return array(
-			'show'       => (bool) ( $content['show'] ?? true ),
-			'heading'    => (string) ( $content['heading'] ?? '' ),
-			'body'       => (string) ( $content['body'] ?? '' ),
-			'link_label' => (string) ( $content['link_label'] ?? '' ),
-			'link_href'  => (string) ( $content['link_href'] ?? '' ),
-		);
-	}
+	/** The content address the pack is written to and read from. */
+	public const STORE_PAGE = 'global';
+	public const SECTION    = 'welcome';
 
 	private static function e( string $v ): string {
 		return htmlspecialchars( $v, ENT_QUOTES, 'UTF-8' );
@@ -163,12 +137,19 @@ final class Blueworx_Clubhouse_Welcome_Pack {
 			return $content;
 		}
 		$storage = new Blueworx_Clubhouse_Options_Storage();
-		$pack    = self::pack( new Blueworx_Clubhouse_Block_Library( $storage ) );
-		if ( ! (bool) ( $pack['show'] ?? true ) ) {
+		if ( ! ( new Blueworx_Clubhouse_Visibility( $storage ) )->is_section_visible( 'home', self::SECTION ) ) {
 			return $content;
 		}
 
-		$block = self::render( $pack );
+		$store = new Blueworx_Clubhouse_Content_Store( $storage );
+		$block = self::render(
+			array(
+				'heading'    => (string) $store->get( self::STORE_PAGE, self::SECTION, 'heading', '' ),
+				'body'       => (string) $store->get( self::STORE_PAGE, self::SECTION, 'body', '' ),
+				'link_label' => (string) $store->get( self::STORE_PAGE, self::SECTION, 'link_label', '' ),
+				'link_href'  => (string) $store->get( self::STORE_PAGE, self::SECTION, 'link_href', '' ),
+			)
+		);
 		if ( '' === $block ) {
 			return $content;
 		}

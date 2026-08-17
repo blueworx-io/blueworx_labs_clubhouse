@@ -10,16 +10,6 @@ final class ImportControllerTest extends TestCase {
 	protected function setUp(): void {
 		wp_stub_reset();
 		$this->storage = new Blueworx_Clubhouse_Fake_Storage();
-		// An import writes onto a composed site's blocks, so compose one.
-		Blueworx_Clubhouse_Test_Site::composer( $this->storage );
-	}
-
-	/** Whether this address's block is still on the page it belongs to. */
-	private function on_page( string $address ): bool {
-		$page = explode( '/', $address, 2 )[0];
-		$id   = ( new Blueworx_Clubhouse_Block_Library( $this->storage ) )->by_address( $address );
-		return '' !== $id
-			&& in_array( $id, ( new Blueworx_Clubhouse_Page_Composition( $this->storage ) )->blocks( $page ), true );
 	}
 
 	/** Write a temp file holding $json and return the $_FILES-shaped array. */
@@ -91,7 +81,8 @@ final class ImportControllerTest extends TestCase {
 		$this->assertSame( 'preview', $model['state'] );
 		$this->assertSame( 'Home · Hero', $model['rows'][0]['label'] );
 
-		$this->assertNull( Blueworx_Clubhouse_Test_Site::read( $this->storage, 'home/hero', 'eyebrow' ) );
+		$store = new Blueworx_Clubhouse_Content_Store( $this->storage );
+		$this->assertNull( $store->get( 'home', 'hero', 'eyebrow' ) );
 	}
 
 	public function test_a_valid_upload_stores_the_plan_in_a_user_scoped_transient(): void {
@@ -146,7 +137,8 @@ final class ImportControllerTest extends TestCase {
 		);
 
 		$this->assertSame( 'result', $model['state'] );
-		$this->assertSame( 'Est. 1974', Blueworx_Clubhouse_Test_Site::read( $this->storage, 'home/hero', 'eyebrow' ) );
+		$store = new Blueworx_Clubhouse_Content_Store( $this->storage );
+		$this->assertSame( 'Est. 1974', $store->get( 'home', 'hero', 'eyebrow' ) );
 		$this->assertFalse( get_transient( 'clubhouse_import_plan_7' ) );
 	}
 
@@ -266,15 +258,16 @@ final class ImportControllerTest extends TestCase {
 			$this->storage
 		);
 
-		$this->assertFalse( $this->on_page( 'home/news' ) );
-		$this->assertTrue( $this->on_page( 'home/hero' ) );
+		$visibility = new Blueworx_Clubhouse_Visibility( $this->storage );
+		$this->assertFalse( $visibility->is_section_visible( 'home', 'news' ) );
+		$this->assertTrue( $visibility->is_section_visible( 'home', 'hero' ) );
 
 		$labels = array_column( $model['rows'], 'detail', 'label' );
 		$this->assertArrayHasKey( 'Sections', $labels );
 	}
 
-	/** Unticked, an import writes content and leaves every page as it was built. */
-	public function test_applying_without_the_tidy_up_leaves_every_page_where_it_was(): void {
+	/** Unticked, an import writes content and leaves every toggle where it was. */
+	public function test_applying_without_the_tidy_up_leaves_every_section_where_it_was(): void {
 		Blueworx_Clubhouse_Import_Controller::handle_request(
 			array( 'clubhouse_import_upload' => '1' ), $this->upload( $this->valid_json() ), $this->storage
 		);
@@ -282,7 +275,7 @@ final class ImportControllerTest extends TestCase {
 			array( 'clubhouse_import_apply' => '1' ), array(), $this->storage
 		);
 
-		$this->assertTrue( $this->on_page( 'home/news' ) );
+		$this->assertTrue( ( new Blueworx_Clubhouse_Visibility( $this->storage ) )->is_section_visible( 'home', 'news' ) );
 	}
 
 	/**

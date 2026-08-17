@@ -9,13 +9,13 @@ final class SetupProgressTest extends TestCase {
 		return new Blueworx_Clubhouse_Court_Side();
 	}
 
-	public function test_fresh_defaults_count_zero_over_five_groups(): void {
+	public function test_fresh_defaults_count_zero_over_six_groups(): void {
 		$branding = new Blueworx_Clubhouse_Branding( new Blueworx_Clubhouse_Fake_Storage() );
 		$p = Blueworx_Clubhouse_Setup_Progress::compute( $branding, $this->look(), false );
 
-		$this->assertSame( 5, $p['total'] );
+		$this->assertSame( 6, $p['total'] );
 		$this->assertSame( 0, $p['completed'] );
-		$this->assertSame( array( 'look', 'accent', 'club_name', 'logo_favicon', 'social' ), array_keys( $p['items'] ) );
+		$this->assertSame( array( 'look', 'accent', 'club_name', 'logo_favicon', 'social', 'visibility' ), array_keys( $p['items'] ) );
 		foreach ( $p['items'] as $done ) {
 			$this->assertFalse( $done );
 		}
@@ -28,12 +28,20 @@ final class SetupProgressTest extends TestCase {
 		$branding->set_logo( '42' );
 		$branding->set_facebook_url( 'https://facebook.com/riverside' );
 
-		$p = Blueworx_Clubhouse_Setup_Progress::compute( $branding, $this->look(), true );
+		$p = Blueworx_Clubhouse_Setup_Progress::compute( $branding, $this->look(), true, true );
 
 		foreach ( $p['items'] as $key => $done ) {
 			$this->assertTrue( $done, "expected group {$key} to be complete" );
 		}
-		$this->assertSame( 5, $p['completed'] );
+		$this->assertSame( 6, $p['completed'] );
+	}
+
+	public function test_visibility_counts_only_once_saved(): void {
+		$branding = new Blueworx_Clubhouse_Branding( new Blueworx_Clubhouse_Fake_Storage() );
+		$not_saved = Blueworx_Clubhouse_Setup_Progress::compute( $branding, $this->look(), false, false );
+		$this->assertFalse( $not_saved['items']['visibility'] );
+		$saved = Blueworx_Clubhouse_Setup_Progress::compute( $branding, $this->look(), false, true );
+		$this->assertTrue( $saved['items']['visibility'] );
 	}
 
 	public function test_favicon_alone_completes_the_logo_favicon_group(): void {

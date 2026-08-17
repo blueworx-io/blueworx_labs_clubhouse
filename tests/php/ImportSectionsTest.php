@@ -96,60 +96,27 @@ final class ImportSectionsTest extends TestCase {
 		$this->assertTrue( $map['events.upcoming'] );
 	}
 
-	// -- Writing the changes onto the club's pages -----------------------------
-
-	/** A seeded club, so there are blocks for the import to move. */
-	private function club(): Blueworx_Clubhouse_Storage {
-		Blueworx_Clubhouse_Test_Site::composer( $this->storage );
-		return $this->storage;
-	}
-
-	/** Whether this address's block is on the page it belongs to. */
-	private function on_page( string $address ): bool {
-		$page = explode( '/', $address, 2 )[0];
-		$id   = ( new Blueworx_Clubhouse_Block_Library( $this->storage ) )->by_address( $address );
-		return '' !== $id
-			&& in_array( $id, ( new Blueworx_Clubhouse_Page_Composition( $this->storage ) )->blocks( $page ), true );
-	}
-
-	public function test_apply_moves_blocks_on_and_off_their_pages(): void {
-		$this->club();
+	public function test_apply_writes_the_toggles(): void {
 		$plan = new Blueworx_Clubhouse_Import_Plan();
 		$plan->add_field( 'home', 'hero', 'eyebrow', 'Est. 1974' );
 		Blueworx_Clubhouse_Import_Sections::apply( $plan, $this->storage );
 
-		$this->assertTrue( $this->on_page( 'home/hero' ) );
-		$this->assertFalse( $this->on_page( 'home/ticker' ) );
-		$this->assertTrue( $this->on_page( 'about/history' ), 'a page the file never mentioned' );
+		$visibility = new Blueworx_Clubhouse_Visibility( $this->storage );
+		$this->assertTrue( $visibility->is_section_visible( 'home', 'hero' ) );
+		$this->assertFalse( $visibility->is_section_visible( 'home', 'ticker' ) );
+		$this->assertTrue( $visibility->is_section_visible( 'about', 'history' ) );
 	}
 
-	/** The block comes off the page but stays in the library, words and all. */
-	public function test_a_block_taken_off_a_page_keeps_its_content(): void {
-		$this->club();
-		Blueworx_Clubhouse_Test_Site::write( $this->storage, 'home/ticker', array( 'items' => array( array( 'text' => 'Bar open' ) ) ) );
-
-		$plan = new Blueworx_Clubhouse_Import_Plan();
-		$plan->add_field( 'home', 'hero', 'eyebrow', 'Est. 1974' );
-		Blueworx_Clubhouse_Import_Sections::apply( $plan, $this->storage );
-
-		$this->assertFalse( $this->on_page( 'home/ticker' ) );
-		$this->assertSame( 'Bar open', Blueworx_Clubhouse_Test_Site::items( $this->storage, 'home/ticker' )[0]['text'] );
-	}
-
-	/** A section the file fills in goes back on the page, even one the owner had removed. */
-	public function test_apply_puts_a_removed_block_back_when_the_file_fills_it(): void {
-		$this->club();
-		Blueworx_Clubhouse_Test_Site::without( $this->storage, 'home/ticker' );
-
+	/** A section the file fills in is switched back on, even one the owner had hidden. */
+	public function test_apply_switches_a_hidden_section_back_on_when_the_file_fills_it(): void {
+		( new Blueworx_Clubhouse_Visibility( $this->storage ) )->set_section_visible( 'home', 'ticker', false );
 		$plan = new Blueworx_Clubhouse_Import_Plan();
 		$plan->add_items( 'home', 'ticker', array( array( 'text' => 'Friday open session' ) ) );
 		Blueworx_Clubhouse_Import_Sections::apply( $plan, $this->storage );
-
-		$this->assertTrue( $this->on_page( 'home/ticker' ) );
+		$this->assertTrue( ( new Blueworx_Clubhouse_Visibility( $this->storage ) )->is_section_visible( 'home', 'ticker' ) );
 	}
 
 	public function test_apply_counts_only_real_changes(): void {
-		$this->club();
 		$plan = new Blueworx_Clubhouse_Import_Plan();
 		$plan->add_field( 'home', 'hero', 'eyebrow', 'Est. 1974' );
 
@@ -160,21 +127,18 @@ final class ImportSectionsTest extends TestCase {
 		$this->assertSame( array( 'on' => 0, 'off' => 0 ), $again );
 	}
 
-	/** The preview must not offer to take off something the owner already removed. */
-	public function test_the_preview_list_skips_blocks_that_are_already_off(): void {
-		$this->club();
-		Blueworx_Clubhouse_Test_Site::without( $this->storage, 'home/ticker' );
-
+	/** The preview must not offer to switch off something the owner already hid. */
+	public function test_the_preview_list_skips_sections_that_are_already_off(): void {
+		( new Blueworx_Clubhouse_Visibility( $this->storage ) )->set_section_visible( 'home', 'ticker', false );
 		$plan = new Blueworx_Clubhouse_Import_Plan();
 		$plan->add_field( 'home', 'hero', 'eyebrow', 'Est. 1974' );
 
 		$off = Blueworx_Clubhouse_Import_Sections::switching_off( $plan, $this->storage );
 		$this->assertContains( 'Home · News', $off );
-		$this->assertNotContains( 'Home · Ticker', $off );
+		$this->assertNotContains( 'Global · Ticker', $off );
 	}
 
 	public function test_an_empty_plan_changes_nothing(): void {
-		$this->club();
 		$plan = new Blueworx_Clubhouse_Import_Plan();
 		$this->assertSame( array(), Blueworx_Clubhouse_Import_Sections::changes( $plan ) );
 		$this->assertSame( array( 'on' => 0, 'off' => 0 ), Blueworx_Clubhouse_Import_Sections::apply( $plan, $this->storage ) );
