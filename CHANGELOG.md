@@ -5,6 +5,10 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.73.0
+
+- **A screen for the words themselves.** Content → Blocks lists every block your site is built from, grouped by kind, each saying which pages use it. Open one and edit its words the same way you always have — and if it is on more than one page, it says so before you start, because changing it changes all of them. Make a new block, rename one, or duplicate one when a shared block has to differ on a single page. Deleting a block that is in use asks first and names the pages.
+
 ## 0.72.0
 
 - **A screen for arranging a page.** Content → Pages lists your pages down the side and shows what the chosen one is built from, top to bottom. Take a block off a page without deleting it, put an existing one on so both pages show the same words, or make a new one of any kind. The page's own on/off switch lives here too. The header and footer are pinned top and bottom, because they are on every page.

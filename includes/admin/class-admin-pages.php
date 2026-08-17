@@ -68,7 +68,16 @@ final class Blueworx_Clubhouse_Admin_Pages {
 				'label'       => 'Content',
 				'cap'         => Blueworx_Clubhouse_Pages_Controller::CAPABILITY,
 				'menu'        => Blueworx_Clubhouse_Pages_Controller::PAGE_SLUG,
-				'description' => 'What each page is built from, and the blocks it is built from.',
+				'description' => 'What each page is built from.',
+			),
+			array(
+				'slug'        => Blueworx_Clubhouse_Blocks_Controller::PAGE_SLUG,
+				'label'       => 'Blocks',
+				'cap'         => Blueworx_Clubhouse_Blocks_Controller::CAPABILITY,
+				// A submenu of Content, so its menu is its parent's — the same rule
+				// Import and the guide follow under Clubhouse.
+				'menu'        => Blueworx_Clubhouse_Pages_Controller::PAGE_SLUG,
+				'description' => 'The words and images in every block, edited once for every page using it.',
 			),
 			array(
 				'slug'        => Blueworx_Clubhouse_Import_Controller::PAGE_SLUG,

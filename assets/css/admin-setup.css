@@ -206,3 +206,10 @@ body.toplevel_page_clubhouse-setup #wpfooter { display: none; }
 /* A link acting as a button: WordPress underlines every admin link, which makes
    an Edit pill read as a link inside a button rather than a button. */
 a.clubhouse-btn { text-decoration: none; display: inline-block; }
+/* The blocks library: the same side list as Pages, with a heading per kind and
+   the "make one" control at its foot. */
+.clubhouse-blocks__kind { margin: 14px 0 4px; }
+.clubhouse-blocks__kind:first-child { margin-top: 0; }
+.clubhouse-blocks__new { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--color-line); }
+.clubhouse-help--strong { color: var(--color-ink); font-weight: 600; }
+.clubhouse-step--warn { border: 1px solid var(--color-secondary-deep); }

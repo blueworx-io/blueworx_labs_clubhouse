@@ -3,7 +3,7 @@
  * Plugin Name:       Blueworx Labs | Clubhouse
  * Plugin URI:        https://github.com/blueworx-io/blueworx_labs_clubhouse
  * Description:        Blueworx Labs Clubhouse WordPress plugin.
- * Version:           0.72.0
+ * Version:           0.73.0
  * Requires at least: 6.0
  * Requires PHP:      8.2
  * Author:            Blueworx
@@ -21,7 +21,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'BLUEWORX_LABS_CLUBHOUSE_VERSION', '0.72.0' );
+define( 'BLUEWORX_LABS_CLUBHOUSE_VERSION', '0.73.0' );
 define( 'BLUEWORX_LABS_CLUBHOUSE_FILE', __FILE__ );
 define( 'BLUEWORX_LABS_CLUBHOUSE_DIR', plugin_dir_path( __FILE__ ) );
 define( 'BLUEWORX_LABS_CLUBHOUSE_URL', plugin_dir_url( __FILE__ ) );
@@ -40,6 +40,7 @@ require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/admin/class-demo-controller
 require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/admin/class-owner-role.php';
 require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/admin/class-access-controller.php';
 require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/admin/class-pages-controller.php';
+require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/admin/class-blocks-controller.php';
 require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/admin/class-seo-controller.php';
 require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/admin/class-guide-controller.php';
 require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/admin/class-shop-pages-controller.php';
@@ -75,6 +76,7 @@ function blueworx_labs_clubhouse_init() {
 	Blueworx_Clubhouse_Import_Controller::register();
 	Blueworx_Clubhouse_Access_Controller::register();
 	Blueworx_Clubhouse_Pages_Controller::register();
+	Blueworx_Clubhouse_Blocks_Controller::register();
 	Blueworx_Clubhouse_Seo_Controller::register();
 	Blueworx_Clubhouse_Guide_Controller::register();
 	Blueworx_Clubhouse_SureCart_Products::register();
