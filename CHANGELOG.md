@@ -5,6 +5,14 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.74.0
+
+- **One place to edit your site.** The old Club Pages screen has gone. Everything it did now lives under Content — Pages for what each page is built from, Blocks for the words and pictures in each block. Your site looks exactly as it did and nothing you have written is lost.
+- **The Visibility tab has gone too.** Taking a section off a page is now removing its block on the Pages screen, rather than a separate list of switches somewhere else.
+- **Content editors can still edit content.** Club Pages was the only screen that role could open, so the two new screens open to it as well.
+- **The welcome pack is a block like any other**, with its own on/off, edited under Content → Blocks.
+- Header and footer are now edited once for the whole site. The per-page header and footer switches are gone.
+
 ## 0.73.2
 
 - Internal only: the repo's own priority list now reflects what has shipped, and the two new screens' browser tests no longer depend on the order they run in. Nothing changes on a site.
