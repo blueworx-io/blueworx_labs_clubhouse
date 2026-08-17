@@ -103,6 +103,63 @@ final class Blueworx_Clubhouse_Block_Seeder {
 	}
 
 	/**
+	 * Write a block's content back to the old content store.
+	 *
+	 * The other half of sync(), and interim for the same reason. While Club
+	 * Pages, Setup and import still project the content store onto the blocks,
+	 * anything saved on the Blocks screen would be overwritten by the next save
+	 * on any of them. Writing back keeps the two in step, so whichever screen an
+	 * owner reaches for, their words survive.
+	 *
+	 * Exactly reverses content_for: folded items go back to the address they came
+	 * from, and the footer's cookie fields go back to the cookie notice. A block
+	 * with no address of its own — one an owner made — has nowhere to write back
+	 * to, and needs none: sync() only ever visits addresses.
+	 *
+	 * Goes with sync() when the old path does (issue #207).
+	 *
+	 * @param array<string,mixed> $block
+	 */
+	public static function project( array $block, Blueworx_Clubhouse_Content_Store $content ): void {
+		$address = (string) ( $block['defaults_key'] ?? '' );
+		if ( '' === $address || ! str_contains( $address, '/' ) ) {
+			return;
+		}
+		[ $page, $section ] = explode( '/', $address, 2 );
+
+		foreach ( (array) ( $block['content'] ?? array() ) as $key => $value ) {
+			$key = (string) $key;
+
+			if ( 'items' === $key ) {
+				$target = self::items_address( $address );
+				[ $item_page, $item_section ] = explode( '/', $target, 2 );
+				$content->set_items( $item_page, $item_section, is_array( $value ) ? array_values( $value ) : array() );
+				continue;
+			}
+
+			if ( 'global/footer' === $address && str_starts_with( $key, 'cookie_' ) ) {
+				$content->set( 'global', 'cookies', substr( $key, 7 ), $value );
+				continue;
+			}
+
+			$content->set( $page, $section, $key, $value );
+		}
+	}
+
+	/**
+	 * Where a block's repeated items belong in the old store: the address that
+	 * folds into it when one does, and its own otherwise.
+	 */
+	private static function items_address( string $address ): string {
+		foreach ( Blueworx_Clubhouse_Block_Addresses::folds() as $folded => $into ) {
+			if ( $into === $address ) {
+				return (string) $folded;
+			}
+		}
+		return $address;
+	}
+
+	/**
 	 * Every page a block can sit on.
 	 *
 	 * @return array<int,string>
