@@ -5,6 +5,10 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.71.0
+
+- **Every page is now built from a library of blocks.** Until now each page was a fixed recipe written into the plugin and all you could do was switch a section off. Your pages are now assembled from named blocks instead, which is what makes editing something once and reusing it possible. Your site is unchanged — every page renders exactly as it did, your words and your switched-off sections carried over on update, and Club Pages still edits everything. The screens for arranging pages and managing the block library come next.
+
 ## 0.70.3
 
 - **Saving Club Pages no longer switches the cookie notice and announcement bar off.** Both are on until a club turns them off, but the editing screen drew their switches as off on a site that had never touched them — so one save wrote that back and both disappeared, without anyone choosing it. The switches now show what the site is really doing, and saving changes nothing you did not change.

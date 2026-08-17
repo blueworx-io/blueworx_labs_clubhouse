@@ -162,6 +162,10 @@ final class Blueworx_Clubhouse_Setup_Controller {
 			}
 		}
 
+		// The site renders from blocks, so a page or section switched here has to
+		// reach them — otherwise the toggle would move and the page would not.
+		Blueworx_Clubhouse_Content_Controller::sync_blocks( $storage, new Blueworx_Clubhouse_Content_Store( $storage ), $vis );
+
 		// 5. Warn if the stored accent is now illegible for the active look.
 		if ( ! Blueworx_Clubhouse_Color_Engine::accent_is_legible_for( $active, $branding->get_accent() ) ) {
 			$notices[] = array( 'type' => 'warning', 'text' => 'Your saved accent colour is low-contrast on the selected look. Choose a new accent for best legibility.' );

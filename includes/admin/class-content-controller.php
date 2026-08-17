@@ -162,8 +162,29 @@ final class Blueworx_Clubhouse_Content_Controller {
 		}
 
 		self::clear_filled_images( $storage, $content_store );
+		// The site is rendered from blocks, and this screen still writes to the
+		// content store, so a save has to reach the blocks or an owner's change
+		// would not appear on the site.
+		self::sync_blocks( $storage, $content_store, $vis );
 
 		return array( array( 'type' => 'success', 'text' => 'Your changes have been saved.' ) );
+	}
+
+	/**
+	 * Project the content and visibility a screen has just saved onto the club's
+	 * blocks. A site that has not been composed yet is left alone: it is still
+	 * rendering from the page methods, and composing it is the installer's job.
+	 */
+	public static function sync_blocks(
+		Blueworx_Clubhouse_Storage $storage,
+		Blueworx_Clubhouse_Content_Store $content,
+		Blueworx_Clubhouse_Visibility $visibility
+	): void {
+		$seeder = new Blueworx_Clubhouse_Block_Seeder(
+			new Blueworx_Clubhouse_Block_Library( $storage ),
+			new Blueworx_Clubhouse_Page_Composition( $storage )
+		);
+		$seeder->sync( $content, $visibility );
 	}
 
 	/**
