@@ -175,6 +175,9 @@ test('@preview an article never shows a tag chip with nothing in it', async ({ p
 // the last line of the headline touched the bottom edge. Asserting the gaps
 // rather than the token keeps the test about what a reader sees.
 test('@preview the news header has room above and below it', async ({ page }) => {
+  // Same reason as the featured-story gap below: measure a page that has
+  // finished moving, rather than race the reveal animation.
+  await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto('?clubhouse_page=news');
 
   const gaps = await page.evaluate(() => {
@@ -203,14 +206,16 @@ for (const look of ['court-side', 'floodlight', 'members-house']) {
   test(`@preview the filters sit under the featured story in ${look}`, async ({ page }) => {
     for (const width of [1440, 390]) {
       await page.setViewportSize({ width, height: 900 });
+      // The reveal animation holds a section 24px low until it scrolls into
+      // view, so a measurement taken while it is still sliding reads the
+      // animation as part of the gap — and whether it has finished is a race
+      // this test would otherwise lose on a loaded machine. reveal.js sits the
+      // whole thing out when the visitor has asked for less motion, which is
+      // the one state where the page is laid out and nothing is moving.
+      await page.emulateMedia({ reducedMotion: 'reduce' });
       await page.goto(`?clubhouse_page=news&look=${look}`);
 
       const measured = await page.evaluate(() => {
-        // The reveal animation holds a section 24px low until it scrolls into
-        // view, and it slides rather than jumps — measuring mid-slide reads the
-        // animation as part of the gap. Dropping the class is what reveal.js
-        // itself does when it gives up, and it settles the section instantly.
-        document.querySelectorAll('.ch-reveal').forEach((el) => el.classList.remove('ch-reveal'));
         const px = (v) => parseFloat(getComputedStyle(document.documentElement).getPropertyValue(v));
         const card = document.querySelector('.ch-featured__card').getBoundingClientRect();
         const bar = document.querySelector('.ch-newsgrid__bar').getBoundingClientRect();
