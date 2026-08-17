@@ -13,7 +13,7 @@ final class SetupControllerTest extends TestCase {
 		return new Blueworx_Clubhouse_Fake_Storage();
 	}
 
-	public function test_saves_look_branding_and_visibility(): void {
+	public function test_saves_look_and_branding(): void {
 		$storage = $this->storage();
 		$post = array(
 			'clubhouse_look'      => 'floodlight',
@@ -23,7 +23,6 @@ final class SetupControllerTest extends TestCase {
 			'clubhouse_facebook'  => 'https://facebook.com/riverside',
 			'clubhouse_instagram' => 'https://instagram.com/riverside',
 			'clubhouse_page'      => array( 'events' => '1' ),
-			'clubhouse_section'   => array( 'home.hero' => '1' ),
 		);
 		$notices = Blueworx_Clubhouse_Setup_Controller::handle_save( $post, $storage );
 
@@ -36,8 +35,6 @@ final class SetupControllerTest extends TestCase {
 		$this->assertSame( 'Riverside RFC', $branding->get_club_name() );
 		$this->assertSame( '42', $branding->get_logo() );
 		$this->assertTrue( $vis->is_page_visible( 'events' ) );
-		$this->assertFalse( $vis->is_section_visible( 'home', 'ticker' ) ); // unticked => hidden
-		$this->assertTrue( $vis->is_section_visible( 'home', 'hero' ) );
 		$this->assertSame( array(), array_values( array_filter( $notices, static fn( $n ) => 'error' === $n['type'] ) ) );
 	}
 
@@ -135,7 +132,7 @@ final class SetupControllerTest extends TestCase {
 		$active = array_values( array_filter( $model['looks'], static fn( $l ) => $l['active'] ) );
 		$this->assertSame( 'floodlight', $active[0]['slug'] );
 		$this->assertCount( 3, $model['looks'] );
-		$this->assertSame( 6, $model['progress']['total'] );
+		$this->assertSame( 5, $model['progress']['total'] );
 	}
 
 	public function test_capability_is_the_custom_clubhouse_cap(): void {

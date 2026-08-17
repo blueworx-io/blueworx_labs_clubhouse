@@ -46,117 +46,58 @@ final class Blueworx_Clubhouse_Block_Seeder {
 	}
 
 	/**
-	 * Bring an already-composed site back into step with the old screens.
+	 * Give an already-composed site the page-less blocks a later release added.
 	 *
-	 * Interim, and deliberately so: until the page and block screens exist, the
-	 * Club Pages and Setup screens are still where a club edits its site, and
-	 * they write to the content store and the visibility toggles. This projects
-	 * a save onto the blocks the front end renders, so an owner's change shows
-	 * up on the site. It creates and deletes nothing — a site that has not been
-	 * composed yet is left alone — and it goes away with the screens it serves.
+	 * A club composed on an earlier version has the blocks that version knew
+	 * about and nothing since. For a block that goes on a page that is fine —
+	 * where it belongs is the owner's decision, not an upgrade's. But the
+	 * welcome pack sits on no page at all, so an upgrade that does not create it
+	 * leaves the club with wording it cannot reach and a switch it cannot find.
+	 *
+	 * Only addresses this site has no block for are touched, so a club's own
+	 * edits and removals survive, and running it twice creates nothing new.
 	 */
-	public function sync( Blueworx_Clubhouse_Content_Store $content, Blueworx_Clubhouse_Visibility $visibility ): void {
-		if ( ! $this->composition->is_configured() ) {
-			return;
-		}
-
-		$by_address = array();
-		foreach ( $this->library->all() as $id => $block ) {
-			$key = (string) ( $block['defaults_key'] ?? '' );
-			if ( '' !== $key ) {
-				$by_address[ $key ] = (string) $id;
-			}
-		}
-
-		$onpage = array();
-		foreach ( array_keys( Blueworx_Clubhouse_Block_Addresses::map() ) as $address ) {
+	public function adopt( Blueworx_Clubhouse_Content_Store $content, Blueworx_Clubhouse_Visibility $visibility ): void {
+		foreach ( Blueworx_Clubhouse_Block_Addresses::map() as $address => $entry ) {
 			$address = (string) $address;
-			if ( ! isset( $by_address[ $address ] ) ) {
+			if ( ! str_starts_with( $address, 'global/' ) || 'global/cookies' === $address ) {
 				continue;
 			}
-			$id = $by_address[ $address ];
-
-			$this->library->set_content( $id, $this->content_for( $address, $content ) );
-			$settings = self::settings_for( $address, $visibility );
-			if ( array() !== $settings ) {
-				$this->library->set_settings( $id, $settings );
-			}
-
-			$page = explode( '/', $address, 2 )[0];
-			if ( 'global' === $page ) {
+			if ( '' !== $this->library->by_address( $address ) ) {
 				continue;
 			}
-			if ( self::on_page( $address, $visibility ) ) {
-				$onpage[ $page ][] = $id;
-			}
-		}
-
-		foreach ( $onpage as $page => $ids ) {
-			$this->composition->set_blocks( (string) $page, $ids );
-		}
-		foreach ( $this->pages() as $page ) {
-			if ( ! isset( $onpage[ $page ] ) ) {
-				$this->composition->set_blocks( $page, array() );
-			}
-			$this->composition->set_enabled( $page, $visibility->is_page_visible( $page ) );
+			$this->make( $address, $entry, $content, $visibility );
 		}
 	}
 
 	/**
-	 * Write a block's content back to the old content store.
+	 * One block for one address, carrying whatever the club had written there.
 	 *
-	 * The other half of sync(), and interim for the same reason. While Club
-	 * Pages, Setup and import still project the content store onto the blocks,
-	 * anything saved on the Blocks screen would be overwritten by the next save
-	 * on any of them. Writing back keeps the two in step, so whichever screen an
-	 * owner reaches for, their words survive.
-	 *
-	 * Exactly reverses content_for: folded items go back to the address they came
-	 * from, and the footer's cookie fields go back to the cookie notice. A block
-	 * with no address of its own — one an owner made — has nowhere to write back
-	 * to, and needs none: sync() only ever visits addresses.
-	 *
-	 * Goes with sync() when the old path does (issue #207).
-	 *
-	 * @param array<string,mixed> $block
+	 * @param array{type:string,position:int} $entry
 	 */
-	public static function project( array $block, Blueworx_Clubhouse_Content_Store $content ): void {
-		$address = (string) ( $block['defaults_key'] ?? '' );
-		if ( '' === $address || ! str_contains( $address, '/' ) ) {
-			return;
-		}
+	private function make(
+		string $address,
+		array $entry,
+		?Blueworx_Clubhouse_Content_Store $content,
+		?Blueworx_Clubhouse_Visibility $visibility
+	): string {
 		[ $page, $section ] = explode( '/', $address, 2 );
 
-		foreach ( (array) ( $block['content'] ?? array() ) as $key => $value ) {
-			$key = (string) $key;
+		$id = $this->library->add(
+			$entry['type'],
+			self::name_for( $page, $section ),
+			$address,
+			$entry['position']
+		);
 
-			if ( 'items' === $key ) {
-				$target = self::items_address( $address );
-				[ $item_page, $item_section ] = explode( '/', $target, 2 );
-				$content->set_items( $item_page, $item_section, is_array( $value ) ? array_values( $value ) : array() );
-				continue;
-			}
-
-			if ( 'global/footer' === $address && str_starts_with( $key, 'cookie_' ) ) {
-				$content->set( 'global', 'cookies', substr( $key, 7 ), $value );
-				continue;
-			}
-
-			$content->set( $page, $section, $key, $value );
+		if ( null !== $content ) {
+			$this->library->set_content( $id, $this->content_for( $address, $content, $visibility ) );
 		}
-	}
-
-	/**
-	 * Where a block's repeated items belong in the old store: the address that
-	 * folds into it when one does, and its own otherwise.
-	 */
-	private static function items_address( string $address ): string {
-		foreach ( Blueworx_Clubhouse_Block_Addresses::folds() as $folded => $into ) {
-			if ( $into === $address ) {
-				return (string) $folded;
-			}
+		$settings = self::settings_for( $address, $visibility );
+		if ( array() !== $settings ) {
+			$this->library->set_settings( $id, $settings );
 		}
-		return $address;
+		return $id;
 	}
 
 	/**
@@ -186,34 +127,15 @@ final class Blueworx_Clubhouse_Block_Seeder {
 			if ( isset( $folds[ $address ] ) ) {
 				continue;
 			}
-			// The welcome pack is prose in shape but renders on the shop's customer
-			// dashboard, which this plugin does not own. It stays where it is.
-			if ( 'global/welcome' === $address ) {
-				continue;
-			}
 			// The cookie notice renders inside the footer, so its wording goes onto
 			// the footer block rather than becoming a block nobody can place.
 			if ( 'global/cookies' === $address ) {
 				continue;
 			}
 
-			[ $page, $section ] = explode( '/', $address, 2 );
-
-			$id = $this->library->add(
-				$entry['type'],
-				self::name_for( $page, $section ),
-				$address,
-				$entry['position']
-			);
+			$page             = explode( '/', (string) $address, 2 )[0];
+			$id               = $this->make( (string) $address, $entry, $content, $visibility );
 			$made[ $address ] = $id;
-
-			if ( null !== $content ) {
-				$this->library->set_content( $id, $this->content_for( $address, $content ) );
-			}
-			$settings = self::settings_for( $address, $visibility );
-			if ( array() !== $settings ) {
-				$this->library->set_settings( $id, $settings );
-			}
 
 			if ( 'global' === $page ) {
 				continue;
@@ -296,7 +218,7 @@ final class Blueworx_Clubhouse_Block_Seeder {
 	 *
 	 * @return array<string,mixed>
 	 */
-	private function content_for( string $address, Blueworx_Clubhouse_Content_Store $content ): array {
+	private function content_for( string $address, Blueworx_Clubhouse_Content_Store $content, ?Blueworx_Clubhouse_Visibility $visibility ): array {
 		[ $page, $section ] = explode( '/', $address, 2 );
 		$own = $content->get_section( $page, $section );
 
@@ -315,6 +237,14 @@ final class Blueworx_Clubhouse_Block_Seeder {
 			foreach ( $content->get_section( 'global', 'cookies' ) as $key => $value ) {
 				$own[ 'cookie_' . (string) $key ] = $value;
 			}
+		}
+
+		// The welcome pack was the one piece of content switched on and off from
+		// the Setup screen rather than from a field of its own. That screen goes
+		// with the old path, so the switch becomes a field on the block — and a
+		// club that had the pack switched off keeps it off.
+		if ( 'global/welcome' === $address && null !== $visibility ) {
+			$own['show'] = $visibility->is_section_visible( 'home', 'welcome' );
 		}
 
 		return $own;

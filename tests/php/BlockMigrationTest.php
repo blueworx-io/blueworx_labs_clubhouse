@@ -59,14 +59,38 @@ final class BlockMigrationTest extends TestCase {
 		$this->assertArrayNotHasKey( 'home/quick_tiles', $blocks );
 		$this->assertArrayNotHasKey( 'home/info', $blocks );
 		$this->assertArrayNotHasKey( 'global/cookies', $blocks );
-		// And the welcome pack, which renders on a page this plugin does not own.
-		$this->assertArrayNotHasKey( 'global/welcome', $blocks );
+	}
+
+	/**
+	 * The welcome pack does get a block, even though it renders on the shop's
+	 * dashboard rather than on any clubhouse page — that is where its wording
+	 * and its on/off switch now live, the Setup screen that held them having gone.
+	 */
+	public function test_the_welcome_pack_becomes_a_block_that_sits_on_no_page(): void {
+		$this->seeder()->seed();
+		$block = $this->by_address()['global/welcome'];
+
+		$this->assertNotSame( '', (string) $block['id'] );
+		foreach ( Blueworx_Clubhouse_Page_Map::pages() as $page ) {
+			$key = Blueworx_Clubhouse_Page_Map::page_key( (string) $page['slug'] );
+			$this->assertNotContains( $block['id'], $this->composition->blocks( $key ), $key );
+		}
+	}
+
+	/** A club that had the pack switched off on the old Setup screen keeps it off. */
+	public function test_a_switched_off_welcome_pack_stays_off_as_a_field_on_its_block(): void {
+		Blueworx_Clubhouse_Test_Site::legacy_section_off( $this->storage, 'home', 'welcome' );
+		$this->seeder()->migrate( $this->content, $this->visibility );
+
+		$this->assertFalse( $this->by_address()['global/welcome']['content']['show'] );
 	}
 
 	public function test_a_clubs_words_come_across(): void {
-		$this->content->set( 'home', 'hero', 'title_lead', 'Marlow rowing, ' );
-		$this->content->set_items( 'home', 'quick_tiles', array( array( 'label' => 'Join us', 'href' => '/membership', 'icon' => 'join' ) ) );
-		$this->content->set( 'global', 'cookies', 'text', 'One cookie, for signing in.' );
+		Blueworx_Clubhouse_Test_Site::legacy_content( $this->storage, 'home', 'hero', array( 'title_lead' => 'Marlow rowing, ' ) );
+		Blueworx_Clubhouse_Test_Site::legacy_content( $this->storage, 'home', 'quick_tiles', array(
+			'items' => array( array( 'label' => 'Join us', 'href' => '/membership', 'icon' => 'join' ) ),
+		) );
+		Blueworx_Clubhouse_Test_Site::legacy_content( $this->storage, 'global', 'cookies', array( 'text' => 'One cookie, for signing in.' ) );
 
 		$this->seeder()->migrate( $this->content, $this->visibility );
 		$blocks = $this->by_address();
@@ -79,7 +103,7 @@ final class BlockMigrationTest extends TestCase {
 	}
 
 	public function test_a_hidden_section_stays_in_the_library_but_leaves_the_page(): void {
-		$this->visibility->set_section_visible( 'about', 'committee', false );
+		Blueworx_Clubhouse_Test_Site::legacy_section_off( $this->storage, 'about', 'committee' );
 		$this->seeder()->migrate( $this->content, $this->visibility );
 
 		$id = $this->by_address()['about/committee']['id'];
@@ -112,7 +136,7 @@ final class BlockMigrationTest extends TestCase {
 
 	/** The Home tier grid has no switch of its own: it goes with the band above it. */
 	public function test_hiding_the_home_membership_band_takes_its_tiers_with_it(): void {
-		$this->visibility->set_section_visible( 'home', 'membership', false );
+		Blueworx_Clubhouse_Test_Site::legacy_section_off( $this->storage, 'home', 'membership' );
 		$this->seeder()->migrate( $this->content, $this->visibility );
 
 		$home   = $this->composition->blocks( 'home' );
@@ -123,7 +147,7 @@ final class BlockMigrationTest extends TestCase {
 
 	/** Either half of the Home closing band can be off on its own. */
 	public function test_the_closing_bands_two_halves_become_settings(): void {
-		$this->visibility->set_section_visible( 'home', 'social', false );
+		Blueworx_Clubhouse_Test_Site::legacy_section_off( $this->storage, 'home', 'social' );
 		$this->seeder()->migrate( $this->content, $this->visibility );
 
 		$settings = $this->by_address()['home/social']['settings'];
@@ -131,47 +155,4 @@ final class BlockMigrationTest extends TestCase {
 		$this->assertTrue( $settings['show_columns'] );
 	}
 
-	// -- Staying in step ------------------------------------------------------
-
-	public function test_a_later_save_reaches_the_blocks(): void {
-		$this->seeder()->migrate( $this->content, $this->visibility );
-		$id = $this->by_address()['about/cta']['id'];
-
-		$this->content->set( 'about', 'cta', 'heading', 'Come and row' );
-		$this->seeder()->sync( $this->content, $this->visibility );
-
-		$this->assertSame( 'Come and row', $this->library->get( $id )['content']['heading'] );
-	}
-
-	public function test_a_later_switch_reaches_the_page(): void {
-		$this->seeder()->migrate( $this->content, $this->visibility );
-		$id = $this->by_address()['about/history']['id'];
-		$this->assertContains( $id, $this->composition->blocks( 'about' ) );
-
-		$this->visibility->set_section_visible( 'about', 'history', false );
-		$this->seeder()->sync( $this->content, $this->visibility );
-
-		$this->assertNotContains( $id, $this->composition->blocks( 'about' ) );
-		$this->assertTrue( $this->library->has( $id ) );
-	}
-
-	/** Syncing must never make a second copy of anything. */
-	public function test_syncing_twice_creates_no_new_blocks(): void {
-		$this->seeder()->migrate( $this->content, $this->visibility );
-		$before = count( $this->library->all() );
-
-		$this->seeder()->sync( $this->content, $this->visibility );
-		$this->seeder()->sync( $this->content, $this->visibility );
-
-		$this->assertCount( $before, $this->library->all() );
-	}
-
-	/** A site that has not been composed is not half-composed by a save. */
-	public function test_syncing_an_uncomposed_site_does_nothing(): void {
-		$this->content->set( 'about', 'cta', 'heading', 'Come and row' );
-		$this->seeder()->sync( $this->content, $this->visibility );
-
-		$this->assertSame( array(), $this->library->all() );
-		$this->assertFalse( $this->composition->is_configured() );
-	}
 }

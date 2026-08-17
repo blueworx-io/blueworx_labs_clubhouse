@@ -6,28 +6,21 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Show/hide state for pages and sections. Defaults to visible; owners hide by
- * opting out — except the sections listed in SECTION_DEFAULTS, which ship hidden
- * and are opted into. Persisted as one storage entry mirroring the feature-toggle
- * pattern.
+ * Whether a page is on the site. Defaults to on; an owner switches one off
+ * under Content → Pages, and Frontend::resolve_slug then 404s its address.
+ *
+ * Sections used to live here too, one flag per page-and-section, switched from
+ * the Setup screen's Visibility tab. That tab has gone: what a page shows is
+ * the list of blocks it is composed of, so taking a section off a page is
+ * removing its block rather than setting a flag beside it. Nothing sets a
+ * section flag any more; the stored ones are read exactly once, by the
+ * migration that decides which blocks a club's pages start out with.
  *
  * @package BlueworxLabsClubhouse
  */
 final class Blueworx_Clubhouse_Visibility {
 
 	private const KEY = 'visibility';
-
-	/**
-	 * Sections that ship hidden, keyed "page.section" — owners opt in rather than
-	 * out. Anything absent here defaults to visible.
-	 *
-	 * @var array<string, bool>
-	 */
-	private const SECTION_DEFAULTS = array(
-		// Empty today: home.stats was the only opt-in section and the stat strip has
-		// been withdrawn. The mechanism stays — it is how a future section ships off
-		// by default — and is_section_visible() still consults it.
-	);
 
 	private Blueworx_Clubhouse_Storage $storage;
 
@@ -50,10 +43,13 @@ final class Blueworx_Clubhouse_Visibility {
 		return (bool) ( $state['pages'][ $page ] ?? true );
 	}
 
+	/**
+	 * Whether a section was showing on the site the club had before blocks.
+	 * Read by the migration and by nothing else.
+	 */
 	public function is_section_visible( string $page, string $section ): bool {
 		$state = $this->state();
-		$key   = $this->section_key( $page, $section );
-		return (bool) ( $state['sections'][ $key ] ?? self::SECTION_DEFAULTS[ $key ] ?? true );
+		return (bool) ( $state['sections'][ $this->section_key( $page, $section ) ] ?? true );
 	}
 
 	public function set_page_visible( string $page, bool $visible ): void {
@@ -62,9 +58,4 @@ final class Blueworx_Clubhouse_Visibility {
 		$this->storage->set( self::KEY, $state );
 	}
 
-	public function set_section_visible( string $page, string $section, bool $visible ): void {
-		$state = $this->state();
-		$state['sections'][ $this->section_key( $page, $section ) ] = $visible;
-		$this->storage->set( self::KEY, $state );
-	}
 }

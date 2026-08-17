@@ -19,20 +19,11 @@ final class NewsTest extends TestCase {
 	}
 
 	private function render_index(): string {
-		return Blueworx_Clubhouse_Page_Map::render(
-			'news',
-			new Blueworx_Clubhouse_Branding( new Blueworx_Clubhouse_Null_Storage() ),
-			new Blueworx_Clubhouse_Visibility( new Blueworx_Clubhouse_Null_Storage() ),
-			new Blueworx_Clubhouse_Demo_Collections()
-		);
+		return Blueworx_Clubhouse_Test_Site::page( 'news' );
 	}
 
 	private function render_article(): string {
-		return Blueworx_Clubhouse_Page_Renderer::post(
-			new Blueworx_Clubhouse_Branding( new Blueworx_Clubhouse_Null_Storage() ),
-			new Blueworx_Clubhouse_Visibility( new Blueworx_Clubhouse_Null_Storage() ),
-			new Blueworx_Clubhouse_Demo_Collections()
-		);
+		return Blueworx_Clubhouse_Test_Site::article();
 	}
 
 	public function test_news_is_a_page_the_site_serves(): void {

@@ -125,8 +125,8 @@ function blueworx_clubhouse_preview_document(): string {
 	}
 	$composer = new Blueworx_Clubhouse_Page_Composer( $library, $composition );
 	$body     = 'post' === $page
-		? Blueworx_Clubhouse_Page_Renderer::post( $branding, $visibility, $collections, '', null, $filter )
-		: Blueworx_Clubhouse_Page_Map::render( $slug, $branding, $visibility, $collections, '', null, $filter, $item, $composer );
+		? Blueworx_Clubhouse_Page_Renderer::post( $branding, $visibility, $collections, $composer )
+		: Blueworx_Clubhouse_Page_Map::render( $slug, $branding, $visibility, $collections, $composer, '', $filter, $item );
 	$palettes  = blueworx_clubhouse_preview_palettes( $registry->active() );
 	$switcher   = '<div class="ch-switcher" data-ch-palettes=\''
 		. htmlspecialchars( json_encode( $palettes ), ENT_QUOTES, 'UTF-8' ) . '\'></div>'

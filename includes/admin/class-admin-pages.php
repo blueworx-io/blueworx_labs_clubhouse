@@ -54,14 +54,7 @@ final class Blueworx_Clubhouse_Admin_Pages {
 				// setup tab is still gated on CAPABILITY inside the screen.
 				'cap'         => Blueworx_Clubhouse_Setup_Controller::MENU_CAPABILITY,
 				'menu'        => Blueworx_Clubhouse_Setup_Controller::PAGE_SLUG,
-				'description' => 'Base look, branding, page visibility and the header menu.',
-			),
-			array(
-				'slug'        => Blueworx_Clubhouse_Content_Controller::PAGE_SLUG,
-				'label'       => 'Club Pages',
-				'cap'         => Blueworx_Clubhouse_Content_Controller::CAPABILITY,
-				'menu'        => Blueworx_Clubhouse_Content_Controller::PAGE_SLUG,
-				'description' => 'The words and images on every page.',
+				'description' => 'Base look, branding, members and the header menu.',
 			),
 			array(
 				'slug'        => Blueworx_Clubhouse_Pages_Controller::PAGE_SLUG,

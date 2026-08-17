@@ -148,6 +148,9 @@ final class Blueworx_Clubhouse_Frontend {
 		// browser's default serif at line-height 1.
 		add_action( 'wp_enqueue_scripts', array( self::class, 'enqueue_assets' ), 20 );
 		add_action( 'wp_head', array( self::class, 'render_favicon' ) );
+		// Before template_include, so a page we decline to serve is marked 404
+		// while WordPress can still pick the theme's 404 template for it.
+		add_action( 'template_redirect', array( self::class, 'maybe_404' ) );
 		add_filter( 'template_include', array( self::class, 'filter_template' ) );
 		// The template used to print its own <title> and then call wp_head(), which
 		// prints WordPress's — so every clubhouse page shipped two titles and the
@@ -271,6 +274,46 @@ final class Blueworx_Clubhouse_Frontend {
 		return self::context()->visibility->is_page_visible( 'news' );
 	}
 
+	/**
+	 * Whether this URL is one of ours that we are declining to serve.
+	 *
+	 * The rewrite rules are registered for every page the plugin knows, present
+	 * integration or not, because they are cached until flushed (see
+	 * Page_Map::pages()). So a switched-off page still matches a rule, WordPress
+	 * still builds a perfectly valid query, and declining to render left it
+	 * answering 200 with whatever the theme falls back to — its blog index, on
+	 * the smoke-test install. Declining to render is not the same as saying the
+	 * page is not there.
+	 *
+	 * Only a URL that named one of our pages counts. The bare site root is left
+	 * alone even when Home is switched off: that address belongs to WordPress as
+	 * much as to us, and 404ing it would take the whole site down rather than
+	 * one page off it.
+	 */
+	public static function is_gone( mixed $query_var, ?Blueworx_Clubhouse_Visibility $visibility ): bool {
+		if ( ! is_string( $query_var ) || '' === $query_var || ! Blueworx_Clubhouse_Page_Map::has( $query_var ) ) {
+			return false;
+		}
+		return null === self::resolve_slug( false, $query_var, $visibility );
+	}
+
+	/**
+	 * Answer 404 for a page this site does not serve, so the URL behaves like it
+	 * does not exist — for a visitor and for a search engine.
+	 */
+	public static function maybe_404(): void {
+		$qv = function_exists( 'get_query_var' ) ? get_query_var( self::QUERY_VAR ) : '';
+		if ( ! self::is_gone( $qv, self::context()->visibility ) ) {
+			return;
+		}
+		global $wp_query;
+		if ( $wp_query instanceof WP_Query ) {
+			$wp_query->set_404();
+		}
+		status_header( 404 );
+		nocache_headers();
+	}
+
 	public static function filter_template( string $template ): string {
 		if ( self::is_article() ) {
 			return dirname( __DIR__, 2 ) . '/templates/clubhouse.php';
@@ -304,7 +347,7 @@ final class Blueworx_Clubhouse_Frontend {
 			new Blueworx_Clubhouse_Theme_Cache( $storage ),
 			new Blueworx_Clubhouse_WP_Collections(),
 			$registry,
-			new Blueworx_Clubhouse_Content_Store( $storage )
+			self::composer()
 		);
 	}
 
@@ -423,23 +466,35 @@ final class Blueworx_Clubhouse_Frontend {
 
 		$ctx      = self::context();
 		$logo_url = self::resolve_logo( $ctx->branding->get_logo() );
+		// So a menu item pointing at a block resolves against the blocks this
+		// club actually has, not the ones the plugin ships.
+		Blueworx_Clubhouse_Link_Catalogue::set_composer( $ctx->composer );
 
 		if ( $is_article ) {
-			return Blueworx_Clubhouse_Page_Renderer::post( $ctx->branding, $ctx->visibility, $ctx->collections, $logo_url, $ctx->content );
+			return Blueworx_Clubhouse_Page_Renderer::post( $ctx->branding, $ctx->visibility, $ctx->collections, $ctx->composer, $logo_url );
 		}
-		return Blueworx_Clubhouse_Page_Map::render( $slug, $ctx->branding, $ctx->visibility, $ctx->collections, $logo_url, $ctx->content, self::current_filter(), self::current_item(), self::composer() );
+		return Blueworx_Clubhouse_Page_Map::render( $slug, $ctx->branding, $ctx->visibility, $ctx->collections, $ctx->composer, $logo_url, self::current_filter(), self::current_item() );
 	}
 
 	/**
 	 * The club's blocks and what each page is built from. Reads the same
 	 * options everything else does, so a page composed in the admin screens is
 	 * the page a visitor gets.
+	 *
+	 * A site that has never been composed is composed here, on the spot. The
+	 * upgrade routine normally does it, but that runs on an admin request, and
+	 * a club whose first visitor after an update arrives before its owner does
+	 * must not be served a site with no pages on it.
 	 */
 	public static function composer(): Blueworx_Clubhouse_Page_Composer {
-		$storage = new Blueworx_Clubhouse_Options_Storage();
+		$storage     = new Blueworx_Clubhouse_Options_Storage();
+		$composition = new Blueworx_Clubhouse_Page_Composition( $storage );
+		if ( ! $composition->is_configured() ) {
+			Blueworx_Clubhouse_Blocks_Installer::install();
+		}
 		return new Blueworx_Clubhouse_Page_Composer(
 			new Blueworx_Clubhouse_Block_Library( $storage ),
-			new Blueworx_Clubhouse_Page_Composition( $storage )
+			$composition
 		);
 	}
 

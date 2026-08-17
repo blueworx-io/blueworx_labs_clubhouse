@@ -12,6 +12,11 @@ use PHPUnit\Framework\TestCase;
  */
 final class PagesScreenTest extends TestCase {
 
+	/** The link picker installs this club's blocks on a static seam; put it back. */
+	protected function tearDown(): void {
+		Blueworx_Clubhouse_Link_Catalogue::set_composer( null );
+	}
+
 	private function seeded(): Blueworx_Clubhouse_Fake_Storage {
 		$storage = new Blueworx_Clubhouse_Fake_Storage();
 		( new Blueworx_Clubhouse_Block_Seeder(

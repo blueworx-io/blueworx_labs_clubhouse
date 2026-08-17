@@ -12,6 +12,11 @@ use PHPUnit\Framework\TestCase;
  */
 final class BlocksScreenTest extends TestCase {
 
+	/** The link picker installs this club's blocks on a static seam; put it back. */
+	protected function tearDown(): void {
+		Blueworx_Clubhouse_Link_Catalogue::set_composer( null );
+	}
+
 	private function seeded(): Blueworx_Clubhouse_Fake_Storage {
 		$storage = new Blueworx_Clubhouse_Fake_Storage();
 		( new Blueworx_Clubhouse_Block_Seeder(
@@ -132,61 +137,11 @@ final class BlocksScreenTest extends TestCase {
 	}
 
 	/**
-	 * Two editors, one site. Until the old path goes (issue #207), Club Pages and
-	 * Setup still project the content store onto the blocks on every save — so a
-	 * block edited here has to reach that store too, or the next save anywhere
-	 * else would quietly put the old words back.
+	 * The home hero's quick tiles used to be stored at an address of their own
+	 * and folded onto the hero at render time. They are the hero block's items
+	 * now — one place, edited on the block that shows them.
 	 */
-	public function test_words_saved_here_survive_a_club_pages_save(): void {
-		$storage = $this->seeded();
-		$this->post(
-			array( 'clubhouse_blocks_block' => 'about-history', 'field' => array( 'heading' => 'Ninety years by the weir' ) ),
-			$storage
-		);
-
-		// Somebody now saves the old screen, which reprojects the store.
-		( new Blueworx_Clubhouse_Block_Seeder(
-			new Blueworx_Clubhouse_Block_Library( $storage ),
-			new Blueworx_Clubhouse_Page_Composition( $storage )
-		) )->sync(
-			new Blueworx_Clubhouse_Content_Store( $storage ),
-			new Blueworx_Clubhouse_Visibility( $storage )
-		);
-
-		$this->assertSame(
-			'Ninety years by the weir',
-			( new Blueworx_Clubhouse_Block_Library( $storage ) )->get( 'about-history' )['content']['heading']
-		);
-	}
-
-	public function test_repeated_items_survive_a_club_pages_save(): void {
-		$storage = $this->seeded();
-		$this->post(
-			array(
-				'clubhouse_blocks_block' => 'membership-faq',
-				'item'                   => array( array( 'question' => 'When do you train?', 'answer' => 'Tuesdays.' ) ),
-			),
-			$storage
-		);
-
-		( new Blueworx_Clubhouse_Block_Seeder(
-			new Blueworx_Clubhouse_Block_Library( $storage ),
-			new Blueworx_Clubhouse_Page_Composition( $storage )
-		) )->sync(
-			new Blueworx_Clubhouse_Content_Store( $storage ),
-			new Blueworx_Clubhouse_Visibility( $storage )
-		);
-
-		$items = ( new Blueworx_Clubhouse_Block_Library( $storage ) )->get( 'membership-faq' )['content']['items'];
-		$this->assertCount( 1, $items );
-		$this->assertSame( 'When do you train?', $items[0]['question'] );
-	}
-
-	/**
-	 * The home hero's quick tiles are stored at their own address and folded onto
-	 * the hero block, so writing back has to unfold them again.
-	 */
-	public function test_folded_items_go_back_to_the_address_they_came_from(): void {
+	public function test_the_heros_tiles_are_saved_onto_the_hero_block(): void {
 		$storage = $this->seeded();
 		$this->post(
 			array(
@@ -196,14 +151,12 @@ final class BlocksScreenTest extends TestCase {
 			$storage
 		);
 
-		$this->assertSame(
-			'Join the club',
-			( new Blueworx_Clubhouse_Content_Store( $storage ) )->get_items( 'home', 'quick_tiles' )[0]['label']
-		);
+		$items = ( new Blueworx_Clubhouse_Block_Library( $storage ) )->get( 'home-hero' )['content']['items'];
+		$this->assertSame( 'Join the club', $items[0]['label'] );
 	}
 
-	/** The cookie notice is stored on its own, but edited on the footer block. */
-	public function test_the_cookie_notice_goes_back_to_the_cookie_notice(): void {
+	/** The cookie notice has no block of its own: it is edited on the footer. */
+	public function test_the_cookie_notice_is_saved_onto_the_footer_block(): void {
 		$storage = $this->seeded();
 		$this->post(
 			array( 'clubhouse_blocks_block' => 'footer', 'field' => array( 'cookie_text' => 'We use a couple of cookies.' ) ),
@@ -212,7 +165,7 @@ final class BlocksScreenTest extends TestCase {
 
 		$this->assertSame(
 			'We use a couple of cookies.',
-			( new Blueworx_Clubhouse_Content_Store( $storage ) )->get( 'global', 'cookies', 'text' )
+			( new Blueworx_Clubhouse_Block_Library( $storage ) )->get( 'footer' )['content']['cookie_text']
 		);
 	}
 

@@ -4,11 +4,10 @@ declare(strict_types=1);
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
 /**
- * Pure declarative catalogue of editable page content, shaped 1:1 to the
- * visibility inventory (`Setup_Sections::inventory()` — enforced by a
- * lockstep test). Single source of truth for the Content editor: it drives
- * the editor UI and defines the `Content_Store` storage-key contract the
- * front-end renderers read (Page_Renderer's override layer).
+ * Pure declarative catalogue of editable content, one entry per address the
+ * plugin ships. Single source of truth for what a block holds: Block_Fields
+ * derives the block editor's form from it, Content_Sanitiser judges a posted
+ * value against it, and the import addresses its contents by the same keys.
  *
  * @package BlueworxLabsClubhouse
  */
@@ -250,6 +249,7 @@ final class Blueworx_Clubhouse_Content_Catalogue {
 				array( 'key' => 'welcome', 'label' => 'Welcome pack', 'type' => 'fields', 'store_page' => 'global',
 					'note' => 'Shown to a member on their account dashboard once they have joined — the practical things a new member needs: how to get in, where to park, who to ask. Leave the body empty and nothing is shown at all. It renders in the dashboard\'s own plain styling rather than the club look, because that page belongs to the shop.',
 					'fields' => array(
+						self::f_toggle( 'show', 'Show the welcome pack', true ),
 						self::f_text( 'heading', 'Heading', 'e.g. Welcome to the club' ),
 						self::f_area( 'body', 'Welcome pack', 8, 'A blank line starts a new paragraph.' ),
 						self::f_text( 'link_label', 'Link label', 'e.g. Read the full handbook' ),

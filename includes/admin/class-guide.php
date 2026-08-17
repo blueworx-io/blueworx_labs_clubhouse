@@ -30,7 +30,7 @@ final class Blueworx_Clubhouse_Guide {
 	 *   pages:array<int,array{key:string,label:string,visible:bool,sections:array<int,array{label:string,visible:bool}>}>,
 	 *   screens:array<int,array{label:string,description:string,url:string}>,
 	 *   collections:array<int,array{plural:string,count:int,url:string}>,
-	 *   setup_url:string,content_url:string,pages_url?:string,blocks_url?:string} $site
+	 *   setup_url:string,pages_url:string,blocks_url:string} $site
 	 * @return array{club:string,intro:string,chapters:array<int,array<string,mixed>>}
 	 */
 	public static function build( array $site ): array {
@@ -137,7 +137,6 @@ final class Blueworx_Clubhouse_Guide {
 	 * @return array<string,mixed>
 	 */
 	private static function content_chapter( array $site ): array {
-		$content_url = (string) ( $site['content_url'] ?? '' );
 		return array(
 			'key'     => 'content',
 			'title'   => 'Changing the words and pictures',
@@ -156,7 +155,7 @@ final class Blueworx_Clubhouse_Guide {
 						'Save. The change is live immediately — there is nothing to publish.',
 					),
 					'state' => '',
-					'url'   => (string) ( $site['blocks_url'] ?? $content_url ),
+					'url'   => (string) ( $site['blocks_url'] ?? '' ),
 				),
 				array(
 					'title' => 'Rearranging a page',
@@ -170,7 +169,7 @@ final class Blueworx_Clubhouse_Guide {
 						'Remove a block, or choose one from the picker and add it.',
 					),
 					'state' => '',
-					'url'   => (string) ( $site['pages_url'] ?? $content_url ),
+					'url'   => (string) ( $site['pages_url'] ?? '' ),
 				),
 				array(
 					'title' => 'The menu',

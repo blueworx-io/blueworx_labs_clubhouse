@@ -123,15 +123,27 @@ final class WelcomePackTest extends TestCase {
 		$this->assertStringNotContainsString( 'font-family', $css );
 	}
 
-	/** It is a section a visibility toggle controls, so it has to be in the inventory. */
-	public function test_the_pack_can_be_switched_off_like_any_other_section(): void {
-		$home = array_values(
-			array_filter(
-				Blueworx_Clubhouse_Setup_Sections::inventory(),
-				static fn( array $p ): bool => 'home' === $p['page']
-			)
-		)[0];
+	/**
+	 * The pack is on no page, so removing its block is not how a club turns it
+	 * off. Its switch is a field on the block itself — and it has to be one the
+	 * block editor draws, or there would be no way to reach it.
+	 */
+	public function test_the_pack_has_a_switch_of_its_own_on_its_block(): void {
+		$storage = new Blueworx_Clubhouse_Fake_Storage();
+		$library = new Blueworx_Clubhouse_Block_Library( $storage );
+		Blueworx_Clubhouse_Test_Site::composer( $storage );
 
-		$this->assertContains( 'welcome', array_column( $home['sections'], 'key' ) );
+		$this->assertTrue( Blueworx_Clubhouse_Welcome_Pack::pack( $library )['show'], 'on by default' );
+
+		Blueworx_Clubhouse_Test_Site::write( $storage, Blueworx_Clubhouse_Welcome_Pack::ADDRESS, array( 'show' => false ) );
+		$this->assertFalse( Blueworx_Clubhouse_Welcome_Pack::pack( $library )['show'] );
+
+		$fields = array();
+		foreach ( Blueworx_Clubhouse_Content_Catalogue::index() as $address => $ignored ) {
+			if ( Blueworx_Clubhouse_Welcome_Pack::ADDRESS === $address ) {
+				$fields[] = $address;
+			}
+		}
+		$this->assertSame( array( Blueworx_Clubhouse_Welcome_Pack::ADDRESS ), $fields, 'the block is editable' );
 	}
 }

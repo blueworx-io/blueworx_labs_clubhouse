@@ -225,6 +225,46 @@ final class FrontendTest extends TestCase {
 		$this->assertNull( Blueworx_Clubhouse_Frontend::resolve_slug( false, '' ) );
 	}
 
+	/**
+	 * Issue #211. The rewrite rule still matches a switched-off page, so
+	 * WordPress has a valid query and served it 200 with the theme's fallback.
+	 * Declining to render is not the same as saying the page is not there.
+	 */
+	public function test_a_switched_off_page_is_gone_rather_than_merely_unrendered(): void {
+		$storage    = new Blueworx_Clubhouse_Fake_Storage();
+		$visibility = new Blueworx_Clubhouse_Visibility( $storage );
+		$visibility->set_page_visible( 'contact', false );
+
+		$this->assertTrue( Blueworx_Clubhouse_Frontend::is_gone( 'contact', $visibility ) );
+		$this->assertFalse( Blueworx_Clubhouse_Frontend::is_gone( 'about', $visibility ), 'a page that is on' );
+	}
+
+	/** A page whose integration is absent takes the same path and the same answer. */
+	public function test_a_page_whose_integration_is_missing_is_gone_too(): void {
+		$visibility = new Blueworx_Clubhouse_Visibility( new Blueworx_Clubhouse_Fake_Storage() );
+		$this->assertTrue( Blueworx_Clubhouse_Frontend::is_gone( 'booking', $visibility ) );
+
+		Blueworx_Clubhouse_Integrations::set_detector( static fn( string $tag ): bool => true );
+		try {
+			$this->assertFalse( Blueworx_Clubhouse_Frontend::is_gone( 'booking', $visibility ) );
+		} finally {
+			Blueworx_Clubhouse_Integrations::set_detector( null );
+		}
+	}
+
+	/**
+	 * A URL that was never ours is not ours to 404 — and neither is the bare
+	 * site root, which belongs to WordPress as much as to the plugin.
+	 */
+	public function test_a_url_that_is_not_ours_is_left_alone(): void {
+		$visibility = new Blueworx_Clubhouse_Visibility( new Blueworx_Clubhouse_Fake_Storage() );
+		$visibility->set_page_visible( 'home', false );
+
+		$this->assertFalse( Blueworx_Clubhouse_Frontend::is_gone( 'nope', $visibility ) );
+		$this->assertFalse( Blueworx_Clubhouse_Frontend::is_gone( '', $visibility ) );
+		$this->assertFalse( Blueworx_Clubhouse_Frontend::is_gone( null, $visibility ) );
+	}
+
 	public function test_enqueue_specs_shape(): void {
 		$look  = new Blueworx_Clubhouse_Court_Side();
 		$specs = Blueworx_Clubhouse_Frontend::enqueue_specs( $look, ':root{--x:1}', 'https://club.test/wp-content/plugins/clubhouse/' );

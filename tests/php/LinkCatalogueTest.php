@@ -5,6 +5,11 @@ use PHPUnit\Framework\TestCase;
 
 final class LinkCatalogueTest extends TestCase {
 
+	/** The link picker installs this club's blocks on a static seam; put it back. */
+	protected function tearDown(): void {
+		Blueworx_Clubhouse_Link_Catalogue::set_composer( null );
+	}
+
 	private function collections(): Blueworx_Clubhouse_Demo_Collections {
 		return new Blueworx_Clubhouse_Demo_Collections();
 	}

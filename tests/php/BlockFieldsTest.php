@@ -28,19 +28,27 @@ final class BlockFieldsTest extends TestCase {
 	 */
 	public function test_every_key_a_migration_writes_is_editable(): void {
 		$storage = new Blueworx_Clubhouse_Fake_Storage();
-		$content = new Blueworx_Clubhouse_Content_Store( $storage );
 
 		// A club that has typed into every box the old editor offered.
 		foreach ( Blueworx_Clubhouse_Content_Catalogue::pages() as $page ) {
 			foreach ( $page['sections'] as $section ) {
+				$fields = array();
 				foreach ( (array) ( $section['fields'] ?? array() ) as $field ) {
-					$content->set( (string) $section['store_page'], (string) $section['key'], (string) $field['key'], 'typed' );
+					$fields[ (string) $field['key'] ] = 'typed';
 				}
 				if ( isset( $section['loop'] ) ) {
-					$content->set_items( (string) $section['store_page'], (string) $section['key'], array( array( 'x' => 'y' ) ) );
+					$fields['items'] = array( array( 'x' => 'y' ) );
 				}
+				Blueworx_Clubhouse_Test_Site::legacy_content(
+					$storage,
+					(string) $section['store_page'],
+					(string) $section['key'],
+					$fields
+				);
 			}
 		}
+
+		$content = new Blueworx_Clubhouse_Content_Store( $storage );
 
 		$library = new Blueworx_Clubhouse_Block_Library( $storage );
 		( new Blueworx_Clubhouse_Block_Seeder( $library, new Blueworx_Clubhouse_Page_Composition( $storage ) ) )

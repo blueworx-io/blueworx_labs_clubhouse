@@ -31,10 +31,9 @@ final class Blueworx_Clubhouse_Page_Composer {
 	/**
 	 * Whether this site has been composed yet.
 	 *
-	 * False on a site that has not been seeded or migrated, which is every site
-	 * for the moment between the plugin updating and its upgrade routine
-	 * running. Callers fall back to the old page methods, so that moment shows
-	 * the club its site rather than a stack of empty pages.
+	 * False only between a plugin update landing and its upgrade routine running.
+	 * A page rendered in that moment has no blocks to draw, so the front end
+	 * holds off rather than serving a club a stack of empty pages.
 	 */
 	public function is_ready(): bool {
 		return $this->composition->is_configured();
@@ -42,8 +41,7 @@ final class Blueworx_Clubhouse_Page_Composer {
 
 	/**
 	 * A whole page's body — header, main, footer — for the page whose key is
-	 * given. Takes the same arguments the page methods took, so Page_Map can
-	 * call it in their place.
+	 * given.
 	 */
 	public function page(
 		string $page,
@@ -53,22 +51,21 @@ final class Blueworx_Clubhouse_Page_Composer {
 		string $logo_url = '',
 		string $filter = ''
 	): string {
-		$blocks = $this->blocks_for( $page );
-		$state  = new Blueworx_Clubhouse_Page_State( $page, $branding, $visibility, $collections, $this->library, $blocks, $filter );
-		$club   = $branding->get_club_name();
+		$blocks  = $this->blocks_for( $page );
+		$state   = new Blueworx_Clubhouse_Page_State( $page, $branding, $visibility, $collections, $this->library, $blocks, $filter );
+		$anchors = self::anchor_keys( $blocks );
 
-		$out = '';
-		if ( $visibility->is_section_visible( $page, 'header' ) ) {
-			$out .= $this->header( $page, $state, $collections, $logo_url );
-		}
+		$out = $this->chrome_header( Blueworx_Clubhouse_Links::url( $page ), $branding, $visibility, $collections, $logo_url );
 		$out .= '<main class="ch-main" id="ch-main" tabindex="-1">';
-		foreach ( $blocks as $block ) {
-			$out .= $this->anchored( $block, Blueworx_Clubhouse_Block_Renderers::render( $block, $state ) );
+		foreach ( $blocks as $index => $block ) {
+			$html = Blueworx_Clubhouse_Block_Renderers::render( $block, $state );
+			$key  = (string) ( $anchors[ $index ] ?? '' );
+			$out .= ( '' === $html || '' === $key )
+				? $html
+				: Blueworx_Clubhouse_Page_Renderer::anchored( $page, $key, $html );
 		}
 		$out .= '</main>';
-		if ( $visibility->is_section_visible( $page, 'footer' ) ) {
-			$out .= $this->footer( $state, $visibility, $branding );
-		}
+		$out .= $this->chrome_footer( $branding, $visibility, $collections );
 		return $out;
 	}
 
@@ -127,27 +124,52 @@ final class Blueworx_Clubhouse_Page_Composer {
 	}
 
 	/**
-	 * Stamp a block's markup with the id its anchor target points at.
+	 * The anchor key each block on a page answers to, in the same order the page
+	 * renders them. '' means the block carries no anchor at all.
 	 *
-	 * A seeded or migrated block takes the anchor of the address it came from,
-	 * so every link an owner has already made keeps working. A block created
-	 * fresh has no such address and takes its type's name instead.
+	 * A seeded or migrated block keeps the key of the address it came from, so
+	 * every link an owner has already made goes on working after the rewrite. A
+	 * block created fresh has no address, and takes its type's key instead —
+	 * which is stable across renames, because a name is the one thing about a
+	 * block an owner changes freely.
 	 *
-	 * @param array<string,mixed> $block
+	 * Two blocks answering to one key on one page cannot both have it: the first
+	 * keeps it and the rest are numbered, so "#ch-about-faq" is always the first
+	 * FAQ on the About page however many are added later.
+	 *
+	 * The one block with no anchor is the Home tier grid, which has never had
+	 * one — it is the Membership page's tiers shown again, and a link to the
+	 * tiers means the page that sells them.
+	 *
+	 * @param array<int,array<string,mixed>> $blocks In render order.
+	 * @return array<int,string>
 	 */
-	private function anchored( array $block, string $html ): string {
-		if ( '' === $html ) {
-			return '';
+	public static function anchor_keys( array $blocks ): array {
+		$out   = array();
+		$taken = array();
+		foreach ( $blocks as $block ) {
+			$address = (string) ( $block['defaults_key'] ?? '' );
+			if ( in_array( $address, Blueworx_Clubhouse_Block_Addresses::unanchored(), true ) ) {
+				$out[] = '';
+				continue;
+			}
+			$key = str_contains( $address, '/' )
+				? explode( '/', $address, 2 )[1]
+				: (string) ( $block['type'] ?? '' );
+			if ( '' === $key ) {
+				$out[] = '';
+				continue;
+			}
+			$candidate = $key;
+			$n         = 1;
+			while ( in_array( $candidate, $taken, true ) ) {
+				++$n;
+				$candidate = $key . '_' . $n;
+			}
+			$taken[] = $candidate;
+			$out[]   = $candidate;
 		}
-		$key = (string) ( $block['defaults_key'] ?? '' );
-		if ( in_array( $key, Blueworx_Clubhouse_Block_Addresses::unanchored(), true ) ) {
-			return $html;
-		}
-		if ( '' !== $key && str_contains( $key, '/' ) ) {
-			[ $page, $section ] = explode( '/', $key, 2 );
-			return Blueworx_Clubhouse_Page_Renderer::anchored( $page, $section, $html );
-		}
-		return $html;
+		return $out;
 	}
 
 	// -- The shell ------------------------------------------------------------
@@ -156,13 +178,21 @@ final class Blueworx_Clubhouse_Page_Composer {
 	 * The site header. Its content is a singleton block — one header, edited
 	 * once, shown on every page — so it is looked up by type rather than read
 	 * off the page's own list.
+	 *
+	 * Public because the header is not only a composed page's: the per-sport and
+	 * per-team pages, a single article and a page another plugin owns all wear
+	 * the same chrome, and one club's header edited once has to reach all of
+	 * them. `$active` is the URL of the page being shown, so the nav can mark
+	 * itself; a page this plugin does not own passes '' and nothing is marked.
 	 */
-	private function header(
-		string $page,
-		Blueworx_Clubhouse_Page_State $state,
+	public function chrome_header(
+		string $active,
+		Blueworx_Clubhouse_Branding $branding,
+		Blueworx_Clubhouse_Visibility $visibility,
 		Blueworx_Clubhouse_Collections $collections,
-		string $logo_url
+		string $logo_url = ''
 	): string {
+		$state    = new Blueworx_Clubhouse_Page_State( '', $branding, $visibility, $collections, $this->library, array() );
 		$block    = $this->singleton( 'header' );
 		$content  = (array) ( $block['content'] ?? array() );
 		$defaults = Blueworx_Clubhouse_Block_Defaults::for_key( 'global/header', $state );
@@ -182,8 +212,8 @@ final class Blueworx_Clubhouse_Page_Composer {
 			'club_name'   => $state->club(),
 			'banner'      => $banner_on ? Blueworx_Clubhouse_Block_Content::text( $content, $defaults, 'banner' ) : '',
 			'banner_href' => Blueworx_Clubhouse_Block_Content::text( $content, $defaults, 'banner_href' ),
-			'nav'         => Blueworx_Clubhouse_Menu::current()->items( $collections, $state->visibility() ),
-			'active'      => Blueworx_Clubhouse_Links::url( $page ),
+			'nav'         => Blueworx_Clubhouse_Menu::current()->items( $collections, $visibility ),
+			'active'      => $active,
 			'login'       => $signed_in ? 'Log out' : 'Log in',
 			'login_href'  => $signed_in ? $auth['logout_url'] : Blueworx_Clubhouse_Links::url( 'login' ),
 			'join'        => Blueworx_Clubhouse_Block_Content::text( $content, $defaults, 'join' ),
@@ -192,11 +222,13 @@ final class Blueworx_Clubhouse_Page_Composer {
 		) );
 	}
 
-	private function footer(
-		Blueworx_Clubhouse_Page_State $state,
+	/** The site footer, the footer's half of chrome_header(). */
+	public function chrome_footer(
+		Blueworx_Clubhouse_Branding $branding,
 		Blueworx_Clubhouse_Visibility $visibility,
-		Blueworx_Clubhouse_Branding $branding
+		Blueworx_Clubhouse_Collections $collections
 	): string {
+		$state    = new Blueworx_Clubhouse_Page_State( '', $branding, $visibility, $collections, $this->library, array() );
 		$block    = $this->singleton( 'footer' );
 		$content  = (array) ( $block['content'] ?? array() );
 		$defaults = Blueworx_Clubhouse_Block_Defaults::for_key( 'global/footer', $state );

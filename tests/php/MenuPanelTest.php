@@ -5,11 +5,16 @@ use PHPUnit\Framework\TestCase;
 
 final class MenuPanelTest extends TestCase {
 
+	/** The link picker installs this club's blocks on a static seam; put it back. */
+	protected function tearDown(): void {
+		Blueworx_Clubhouse_Link_Catalogue::set_composer( null );
+	}
+
 	private function model( array $tree ): array {
 		return array(
 			'tree'        => $tree,
 			'targets'     => Blueworx_Clubhouse_Link_Catalogue::targets( new Blueworx_Clubhouse_Demo_Collections() ),
-			'action_url'  => 'http://x.test/wp-admin/admin.php?page=clubhouse-site-content',
+			'action_url'  => 'http://x.test/wp-admin/admin.php?page=clubhouse-blocks',
 			'nonce_field' => '<input type="hidden" name="_wpnonce" value="abc">',
 		);
 	}
@@ -96,15 +101,16 @@ final class MenuPanelTest extends TestCase {
 	 * which reads get_posts() — empty under a fresh Fake_Storage/stub set unless a
 	 * post is seeded into $GLOBALS['wp_stub_posts']. Asserting through it here would
 	 * only prove sport/team targets are missing, not present, so this asserts
-	 * against Content_Screen::render() with a hand-built model instead, using
+	 * against Blocks_Screen::render() with a hand-built model instead, using
 	 * Demo_Collections the way the rest of this file's tests already do — it is a
 	 * DB-free stand-in for the same Link_Catalogue::targets() the controller calls.
 	 */
 	public function test_the_shared_datalist_offers_anchors_and_filters(): void {
-		$s     = new Blueworx_Clubhouse_Fake_Storage();
-		$model = Blueworx_Clubhouse_Content_Controller::build_model( $s, array(), '', '' );
+		$s = new Blueworx_Clubhouse_Fake_Storage();
+		Blueworx_Clubhouse_Test_Site::composer( $s );
+		$model = Blueworx_Clubhouse_Blocks_Controller::build_model( $s, array(), '', '' );
 		$model['menu_targets'] = Blueworx_Clubhouse_Link_Catalogue::targets( new Blueworx_Clubhouse_Demo_Collections() );
-		$html = Blueworx_Clubhouse_Content_Screen::render( $model );
+		$html = Blueworx_Clubhouse_Blocks_Screen::render( $model );
 		$this->assertStringContainsString( 'About → History', $html );
 		$this->assertStringContainsString( 'Sports → Rugby', $html );
 	}

@@ -21,7 +21,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 final class Blueworx_Clubhouse_Pages_Controller {
 
-	public const CAPABILITY = Blueworx_Clubhouse_Owner_Capabilities::SETUP_CAP;
+	public const CAPABILITY = Blueworx_Clubhouse_Owner_Capabilities::CONTENT_CAP;
 	public const PAGE_SLUG  = 'clubhouse-pages';
 	public const NONCE      = 'clubhouse_pages_save';
 

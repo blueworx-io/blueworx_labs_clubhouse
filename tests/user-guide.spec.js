@@ -28,32 +28,27 @@ test('the user guide describes this site, not a generic one @wordpress', async (
   }
 });
 
-// The visibility toggles live in a tab panel that is not the one the Setup
-// screen opens on, so the tab has to be opened before anything in it can be
-// clicked — its inputs are genuinely not on screen until then.
+// A page's on/off switch lives on Content → Pages, beside the blocks that page
+// is built from — one page at a time, chosen from the list down the side.
 async function setPageVisible(page, slug, visible) {
-  await page.goto('/wp-admin/admin.php?page=clubhouse-setup', { waitUntil: 'domcontentloaded' });
-  // Two levels of tab: the Visibility panel, then the sub-tab for this page.
-  // Only Home's sub-panel is open to begin with, so everything else is off
-  // screen until its tab is clicked.
+  await page.goto(`/wp-admin/admin.php?page=clubhouse-pages&club_page=${slug}`, {
+    waitUntil: 'domcontentloaded',
+  });
+
+  const toggle = page.locator('input[name="clubhouse_page_enabled"]');
+  await expect(toggle).toBeVisible();
+  if ((await toggle.isChecked()) !== visible) {
+    await toggle.click({ force: true });
+  }
+  expect(await toggle.isChecked()).toBe(visible);
+
   // force, for the reason menu-editor.spec.js documents: wp-admin's own chrome
   // keeps reflowing after this screen loads, so Playwright's 'stable' wait never
   // converges even though the control is provably where it says it is.
-  await page.getByRole('tab', { name: 'Visibility' }).click({ force: true });
-  await page.locator(`button.clubhouse-vistab[data-vistab="${slug}"]`).click({ force: true });
-
-  // The checkbox is opacity:0 and 0×0; the switch beside it is what a person
-  // sees and clicks, and clicking the label is what flips the input. Playwright
-  // cannot check() an invisible input even with force, so drive the label —
-  // which is the real control anyway.
-  const toggle = page.locator(`input[name="clubhouse_page[${slug}]"]`);
-  await expect(toggle).toBeAttached();
-  if ((await toggle.isChecked()) !== visible) {
-    await page.locator('label.clubhouse-toggle', { has: toggle }).click({ force: true });
-  }
-  expect(await toggle.isChecked()).toBe(visible);
-  await page.getByRole('button', { name: /save/i }).first().click({ force: true });
-  await expect(page.locator('.notice-success')).toBeVisible();
+  await page
+    .locator('form:has(input[name="clubhouse_pages_switch"]) button[name="clubhouse_pages_submit"]')
+    .click({ force: true });
+  await expect(page.locator('.notice, .clubhouse-notice').first()).toBeVisible();
 }
 
 test('switching a page off changes what the guide says about it @wordpress', async ({ page }) => {

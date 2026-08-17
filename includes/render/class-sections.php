@@ -165,18 +165,18 @@ final class Blueworx_Clubhouse_Sections {
 	 * @param array{label:string,href:string,children?:array<int,array{label:string,href:string}>} $item
 	 */
 	private static function nav_item( array $item, string $active ): string {
-		$children = isset( $item['children'] ) && is_array( $item['children'] ) ? $item['children'] : array();
+		$children = is_array( $item['children'] ?? null ) ? $item['children'] : array();
 
 		if ( array() === $children ) {
 			// Flat branch: matches the pre-existing inline loop byte-for-byte,
 			// including its no-emptiness-guard quirk (both '' matches active as '').
-			$flat_cls = 'ch-nav__link' . ( $item['href'] === $active ? ' ch-nav__link--active' : '' );
-			return '<a class="' . $flat_cls . '" href="' . self::e( $item['href'] ) . '">' . self::e( $item['label'] ) . '</a>';
+			$flat_cls = 'ch-nav__link' . ( ( $item['href'] ?? '' ) === $active ? ' ch-nav__link--active' : '' );
+			return '<a class="' . $flat_cls . '" href="' . self::e( $item['href'] ?? '' ) . '">' . self::e( $item['label'] ?? '' ) . '</a>';
 		}
 
 		// A parent with children only counts as "here" when its own href is a
 		// real, matching target — two empty strings should not read as active.
-		$is_here = '' !== $item['href'] && $item['href'] === $active;
+		$is_here = '' !== ( $item['href'] ?? '' ) && ( $item['href'] ?? '' ) === $active;
 		$cls     = 'ch-nav__link' . ( $is_here ? ' ch-nav__link--active' : '' );
 
 		// A parent whose own target has gone still heads its children, but must
@@ -184,13 +184,13 @@ final class Blueworx_Clubhouse_Sections {
 		// still needs to be reachable by Tab (tabindex="0") so :focus-within can
 		// reveal its children with no JavaScript; a bare <span> is never in the
 		// tab order on its own.
-		$head = '' === $item['href']
-			? '<span class="' . $cls . ' ch-nav__link--static" tabindex="0" aria-haspopup="true">' . self::e( $item['label'] ) . '</span>'
-			: '<a class="' . $cls . '" href="' . self::e( $item['href'] ) . '" aria-haspopup="true">' . self::e( $item['label'] ) . '</a>';
+		$head = '' === ( $item['href'] ?? '' )
+			? '<span class="' . $cls . ' ch-nav__link--static" tabindex="0" aria-haspopup="true">' . self::e( $item['label'] ?? '' ) . '</span>'
+			: '<a class="' . $cls . '" href="' . self::e( $item['href'] ?? '' ) . '" aria-haspopup="true">' . self::e( $item['label'] ?? '' ) . '</a>';
 
 		$sub = '';
 		foreach ( $children as $child ) {
-			$sub .= '<a class="ch-nav__sublink" href="' . self::e( $child['href'] ) . '">' . self::e( $child['label'] ) . '</a>';
+			$sub .= '<a class="ch-nav__sublink" href="' . self::e( $child['href'] ?? '' ) . '">' . self::e( $child['label'] ?? '' ) . '</a>';
 		}
 
 		return '<span class="ch-nav__item ch-nav__item--has-children">' . $head
@@ -385,8 +385,8 @@ final class Blueworx_Clubhouse_Sections {
 		$pills = '';
 		foreach ( $filters as $f ) {
 			$on     = ! empty( $f['active'] ) ? ' ch-filter--on' : '';
-			$pills .= '<a class="ch-filter' . $on . '" href="' . self::e( $f['href'] ) . '"'
-				. ( ! empty( $f['active'] ) ? ' aria-current="page"' : '' ) . '>' . self::e( $f['label'] ) . '</a>';
+			$pills .= '<a class="ch-filter' . $on . '" href="' . self::e( $f['href'] ?? '' ) . '"'
+				. ( ! empty( $f['active'] ) ? ' aria-current="page"' : '' ) . '>' . self::e( $f['label'] ?? '' ) . '</a>';
 		}
 		return '<nav class="ch-filters" aria-label="' . self::e( $label ) . '">' . $pills . '</nav>';
 	}
@@ -473,8 +473,8 @@ final class Blueworx_Clubhouse_Sections {
 	public static function quick_tiles( array $tiles ): string {
 		$items = '';
 		foreach ( $tiles as $t ) {
-			$items .= '<a class="ch-tiles__tile" href="' . self::e( $t['href'] ) . '">'
-				. '<span class="ch-tiles__label">' . self::e( $t['label'] ) . '</span>'
+			$items .= '<a class="ch-tiles__tile" href="' . self::e( $t['href'] ?? '' ) . '">'
+				. '<span class="ch-tiles__label">' . self::e( $t['label'] ?? '' ) . '</span>'
 				. '<span class="ch-tiles__arrow" aria-hidden="true">→</span></a>';
 		}
 		return '<section class="ch-tiles-sec"><div class="ch-wrap"><nav class="ch-tiles" aria-label="Quick links">' . $items . '</nav></div></section>';
@@ -519,14 +519,14 @@ final class Blueworx_Clubhouse_Sections {
 			// card gets the click target back through CSS.
 			$href  = trim( (string) ( $c['href'] ?? '' ) );
 			$title = '' !== $href
-				? '<a class="ch-scard__link" href="' . self::e( $href ) . '">' . self::e( $c['title'] ) . '</a>'
-				: self::e( $c['title'] );
+				? '<a class="ch-scard__link" href="' . self::e( $href ) . '">' . self::e( $c['title'] ?? '' ) . '</a>'
+				: self::e( $c['title'] ?? '' );
 			$out  .= '<article class="ch-card' . ( '' !== $href ? ' ch-scard--linked' : '' ) . '" role="listitem">'
-				. self::media( $c['image'], $c['image_alt'], 'ch-card__media' )
+				. self::media( $c['image'] ?? '', $c['image_alt'] ?? '', 'ch-card__media' )
 				. '<div class="ch-card__scrim"></div>'
-				. '<span class="ch-card__tag">' . self::e( $c['tag'] ) . '</span>'
+				. '<span class="ch-card__tag">' . self::e( $c['tag'] ?? '' ) . '</span>'
 				. '<div class="ch-card__body"><h3 class="ch-card__title">' . $title . '</h3>'
-				. '<p class="ch-card__sub">' . self::e( $c['subtitle'] ) . '</p></div></article>';
+				. '<p class="ch-card__sub">' . self::e( $c['subtitle'] ?? '' ) . '</p></div></article>';
 		}
 		return '<div class="ch-cards" role="list">' . $out . '</div>';
 	}
@@ -588,9 +588,9 @@ final class Blueworx_Clubhouse_Sections {
 		$cards = '';
 		foreach ( $data['cards'] as $c ) {
 			$stats = '';
-			foreach ( $c['stats'] as $s ) {
-				$stats .= '<div class="ch-scard__stat"><b class="ch-scard__stat-v">' . self::e( $s['value'] )
-					. '</b><span class="ch-scard__stat-l">' . self::e( $s['label'] ) . '</span></div>';
+			foreach ( ( $c['stats'] ?? array() ) as $s ) {
+				$stats .= '<div class="ch-scard__stat"><b class="ch-scard__stat-v">' . self::e( $s['value'] ?? '' )
+					. '</b><span class="ch-scard__stat-l">' . self::e( $s['label'] ?? '' ) . '</span></div>';
 			}
 			// The title is the link, not the whole card: a card wrapped in an anchor
 			// swallows the stats and the image into one enormous link label, which
@@ -598,14 +598,14 @@ final class Blueworx_Clubhouse_Sections {
 			// The class puts the click target back over the whole card visually.
 			$href  = trim( (string) ( $c['href'] ?? '' ) );
 			$title = '' !== $href
-				? '<a class="ch-scard__link" href="' . self::e( $href ) . '">' . self::e( $c['title'] ) . '</a>'
-				: self::e( $c['title'] );
+				? '<a class="ch-scard__link" href="' . self::e( $href ) . '">' . self::e( $c['title'] ?? '' ) . '</a>'
+				: self::e( $c['title'] ?? '' );
 			$cards .= '<article class="ch-scard' . ( '' !== $href ? ' ch-scard--linked' : '' ) . '" role="listitem">'
-				. self::media( $c['image'], $c['image_alt'], 'ch-scard__media' )
-				. '<span class="ch-scard__chip">' . self::e( $c['chip'] ) . '</span>'
+				. self::media( $c['image'] ?? '', $c['image_alt'] ?? '', 'ch-scard__media' )
+				. '<span class="ch-scard__chip">' . self::e( $c['chip'] ?? '' ) . '</span>'
 				. '<div class="ch-scard__body">'
 				. '<h3 class="ch-scard__title">' . $title . '</h3>'
-				. '<p class="ch-scard__desc">' . self::e( $c['description'] ) . '</p>'
+				. '<p class="ch-scard__desc">' . self::e( $c['description'] ?? '' ) . '</p>'
 				. '<div class="ch-scard__stats">' . $stats . '</div></div></article>';
 		}
 		$head = '';
@@ -799,18 +799,18 @@ final class Blueworx_Clubhouse_Sections {
 		$h     = 2 === $level ? 'h2' : 'h3';
 		$cards = '';
 		foreach ( $tiers as $t ) {
-			$cls   = $t['recommended'] ? 'ch-tier ch-tier--pop' : 'ch-tier';
-			$btn   = $t['recommended'] ? 'ch-btn--accent' : 'ch-btn--ghost';
+			$cls   = ( $t['recommended'] ?? '' ) ? 'ch-tier ch-tier--pop' : 'ch-tier';
+			$btn   = ( $t['recommended'] ?? '' ) ? 'ch-btn--accent' : 'ch-btn--ghost';
 			$feats = '';
-			foreach ( $t['features'] as $f ) {
+			foreach ( ( $t['features'] ?? array() ) as $f ) {
 				$feats .= '<li class="ch-tier__feat" role="listitem">' . self::e( $f ) . '</li>';
 			}
 			$cards .= '<div class="' . $cls . '" role="listitem">'
-				. '<span class="ch-tier__k">' . self::e( $t['eyebrow'] ) . '</span>'
-				. '<' . $h . ' class="ch-tier__name">' . self::e( $t['name'] ) . '</' . $h . '>'
-				. '<div class="ch-tier__amt">' . self::e( $t['price'] ) . '<small>' . self::e( $t['period'] ) . '</small></div>'
+				. '<span class="ch-tier__k">' . self::e( $t['eyebrow'] ?? '' ) . '</span>'
+				. '<' . $h . ' class="ch-tier__name">' . self::e( $t['name'] ?? '' ) . '</' . $h . '>'
+				. '<div class="ch-tier__amt">' . self::e( $t['price'] ?? '' ) . '<small>' . self::e( $t['period'] ?? '' ) . '</small></div>'
 				. '<ul class="ch-tier__feats" role="list">' . $feats . '</ul>'
-				. '<a class="ch-btn ' . $btn . ' ch-tier__cta" href="' . self::e( $t['cta_href'] ) . '">' . self::e( $t['cta_label'] ) . '</a>'
+				. '<a class="ch-btn ' . $btn . ' ch-tier__cta" href="' . self::e( $t['cta_href'] ?? '' ) . '">' . self::e( $t['cta_label'] ?? '' ) . '</a>'
 				. '</div>';
 		}
 		return '<section class="ch-wrap ch-tiers-sec"><div class="ch-tiers" role="list">' . $cards . '</div></section>';
@@ -824,17 +824,17 @@ final class Blueworx_Clubhouse_Sections {
 	public static function activity_tabs( array $data ): string {
 		$fx = '';
 		foreach ( $data['fixtures'] as $f ) {
-			$fx .= '<div class="ch-fx" role="listitem"><div class="ch-fx__date"><b>' . self::e( $f['day'] ) . '</b><span>' . self::e( $f['month'] ) . '</span></div>'
-				. '<div class="ch-fx__body"><span class="ch-fx__comp">' . self::e( $f['competition'] ) . '</span>'
-				. '<span class="ch-fx__match">' . self::e( $f['matchup'] ) . '</span></div>'
-				. '<span class="ch-fx__time">' . self::e( $f['time'] ) . '</span></div>';
+			$fx .= '<div class="ch-fx" role="listitem"><div class="ch-fx__date"><b>' . self::e( $f['day'] ?? '' ) . '</b><span>' . self::e( $f['month'] ?? '' ) . '</span></div>'
+				. '<div class="ch-fx__body"><span class="ch-fx__comp">' . self::e( $f['competition'] ?? '' ) . '</span>'
+				. '<span class="ch-fx__match">' . self::e( $f['matchup'] ?? '' ) . '</span></div>'
+				. '<span class="ch-fx__time">' . self::e( $f['time'] ?? '' ) . '</span></div>';
 		}
 		$ev = '';
 		foreach ( $data['events'] as $e ) {
-			$ev .= '<div class="ch-evt" role="listitem"><div class="ch-evt__meta"><span class="ch-evt__tag">' . self::e( $e['tag'] ) . '</span>'
-				. '<span class="ch-evt__date">' . self::e( $e['date'] ) . '</span></div>'
-				. '<h3 class="ch-evt__title">' . self::e( $e['title'] ) . '</h3>'
-				. '<p class="ch-evt__detail">' . self::e( $e['detail'] ) . '</p></div>';
+			$ev .= '<div class="ch-evt" role="listitem"><div class="ch-evt__meta"><span class="ch-evt__tag">' . self::e( $e['tag'] ?? '' ) . '</span>'
+				. '<span class="ch-evt__date">' . self::e( $e['date'] ?? '' ) . '</span></div>'
+				. '<h3 class="ch-evt__title">' . self::e( $e['title'] ?? '' ) . '</h3>'
+				. '<p class="ch-evt__detail">' . self::e( $e['detail'] ?? '' ) . '</p></div>';
 		}
 		return '<section class="ch-sec ch-sec--alt"><div class="ch-wrap">'
 			. '<span class="ch-eyebrow">' . self::e( $data['eyebrow'] ) . '</span>'
@@ -919,10 +919,10 @@ final class Blueworx_Clubhouse_Sections {
 	public static function news_cards( array $data ): string {
 		$cards = '';
 		foreach ( $data['cards'] as $c ) {
-			$body = self::media( $c['image'], $c['image_alt'], 'ch-news__media' )
-				. '<div class="ch-news__meta"><span class="ch-news__tag">' . self::e( $c['tag'] ) . '</span>'
-				. '<span class="ch-news__date">' . self::e( $c['date'] ) . '</span></div>'
-				. '<h3 class="ch-news__title">' . self::e( $c['title'] ) . '</h3>';
+			$body = self::media( $c['image'] ?? '', $c['image_alt'] ?? '', 'ch-news__media' )
+				. '<div class="ch-news__meta"><span class="ch-news__tag">' . self::e( $c['tag'] ?? '' ) . '</span>'
+				. '<span class="ch-news__date">' . self::e( $c['date'] ?? '' ) . '</span></div>'
+				. '<h3 class="ch-news__title">' . self::e( $c['title'] ?? '' ) . '</h3>';
 			// A card that has a story behind it is a link; one that does not stays an
 			// article, because a card that looks clickable and is not is worse than a
 			// card that never invited the click. role="listitem" is dropped on the
@@ -972,14 +972,14 @@ final class Blueworx_Clubhouse_Sections {
 			// Both halves, or neither. A label with no link rendered a button that
 			// looked live and reloaded the page when pressed — two of them shipped
 			// on the demo Events page. Same rule as the contact details.
-			$cta = '' !== $c['cta_label'] && '' !== trim( (string) $c['cta_href'] )
-				? '<a class="ch-btn ch-btn--ghost ch-event__cta" href="' . self::e( $c['cta_href'] ) . '">' . self::e( $c['cta_label'] ) . '</a>'
+			$cta = '' !== ( $c['cta_label'] ?? '' ) && '' !== trim( (string) ( $c['cta_href'] ?? '' ) )
+				? '<a class="ch-btn ch-btn--ghost ch-event__cta" href="' . self::e( $c['cta_href'] ?? '' ) . '">' . self::e( $c['cta_label'] ?? '' ) . '</a>'
 				: '';
 			$cards .= '<article class="ch-event" role="listitem">'
-				. '<div class="ch-event__meta"><span class="ch-event__tag">' . self::e( $c['tag'] ) . '</span>'
-				. '<span class="ch-event__date">' . self::e( $c['date'] ) . '</span></div>'
-				. '<h3 class="ch-event__title">' . self::e( $c['title'] ) . '</h3>'
-				. '<p class="ch-event__detail">' . self::e( $c['detail'] ) . '</p>'
+				. '<div class="ch-event__meta"><span class="ch-event__tag">' . self::e( $c['tag'] ?? '' ) . '</span>'
+				. '<span class="ch-event__date">' . self::e( $c['date'] ?? '' ) . '</span></div>'
+				. '<h3 class="ch-event__title">' . self::e( $c['title'] ?? '' ) . '</h3>'
+				. '<p class="ch-event__detail">' . self::e( $c['detail'] ?? '' ) . '</p>'
 				. $cta . '</article>';
 		}
 		return '<section class="ch-sec"><div class="ch-wrap">'
@@ -995,9 +995,9 @@ final class Blueworx_Clubhouse_Sections {
 		$rows = '';
 		foreach ( $data['rows'] as $r ) {
 			$rows .= '<div class="ch-archive__row" role="listitem">'
-				. '<span class="ch-archive__date">' . self::e( $r['date'] ) . '</span>'
-				. '<span class="ch-archive__tag">' . self::e( $r['tag'] ) . '</span>'
-				. '<span class="ch-archive__title">' . self::e( $r['title'] ) . '</span></div>';
+				. '<span class="ch-archive__date">' . self::e( $r['date'] ?? '' ) . '</span>'
+				. '<span class="ch-archive__tag">' . self::e( $r['tag'] ?? '' ) . '</span>'
+				. '<span class="ch-archive__title">' . self::e( $r['title'] ?? '' ) . '</span></div>';
 		}
 		return '<section class="ch-sec ch-sec--alt"><div class="ch-wrap">'
 			. '<h2 class="ch-sec__title ch-sec__title--sm">' . self::e( $data['heading'] ) . '</h2>'
@@ -1058,12 +1058,12 @@ final class Blueworx_Clubhouse_Sections {
 		$cols = '';
 		foreach ( $data['columns'] as $col ) {
 			$links = '';
-			foreach ( $col['links'] as $l ) {
-				$links .= '<a class="ch-footer__link" href="' . self::e( $l['href'] ) . '">' . self::e( $l['label'] ) . '</a>';
+			foreach ( ( $col['links'] ?? array() ) as $l ) {
+				$links .= '<a class="ch-footer__link" href="' . self::e( $l['href'] ?? '' ) . '">' . self::e( $l['label'] ?? '' ) . '</a>';
 			}
 			// h2, not h4: the footer is its own landmark and nothing above these sits
 			// at h3, so h4 jumped two levels and broke heading navigation on every page.
-			$cols .= '<div class="ch-footer__col"><h2 class="ch-footer__h">' . self::e( $col['title'] ) . '</h2>' . $links . '</div>';
+			$cols .= '<div class="ch-footer__col"><h2 class="ch-footer__h">' . self::e( $col['title'] ?? '' ) . '</h2>' . $links . '</div>';
 		}
 		// Same rule as the contact form: a signup box that swallows an address and
 		// says nothing is worse than none, so the input only appears once a real
@@ -1079,7 +1079,7 @@ final class Blueworx_Clubhouse_Sections {
 			. $nl_form . '</div>';
 		$legal = '';
 		foreach ( $data['legal'] as $l ) {
-			$legal .= '<a class="ch-footer__legal-link" href="' . self::e( $l['href'] ) . '">' . self::e( $l['label'] ) . '</a>';
+			$legal .= '<a class="ch-footer__legal-link" href="' . self::e( $l['href'] ?? '' ) . '">' . self::e( $l['label'] ?? '' ) . '</a>';
 		}
 		$copyright = (string) ( $data['copyright'] ?? '' );
 		// The bottom bar carries the copyright even on a club that has set no legal
@@ -1117,8 +1117,8 @@ final class Blueworx_Clubhouse_Sections {
 		$cards = '';
 		foreach ( $data['cards'] as $c ) {
 			$cards .= '<article class="ch-benefit" role="listitem"><span class="ch-benefit__dot" aria-hidden="true"></span>'
-				. '<h3 class="ch-benefit__title">' . self::e( $c['title'] ) . '</h3>'
-				. '<p class="ch-benefit__desc">' . self::e( $c['description'] ) . '</p></article>';
+				. '<h3 class="ch-benefit__title">' . self::e( $c['title'] ?? '' ) . '</h3>'
+				. '<p class="ch-benefit__desc">' . self::e( $c['description'] ?? '' ) . '</p></article>';
 		}
 		return '<section class="ch-sec"><div class="ch-wrap">'
 			. '<span class="ch-eyebrow">' . self::e( $data['eyebrow'] ) . '</span>'
@@ -1135,9 +1135,9 @@ final class Blueworx_Clubhouse_Sections {
 	private static function person_avatar( array $p ): string {
 		$photo = (string) ( $p['photo'] ?? '' );
 		if ( '' !== $photo ) {
-			return '<img class="ch-person__avatar ch-person__photo" src="' . self::e( $photo ) . '" alt="' . self::e( $p['name'] ) . '">';
+			return '<img class="ch-person__avatar ch-person__photo" src="' . self::e( $photo ) . '" alt="' . self::e( $p['name'] ?? '' ) . '">';
 		}
-		return '<div class="ch-person__avatar ch-avatar" aria-hidden="true">' . self::e( self::initials( $p['name'] ) ) . '</div>';
+		return '<div class="ch-person__avatar ch-avatar" aria-hidden="true">' . self::e( self::initials( ( $p['name'] ?? '' ) ) ) . '</div>';
 	}
 
 	/** @param array{eyebrow:string,heading:string,people:array<int,array{name:string,role:string,email:string,photo?:string}>} $data */
@@ -1147,12 +1147,12 @@ final class Blueworx_Clubhouse_Sections {
 		}
 		$people = '';
 		foreach ( $data['people'] as $p ) {
-			$email = '' !== $p['email']
-				? '<a class="ch-person__email" href="mailto:' . self::e( $p['email'] ) . '">' . self::e( $p['email'] ) . '</a>' : '';
+			$email = '' !== ( $p['email'] ?? '' )
+				? '<a class="ch-person__email" href="mailto:' . self::e( $p['email'] ?? '' ) . '">' . self::e( $p['email'] ?? '' ) . '</a>' : '';
 			$people .= '<article class="ch-person" role="listitem">'
 				. self::person_avatar( $p )
-				. '<span class="ch-person__role">' . self::e( $p['role'] ) . '</span>'
-				. '<h3 class="ch-person__name">' . self::e( $p['name'] ) . '</h3>' . $email . '</article>';
+				. '<span class="ch-person__role">' . self::e( $p['role'] ?? '' ) . '</span>'
+				. '<h3 class="ch-person__name">' . self::e( $p['name'] ?? '' ) . '</h3>' . $email . '</article>';
 		}
 		return '<section class="ch-sec"><div class="ch-wrap">'
 			. '<span class="ch-eyebrow">' . self::e( $data['eyebrow'] ) . '</span>'
@@ -1164,9 +1164,9 @@ final class Blueworx_Clubhouse_Sections {
 	public static function timeline( array $data ): string {
 		$rows = '';
 		foreach ( $data['milestones'] as $m ) {
-			$rows .= '<div class="ch-milestone" role="listitem"><div class="ch-milestone__year">' . self::e( $m['year'] ) . '</div>'
-				. '<div class="ch-milestone__body"><h3 class="ch-milestone__title">' . self::e( $m['title'] ) . '</h3>'
-				. '<p class="ch-milestone__desc">' . self::e( $m['desc'] ) . '</p></div></div>';
+			$rows .= '<div class="ch-milestone" role="listitem"><div class="ch-milestone__year">' . self::e( $m['year'] ?? '' ) . '</div>'
+				. '<div class="ch-milestone__body"><h3 class="ch-milestone__title">' . self::e( $m['title'] ?? '' ) . '</h3>'
+				. '<p class="ch-milestone__desc">' . self::e( $m['desc'] ?? '' ) . '</p></div></div>';
 		}
 		return '<section class="ch-sec"><div class="ch-wrap">'
 			. '<span class="ch-eyebrow">' . self::e( $data['eyebrow'] ) . '</span>'
@@ -1192,8 +1192,8 @@ final class Blueworx_Clubhouse_Sections {
 		}
 		$pol = '';
 		foreach ( $data['policies'] as $p ) {
-			$pol .= '<div class="ch-policy" role="listitem"><h4 class="ch-policy__title">' . self::e( $p['title'] ) . '</h4>'
-				. '<p class="ch-policy__desc">' . self::e( $p['desc'] ) . '</p></div>';
+			$pol .= '<div class="ch-policy" role="listitem"><h4 class="ch-policy__title">' . self::e( $p['title'] ?? '' ) . '</h4>'
+				. '<p class="ch-policy__desc">' . self::e( $p['desc'] ?? '' ) . '</p></div>';
 		}
 		return '<section class="ch-sec"><div class="ch-wrap">'
 			. '<span class="ch-eyebrow">' . self::e( $data['eyebrow'] ) . '</span>'
@@ -1209,9 +1209,9 @@ final class Blueworx_Clubhouse_Sections {
 	public static function step_grid( array $data ): string {
 		$steps = '';
 		foreach ( $data['steps'] as $s ) {
-			$steps .= '<article class="ch-step" role="listitem"><span class="ch-step__num">' . self::e( $s['number'] ) . '</span>'
-				. '<h3 class="ch-step__title">' . self::e( $s['title'] ) . '</h3>'
-				. '<p class="ch-step__desc">' . self::e( $s['description'] ) . '</p></article>';
+			$steps .= '<article class="ch-step" role="listitem"><span class="ch-step__num">' . self::e( $s['number'] ?? '' ) . '</span>'
+				. '<h3 class="ch-step__title">' . self::e( $s['title'] ?? '' ) . '</h3>'
+				. '<p class="ch-step__desc">' . self::e( $s['description'] ?? '' ) . '</p></article>';
 		}
 		return '<section class="ch-sec"><div class="ch-wrap">'
 			. '<span class="ch-eyebrow">' . self::e( $data['eyebrow'] ) . '</span>'
@@ -1225,8 +1225,8 @@ final class Blueworx_Clubhouse_Sections {
 		foreach ( $data['items'] as $it ) {
 			$open   = ! empty( $it['open'] ) ? ' open' : '';
 			$items .= '<details class="ch-faq__item"' . $open . '>'
-				. '<summary class="ch-faq__q">' . self::e( $it['question'] ) . '<span class="ch-faq__mark" aria-hidden="true"></span></summary>'
-				. '<p class="ch-faq__a">' . self::e( $it['answer'] ) . '</p></details>';
+				. '<summary class="ch-faq__q">' . self::e( $it['question'] ?? '' ) . '<span class="ch-faq__mark" aria-hidden="true"></span></summary>'
+				. '<p class="ch-faq__a">' . self::e( $it['answer'] ?? '' ) . '</p></details>';
 		}
 		return '<section class="ch-sec"><div class="ch-wrap ch-faq-wrap">'
 			. '<span class="ch-eyebrow">' . self::e( $data['eyebrow'] ) . '</span>'
@@ -1485,22 +1485,22 @@ final class Blueworx_Clubhouse_Sections {
 		$months = '';
 		foreach ( $data['months'] as $m ) {
 			$rows = '';
-			foreach ( $m['rows'] as $r ) {
-				if ( '' === $r['outcome'] ) {
+			foreach ( ( $m['rows'] ?? array() ) as $r ) {
+				if ( '' === ( $r['outcome'] ?? '' ) ) {
 					$status = '<span class="ch-cal__soon">Upcoming</span>';
 				} else {
-					$o      = strtolower( $r['outcome'] );
+					$o      = strtolower( ( $r['outcome'] ?? '' ) );
 					$mod    = in_array( $o, array( 'w', 'l', 'd' ), true ) ? $o : 'd';
-					$status = '<span class="ch-badge ch-badge--' . $mod . '">' . self::e( $r['outcome'] ) . '</span>';
+					$status = '<span class="ch-badge ch-badge--' . $mod . '">' . self::e( $r['outcome'] ?? '' ) . '</span>';
 				}
 				$rows .= '<div class="ch-cal__row" role="listitem">'
-					. '<span class="ch-cal__date">' . self::e( $r['date'] ) . '</span>'
-					. '<div class="ch-cal__body"><span class="ch-cal__comp">' . self::e( $r['competition'] ) . '</span>'
-					. '<span class="ch-cal__match">' . self::e( $r['matchup'] ) . '</span></div>'
-					. '<span class="ch-cal__detail">' . self::e( $r['detail'] ) . '</span>'
+					. '<span class="ch-cal__date">' . self::e( $r['date'] ?? '' ) . '</span>'
+					. '<div class="ch-cal__body"><span class="ch-cal__comp">' . self::e( $r['competition'] ?? '' ) . '</span>'
+					. '<span class="ch-cal__match">' . self::e( $r['matchup'] ?? '' ) . '</span></div>'
+					. '<span class="ch-cal__detail">' . self::e( $r['detail'] ?? '' ) . '</span>'
 					. $status . '</div>';
 			}
-			$months .= '<div class="ch-cal__month"><h3 class="ch-cal__mlabel">' . self::e( $m['label'] ) . '</h3>'
+			$months .= '<div class="ch-cal__month"><h3 class="ch-cal__mlabel">' . self::e( $m['label'] ?? '' ) . '</h3>'
 				. '<div class="ch-cal__rows" role="list">' . $rows . '</div></div>';
 		}
 		return '<section class="ch-sec"><div class="ch-wrap">'
@@ -1588,15 +1588,15 @@ final class Blueworx_Clubhouse_Sections {
 	public static function news_featured( array $data ): string {
 		$p = $data['post'];
 		return '<section class="ch-featured"><div class="ch-wrap">'
-			. '<a class="ch-featured__card" href="' . self::e( $p['href'] ) . '">'
-			. self::media( $p['image'], $p['image_alt'], 'ch-featured__media' )
+			. '<a class="ch-featured__card" href="' . self::e( $p['href'] ?? '' ) . '">'
+			. self::media( $p['image'] ?? '', $p['image_alt'] ?? '', 'ch-featured__media' )
 			. '<div class="ch-featured__body">'
 			. '<div class="ch-featured__meta">'
 			. '<span class="ch-featured__flag">' . self::e( $data['label'] ) . '</span>'
-			. '<span class="ch-featured__cat">' . self::e( $p['category'] ) . '</span>'
+			. '<span class="ch-featured__cat">' . self::e( $p['category'] ?? '' ) . '</span>'
 			. '<span class="ch-featured__date">' . self::e( self::dateline( $p ) ) . '</span></div>'
-			. '<h2 class="ch-featured__title">' . self::e( $p['title'] ) . '</h2>'
-			. '<p class="ch-featured__excerpt">' . self::e( $p['excerpt'] ) . '</p>'
+			. '<h2 class="ch-featured__title">' . self::e( $p['title'] ?? '' ) . '</h2>'
+			. '<p class="ch-featured__excerpt">' . self::e( $p['excerpt'] ?? '' ) . '</p>'
 			. '<span class="ch-featured__cta">' . self::e( $data['cta'] ) . '</span>'
 			. '</div></a></div></section>';
 	}
@@ -1615,19 +1615,19 @@ final class Blueworx_Clubhouse_Sections {
 		$pills = '';
 		foreach ( $data['filters'] as $f ) {
 			$on     = ! empty( $f['active'] ) ? ' ch-filter--on' : '';
-			$pills .= '<a class="ch-filter' . $on . '" href="' . self::e( $f['href'] ) . '">' . self::e( $f['label'] ) . '</a>';
+			$pills .= '<a class="ch-filter' . $on . '" href="' . self::e( $f['href'] ?? '' ) . '">' . self::e( $f['label'] ?? '' ) . '</a>';
 		}
 
 		$cards = '';
 		foreach ( $data['posts'] as $p ) {
 			$cards .= '<article class="ch-postcard" role="listitem">'
-				. '<a class="ch-postcard__link" href="' . self::e( (string) $p['href'] ) . '">'
-				. self::media( (string) $p['image'], (string) $p['image_alt'], 'ch-postcard__media' )
+				. '<a class="ch-postcard__link" href="' . self::e( (string) ( $p['href'] ?? '' ) ) . '">'
+				. self::media( (string) ( $p['image'] ?? '' ), (string) ( $p['image_alt'] ?? '' ), 'ch-postcard__media' )
 				. '<div class="ch-postcard__meta">'
-				. '<span class="ch-postcard__cat">' . self::e( (string) $p['category'] ) . '</span>'
+				. '<span class="ch-postcard__cat">' . self::e( (string) ( $p['category'] ?? '' ) ) . '</span>'
 				. '<span class="ch-postcard__date">' . self::e( self::dateline( $p ) ) . '</span></div>'
-				. '<h3 class="ch-postcard__title">' . self::e( (string) $p['title'] ) . '</h3>'
-				. '<p class="ch-postcard__excerpt">' . self::e( (string) $p['excerpt'] ) . '</p>'
+				. '<h3 class="ch-postcard__title">' . self::e( (string) ( $p['title'] ?? '' ) ) . '</h3>'
+				. '<p class="ch-postcard__excerpt">' . self::e( (string) ( $p['excerpt'] ?? '' ) ) . '</p>'
 				. '</a></article>';
 		}
 
@@ -1660,8 +1660,8 @@ final class Blueworx_Clubhouse_Sections {
 		$numbers = '';
 		foreach ( $pager['pages_list'] as $p ) {
 			$on       = ! empty( $p['active'] ) ? ' ch-pager__no--on' : '';
-			$numbers .= '<a class="ch-pager__no' . $on . '" href="' . self::e( $p['href'] ) . '"'
-				. ( ! empty( $p['active'] ) ? ' aria-current="page"' : '' ) . '>' . self::e( $p['label'] ) . '</a>';
+			$numbers .= '<a class="ch-pager__no' . $on . '" href="' . self::e( $p['href'] ?? '' ) . '"'
+				. ( ! empty( $p['active'] ) ? ' aria-current="page"' : '' ) . '>' . self::e( $p['label'] ?? '' ) . '</a>';
 		}
 		// A disabled button at either end is emitted as a span, not a dead link:
 		// a link to the page you are already on is a trap for keyboard and screen
@@ -1691,24 +1691,24 @@ final class Blueworx_Clubhouse_Sections {
 	 */
 	public static function post_head( array $data ): string {
 		$p      = $data['post'];
-		$author = (array) $p['author'];
-		$avatar = '' !== (string) $author['initials']
-			? '<span class="ch-byline__avatar" aria-hidden="true">' . self::e( (string) $author['initials'] ) . '</span>'
+		$author = (array) ( $p['author'] ?? array() );
+		$avatar = '' !== (string) ( $author['initials'] ?? '' )
+			? '<span class="ch-byline__avatar" aria-hidden="true">' . self::e( (string) ( $author['initials'] ?? '' ) ) . '</span>'
 			: '';
-		$byline = '' !== (string) $author['name']
+		$byline = '' !== (string) ( $author['name'] ?? '' )
 			? '<div class="ch-byline">' . $avatar
-				. '<span class="ch-byline__who"><span class="ch-byline__name">' . self::e( (string) $author['name'] ) . '</span>'
-				. ( '' !== (string) $author['role'] ? '<span class="ch-byline__role">' . self::e( (string) $author['role'] ) . '</span>' : '' )
+				. '<span class="ch-byline__who"><span class="ch-byline__name">' . self::e( (string) ( $author['name'] ?? '' ) ) . '</span>'
+				. ( '' !== (string) ( $author['role'] ?? '' ) ? '<span class="ch-byline__role">' . self::e( (string) ( $author['role'] ?? '' ) ) . '</span>' : '' )
 				. '</span></div>'
 			: '';
 
 		return '<section class="ch-posthead"><div class="ch-wrap"><div class="ch-posthead__in">'
 			. '<a class="ch-posthead__back" href="' . self::e( $data['back_href'] ) . '">← ' . self::e( $data['back_label'] ) . '</a>'
 			. '<div class="ch-posthead__meta">'
-			. '<span class="ch-posthead__cat">' . self::e( (string) $p['category'] ) . '</span>'
+			. '<span class="ch-posthead__cat">' . self::e( (string) ( $p['category'] ?? '' ) ) . '</span>'
 			. '<span class="ch-posthead__date">' . self::e( self::dateline( $p ) ) . '</span></div>'
-			. '<h1 class="ch-posthead__title">' . self::e( (string) $p['title'] ) . '</h1>'
-			. ( '' !== (string) $p['standfirst'] ? '<p class="ch-posthead__standfirst">' . self::e( (string) $p['standfirst'] ) . '</p>' : '' )
+			. '<h1 class="ch-posthead__title">' . self::e( (string) ( $p['title'] ?? '' ) ) . '</h1>'
+			. ( '' !== (string) ( $p['standfirst'] ?? '' ) ? '<p class="ch-posthead__standfirst">' . self::e( (string) ( $p['standfirst'] ?? '' ) ) . '</p>' : '' )
 			. $byline
 			. '</div></div></section>';
 	}
@@ -1883,12 +1883,12 @@ final class Blueworx_Clubhouse_Sections {
 		$cards = '';
 		foreach ( $data['posts'] as $p ) {
 			$cards .= '<article class="ch-postcard ch-postcard--sm" role="listitem">'
-				. '<a class="ch-postcard__link" href="' . self::e( (string) $p['href'] ) . '">'
-				. self::media( (string) $p['image'], (string) $p['image_alt'], 'ch-postcard__media' )
+				. '<a class="ch-postcard__link" href="' . self::e( (string) ( $p['href'] ?? '' ) ) . '">'
+				. self::media( (string) ( $p['image'] ?? '' ), (string) ( $p['image_alt'] ?? '' ), 'ch-postcard__media' )
 				. '<div class="ch-postcard__meta">'
-				. '<span class="ch-postcard__cat">' . self::e( (string) $p['category'] ) . '</span>'
-				. '<span class="ch-postcard__date">' . self::e( (string) $p['date'] ) . '</span></div>'
-				. '<h3 class="ch-postcard__title">' . self::e( (string) $p['title'] ) . '</h3>'
+				. '<span class="ch-postcard__cat">' . self::e( (string) ( $p['category'] ?? '' ) ) . '</span>'
+				. '<span class="ch-postcard__date">' . self::e( (string) ( $p['date'] ?? '' ) ) . '</span></div>'
+				. '<h3 class="ch-postcard__title">' . self::e( (string) ( $p['title'] ?? '' ) ) . '</h3>'
 				. '</a></article>';
 		}
 		return '<section class="ch-sec ch-sec--alt ch-related"><div class="ch-wrap">'
@@ -1928,12 +1928,12 @@ final class Blueworx_Clubhouse_Sections {
 		$cols = '';
 		foreach ( $data['columns'] as $c ) {
 			$lines = '';
-			foreach ( $c['lines'] as $line ) {
+			foreach ( ( $c['lines'] ?? array() ) as $line ) {
 				$lines .= '<span class="ch-social__col-line">' . self::e( $line ) . '</span>';
 			}
-			$link = ( '' !== $c['link_label'] && '' !== $c['link_href'] )
-				? '<a class="ch-social__col-link" href="' . self::e( $c['link_href'] ) . '">' . self::e( $c['link_label'] ) . ' →</a>' : '';
-			$cols .= '<div class="ch-social__col" role="listitem"><div class="ch-social__col-label">' . self::e( $c['label'] ) . '</div>'
+			$link = ( '' !== ( $c['link_label'] ?? '' ) && '' !== ( $c['link_href'] ?? '' ) )
+				? '<a class="ch-social__col-link" href="' . self::e( $c['link_href'] ?? '' ) . '">' . self::e( $c['link_label'] ?? '' ) . ' →</a>' : '';
+			$cols .= '<div class="ch-social__col" role="listitem"><div class="ch-social__col-label">' . self::e( $c['label'] ?? '' ) . '</div>'
 				. '<div class="ch-social__col-body">' . $lines . $link . '</div></div>';
 		}
 		if ( '' !== $cols ) {

@@ -46,16 +46,19 @@ final class Blueworx_Clubhouse_Blocks_Installer {
 	public static function install(): void {
 		$storage     = new Blueworx_Clubhouse_Options_Storage();
 		$composition = new Blueworx_Clubhouse_Page_Composition( $storage );
-		if ( $composition->is_configured() ) {
-			return;
-		}
-		$seeder = new Blueworx_Clubhouse_Block_Seeder(
+		$seeder      = new Blueworx_Clubhouse_Block_Seeder(
 			new Blueworx_Clubhouse_Block_Library( $storage ),
 			$composition
 		);
-		$seeder->migrate(
-			new Blueworx_Clubhouse_Content_Store( $storage ),
-			new Blueworx_Clubhouse_Visibility( $storage )
-		);
+		$content    = new Blueworx_Clubhouse_Content_Store( $storage );
+		$visibility = new Blueworx_Clubhouse_Visibility( $storage );
+
+		if ( $composition->is_configured() ) {
+			// Composed already, so its pages are the owner's business and are left
+			// alone. A block that goes on no page is not — see Block_Seeder::adopt().
+			$seeder->adopt( $content, $visibility );
+			return;
+		}
+		$seeder->migrate( $content, $visibility );
 	}
 }

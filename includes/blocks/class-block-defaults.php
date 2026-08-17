@@ -953,16 +953,31 @@ final class Blueworx_Clubhouse_Block_Defaults {
 	}
 
 	/**
-	 * The starter policy wording. Deliberately narrow: it says only what is true
-	 * of a stock Clubhouse site and names the things only the club can answer
-	 * rather than inventing them. A generated policy that confidently describes
-	 * data sharing nobody does is worse than an obviously unfinished one,
-	 * because only the second gets corrected.
+	 * The starter policy wording.
+	 *
+	 * Two kinds of paragraph. Most say only what is true of a stock Clubhouse
+	 * site — those are safe as they stand. The rest answer questions only the
+	 * club can answer, and those are worked examples, each opening with the
+	 * sentence EXAMPLE_LEAD holds so nobody mistakes one for a decision their
+	 * club has made.
+	 *
+	 * Examples rather than blanks because a club reads a whole page and edits
+	 * it; a page of instructions is one nobody starts. They are still not a
+	 * policy: a site must not take real sign-ups until a person has been
+	 * through and replaced every one. Guarded by a test that counts them.
 	 *
 	 * @return array<string,mixed>
 	 */
+	/**
+	 * How every worked example opens. One string, so the Setup progress check
+	 * and the guide can both count what is left to write without either of them
+	 * carrying its own copy of the wording.
+	 */
+	public const EXAMPLE_LEAD = 'Example wording — replace this with your club’s own.';
+
 	private static function legal_body( string $page, Blueworx_Clubhouse_Page_State $state ): array {
 		$club = $state->club();
+		$eg   = static fn( string $body ): string => self::EXAMPLE_LEAD . "\n\n" . $body;
 		if ( 'privacy' === $page ) {
 			return array(
 				'heading' => '',
@@ -970,13 +985,13 @@ final class Blueworx_Clubhouse_Block_Defaults {
 					array(
 						'heading' => 'Who we are',
 						'body'    => $club . ' runs this website. If you have a question about anything on this page, or you want to see, correct or delete what we hold about you, contact us through the contact page and say so — we will answer.'
-							. "\n\n" . 'ADD: your club’s postal address, and the name or role of whoever handles data questions. If your club is registered with the ICO, add your registration number here.',
+							. "\n\n" . $eg( 'You can write to us at The Clubhouse, Riverside Lane, Anytown AT1 2CD. Data questions go to our Membership Secretary, who is the person responsible for how we handle your details. We are registered with the Information Commissioner’s Office under registration number ZA000000.' ),
 					),
 					array(
 						'heading' => 'What we collect, and when',
 						'body'    => 'We only collect what you type into a form on this site, and only when you choose to send it.'
 							. "\n\n" . 'Getting in touch: your name, email address and whatever you write in the message. Joining or paying: your name, email address and billing details, which go to our payment provider — we never see or store your card number. Signing in: your email address and password, held by the website itself. Booking a session: your name, email address and phone number.'
-							. "\n\n" . 'ADD: anything else your club collects — membership forms, medical or emergency-contact details for juniors, photography consent.',
+							. "\n\n" . $eg( 'Away from the website, our membership form asks for your date of birth and an emergency contact. For junior members we also ask about medical conditions and allergies, and whether you are happy for your child to appear in club photographs. You can say no to the photographs and still be a member.' ),
 					),
 					array(
 						'heading' => 'Why we hold it',
@@ -985,16 +1000,16 @@ final class Blueworx_Clubhouse_Block_Defaults {
 					array(
 						'heading' => 'Who else sees it',
 						'body'    => 'Our website host, and our payment provider when you pay. Both handle it on our behalf and are not allowed to use it for anything else.'
-							. "\n\n" . 'ADD: anyone else your club shares data with — a league or governing body, an email newsletter service, a booking system.',
+							. "\n\n" . $eg( 'We also send member names and dates of birth to our county association and our national governing body, because a registered player has to be registered with them too. Our newsletter is sent through an email service that holds the address you gave us, and nothing else.' ),
 					),
 					array(
 						'heading' => 'Cookies',
 						'body'    => 'A cookie is a small file a website leaves on your device. This site sets one when you sign in, so it can remember you between pages. Our shop and payment pages set their own when you use them, which is what makes paying work.'
-							. "\n\n" . 'ADD: if your club adds analytics or advertising tools, say so here — those are the ones people care about.',
+							. "\n\n" . $eg( 'We do not use analytics or advertising cookies, so there is nothing here that follows you to other websites. If that changes we will say so on this page before it does.' ),
 					),
 					array(
 						'heading' => 'How long we keep it',
-						'body'    => 'ADD: how long your club keeps enquiries, membership records and payment records. Payment records usually have to be kept for six years; an enquiry rarely needs keeping at all once it is answered.',
+						'body'    => $eg( 'We delete an enquiry once it has been answered and there is nothing left to follow up. Membership records are kept while you are a member and for a year after you leave, in case you come back. Payment records are kept for six years, because we have to.' ),
 					),
 					array(
 						'heading' => 'Your rights',
@@ -1002,7 +1017,7 @@ final class Blueworx_Clubhouse_Block_Defaults {
 					),
 					array(
 						'heading' => 'Children',
-						'body'    => 'ADD: how your club handles junior members’ details, and who gives consent for them.',
+						'body'    => $eg( 'A member under 16 is signed up by a parent or guardian, who gives consent on their behalf and can withdraw it at any time. We hold a junior’s details only for as long as they play with us, and we do not send them email — anything we have to say goes to the parent or guardian.' ),
 					),
 				),
 			);
@@ -1016,19 +1031,19 @@ final class Blueworx_Clubhouse_Block_Defaults {
 				),
 				array(
 					'heading' => 'Membership and payments',
-					'body'    => 'ADD: what a membership includes and for how long, when payment is taken, whether it renews automatically, and how somebody cancels. If you take payments, this is the section that matters most — write it before you sell anything.',
+					'body'    => $eg( 'A membership runs for twelve months from the day you join and includes use of the club facilities, entry to club sessions, and a vote at the AGM. Payment is taken in full when you join. It does not renew on its own — we will email you before it runs out and you decide. You can cancel at any time by telling us; the membership then runs to the end of the year you have paid for.' ),
 				),
 				array(
 					'heading' => 'Refunds',
-					'body'    => 'ADD: your club’s refund position — for memberships, for sessions cancelled by a member, and for sessions cancelled by the club.',
+					'body'    => $eg( 'Change your mind about a new membership within fourteen days and we will refund it in full, as long as you have not used the facilities. After that we do not refund part of a year. A session you cancel in time costs you nothing; a session the club cancels is always refunded or moved, whichever you prefer.' ),
 				),
 				array(
 					'heading' => 'Bookings',
-					'body'    => 'ADD: how far ahead sessions can be booked, how much notice is needed to cancel one, and what happens if somebody does not turn up.',
+					'body'    => $eg( 'Sessions open for booking two weeks ahead. Cancel at least 24 hours before and there is nothing to pay. Miss a session without telling us and we count it as taken — three of those in a season and we may hold off taking your bookings for a while, because an empty court is one nobody else could use.' ),
 				),
 				array(
 					'heading' => 'Behaviour at the club',
-					'body'    => 'ADD: link to your club’s code of conduct, safeguarding policy and any ground rules, or write the short version here.',
+					'body'    => $eg( 'The short version: treat people, the staff and the place the way you would want them treated. Our code of conduct and safeguarding policy set out the rest, and every member, coach and volunteer agrees to both on joining — ask us for a copy. Serious or repeated breaches can end a membership.' ),
 				),
 				array(
 					'heading' => 'What we can and cannot promise',

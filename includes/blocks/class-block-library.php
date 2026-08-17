@@ -83,6 +83,21 @@ final class Blueworx_Clubhouse_Block_Library {
 		return $this->all()[ $id ] ?? null;
 	}
 
+	/**
+	 * The id of the block seeded from one of the plugin's own content addresses,
+	 * or '' when this site has none — a block an owner deleted, or a site not yet
+	 * composed. Only seeded and migrated blocks carry an address; one an owner
+	 * made is reachable by id alone.
+	 */
+	public function by_address( string $address ): string {
+		foreach ( $this->all() as $id => $block ) {
+			if ( (string) ( $block['defaults_key'] ?? '' ) === $address ) {
+				return (string) $id;
+			}
+		}
+		return '';
+	}
+
 	/** @return array<string,array> */
 	public function of_type( string $type ): array {
 		return array_filter(

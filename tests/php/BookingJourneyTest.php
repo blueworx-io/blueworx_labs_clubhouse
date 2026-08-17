@@ -30,18 +30,6 @@ final class BookingJourneyTest extends TestCase {
 		Blueworx_Clubhouse_Shortcodes::set_expander( null );
 	}
 
-	private function branding(): Blueworx_Clubhouse_Branding {
-		return new Blueworx_Clubhouse_Branding( new Blueworx_Clubhouse_Fake_Storage() );
-	}
-
-	private function visibility(): Blueworx_Clubhouse_Visibility {
-		return new Blueworx_Clubhouse_Visibility( new Blueworx_Clubhouse_Fake_Storage() );
-	}
-
-	private function collections(): Blueworx_Clubhouse_Collections {
-		return new Blueworx_Clubhouse_Demo_Collections();
-	}
-
 	/**
 	 * The page's own content, with the header and footer stripped off.
 	 *
@@ -49,20 +37,18 @@ final class BookingJourneyTest extends TestCase {
 	 * links every page to every other, so "the Bookings page links to the
 	 * Calendar" is true of a page that says nothing about booking at all.
 	 */
-	private function body( string $html ): string {
-		$open  = strpos( $html, '<main' );
-		$close = strpos( $html, '</main>' );
-		$this->assertIsInt( $open );
-		$this->assertIsInt( $close );
-		return substr( $html, $open, $close - $open );
+	private function body( string $page, ?Blueworx_Clubhouse_Fake_Storage $storage = null ): string {
+		return Blueworx_Clubhouse_Test_Site::main(
+			Blueworx_Clubhouse_Test_Site::page( $page, $storage ?? new Blueworx_Clubhouse_Fake_Storage() )
+		);
 	}
 
 	private function booking(): string {
-		return $this->body( Blueworx_Clubhouse_Page_Renderer::booking( $this->branding(), $this->visibility(), $this->collections(), '', null ) );
+		return $this->body( 'booking' );
 	}
 
 	private function calendar(): string {
-		return $this->body( Blueworx_Clubhouse_Page_Renderer::calendar( $this->branding(), $this->visibility(), $this->collections(), '', null ) );
+		return $this->body( 'calendar' );
 	}
 
 	public function test_the_bookings_page_points_at_the_times(): void {
@@ -97,10 +83,12 @@ final class BookingJourneyTest extends TestCase {
 	}
 
 	public function test_a_club_can_replace_the_cross_link(): void {
-		$content = new Blueworx_Clubhouse_Content_Store( new Blueworx_Clubhouse_Fake_Storage() );
-		$content->set( 'calendar', 'booking', 'link_label', 'Our own words' );
-		$content->set( 'calendar', 'booking', 'link_href', 'https://club.test/elsewhere' );
-		$html = $this->body( Blueworx_Clubhouse_Page_Renderer::calendar( $this->branding(), $this->visibility(), $this->collections(), '', $content ) );
+		$storage = new Blueworx_Clubhouse_Fake_Storage();
+		Blueworx_Clubhouse_Test_Site::write( $storage, 'calendar/booking', array(
+			'link_label' => 'Our own words',
+			'link_href'  => 'https://club.test/elsewhere',
+		) );
+		$html = $this->body( 'calendar', $storage );
 		$this->assertStringContainsString( 'Our own words', $html );
 		$this->assertStringContainsString( 'https://club.test/elsewhere', $html );
 	}

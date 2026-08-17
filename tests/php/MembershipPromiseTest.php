@@ -16,55 +16,42 @@ final class MembershipPromiseTest extends TestCase {
 		Blueworx_Clubhouse_Checkout::set_base_url( '' );
 	}
 
-	private function branding(): Blueworx_Clubhouse_Branding {
-		return new Blueworx_Clubhouse_Branding( new Blueworx_Clubhouse_Fake_Storage() );
-	}
-
-	private function visibility(): Blueworx_Clubhouse_Visibility {
-		return new Blueworx_Clubhouse_Visibility( new Blueworx_Clubhouse_Fake_Storage() );
-	}
-
-	private function collections(): Blueworx_Clubhouse_Collections {
-		return new Blueworx_Clubhouse_Demo_Collections();
+	/** A club whose tier grid carries these tiers. */
+	private function club( array $tiers ): Blueworx_Clubhouse_Fake_Storage {
+		$storage = new Blueworx_Clubhouse_Fake_Storage();
+		Blueworx_Clubhouse_Test_Site::write( $storage, 'membership/tiers', array( 'items' => $tiers ) );
+		return $storage;
 	}
 
 	/** A shop with a checkout, and one tier connected to a real price. */
-	private function selling_content(): Blueworx_Clubhouse_Content_Store {
+	private function selling(): Blueworx_Clubhouse_Fake_Storage {
 		Blueworx_Clubhouse_Products_Source::set( new Blueworx_Clubhouse_Demo_Products() );
 		Blueworx_Clubhouse_Checkout::set_base_url( 'https://club.test/checkout/' );
 
-		$content = new Blueworx_Clubhouse_Content_Store( new Blueworx_Clubhouse_Fake_Storage() );
-		$content->set_items( 'membership', 'tiers', array(
+		return $this->club( array(
 			array( 'name' => 'Adult', 'price' => '£99', 'period' => '/yr', 'features' => 'One', 'cta_label' => 'Join', 'price_id' => 'price_adult_monthly' ),
 		) );
-		return $content;
 	}
 
-	private function page( ?Blueworx_Clubhouse_Content_Store $content ): string {
-		return Blueworx_Clubhouse_Page_Renderer::membership(
-			$this->branding(),
-			$this->visibility(),
-			$this->collections(),
-			'',
-			$content
-		);
+	private function page( ?Blueworx_Clubhouse_Fake_Storage $storage = null ): string {
+		return Blueworx_Clubhouse_Test_Site::page( 'membership', $storage ?? new Blueworx_Clubhouse_Fake_Storage() );
 	}
 
 	public function test_a_club_that_cannot_take_payment_does_not_promise_five_minutes(): void {
-		$html = $this->page( null );
+		$html = $this->page();
 		$this->assertStringNotContainsString( 'Join in five minutes', $html );
 		$this->assertStringContainsString( 'Register interest', $html );
 		$this->assertStringContainsString( 'no payment yet', $html );
 	}
 
 	public function test_a_club_that_cannot_take_payment_says_it_will_be_in_touch(): void {
-		$html = $this->page( null );
+		$html = $this->page();
 		$this->assertStringContainsString( 'in touch within a few days', $html );
 		$this->assertStringContainsString( 'Payment details are arranged once your interest is confirmed', $html );
 	}
 
 	public function test_a_club_that_can_take_payment_promises_joining_and_paying(): void {
-		$html = $this->page( $this->selling_content() );
+		$html = $this->page( $this->selling() );
 		$this->assertStringContainsString( 'Join in five minutes', $html );
 		$this->assertStringContainsString( 'Join and pay', $html );
 		$this->assertStringContainsString( 'By card, at checkout, when you join.', $html );
@@ -73,23 +60,23 @@ final class MembershipPromiseTest extends TestCase {
 	public function test_a_club_that_can_take_payment_never_says_register_your_interest(): void {
 		// The contradiction, from the other side: a page that takes cards must
 		// not also tell someone to fill in a form and wait for a call.
-		$html = $this->page( $this->selling_content() );
+		$html = $this->page( $this->selling() );
 		$this->assertStringNotContainsString( 'no payment yet', $html );
 		$this->assertStringNotContainsString( 'in touch within a few days', $html );
 		$this->assertStringNotContainsString( 'Payment details are arranged', $html );
 	}
 
 	public function test_a_selling_page_sends_people_to_the_tiers_rather_than_the_contact_form(): void {
-		$html = $this->page( $this->selling_content() );
+		$html = $this->page( $this->selling() );
 		$this->assertStringContainsString( '#' . Blueworx_Clubhouse_Link_Catalogue::anchor_id( 'membership', 'tiers' ), $html );
 	}
 
 	public function test_a_clubs_own_copy_always_wins(): void {
 		// The page picks a default, not the words. A club that has written its
 		// own headline keeps it whether or not it sells.
-		$content = $this->selling_content();
-		$content->set( 'membership', 'hero', 'title_lead', 'Our own headline. ' );
-		$html = $this->page( $content );
+		$storage = $this->selling();
+		Blueworx_Clubhouse_Test_Site::write( $storage, 'membership/hero', array( 'title_lead' => 'Our own headline. ' ) );
+		$html = $this->page( $storage );
 		$this->assertStringContainsString( 'Our own headline.', $html );
 		$this->assertStringNotContainsString( 'Join in five minutes', $html );
 	}
@@ -101,12 +88,11 @@ final class MembershipPromiseTest extends TestCase {
 		Blueworx_Clubhouse_Products_Source::set( new Blueworx_Clubhouse_Demo_Products() );
 		Blueworx_Clubhouse_Checkout::set_base_url( '' );
 
-		$content = new Blueworx_Clubhouse_Content_Store( new Blueworx_Clubhouse_Fake_Storage() );
-		$content->set_items( 'membership', 'tiers', array(
+		$storage = $this->club( array(
 			array( 'name' => 'Adult', 'price' => '£99', 'period' => '/yr', 'features' => 'One', 'cta_label' => 'Join', 'price_id' => 'price_adult_monthly' ),
 		) );
 
-		$this->assertStringContainsString( 'no payment yet', $this->page( $content ) );
+		$this->assertStringContainsString( 'no payment yet', $this->page( $storage ) );
 	}
 
 	public function test_the_promise_is_read_off_the_buttons_the_visitor_can_see(): void {
