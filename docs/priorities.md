@@ -1,10 +1,10 @@
 # What to work on next
 
-The standing priority order for this repo. **The page builder is the only thing
-left on the list** — every GitHub issue is closed.
+The standing priority order for this repo. **The page builder is the only code
+left on the list**, plus three things only a person can do.
 
 Written 14 August 2026, rewritten 17 August 2026 against main at v0.71.0. Keep
-it current: when something ships, strike it here.
+it current: when an issue closes, strike it here.
 
 ---
 
@@ -17,8 +17,8 @@ Spec: `docs/superpowers/specs/2026-08-13-page-composition-and-block-library-desi
 | 1 | Registry and stores | **Done** — v0.64.0 |
 | 2 | Render pages from blocks, behind a byte-for-byte parity check | **Done** — v0.71.0 |
 | 3 | Seeding and migration, so existing club sites upgrade unchanged | **Done** — v0.71.0 |
-| 4 | The two admin screens — Content → Pages and Content → Blocks | **Next.** This is the part that looks like a page builder. |
-| 5 | Repoint import, guide and link picker; delete the old path | After 4 |
+| 4 | The two admin screens — [#204](../../issues/204) Pages, [#205](../../issues/205) Blocks | **Next.** This is the part that looks like a page builder. |
+| 5 | [#206](../../issues/206) repoint import, guide and link picker, then [#207](../../issues/207) delete the old path | After 4 |
 
 **What 4 has to do.** Content → Pages: a page's on/off switch, its blocks in
 render order, remove, and a picker that adds an existing block or makes a new
@@ -39,14 +39,15 @@ pages before deleting one in use.
 
 ## 2. Not code, but blocking a real launch
 
-- **One real purchase on a live SureCart shop is still unproven.** The link
-  format is confirmed against SureCart's source; only an actual checkout proves
-  the basket prefills.
-- **The privacy and terms pages carry `ADD:` placeholders** wherever only the
-  club can answer. They need writing before the site takes real sign-ups.
-- **A manual WordPress smoke test of the upgrade.** The migration cannot run in
-  the DB-free preview: upgrade an install that has saved content and hidden
-  sections, and confirm the front end is unchanged.
+- [#208](../../issues/208) **Smoke-test the block migration on real WordPress.**
+  It cannot run in the DB-free preview, so nothing automated has ever exercised
+  it against a club's saved options. Do this one first — it gates the release.
+- [#209](../../issues/209) **One real purchase on a live SureCart shop.** The
+  link format is confirmed against SureCart's source; only an actual checkout
+  proves the basket prefills.
+- [#210](../../issues/210) **Write the privacy and terms wording.** Both pages
+  carry `ADD:` placeholders wherever only the club can answer, and they have to
+  go before the site takes real sign-ups.
 
 ## The rule
 
