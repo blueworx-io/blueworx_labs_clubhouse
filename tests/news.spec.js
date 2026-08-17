@@ -175,6 +175,9 @@ test('@preview an article never shows a tag chip with nothing in it', async ({ p
 // the last line of the headline touched the bottom edge. Asserting the gaps
 // rather than the token keeps the test about what a reader sees.
 test('@preview the news header has room above and below it', async ({ page }) => {
+  // Same reason as the featured-story gap below: measure a page that has
+  // finished moving, rather than race the reveal animation.
+  await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto('?clubhouse_page=news');
 
   const gaps = await page.evaluate(() => {
@@ -192,6 +195,41 @@ test('@preview the news header has room above and below it', async ({ page }) =>
   expect(gaps.below, 'the headline touches the bottom of the band').toBeGreaterThanOrEqual(24);
   expect(gaps.above, 'the band has drifted away from the nav').toBeLessThanOrEqual(1);
 });
+
+// Issue #218. The filter row sat a full section gap below the featured story,
+// far enough that it read as a broken layout rather than a deliberate break —
+// the pills floating in empty space with the story above and the rule line
+// below. The gap belongs to the section flow, so it is checked against the
+// looks that set it rather than a single number: every look must draw the
+// filters closer under the card than it separates two unrelated sections.
+for (const look of ['court-side', 'floodlight', 'members-house']) {
+  test(`@preview the filters sit under the featured story in ${look}`, async ({ page }) => {
+    for (const width of [1440, 390]) {
+      await page.setViewportSize({ width, height: 900 });
+      // The reveal animation holds a section 24px low until it scrolls into
+      // view, so a measurement taken while it is still sliding reads the
+      // animation as part of the gap — and whether it has finished is a race
+      // this test would otherwise lose on a loaded machine. reveal.js sits the
+      // whole thing out when the visitor has asked for less motion, which is
+      // the one state where the page is laid out and nothing is moving.
+      await page.emulateMedia({ reducedMotion: 'reduce' });
+      await page.goto(`?clubhouse_page=news&look=${look}`);
+
+      const measured = await page.evaluate(() => {
+        const px = (v) => parseFloat(getComputedStyle(document.documentElement).getPropertyValue(v));
+        const card = document.querySelector('.ch-featured__card').getBoundingClientRect();
+        const bar = document.querySelector('.ch-newsgrid__bar').getBoundingClientRect();
+        return { gap: bar.top - card.bottom, flow: px('--flow-lg') };
+      });
+
+      expect(
+        measured.gap,
+        `${look} at ${width}px leaves the filters adrift under the featured story`,
+      ).toBeLessThan(measured.flow);
+      expect(measured.gap, `${look} at ${width}px has the filters crowding the card`).toBeGreaterThanOrEqual(24);
+    }
+  });
+}
 
 test('@preview the news pages hold their layout on a phone', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });

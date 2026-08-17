@@ -5,6 +5,10 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.76.1
+
+- **The Stories page no longer has a hole in it.** The category buttons sat so far below the featured story that the page looked broken. They now sit under it, on both a computer and a phone. Nothing else on the page has moved.
+
 ## 0.76.0
 
 - **Club Pages is back, and it is where you edit your site again.** The Pages and Blocks screens have gone: building a page out of blocks did not turn out to be a better way to run a club site. Everything you have written is exactly where it was, your site looks the same, and the Visibility tab is back under Setup for taking a section off a page.
