@@ -193,6 +193,39 @@ test('@preview the news header has room above and below it', async ({ page }) =>
   expect(gaps.above, 'the band has drifted away from the nav').toBeLessThanOrEqual(1);
 });
 
+// Issue #218. The filter row sat a full section gap below the featured story,
+// far enough that it read as a broken layout rather than a deliberate break —
+// the pills floating in empty space with the story above and the rule line
+// below. The gap belongs to the section flow, so it is checked against the
+// looks that set it rather than a single number: every look must draw the
+// filters closer under the card than it separates two unrelated sections.
+for (const look of ['court-side', 'floodlight', 'members-house']) {
+  test(`@preview the filters sit under the featured story in ${look}`, async ({ page }) => {
+    for (const width of [1440, 390]) {
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto(`?clubhouse_page=news&look=${look}`);
+
+      const measured = await page.evaluate(() => {
+        // The reveal animation holds a section 24px low until it scrolls into
+        // view, and it slides rather than jumps — measuring mid-slide reads the
+        // animation as part of the gap. Dropping the class is what reveal.js
+        // itself does when it gives up, and it settles the section instantly.
+        document.querySelectorAll('.ch-reveal').forEach((el) => el.classList.remove('ch-reveal'));
+        const px = (v) => parseFloat(getComputedStyle(document.documentElement).getPropertyValue(v));
+        const card = document.querySelector('.ch-featured__card').getBoundingClientRect();
+        const bar = document.querySelector('.ch-newsgrid__bar').getBoundingClientRect();
+        return { gap: bar.top - card.bottom, flow: px('--flow-lg') };
+      });
+
+      expect(
+        measured.gap,
+        `${look} at ${width}px leaves the filters adrift under the featured story`,
+      ).toBeLessThan(measured.flow);
+      expect(measured.gap, `${look} at ${width}px has the filters crowding the card`).toBeGreaterThanOrEqual(24);
+    }
+  });
+}
+
 test('@preview the news pages hold their layout on a phone', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
 
