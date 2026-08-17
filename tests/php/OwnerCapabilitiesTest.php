@@ -43,6 +43,7 @@ final class OwnerCapabilitiesTest extends TestCase {
 			array(
 				'index.php',
 				'clubhouse-setup',
+				'clubhouse-pages',
 				'clubhouse-site-content',
 				'clubhouse-content',
 				'sc-dashboard',

@@ -51,6 +51,7 @@ require_once dirname( __DIR__, 2 ) . '/includes/admin/class-content-controller.p
 require_once dirname( __DIR__, 2 ) . '/includes/admin/class-demo-controller.php';
 require_once dirname( __DIR__, 2 ) . '/includes/admin/class-owner-role.php';
 require_once dirname( __DIR__, 2 ) . '/includes/admin/class-access-controller.php';
+require_once dirname( __DIR__, 2 ) . '/includes/admin/class-pages-controller.php';
 require_once dirname( __DIR__, 2 ) . '/includes/admin/class-seo-controller.php';
 require_once dirname( __DIR__, 2 ) . '/includes/admin/class-guide-controller.php';
 require_once dirname( __DIR__, 2 ) . '/includes/admin/class-shop-pages-controller.php';

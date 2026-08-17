@@ -369,6 +369,7 @@ final class Blueworx_Clubhouse_Owner_Capabilities {
 		return array(
 			'index.php',              // Dashboard.
 			'clubhouse-setup',        // Clubhouse.
+			'clubhouse-pages',        // Content — pages and blocks.
 			'clubhouse-site-content', // Club Pages.
 			'clubhouse-content',      // Collections.
 			self::SURECART_MENU,      // SureCart.
