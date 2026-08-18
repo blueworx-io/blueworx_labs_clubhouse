@@ -251,6 +251,46 @@ final class PageRendererTest extends TestCase {
 		$this->assertStringNotContainsString( 'Netball', substr( $html, strpos( $html, 'Our sports' ), 600 ) );  // only first 4
 	}
 
+	/** @param array<int,array<string,string>> $items */
+	private function homeWithSocialFeed( bool $on, array $items ): string {
+		wp_stub_reset();
+		$storage    = new Blueworx_Clubhouse_Fake_Storage();
+		$visibility = new Blueworx_Clubhouse_Visibility( $storage );
+		if ( $on ) {
+			$visibility->set_section_visible( 'home', 'social_feed', true );
+		}
+		$content = new Blueworx_Clubhouse_Content_Store( $storage );
+		$content->set_items( 'home', 'social_feed', $items );
+		return Blueworx_Clubhouse_Page_Renderer::home(
+			new Blueworx_Clubhouse_Branding( $storage ),
+			$visibility,
+			$this->collections(),
+			'',
+			$content
+		);
+	}
+
+	/** @return array<int,array<string,string>> */
+	private function onePastedPost(): array {
+		return array( array( 'href' => 'https://facebook.com/club/posts/1', 'caption' => 'Saturday win' ) );
+	}
+
+	public function test_the_social_feed_is_absent_until_a_club_switches_it_on(): void {
+		$this->assertStringNotContainsString( 'ch-feed', $this->homeWithSocialFeed( false, $this->onePastedPost() ) );
+	}
+
+	public function test_a_switched_on_social_feed_shows_the_pasted_posts(): void {
+		$html = $this->homeWithSocialFeed( true, $this->onePastedPost() );
+		$this->assertStringContainsString( 'ch-feed__card', $html );
+		$this->assertStringContainsString( 'Saturday win', $html );
+		$this->assertStringContainsString( 'https://facebook.com/club/posts/1', $html );
+	}
+
+	public function test_a_switched_on_but_unconnected_social_feed_renders_nothing(): void {
+		// Nothing pasted yet: a heading over an empty space reads as a broken site.
+		$this->assertStringNotContainsString( 'ch-feed', $this->homeWithSocialFeed( true, array() ) );
+	}
+
 	private function render( string $page ): string {
 		return Blueworx_Clubhouse_Page_Map::render(
 			$page,

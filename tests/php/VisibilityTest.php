@@ -16,20 +16,29 @@ final class VisibilityTest extends TestCase {
 	}
 
 	/**
-	 * No section ships hidden today — home.stats was the only one and the stat
-	 * strip has been withdrawn. Pinned so reintroducing an opt-in section is a
-	 * deliberate edit here rather than a silent default change.
+	 * The social feed is the only section that ships hidden: it shows nothing
+	 * until a club has pasted its posts in, so shipping it on would put an empty
+	 * band on every existing club site. Pinned so any further opt-in section is
+	 * a deliberate edit here rather than a silent default change.
 	 */
-	public function test_no_section_ships_hidden(): void {
+	public function test_only_the_social_feed_ships_hidden(): void {
 		$v = $this->vis();
 		foreach ( Blueworx_Clubhouse_Setup_Sections::inventory() as $page ) {
 			foreach ( $page['sections'] as $section ) {
-				$this->assertTrue(
-					$v->is_section_visible( $page['page'], $section['key'] ),
-					$page['page'] . '.' . $section['key']
-				);
+				$key = $page['page'] . '.' . $section['key'];
+				if ( 'home.social_feed' === $key ) {
+					$this->assertFalse( $v->is_section_visible( $page['page'], $section['key'] ), $key );
+					continue;
+				}
+				$this->assertTrue( $v->is_section_visible( $page['page'], $section['key'] ), $key );
 			}
 		}
+	}
+
+	public function test_a_club_can_opt_the_social_feed_in(): void {
+		$v = $this->vis();
+		$v->set_section_visible( 'home', 'social_feed', true );
+		$this->assertTrue( $v->is_section_visible( 'home', 'social_feed' ) );
 	}
 
 	public function test_a_section_can_be_switched_off_and_back_on(): void {

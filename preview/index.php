@@ -104,14 +104,42 @@ function blueworx_clubhouse_preview_document(): string {
 	// seam is installed so the preview exercises the same code path as the live site.
 	Blueworx_Clubhouse_Products_Source::set( new Blueworx_Clubhouse_Demo_Products() );
 	Blueworx_Clubhouse_Checkout::set_base_url( '?page=checkout-demo' );
-	// The Monthly / Annual switch only appears when some tier is priced both
-	// ways, and the built-in tiers are monthly-only — so the preview has to be
-	// given tiers to switch between. One tier is left deliberately monthly-only,
-	// because how that card behaves mid-switch is the part worth looking at.
+	// Two seeded states the preview can be asked for, both off by default. Each
+	// makes something visible that a fresh site has no content for: the social
+	// feed ships hidden and shows only pasted posts, and the Monthly / Annual
+	// switch only appears when a tier is priced both ways. They share one
+	// content store so both can be asked for at once.
 	$preview_content = null;
+	$preview_store   = static function () use ( $storage, &$preview_content ): Blueworx_Clubhouse_Content_Store {
+		if ( null === $preview_content ) {
+			$preview_content = new Blueworx_Clubhouse_Content_Store( $storage );
+		}
+		return $preview_content;
+	};
+
+	// 'demo' seeds three posts; 'empty' switches the section on with nothing
+	// pasted, which is what a club sees between opting in and connecting.
+	$raw_social = $_GET['clubhouse_social'] ?? '';
+	$social     = is_string( $raw_social ) ? (string) preg_replace( '/[^a-z]/', '', $raw_social ) : '';
+	if ( 'demo' === $social || 'empty' === $social ) {
+		$visibility->set_section_visible( 'home', 'social_feed', true );
+		$content_store = $preview_store();
+		$content_store->set( 'home', 'social_feed', 'platform', 'instagram' );
+		$content_store->set( 'home', 'social_feed', 'heading', 'Latest from the club' );
+		$content_store->set( 'home', 'social_feed', 'lede', 'Match-day photos and the week as it happened.' );
+		if ( 'demo' === $social ) {
+			$content_store->set_items( 'home', 'social_feed', array(
+				array( 'href' => 'https://www.instagram.com/p/clubhouse-1/', 'caption' => 'Saturday’s win, in one photograph.' ),
+				array( 'href' => 'https://www.instagram.com/p/clubhouse-2/', 'caption' => 'Juniors back on the pitch after the break.' ),
+				array( 'href' => 'https://www.instagram.com/p/clubhouse-3/', 'caption' => 'The clubhouse bar is open again from Friday.' ),
+			) );
+		}
+	}
+
+	// One tier is left deliberately monthly-only, because how that card behaves
+	// mid-switch is the part worth looking at.
 	if ( 'cadence' === (string) preg_replace( '/[^a-z]/', '', (string) ( $_GET['clubhouse_tiers'] ?? '' ) ) ) {
-		$preview_content = new Blueworx_Clubhouse_Content_Store( $storage );
-		$preview_content->set_items( 'membership', 'tiers', array(
+		$preview_store()->set_items( 'membership', 'tiers', array(
 			array( 'eyebrow' => 'Under 18', 'name' => 'Junior', 'price' => '£12', 'period' => '/mo',
 				'features' => "Any junior section\nCoaching included", 'cta_label' => 'Join' ),
 			array( 'eyebrow' => 'Full playing', 'name' => 'Adult', 'price' => '£28', 'period' => '/mo',
