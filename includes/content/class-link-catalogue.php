@@ -133,7 +133,15 @@ final class Blueworx_Clubhouse_Link_Catalogue {
 	 */
 	private static function has_no_anchor( string $tab, array $section ): bool {
 		$shared_root = array();
-		return in_array( (string) $section['key'], $shared_root[ $tab ] ?? array(), true );
+		if ( in_array( (string) $section['key'], $shared_root[ $tab ] ?? array(), true ) ) {
+			return true;
+		}
+		// The social feed is off until a club opts in, and renders nothing until
+		// posts are pasted, so on most sites there is no root to point at. A menu
+		// item leading to an anchor that is not on the page is worse than not
+		// offering it — a club that wants one can link to the page itself.
+		$opt_in = array( 'home' => array( 'social_feed' ) );
+		return in_array( (string) $section['key'], $opt_in[ $tab ] ?? array(), true );
 	}
 
 	/**

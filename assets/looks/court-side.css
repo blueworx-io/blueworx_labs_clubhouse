@@ -362,6 +362,15 @@ a{color:inherit;text-decoration:none}
 .ch-news__date{color:var(--color-ink-soft)}
 .ch-news__title{font-family:var(--font-display);font-weight:800;font-size:22px;line-height:1.05}
 
+/* The social feed: square cards, because that is the shape both platforms crop to. */
+.ch-feed{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(220px,100%),1fr));gap:24px}
+.ch-feed__lede{font-size:15px;color:var(--color-ink-soft);max-width:56ch;margin-top:8px}
+.ch-feed__card{display:block;color:inherit;transition:transform .25s ease}
+@media(prefers-reduced-motion:no-preference){.ch-feed__card:hover{transform:translateY(-3px)}}
+.ch-feed__media{aspect-ratio:1/1;border-radius:var(--radius-md);margin-bottom:12px}
+.ch-feed__caption{font-size:15px;line-height:1.45}
+.ch-feed__date{display:block;margin-top:6px;font-size:12px;color:var(--color-ink-soft)}
+
 
 .ch-sec__title--sm{font-size:clamp(28px,3.8vw,38px)}
 .ch-link{font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--color-ink);border-bottom:2px solid var(--color-accent);padding-bottom:4px}

@@ -285,6 +285,18 @@ final class Blueworx_Clubhouse_Content_Catalogue {
 				array( 'key' => 'news', 'label' => 'News', 'type' => 'loop', 'store_page' => 'home',
 					'fields' => array( self::f_text( 'eyebrow', 'Eyebrow' ), self::f_text( 'heading', 'Heading' ) ),
 					'loop' => array( 'name' => 'Article', 'plural' => 'Articles', 'fields' => array( self::f_text( 'tag', 'Tag' ), self::f_text( 'date', 'Date' ), self::f_text( 'title', 'Title' ), self::f_image( 'image', 'Image' ) ) ) ),
+				array( 'key' => 'social_feed', 'label' => 'Social feed', 'type' => 'loop', 'store_page' => 'home',
+					'note' => 'Switched off until you turn it on under Setup → Visibility. Paste the link to each post you want shown — the section stays off the page until at least one is pasted, because a heading over an empty space reads as a broken site. Connecting Facebook or Instagram directly, so posts arrive on their own, comes later.',
+					'fields' => array(
+						self::f_select( 'platform', 'Platform', array( 'facebook' => 'Facebook', 'instagram' => 'Instagram' ) ),
+						self::f_text( 'heading', 'Heading', 'e.g. Latest from the club' ),
+						self::f_area( 'lede', 'Blurb', 2 ),
+						self::f_select( 'count', 'How many posts to show', array( '3' => '3', '6' => '6', '9' => '9' ) ),
+					),
+					'loop' => array( 'name' => 'Post', 'plural' => 'Posts', 'fields' => array(
+						self::f_url( 'href', 'Post link' ),
+						self::f_text( 'caption', 'Caption' ),
+					) ) ),
 				array( 'key' => 'info', 'label' => 'Find us details', 'type' => 'loop', 'store_page' => 'home',
 					'loop' => array( 'name' => 'Column', 'plural' => 'Columns', 'fields' => array( self::f_text( 'label', 'Label' ), self::f_area( 'lines', 'Lines (one per line)' ), self::f_text( 'link_label', 'Link label' ), self::f_url( 'link_href', 'Link href' ) ) ) ),
 				array( 'key' => 'sponsors', 'label' => 'Sponsors', 'type' => 'linkout', 'store_page' => 'home',

@@ -720,6 +720,21 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				),
 			) ) );
 		}
+		if ( $visibility->is_section_visible( 'home', 'social_feed' ) ) {
+			// Stage one's source is the links the club pasted; stage two swaps a
+			// Meta connection in here and nothing below this line changes. With no
+			// content store there is nothing pasted, so there is nothing to show.
+			$posts = null !== $content
+				? ( new Blueworx_Clubhouse_Social_Feed( new Blueworx_Clubhouse_Manual_Feed_Source( $content ) ) )->posts()
+				: array();
+			$count = (int) self::cget( $content, 'home', 'social_feed', 'count', '3' );
+			$out  .= self::anchored( 'home', 'social_feed', Blueworx_Clubhouse_Sections::social_feed( array(
+				'platform' => self::cget( $content, 'home', 'social_feed', 'platform', 'facebook' ),
+				'heading'  => self::cget( $content, 'home', 'social_feed', 'heading', 'Latest from the club' ),
+				'lede'     => self::cget( $content, 'home', 'social_feed', 'lede', '' ),
+				'posts'    => array_slice( $posts, 0, $count > 0 ? $count : 3 ),
+			) ) );
+		}
 		if ( $visibility->is_section_visible( 'home', 'sponsors' ) ) {
 			$out .= self::anchored( 'home', 'sponsors', Blueworx_Clubhouse_Sections::sponsors( array(
 				'eyebrow' => 'Our partners', 'heading' => 'Our sponsors & partners', 'link_label' => 'Become a sponsor',

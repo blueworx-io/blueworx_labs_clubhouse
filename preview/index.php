@@ -104,6 +104,27 @@ function blueworx_clubhouse_preview_document(): string {
 	// seam is installed so the preview exercises the same code path as the live site.
 	Blueworx_Clubhouse_Products_Source::set( new Blueworx_Clubhouse_Demo_Products() );
 	Blueworx_Clubhouse_Checkout::set_base_url( '?page=checkout-demo' );
+	// The social feed ships hidden and shows only what a club has pasted, so this
+	// harness — a design tool with no database — has to be told to switch it on.
+	// 'demo' seeds three posts; 'empty' switches the section on with nothing
+	// pasted, which is what a club sees between opting in and connecting.
+	$preview_content = null;
+	$raw_social      = $_GET['clubhouse_social'] ?? '';
+	$social          = is_string( $raw_social ) ? (string) preg_replace( '/[^a-z]/', '', $raw_social ) : '';
+	if ( 'demo' === $social || 'empty' === $social ) {
+		$visibility->set_section_visible( 'home', 'social_feed', true );
+		$preview_content = new Blueworx_Clubhouse_Content_Store( $storage );
+		$preview_content->set( 'home', 'social_feed', 'platform', 'instagram' );
+		$preview_content->set( 'home', 'social_feed', 'heading', 'Latest from the club' );
+		$preview_content->set( 'home', 'social_feed', 'lede', 'Match-day photos and the week as it happened.' );
+		if ( 'demo' === $social ) {
+			$preview_content->set_items( 'home', 'social_feed', array(
+				array( 'href' => 'https://www.instagram.com/p/clubhouse-1/', 'caption' => 'Saturday’s win, in one photograph.' ),
+				array( 'href' => 'https://www.instagram.com/p/clubhouse-2/', 'caption' => 'Juniors back on the pitch after the break.' ),
+				array( 'href' => 'https://www.instagram.com/p/clubhouse-3/', 'caption' => 'The clubhouse bar is open again from Friday.' ),
+			) );
+		}
+	}
 	// The login page's account screens are part of the design, so ?clubhouse_auth=
 	// selects one here too. No form action and no nonce: there is nothing to post
 	// to without WordPress, and the card renders its form either way.
@@ -115,8 +136,8 @@ function blueworx_clubhouse_preview_document(): string {
 	$item     = is_string( $raw_item ) ? trim( (string) preg_replace( '/[^a-z0-9]+/', '-', strtolower( $raw_item ) ), '-' ) : '';
 	$collections = new Blueworx_Clubhouse_Demo_Collections();
 	$body        = 'post' === $page
-		? Blueworx_Clubhouse_Page_Renderer::post( $branding, $visibility, $collections, '', null, $filter )
-		: Blueworx_Clubhouse_Page_Map::render( $slug, $branding, $visibility, $collections, '', null, $filter, $item );
+		? Blueworx_Clubhouse_Page_Renderer::post( $branding, $visibility, $collections, '', $preview_content, $filter )
+		: Blueworx_Clubhouse_Page_Map::render( $slug, $branding, $visibility, $collections, '', $preview_content, $filter, $item );
 	$palettes  = blueworx_clubhouse_preview_palettes( $registry->active() );
 	$switcher   = '<div class="ch-switcher" data-ch-palettes=\''
 		. htmlspecialchars( json_encode( $palettes ), ENT_QUOTES, 'UTF-8' ) . '\'></div>'

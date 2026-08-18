@@ -961,6 +961,92 @@ final class Blueworx_Clubhouse_Sections {
 			. $cards . '</div>' . $more . '</div></section>';
 	}
 
+	/** How the platform is named to a visitor. Anything else names no platform at all. */
+	private const FEED_PLATFORMS = array(
+		'facebook'  => 'Facebook',
+		'instagram' => 'Instagram',
+	);
+
+	/** Longest caption a card carries before it is cut — enough for a sentence, not a whole post. */
+	private const FEED_CAPTION_MAX = 140;
+
+	/**
+	 * The club's recent social posts, drawn as cards that link back to the
+	 * platform. Never a heading over an empty space: no posts means no band, in
+	 * every one of the three states the feed can be in (see Social_Feed).
+	 *
+	 * Captions are plain text and are escaped like everything else here; the
+	 * platform's own markup is never trusted, and no post is ever embedded.
+	 *
+	 * @param array{platform:string,heading:string,lede:string,
+	 *   posts:array<int,array{id:string,image:string,caption:string,date:string,permalink:string}>} $data
+	 */
+	public static function social_feed( array $data ): string {
+		$posts = $data['posts'] ?? array();
+		if ( array() === $posts ) {
+			return '';
+		}
+		$platform = self::FEED_PLATFORMS[ (string) ( $data['platform'] ?? '' ) ] ?? '';
+
+		$cards = '';
+		foreach ( $posts as $post ) {
+			$caption = self::truncate( (string) ( $post['caption'] ?? '' ), self::FEED_CAPTION_MAX );
+			$date    = self::feed_date( (string) ( $post['date'] ?? '' ) );
+			$cards  .= '<a class="ch-feed__card" href="' . self::e( (string) $post['permalink'] ) . '">'
+				// The image carries the caption as its alt text; a post whose
+				// picture is its whole content would otherwise be silent.
+				. self::media( (string) ( $post['image'] ?? '' ), $caption, 'ch-feed__media' )
+				. ( '' !== $caption ? '<p class="ch-feed__caption">' . self::e( $caption ) . '</p>' : '' )
+				. ( '' !== $date ? '<span class="ch-feed__date">' . self::e( $date ) . '</span>' : '' )
+				. '</a>';
+		}
+
+		$lede = (string) ( $data['lede'] ?? '' );
+		return '<section class="ch-sec"><div class="ch-wrap">'
+			. '<div class="ch-sec__head"><div>'
+			. ( '' !== $platform ? '<span class="ch-eyebrow">On ' . self::e( $platform ) . '</span>' : '' )
+			. '<h2 class="ch-sec__title ch-sec__title--sm">' . self::e( (string) ( $data['heading'] ?? '' ) ) . '</h2>'
+			. ( '' !== $lede ? '<p class="ch-feed__lede">' . self::e( $lede ) . '</p>' : '' )
+			. '</div></div>'
+			// Cards are links, so no role="list": it would force role="listitem"
+			// onto each anchor and override the link role — the trap the news
+			// cards and the hero tiles both fell into.
+			. '<div class="ch-feed">' . $cards . '</div>'
+			. '</div></section>';
+	}
+
+	/** Cut at a word boundary and mark the cut, or leave short text alone. */
+	private static function truncate( string $text, int $max ): string {
+		$text = trim( $text );
+		if ( mb_strlen( $text ) <= $max ) {
+			return $text;
+		}
+		$cut   = mb_substr( $text, 0, $max );
+		$space = mb_strrpos( $cut, ' ' );
+		if ( false !== $space && $space > 0 ) {
+			$cut = mb_substr( $cut, 0, $space );
+		}
+		return rtrim( $cut ) . "\u{2026}";
+	}
+
+	/**
+	 * An ISO 8601 timestamp as a date a reader recognises, or '' when there is
+	 * no usable date — an unreadable one beside a post is worse than none.
+	 * wp_date() applies the site's own timezone where WordPress is present; the
+	 * preview has no WordPress, so it falls back to UTC.
+	 */
+	private static function feed_date( string $iso ): string {
+		$iso = trim( $iso );
+		if ( '' === $iso ) {
+			return '';
+		}
+		$time = strtotime( $iso );
+		if ( false === $time ) {
+			return '';
+		}
+		return function_exists( 'wp_date' ) ? (string) wp_date( 'j M Y', $time ) : gmdate( 'j M Y', $time );
+	}
+
 	/**
 	 * @param array{eyebrow:string,heading:string,
 	 *   cards:array<int,array{tag:string,date:string,title:string,detail:string,cta_label:string,cta_href:string}>} $data

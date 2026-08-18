@@ -51,6 +51,15 @@ function wp_stub_reset(): void {
 	unset( $GLOBALS['menu'], $GLOBALS['wp_meta_boxes'] );
 }
 
+/**
+ * Empty the transient store while leaving options alone — what a TTL expiring
+ * looks like, and the only way to exercise a cache falling back to its
+ * no-expiry last-good option.
+ */
+function wp_stub_clear_transients(): void {
+	$GLOBALS['wp_stub_transients'] = array();
+}
+
 /** Put the request on a clubhouse page: the front page, or a mapped page slug. */
 function wp_stub_on_clubhouse_page( string $slug = '' ): void {
 	$GLOBALS['wp_stub_is_front_page'] = '' === $slug;

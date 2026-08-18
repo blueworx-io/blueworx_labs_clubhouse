@@ -5,6 +5,10 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.77.0
+
+- **Your Facebook or Instagram posts can now sit on your Home page.** Paste the link to each post you want shown under Club Pages → Home → Social feed, then switch the section on under Setup → Visibility. It arrives switched off, so nothing on your site changes until you turn it on, and it stays off the page until you have pasted at least one post. Connecting your account directly, so posts arrive on their own, comes later.
+
 ## 0.76.2
 
 - **The welcome pack now greets a member at the top of their account page.** It used to sit right at the bottom, under everything else, where a new member would only find it by scrolling. It is now a banner at the very top, in your club's colour, with the welcome pack link as a button rather than a line of underlined text. The wording is unchanged and still edited in the same place.
