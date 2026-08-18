@@ -5,6 +5,10 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.77.0
+
+- **Your Facebook or Instagram posts can now sit on your Home page.** Paste the link to each post you want shown under Club Pages → Home → Social feed, then switch the section on under Setup → Visibility. It arrives switched off, so nothing on your site changes until you turn it on, and it stays off the page until you have pasted at least one post. Connecting your account directly, so posts arrive on their own, comes later.
+
 ## 0.76.1
 
 - **The Stories page no longer has a hole in it.** The category buttons sat so far below the featured story that the page looked broken. They now sit under it, on both a computer and a phone. Nothing else on the page has moved.
