@@ -18,27 +18,31 @@ test('a member sees the club welcome pack on their dashboard @wordpress', async 
   await expect(pack).toHaveCount(1);
   await expect(pack.getByRole('heading', { name: 'Welcome to the club' })).toBeVisible();
   await expect(pack).toContainText('The gate code is on your membership card.');
-  // A blank line in the admin textarea is a new paragraph.
-  await expect(pack.locator('p.clubhouse-welcome__p')).toHaveCount(3);
+  // A blank line in the admin textarea is a new paragraph. The link is no
+  // longer one of them — it is a button in its own row.
+  await expect(pack.locator('p.clubhouse-welcome__p')).toHaveCount(2);
   await expect(pack.getByRole('link', { name: 'Read the handbook' })).toHaveAttribute(
     'href',
     'https://club.example/handbook',
   );
 });
 
-test('the pack sits below what the shop renders, not above it @wordpress', async ({ page }) => {
+test('the pack greets a member above what the shop renders @wordpress', async ({ page }) => {
+  // It used to sit below all of it, which on a real club's dashboard meant
+  // under the tabs and an empty appointments list — the last thing a new
+  // member would see, if they scrolled at all.
   await page.goto(DASHBOARD);
 
   const order = await page.evaluate(() => {
     const own = document.querySelector('#foreign-content');
     const pack = document.querySelector('.clubhouse-welcome');
     if (!own || !pack) return null;
-    // 4 === DOCUMENT_POSITION_FOLLOWING: the pack comes after the page's own
-    // content, which is the whole point of the priority the filter runs at.
-    return own.compareDocumentPosition(pack) & 4 ? 'after' : 'before';
+    // 4 === DOCUMENT_POSITION_FOLLOWING: the page's own content comes after the
+    // pack, which is what prepending at this filter priority is for.
+    return pack.compareDocumentPosition(own) & 4 ? 'before' : 'after';
   });
 
-  expect(order).toBe('after');
+  expect(order).toBe('before');
 });
 
 // The reason this renders plainly at all: the dashboard is the shop's page and
