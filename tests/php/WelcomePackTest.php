@@ -115,12 +115,55 @@ final class WelcomePackTest extends TestCase {
 	 * The dashboard belongs to the shop and carries none of the club's design
 	 * tokens, so the pack must not reach for them — a var() there resolves to
 	 * nothing and the block would arrive unstyled in a way nobody could debug.
+	 * The club's accent is inlined as a literal colour instead.
 	 */
 	public function test_the_styling_asks_for_nothing_the_dashboard_does_not_have(): void {
 		$css = Blueworx_Clubhouse_Welcome_Pack::css();
 
 		$this->assertStringNotContainsString( 'var(--', $css );
 		$this->assertStringNotContainsString( 'font-family', $css );
+	}
+
+	public function test_the_pack_greets_a_member_at_the_top_of_the_dashboard(): void {
+		// It used to hang off the bottom, under the tabs and an empty
+		// appointments list — the last thing a new member saw, if they scrolled.
+		$page = Blueworx_Clubhouse_Welcome_Pack::compose( '<div class="sc-dashboard">Orders</div>', 'BLOCK' );
+
+		$this->assertLessThan(
+			strpos( $page, 'sc-dashboard' ),
+			strpos( $page, 'BLOCK' ),
+			'the welcome pack must come before the dashboard, not after it'
+		);
+	}
+
+	public function test_the_dashboard_itself_is_never_touched(): void {
+		$page = Blueworx_Clubhouse_Welcome_Pack::compose( '<div class="sc-dashboard">Orders</div>', 'BLOCK' );
+		$this->assertStringContainsString( '<div class="sc-dashboard">Orders</div>', $page );
+	}
+
+	public function test_it_reads_as_a_banner_rather_than_a_paragraph_at_the_foot(): void {
+		$html = Blueworx_Clubhouse_Welcome_Pack::render( $this->pack( array(
+			'link_label' => 'Download the Welcome Pack',
+			'link_href'  => 'https://club.example/handbook.pdf',
+		) ) );
+
+		$this->assertStringContainsString( 'clubhouse-welcome--banner', $html );
+		// The download is a button a member can see, not an underlined line of text.
+		$this->assertStringContainsString( 'clubhouse-welcome__link', $html );
+		$this->assertStringContainsString( 'Download the Welcome Pack', $html );
+	}
+
+	public function test_the_club_accent_colours_the_banner(): void {
+		// The dashboard loads none of the club's CSS, so the colour has to be
+		// written in literally rather than reached for through a token.
+		$css = Blueworx_Clubhouse_Welcome_Pack::css( '#c6f24e', '#101010' );
+		$this->assertStringContainsString( '#c6f24e', $css );
+		$this->assertStringContainsString( '#101010', $css );
+	}
+
+	public function test_a_nonsense_accent_falls_back_rather_than_writing_junk_into_the_page(): void {
+		$css = Blueworx_Clubhouse_Welcome_Pack::css( 'red; } body { display:none', '#101010' );
+		$this->assertStringNotContainsString( 'display:none', $css );
 	}
 
 	/** It is a section a visibility toggle controls, so it has to be in the inventory. */
