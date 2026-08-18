@@ -5,6 +5,10 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.76.2
+
+- **The welcome pack now greets a member at the top of their account page.** It used to sit right at the bottom, under everything else, where a new member would only find it by scrolling. It is now a banner at the very top, in your club's colour, with the welcome pack link as a button rather than a line of underlined text. The wording is unchanged and still edited in the same place.
+
 ## 0.76.1
 
 - **The Stories page no longer has a hole in it.** The category buttons sat so far below the featured story that the page looked broken. They now sit under it, on both a computer and a phone. Nothing else on the page has moved.
