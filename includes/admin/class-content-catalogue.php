@@ -213,7 +213,7 @@ final class Blueworx_Clubhouse_Content_Catalogue {
 		if ( array() === $products->prices() ) {
 			return 'Connect a tier to a product to take payment for it. Your shop has no products yet — add one, and it will appear here.';
 		}
-		return 'Connect a tier to a product and the card shows what that product charges, with its button going straight to checkout. Change the price in the shop and this page follows. A tier left unconnected shows the price you type here.';
+		return 'Connect a tier to a product and the card shows what that product charges, with its button going straight to checkout. Change the price in the shop and this page follows. A tier left unconnected shows the price you type here. Give a tier an annual price as well as a monthly one and your pages get a Monthly / Annual switch above the tiers; a tier priced only one way simply shows that price and says so.';
 	}
 
 	/**
@@ -332,10 +332,12 @@ final class Blueworx_Clubhouse_Content_Catalogue {
 						self::f_text( 'name', 'Name' ),
 						self::f_text( 'price', 'Price' ),
 						self::f_text( 'period', 'Period' ),
+						self::f_text( 'price_annual', 'Annual price' ),
 						self::f_area( 'features', 'Features (one per line)', 4 ),
 						self::f_toggle( 'featured', 'Most popular' ),
 						self::f_text( 'cta_label', 'CTA label' ),
 						self::f_select( 'price_id', 'Sells', self::price_options( $products ) ),
+						self::f_select( 'price_id_annual', 'Sells (annual)', self::price_options( $products ) ),
 					) ) ),
 				array( 'key' => 'detail', 'label' => 'Included / excluded', 'type' => 'loop', 'store_page' => 'membership',
 					'loop' => array( 'name' => 'Point', 'plural' => 'Points', 'fields' => array( self::f_text( 'text', 'Text' ), self::f_toggle( 'included', 'Included' ) ) ) ),

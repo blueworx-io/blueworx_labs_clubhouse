@@ -132,14 +132,14 @@ final class PageRendererContentOverrideTest extends TestCase {
 	public function test_home_tier_ctas_funnel_to_the_membership_page(): void {
 		[ $b, $v, $c ] = $this->ctx();
 		$home = Blueworx_Clubhouse_Page_Renderer::home( $b, $v, $c, '', null );
-		$this->assertStringContainsString( 'ch-tier__cta" href="?page=membership"', $home );
-		$this->assertStringNotContainsString( 'ch-tier__cta" href="?page=contact"', $home );
+		$this->assertMatchesRegularExpression( "/ch-tier__cta[^\"]*\"[^>]*href=\"\?page=membership\"/", $home );
+		$this->assertDoesNotMatchRegularExpression( "/ch-tier__cta[^\"]*\"[^>]*href=\"\?page=contact\"/", $home );
 	}
 
 	public function test_membership_tier_ctas_still_target_contact(): void {
 		[ $b, $v, $c ] = $this->ctx();
 		$page = Blueworx_Clubhouse_Page_Renderer::membership( $b, $v, $c, '', null );
-		$this->assertStringContainsString( 'ch-tier__cta" href="?page=contact"', $page );
+		$this->assertMatchesRegularExpression( "/ch-tier__cta[^\"]*\"[^>]*href=\"\?page=contact\"/", $page );
 	}
 
 	public function test_announcement_bar_renders_by_default(): void {

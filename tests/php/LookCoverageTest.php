@@ -46,6 +46,10 @@ final class LookCoverageTest extends TestCase {
 		'ch-social__text',
 		'ch-split',
 		'ch-tabs',
+		// Bare wrapper around a cadence's price, save badge and note; each of
+		// those carries its own rule and the wrapper needs none. It exists to be
+		// shown and hidden by the switch, which ch-is-off does.
+		'ch-tier__price',
 		'ch-tiles__label',
 	);
 
