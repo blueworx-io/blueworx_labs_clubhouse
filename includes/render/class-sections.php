@@ -797,8 +797,19 @@ final class Blueworx_Clubhouse_Sections {
 	 *
 	 * @param 2|3 $level
 	 */
-	public static function tier_grid( array $tiers, int $level = 3 ): string {
+	public static function tier_grid( array $tiers, int $level = 3, bool $switcher = true ): string {
 		$h     = 2 === $level ? 'h2' : 'h3';
+		// A switch that changes nothing is a control that lies about what the
+		// page can do: offered only when some tier is genuinely priced both ways.
+		$switchable = false;
+		foreach ( $tiers as $t ) {
+			if ( ( $t['monthly']['available'] ?? false ) && ( $t['annual']['available'] ?? false ) ) {
+				$switchable = true;
+				break;
+			}
+		}
+		$switcher = $switcher && $switchable;
+
 		$cards = '';
 		foreach ( $tiers as $t ) {
 			$cls   = ( $t['recommended'] ?? false ) ? 'ch-tier ch-tier--pop' : 'ch-tier';
@@ -810,13 +821,122 @@ final class Blueworx_Clubhouse_Sections {
 			$cards .= '<div class="' . $cls . '" role="listitem">'
 				. '<span class="ch-tier__k">' . self::e( $t['eyebrow'] ?? '' ) . '</span>'
 				. '<' . $h . ' class="ch-tier__name">' . self::e( $t['name'] ?? '' ) . '</' . $h . '>'
-				. '<div class="ch-tier__amt">' . self::e( $t['price'] ?? '' ) . '<small>' . self::e( $t['period'] ?? '' ) . '</small></div>'
+				. self::tier_prices( $t, $switcher )
 				. '<ul class="ch-tier__feats" role="list">' . $feats . '</ul>'
-				. '<a class="ch-btn ' . $btn . ' ch-tier__cta" href="' . self::e( $t['cta_href'] ?? '' ) . '">' . self::e( $t['cta_label'] ?? '' ) . '</a>'
+				. self::tier_ctas( $t, $btn, $switcher )
 				. '</div>';
 		}
-		return '<section class="ch-wrap ch-tiers-sec"><div class="ch-tiers" role="list">' . $cards . '</div></section>';
+		return '<section class="ch-wrap ch-tiers-sec"' . ( $switcher ? ' data-ch-cadence-root' : '' ) . '>'
+			. ( $switcher ? self::cadence_switcher() : '' )
+			. '<div class="ch-tiers" role="list">' . $cards . '</div>'
+			. '</section>' . ( $switcher ? self::CADENCE_SCRIPT : '' );
 	}
+
+	/**
+	 * The Monthly / Annual switch. Two buttons rather than tabs: nothing is being
+	 * revealed and hidden except the price beside them, and a tablist would
+	 * promise a panel that does not exist.
+	 */
+	private static function cadence_switcher(): string {
+		return '<div class="ch-cadence" role="group" aria-label="How often to pay">'
+			. '<button type="button" class="ch-cadence__btn ch-cadence__btn--on" data-ch-cadence="monthly" aria-pressed="true">Monthly</button>'
+			. '<button type="button" class="ch-cadence__btn" data-ch-cadence="annual" aria-pressed="false">Annual</button>'
+			. '</div>';
+	}
+
+	/**
+	 * Both prices, one of them hidden. Rendering both into the same card is what
+	 * keeps the grid still as somebody switches: nothing is measured, moved or
+	 * re-laid out, only shown.
+	 *
+	 * A tier priced only one way shows the price it has under both switch
+	 * positions, with a quiet note saying which it is — a card that empties out
+	 * or disappears mid-toggle reads as a broken page.
+	 *
+	 * @param array<string,mixed> $tier
+	 */
+	private static function tier_prices( array $tier, bool $switcher ): string {
+		$flat = array(
+			'price'     => (string) ( $tier['price'] ?? '' ),
+			'period'    => (string) ( $tier['period'] ?? '' ),
+			'available' => true,
+		);
+		$monthly = is_array( $tier['monthly'] ?? null ) ? $tier['monthly'] : $flat;
+
+		$out = self::tier_price( $monthly, 'monthly', '', false );
+		if ( ! $switcher ) {
+			return $out;
+		}
+		$annual = is_array( $tier['annual'] ?? null ) ? $tier['annual'] : $flat;
+		return $out . self::tier_price( $annual, 'annual', (string) ( $tier['saving'] ?? '' ), true );
+	}
+
+	/**
+	 * One cadence's price block.
+	 *
+	 * @param array<string,mixed> $cadence
+	 */
+	private static function tier_price( array $cadence, string $key, string $saving, bool $hidden ): string {
+		$note = '';
+		if ( ! ( $cadence['available'] ?? true ) ) {
+			$note = 'monthly' === $key ? 'Annual only' : 'Monthly only';
+		}
+		return '<div class="ch-tier__price ch-tier__price--' . $key . ( $hidden ? ' ch-is-off' : '' ) . '" data-ch-cadence-side="' . $key . '">'
+			. '<div class="ch-tier__amt">' . self::e( (string) ( $cadence['price'] ?? '' ) )
+			. '<small>' . self::e( (string) ( $cadence['period'] ?? '' ) ) . '</small></div>'
+			. ( '' !== $saving ? '<span class="ch-tier__save">' . self::e( $saving ) . '</span>' : '' )
+			. ( '' !== $note ? '<span class="ch-tier__note">' . self::e( $note ) . '</span>' : '' )
+			. '</div>';
+	}
+
+	/**
+	 * One button per cadence, so each buys the thing its price names. Without a
+	 * switcher there is only the monthly one, which is what every caller had
+	 * before this existed.
+	 *
+	 * @param array<string,mixed> $tier
+	 */
+	private static function tier_ctas( array $tier, string $btn, bool $switcher ): string {
+		$flat = array(
+			'cta_label' => (string) ( $tier['cta_label'] ?? '' ),
+			'cta_href'  => (string) ( $tier['cta_href'] ?? '' ),
+		);
+		$monthly = is_array( $tier['monthly'] ?? null ) ? $tier['monthly'] : $flat;
+
+		$out = self::tier_cta( $monthly, $btn, 'monthly', false );
+		if ( ! $switcher ) {
+			return $out;
+		}
+		$annual = is_array( $tier['annual'] ?? null ) ? $tier['annual'] : $flat;
+		return $out . self::tier_cta( $annual, $btn, 'annual', true );
+	}
+
+	/** @param array<string,mixed> $cadence */
+	private static function tier_cta( array $cadence, string $btn, string $key, bool $hidden ): string {
+		return '<a class="ch-btn ' . $btn . ' ch-tier__cta ch-tier__cta--' . $key . ( $hidden ? ' ch-is-off' : '' ) . '"'
+			. ' data-ch-cadence-side="' . $key . '"'
+			. ' href="' . self::e( (string) ( $cadence['cta_href'] ?? '' ) ) . '">'
+			. self::e( (string) ( $cadence['cta_label'] ?? '' ) ) . '</a>';
+	}
+
+	/**
+	 * Binds every cadence switch on the page — Home and Membership can each
+	 * carry one, and a single querySelector would leave the second dead. Guarded
+	 * so emitting it once per grid is safe, exactly as TAB_SCRIPT is.
+	 *
+	 * One pass sets both the class and aria-pressed, so a sighted visitor and a
+	 * screen reader user are never told different things about which is on.
+	 */
+	private const CADENCE_SCRIPT = '<script>(function(){if(window.__chCadence)return;window.__chCadence=1;'
+		. 'document.addEventListener("click",function(e){'
+		. 'var b=e.target&&e.target.closest?e.target.closest("[data-ch-cadence]"):null;if(!b)return;'
+		. 'var r=b.closest("[data-ch-cadence-root]");if(!r)return;'
+		. 'var k=b.getAttribute("data-ch-cadence");'
+		. 'r.querySelectorAll("[data-ch-cadence]").forEach(function(x){var on=x===b;'
+		. 'x.classList.toggle("ch-cadence__btn--on",on);x.setAttribute("aria-pressed",on?"true":"false")});'
+		. 'r.querySelectorAll("[data-ch-cadence-side]").forEach(function(p){'
+		. 'p.classList.toggle("ch-is-off",p.getAttribute("data-ch-cadence-side")!==k)});'
+		. '});})();</script>';
 
 	/**
 	 * @param array{eyebrow:string,heading:string,

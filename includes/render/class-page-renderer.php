@@ -728,8 +728,18 @@ final class Blueworx_Clubhouse_Page_Renderer {
 			// happens). Editing the Membership tiers updates both pages.
 			$home_tiers = array_map(
 				static function ( array $t ): array {
+					// Both cadences, or the annual button would slip a checkout
+					// link onto Home — the one page whose tier buttons deliberately
+					// lead to the Membership page rather than to a purchase.
+					$to_membership = static function ( array $cadence ): array {
+						$cadence['cta_label'] = 'Join';
+						$cadence['cta_href']  = Blueworx_Clubhouse_Links::url( 'membership' );
+						return $cadence;
+					};
 					$t['cta_label'] = 'Join';
 					$t['cta_href']  = Blueworx_Clubhouse_Links::url( 'membership' );
+					$t['monthly']   = $to_membership( is_array( $t['monthly'] ?? null ) ? $t['monthly'] : array() );
+					$t['annual']    = $to_membership( is_array( $t['annual'] ?? null ) ? $t['annual'] : array() );
 					return $t;
 				},
 				self::membership_tiers( $content )
