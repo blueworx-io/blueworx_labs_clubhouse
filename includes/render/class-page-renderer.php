@@ -284,32 +284,112 @@ final class Blueworx_Clubhouse_Page_Renderer {
 					'cta_href'    => (string) ( $t['cta_href'] ?? Blueworx_Clubhouse_Links::url( 'contact' ) ),
 				);
 
-				// A tier connected to a real price shows what that price charges and
-				// sells it. Anything missing — no shop, no such price, no checkout
-				// page — leaves the tier exactly as the club typed it, which is how
-				// every site behaved before this existed.
-				$price_id = (string) ( $t['price_id'] ?? '' );
-				if ( '' === $price_id ) {
-					return $tier;
+				$monthly = self::tier_cadence( $t, 'price', 'price_id', (string) ( $t['period'] ?? '/mo' ) );
+				$annual  = self::tier_cadence( $t, 'price_annual', 'price_id_annual', '/yr' );
+
+				// A tier priced in only one cadence keeps showing the price it has
+				// on the other view, labelled by the renderer — a card that empties
+				// out as somebody toggles reads as a broken page.
+				if ( ! $annual['available'] ) {
+					$annual = array_merge( $monthly, array( 'available' => false ) );
 				}
-				$price = Blueworx_Clubhouse_Products_Source::get()?->price( $price_id );
-				if ( null === $price ) {
-					return $tier;
-				}
-				$checkout = Blueworx_Clubhouse_Checkout::url( $price_id );
-				if ( '' === $checkout ) {
-					// Deliberately all-or-nothing: showing the shop's price beside a
-					// contact link would advertise a price the visitor cannot pay.
-					return $tier;
+				if ( ! $monthly['available'] ) {
+					$monthly = array_merge( $annual, array( 'available' => false ) );
 				}
 
-				$tier['price']    = $price['amount'];
-				$tier['period']   = $price['period'];
-				$tier['cta_href'] = $checkout;
+				$tier['monthly'] = $monthly;
+				$tier['annual']  = $annual;
+				$tier['saving']  = ( $monthly['available'] && $annual['available'] )
+					? self::annual_saving( $monthly['price'], $annual['price'] )
+					: '';
+
+				// The flat fields stay the monthly ones, so everything that read a
+				// tier before this existed — tiers_sell(), the page copy, the tests
+				// — is unchanged.
+				$tier['price']     = $monthly['price'];
+				$tier['period']    = $monthly['period'];
+				$tier['cta_label'] = $monthly['cta_label'];
+				$tier['cta_href']  = $monthly['cta_href'];
 				return $tier;
 			},
 			$items
 		);
+	}
+
+	/**
+	 * One cadence of one tier: what it costs, and what its button does.
+	 *
+	 * All-or-nothing, exactly as the single-price version was. A tier connected
+	 * to a real price shows what that price charges and sells it; anything
+	 * missing — no shop, no such price, no checkout page — leaves the cadence
+	 * exactly as the club typed it, which is how every site behaved before any
+	 * of this existed. Showing the shop's price beside a contact link would
+	 * advertise a price the visitor cannot pay.
+	 *
+	 * `available` is the difference between "this is what it costs" and "this is
+	 * the other cadence's price, shown because a card must not empty out".
+	 *
+	 * @param array<string,mixed> $tier
+	 * @return array{price:string,period:string,cta_label:string,cta_href:string,available:bool}
+	 */
+	private static function tier_cadence( array $tier, string $price_field, string $price_id_field, string $fallback_period ): array {
+		$typed     = trim( (string) ( $tier[ $price_field ] ?? '' ) );
+		$cta_label = (string) ( $tier['cta_label'] ?? '' );
+		$cta_href  = (string) ( $tier['cta_href'] ?? Blueworx_Clubhouse_Links::url( 'contact' ) );
+
+		$price_id = (string) ( $tier[ $price_id_field ] ?? '' );
+		if ( '' !== $price_id ) {
+			$price    = Blueworx_Clubhouse_Products_Source::get()?->price( $price_id );
+			$checkout = Blueworx_Clubhouse_Checkout::url( $price_id );
+			if ( null !== $price && '' !== $checkout ) {
+				return array(
+					'price'     => $price['amount'],
+					'period'    => $price['period'],
+					'cta_label' => $cta_label,
+					'cta_href'  => $checkout,
+					'available' => true,
+				);
+			}
+		}
+
+		return array(
+			'price'     => $typed,
+			'period'    => '' !== $typed ? $fallback_period : '',
+			'cta_label' => $cta_label,
+			'cta_href'  => $cta_href,
+			'available' => '' !== $typed,
+		);
+	}
+
+	/**
+	 * "Save £56 a year", or '' when it cannot be said safely.
+	 *
+	 * Deliberately narrow: both prices must be an optional currency symbol and a
+	 * number, nothing else, in the same currency. "from £28" and "£28 per adult"
+	 * produce no badge, because a saving that contradicts the price printed
+	 * beside it is worse than no saving at all.
+	 */
+	public static function annual_saving( string $monthly, string $annual ): string {
+		$parse = static function ( string $raw ): ?array {
+			$raw = trim( $raw );
+			if ( 1 !== preg_match( '/^([^\d\s.]{0,3})\s*(\d+(?:\.\d{1,2})?)$/u', $raw, $m ) ) {
+				return null;
+			}
+			return array( 'symbol' => $m[1], 'amount' => (float) $m[2] );
+		};
+
+		$m = $parse( $monthly );
+		$a = $parse( $annual );
+		if ( null === $m || null === $a || $m['symbol'] !== $a['symbol'] ) {
+			return '';
+		}
+
+		$saving = ( $m['amount'] * 12 ) - $a['amount'];
+		if ( $saving <= 0 ) {
+			return '';
+		}
+		$number = ( 0.0 === fmod( $saving, 1.0 ) ) ? (string) (int) $saving : number_format( $saving, 2 );
+		return 'Save ' . $m['symbol'] . $number . ' a year';
 	}
 
 	/**
