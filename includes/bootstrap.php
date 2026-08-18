@@ -26,6 +26,10 @@ require_once __DIR__ . '/content/class-menu.php';
 require_once __DIR__ . '/content/class-shortcodes.php';
 require_once __DIR__ . '/content/class-integrations.php';
 
+// Social feed. Interface before its implementors, as everywhere else here.
+require_once __DIR__ . '/social/interface-feed-source.php';
+require_once __DIR__ . '/social/class-manual-feed-source.php';
+
 // Membership
 require_once __DIR__ . '/membership/interface-products.php';
 require_once __DIR__ . '/membership/class-demo-products.php';
