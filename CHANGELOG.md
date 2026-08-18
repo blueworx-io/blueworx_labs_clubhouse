@@ -5,6 +5,10 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.77.0
+
+- **Members can now be shown monthly or annual prices.** Give a tier an annual price as well as a monthly one, under Club Pages → Membership → Tiers, and your Membership and Home pages get a Monthly / Annual switch above the tiers. If paying annually works out cheaper, the card says how much a member saves. A tier priced only one way simply shows that price and says so, and nothing you have already entered changes — your current prices are the monthly ones.
+
 ## 0.76.1
 
 - **The Stories page no longer has a hole in it.** The category buttons sat so far below the featured story that the page looked broken. They now sit under it, on both a computer and a phone. Nothing else on the page has moved.
