@@ -32,6 +32,20 @@ final class ImportParserContentTest extends TestCase {
 		$this->assertSame( 'price_adult_monthly', $out['plan']->items()['membership']['tiers'][0]['price_id'] );
 	}
 
+	public function test_a_tier_annual_price_id_survives_import_too(): void {
+		// The annual select is built from the same products adapter as the
+		// monthly one, so an import must not silently clear it either.
+		Blueworx_Clubhouse_Products_Source::set( new Blueworx_Clubhouse_Demo_Products() );
+
+		$out = $this->parse( array( 'membership' => array( 'tiers' => array( 'items' => array(
+			array( 'name' => 'Adult', 'price' => '£28', 'price_annual' => '£280', 'price_id_annual' => 'price_adult_yearly' ),
+		) ) ) ) );
+
+		$items = $out['plan']->items()['membership']['tiers'][0];
+		$this->assertSame( 'price_adult_yearly', $items['price_id_annual'] );
+		$this->assertSame( '£280', $items['price_annual'] );
+	}
+
 	public function test_a_non_array_file_is_a_hard_error(): void {
 		$out = Blueworx_Clubhouse_Import_Parser::parse( 'nope' );
 		$this->assertNull( $out['plan'] );

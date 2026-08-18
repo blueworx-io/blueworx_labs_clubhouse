@@ -36,6 +36,26 @@ final class ContentCatalogueProductsTest extends TestCase {
 		$this->assertSame( 'Adult membership — £28/mo', $options['price_adult_monthly'] );
 	}
 
+	public function test_the_annual_price_can_be_connected_to_its_own_product(): void {
+		// Both cadences pick from the same shop prices; a tier that sells
+		// annually must be able to name the annual price, not reuse the monthly.
+		$annual = null;
+		foreach ( $this->tiers_section( new Blueworx_Clubhouse_Demo_Products() )['loop']['fields'] as $field ) {
+			if ( 'price_id_annual' === $field['key'] ) {
+				$annual = $field;
+			}
+		}
+		$this->assertNotNull( $annual, 'the tier has no annual product field' );
+		$this->assertSame( 'select', $annual['type'] );
+		$this->assertArrayHasKey( 'price_adult_yearly', $annual['options'] );
+		$this->assertSame( $this->price_field( new Blueworx_Clubhouse_Demo_Products() )['options'], $annual['options'] );
+	}
+
+	public function test_a_tier_offers_a_typed_annual_price(): void {
+		$keys = array_column( $this->tiers_section( null )['loop']['fields'], 'key' );
+		$this->assertContains( 'price_annual', $keys );
+	}
+
 	public function test_with_no_shop_only_not_connected_is_offered(): void {
 		$options = $this->price_field( null )['options'];
 		$this->assertSame( array( '' ), array_keys( $options ) );
