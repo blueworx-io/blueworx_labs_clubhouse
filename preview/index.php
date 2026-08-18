@@ -104,6 +104,22 @@ function blueworx_clubhouse_preview_document(): string {
 	// seam is installed so the preview exercises the same code path as the live site.
 	Blueworx_Clubhouse_Products_Source::set( new Blueworx_Clubhouse_Demo_Products() );
 	Blueworx_Clubhouse_Checkout::set_base_url( '?page=checkout-demo' );
+	// The Monthly / Annual switch only appears when some tier is priced both
+	// ways, and the built-in tiers are monthly-only — so the preview has to be
+	// given tiers to switch between. One tier is left deliberately monthly-only,
+	// because how that card behaves mid-switch is the part worth looking at.
+	$preview_content = null;
+	if ( 'cadence' === (string) preg_replace( '/[^a-z]/', '', (string) ( $_GET['clubhouse_tiers'] ?? '' ) ) ) {
+		$preview_content = new Blueworx_Clubhouse_Content_Store( $storage );
+		$preview_content->set_items( 'membership', 'tiers', array(
+			array( 'eyebrow' => 'Under 18', 'name' => 'Junior', 'price' => '£12', 'period' => '/mo',
+				'features' => "Any junior section\nCoaching included", 'cta_label' => 'Join' ),
+			array( 'eyebrow' => 'Full playing', 'name' => 'Adult', 'price' => '£28', 'period' => '/mo',
+				'price_annual' => '£280', 'features' => "Any section, any level\nClubhouse & socials", 'cta_label' => 'Join' ),
+			array( 'eyebrow' => 'Best value', 'name' => 'Family', 'price' => '£45', 'period' => '/mo',
+				'price_annual' => '£450', 'features' => "Up to 5 members\nAny sections", 'featured' => true, 'cta_label' => 'Join' ),
+		) );
+	}
 	// The login page's account screens are part of the design, so ?clubhouse_auth=
 	// selects one here too. No form action and no nonce: there is nothing to post
 	// to without WordPress, and the card renders its form either way.
@@ -115,8 +131,8 @@ function blueworx_clubhouse_preview_document(): string {
 	$item     = is_string( $raw_item ) ? trim( (string) preg_replace( '/[^a-z0-9]+/', '-', strtolower( $raw_item ) ), '-' ) : '';
 	$collections = new Blueworx_Clubhouse_Demo_Collections();
 	$body        = 'post' === $page
-		? Blueworx_Clubhouse_Page_Renderer::post( $branding, $visibility, $collections, '', null, $filter )
-		: Blueworx_Clubhouse_Page_Map::render( $slug, $branding, $visibility, $collections, '', null, $filter, $item );
+		? Blueworx_Clubhouse_Page_Renderer::post( $branding, $visibility, $collections, '', $preview_content, $filter )
+		: Blueworx_Clubhouse_Page_Map::render( $slug, $branding, $visibility, $collections, '', $preview_content, $filter, $item );
 	$palettes  = blueworx_clubhouse_preview_palettes( $registry->active() );
 	$switcher   = '<div class="ch-switcher" data-ch-palettes=\''
 		. htmlspecialchars( json_encode( $palettes ), ENT_QUOTES, 'UTF-8' ) . '\'></div>'
