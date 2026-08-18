@@ -65,14 +65,14 @@ final class Blueworx_Clubhouse_Social_Feed {
 			return $this->resolved;
 		}
 
-		$cached = get_transient( self::cache_key() );
+		$cached = self::cached();
 		if ( is_array( $cached ) ) {
 			$this->status   = array() === $cached ? self::NOT_CONNECTED : self::OK;
 			$this->resolved = $cached;
 			return $this->resolved;
 		}
 
-		if ( false !== get_transient( self::failure_key() ) ) {
+		if ( self::failure_marker() ) {
 			// A fetch failed moments ago. Serve whatever last succeeded rather
 			// than paying for the failure again on every render of an outage.
 			$this->resolved = $this->after_failure();
@@ -81,14 +81,18 @@ final class Blueworx_Clubhouse_Social_Feed {
 
 		$fetched = $this->source->posts();
 		if ( null === $fetched ) {
-			set_transient( self::failure_key(), true, self::FAILURE_TTL );
+			if ( function_exists( 'set_transient' ) ) {
+				set_transient( self::failure_key(), true, self::FAILURE_TTL );
+			}
 			$this->resolved = $this->after_failure();
 			return $this->resolved;
 		}
 
 		$posts = self::clean( $fetched );
-		set_transient( self::cache_key(), $posts, self::CACHE_TTL );
-		if ( array() !== $posts ) {
+		if ( function_exists( 'set_transient' ) ) {
+			set_transient( self::cache_key(), $posts, self::CACHE_TTL );
+		}
+		if ( array() !== $posts && function_exists( 'update_option' ) ) {
 			// No expiry: this is read only when a later fetch fails, so it has
 			// to still be here whenever that happens.
 			update_option( self::LAST_GOOD_OPTION, $posts, false );
@@ -161,8 +165,34 @@ final class Blueworx_Clubhouse_Social_Feed {
 	 * @return array<int,array<string,string>>
 	 */
 	private static function last_good(): array {
+		if ( ! function_exists( 'get_option' ) ) {
+			return array();
+		}
 		$stored = get_option( self::LAST_GOOD_OPTION, array() );
 		return is_array( $stored ) ? self::clean( $stored ) : array();
+	}
+
+	/**
+	 * The cached fetch, or false when there is none — and false, too, wherever
+	 * WordPress's cache functions are absent. The DB-free preview
+	 * (preview/index.php) renders these same sections without WordPress
+	 * loaded, so every store here is optional: without one, each render simply
+	 * asks the source, which is exactly right for a design harness and never
+	 * happens on a real site.
+	 *
+	 * @return array<int,mixed>|false
+	 */
+	private static function cached() {
+		if ( ! function_exists( 'get_transient' ) ) {
+			return false;
+		}
+		$cached = get_transient( self::cache_key() );
+		return is_array( $cached ) ? $cached : false;
+	}
+
+	/** Whether a fetch failed moments ago — see cached() on the missing-WordPress case. */
+	private static function failure_marker(): bool {
+		return function_exists( 'get_transient' ) && false !== get_transient( self::failure_key() );
 	}
 
 	/** Transient key, scoped to the running plugin version like Theme_Cache. */
