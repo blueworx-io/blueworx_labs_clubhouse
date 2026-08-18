@@ -24,9 +24,10 @@ final class Blueworx_Clubhouse_Visibility {
 	 * @var array<string, bool>
 	 */
 	private const SECTION_DEFAULTS = array(
-		// Empty today: home.stats was the only opt-in section and the stat strip has
-		// been withdrawn. The mechanism stays — it is how a future section ships off
-		// by default — and is_section_visible() still consults it.
+		// The social feed shows nothing until a club has pasted its posts in, so
+		// shipping it on would put an empty band on every existing club site the
+		// moment this updated. It is opted into, on Setup → Visibility.
+		'home.social_feed' => false,
 	);
 
 	private Blueworx_Clubhouse_Storage $storage;

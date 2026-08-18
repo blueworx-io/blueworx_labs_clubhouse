@@ -55,7 +55,10 @@ final class SectionAnchorTest extends TestCase {
 		// Sections deliberately excluded from Link_Catalogue::anchors() because
 		// they share another section's root and have no id of their own to
 		// carry — kept in lock-step with Link_Catalogue::has_no_anchor().
-		$expected_missing = array();
+		// The social feed ships hidden and renders nothing until a club pastes
+		// posts in, so a default render carries no root for it — kept in
+		// lock-step with Link_Catalogue::has_no_anchor().
+		$expected_missing = array( Blueworx_Clubhouse_Link_Catalogue::anchor_id( 'home', 'social_feed' ) );
 
 		$branding    = new Blueworx_Clubhouse_Branding( new Blueworx_Clubhouse_Fake_Storage() );
 		$visibility  = new Blueworx_Clubhouse_Visibility( new Blueworx_Clubhouse_Fake_Storage() );
