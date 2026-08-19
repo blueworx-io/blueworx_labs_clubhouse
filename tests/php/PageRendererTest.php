@@ -5,6 +5,14 @@ use PHPUnit\Framework\TestCase;
 
 final class PageRendererTest extends TestCase {
 
+	// The auth seam is static (Blueworx_Clubhouse_Auth_View::set_state()) — leaving
+	// a signed-in state set would change what every later test in this process
+	// renders, so every test that sets it must be cleaned up here too.
+	protected function tearDown(): void {
+		Blueworx_Clubhouse_Auth_View::reset();
+		parent::tearDown();
+	}
+
 	private function branding(): Blueworx_Clubhouse_Branding {
 		return new Blueworx_Clubhouse_Branding( new Blueworx_Clubhouse_Fake_Storage() );
 	}
@@ -500,5 +508,54 @@ final class PageRendererTest extends TestCase {
 		list( $label, $href ) = Blueworx_Clubhouse_Page_Renderer::header_account( true, false, '/out/' );
 		$this->assertSame( 'Log out', $label );
 		$this->assertSame( '/out/', $href );
+	}
+
+	/**
+	 * These three exercise the wiring inside shell_header() itself — deriving
+	 * $signed_in from Auth_View::state() and composing Page_Map::is_available()
+	 * with Visibility::is_page_visible() — not just header_account() in isolation.
+	 */
+	public function test_a_visitor_sees_log_in_in_the_rendered_header(): void {
+		Blueworx_Clubhouse_Auth_View::reset();
+		$html = Blueworx_Clubhouse_Page_Renderer::home(
+			$this->branding(),
+			new Blueworx_Clubhouse_Visibility( new Blueworx_Clubhouse_Fake_Storage() ),
+			$this->collections()
+		);
+		$header_html = substr( $html, 0, strpos( $html, '<main' ) );
+		$this->assertStringContainsString( '>Log in<', $header_html );
+	}
+
+	public function test_a_signed_in_member_sees_the_member_area_in_the_rendered_header(): void {
+		Blueworx_Clubhouse_Auth_View::set_state( array(
+			'logged_in'  => '1',
+			'logout_url' => 'https://club.test/wp-login.php?action=logout',
+		) );
+		$html = Blueworx_Clubhouse_Page_Renderer::home(
+			$this->branding(),
+			new Blueworx_Clubhouse_Visibility( new Blueworx_Clubhouse_Fake_Storage() ),
+			$this->collections()
+		);
+		$header_html = substr( $html, 0, strpos( $html, '<main' ) );
+		$this->assertStringContainsString( '>Member area<', $header_html );
+		$this->assertStringContainsString( 'member-dashboard', $header_html );
+	}
+
+	public function test_a_signed_in_member_sees_log_out_when_the_member_area_is_switched_off(): void {
+		Blueworx_Clubhouse_Auth_View::set_state( array(
+			'logged_in'  => '1',
+			'logout_url' => 'https://club.test/wp-login.php?action=logout',
+		) );
+		$storage    = new Blueworx_Clubhouse_Fake_Storage();
+		$visibility = new Blueworx_Clubhouse_Visibility( $storage );
+		$visibility->set_page_visible( 'member-dashboard', false );
+		$html = Blueworx_Clubhouse_Page_Renderer::home(
+			$this->branding(),
+			$visibility,
+			$this->collections()
+		);
+		$header_html = substr( $html, 0, strpos( $html, '<main' ) );
+		$this->assertStringContainsString( '>Log out<', $header_html );
+		$this->assertStringContainsString( 'https://club.test/wp-login.php?action=logout', $header_html );
 	}
 }
