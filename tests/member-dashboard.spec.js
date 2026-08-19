@@ -94,12 +94,16 @@ test('a signed-in member is offered the way out @wordpress', async ({ page }) =>
   await expect(page.getByRole('link', { name: 'Sign out' }).first()).toBeVisible();
 });
 
-test('a signed-out visitor keeps the page own content @wordpress', async ({ page, context }) => {
-  // On a real club that content is SureCart's sign-in form. Our frame would
-  // tell them the club had set nothing up, which is not true and not their
-  // problem.
+test('a signed-out visitor is sent to the club login page, not the bare frame @wordpress', async ({
+  page,
+  context,
+}) => {
+  // The member area's own route now redirects a stranger to the club's login
+  // page rather than rendering the frame with nothing in it — the same
+  // journey welcome-pack.spec.js proves. There is no more shop content to
+  // fall back to here: the shop's own page is what redirects to this one.
   await context.clearCookies();
   await page.goto(DASHBOARD);
+  await expect(page).toHaveURL(/\/login\/?$/);
   await expect(page.locator('.bw-admin.clubhouse-member')).toHaveCount(0);
-  await expect(page.locator('#foreign-content')).toHaveText('FOREIGN CONTENT');
 });
