@@ -126,6 +126,9 @@ final class Blueworx_Clubhouse_Member_Dashboard {
 		if ( '' === $out ) {
 			return self::not_set_up( $home_url );
 		}
+		// $welcome is always '' here in production — take_over() only ever
+		// passes the pack into overview(). Kept as a parameter so the brief's
+		// direct calls to view_body() can still exercise it; not a live path.
 		return ( '' !== $welcome ? $welcome : '' ) . $out;
 	}
 
@@ -155,6 +158,12 @@ final class Blueworx_Clubhouse_Member_Dashboard {
 		}
 		if ( '' !== $links ) {
 			$links = '<div class="clubhouse-member__quicks">' . $links . '</div>';
+		}
+		if ( '' === $welcome && '' === $links ) {
+			// No pack written, and no other views to link to (SureCart inactive
+			// and LatePoint absent, or deactivated after the page was seeded).
+			// A member must never meet a blank frame here.
+			return self::not_set_up( $home_url );
 		}
 		return $welcome . $links;
 	}

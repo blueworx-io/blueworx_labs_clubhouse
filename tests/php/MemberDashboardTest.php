@@ -92,4 +92,14 @@ final class MemberDashboardTest extends TestCase {
 		$this->assertStringContainsString( '?view=orders', $html );
 		$this->assertNotSame( '', trim( $html ) );
 	}
+
+	public function test_an_overview_with_neither_pack_nor_views_shows_the_honest_empty_state(): void {
+		// No pack written, and no other views to link to — e.g. a club whose
+		// shop plugin is inactive. A member must never meet a blank frame.
+		$views = Blueworx_Clubhouse_Dashboard_Views::available( false, false );
+		$html  = Blueworx_Clubhouse_Member_Dashboard::overview( '', $views, 'https://club.test/' );
+		$this->assertNotSame( '', trim( $html ) );
+		$this->assertStringContainsString( 'bw-empty', $html );
+		$this->assertStringContainsString( 'href="https://club.test/"', $html );
+	}
 }
