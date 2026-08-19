@@ -53,6 +53,7 @@ page id and a broken one costs a club a sale.
 | Look | BlueWorx admin, full width, no club header or footer | Decided by Luke. The member area reads as one BlueWorx product across every club rather than as part of each club's site. |
 | SureCart's dashboard page | Kept, hidden, redirects to `/member-dashboard/` | SureCart's own account links and any member's bookmark still land in the right place. |
 | Signed-out visitors | Sent to Clubhouse's own `/login/` | Today they get SureCart's login form, which looks nothing like the club. Clubhouse already owns a login page; use it. |
+| The header button | "Log in" signed out, "Member area" signed in | Decided by Luke. The way in and the way back are the same button, so a member never hunts for their account. Signing out lives inside the member area. |
 
 ## Architecture
 
@@ -93,6 +94,14 @@ The pages themselves are untouched: still in the database, still served, still
 reachable by direct URL for anyone who types one. Removing the menu is what Luke
 asked for and is the reversible half of the change.
 
+**The header button** already switches on login state — it reads "Log in" signed
+out and "Log out" signed in. Signed in it now reads **Member area** and points at
+`/member-dashboard/`; signed out it is unchanged. Signing out moves inside the
+member area, which already carries a nonced sign-out link, so the action is not
+lost, only moved to where a member goes to manage everything else about their
+membership. The main nav gains nothing: the member area is a members-only screen
+and does not belong in a list every visitor sees.
+
 **`Commerce_Pages` is unchanged.** Checkout and order confirmation keep their
 `the_content` dressing and their SureCart URLs.
 
@@ -104,9 +113,11 @@ other switched-off page. The Pages menu is gone.
 
 ## What a member sees
 
-`/member-dashboard/` — the same screen as today, at a club address instead of
-SureCart's. Signed out, they are sent to the club's own login page rather than
-SureCart's form. Old bookmarks redirect.
+Signed out, the header offers **Log in**. Signed in, that same button reads
+**Member area** and opens `/member-dashboard/` — the same screen as today, at a
+club address instead of SureCart's. Signing out is inside that screen. A
+signed-out visitor who types the address is sent to the club's own login page
+rather than SureCart's form. Old bookmarks redirect.
 
 ## Testing
 
@@ -114,12 +125,16 @@ SureCart's form. Old bookmarks redirect.
 the rewrite registration; the renderer returning the member area's frame without
 the club's header or footer; the enqueue decision choosing `bw.css` over the
 look stylesheet for this slug and only this slug; and the redirect deciding
-correctly for the dashboard page id, for a `0` id, and for any other page.
+correctly for the dashboard page id, for a `0` id, and for any other page; and
+the header button reading "Log in" to `/login/` signed out and "Member area" to
+`/member-dashboard/` signed in.
 
 **A Playwright spec** against the real WordPress harness covers the address
 serving the member area, a switched-off page answering 404, a signed-out visitor
 reaching the login page, the redirect from the old dashboard page carrying
-`?view=` through, and the Pages menu being absent from wp-admin.
+`?view=` through, the header button taking a signed-in member to the member area
+and a signed-out visitor to the login page, and the Pages menu being absent from
+wp-admin.
 
 The existing member-area tests move with the code; the ones asserting the
 `the_content` takeover go, because that path goes.
@@ -139,6 +154,5 @@ The existing member-area tests move with the code; the ones asserting the
 
 ## Open questions
 
-- Whether Member area belongs in the club's main nav, or only reached from the
-  login and account links. It is a members-only screen, so the nav is probably
-  wrong, but that is worth seeing once it is real.
+None. The nav question is settled above: the member area is reached from the
+header button, not from the main nav.
