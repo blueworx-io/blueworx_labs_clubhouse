@@ -30,27 +30,49 @@ final class Blueworx_Clubhouse_Dashboard_Shell {
 	/** The query argument each view is addressed by. */
 	public const VIEW_ARG = 'view';
 
+	/**
+	 * Escape, the same way Sections does — decoding first so escaping twice
+	 * changes nothing. Some of what arrives here is built by WordPress's own
+	 * helpers, which hand back a URL with its ampersands already written as
+	 * entities; escaping that again would turn &amp; into &amp;amp; and quietly
+	 * rename the query argument behind it.
+	 */
 	private static function e( string $v ): string {
-		return htmlspecialchars( $v, ENT_QUOTES, 'UTF-8' );
+		return htmlspecialchars( html_entity_decode( $v, ENT_QUOTES | ENT_HTML5, 'UTF-8' ), ENT_QUOTES, 'UTF-8' );
 	}
 
-	/** The address of one view, relative to the page the member area is on. */
-	public static function view_url( string $key ): string {
-		return '?' . self::VIEW_ARG . '=' . rawurlencode( $key );
+	/**
+	 * The address of one view.
+	 *
+	 * Built on the page's own address, handed in by whoever knows it, because a
+	 * bare '?view=orders' replaces the whole query rather than adding to it: on
+	 * a club with permalinks set to Plain the dashboard lives at '/?page_id=42'
+	 * and that link would land the member on the front page. With no address to
+	 * build on it falls back to the bare form, which is right wherever the page
+	 * carries no query of its own.
+	 */
+	public static function view_url( string $key, string $base = '' ): string {
+		$arg = self::VIEW_ARG . '=' . rawurlencode( $key );
+		if ( '' === trim( $base ) ) {
+			return '?' . $arg;
+		}
+		return $base . ( false !== strpos( $base, '?' ) ? '&' : '?' ) . $arg;
 	}
 
 	/**
 	 * The whole member area: nav down the side, one view in the middle.
 	 *
-	 * @param array<int,array<string,mixed>> $views   From Dashboard_Views::available().
-	 * @param string                         $current The key of the view being read.
-	 * @param string                         $body    Already-rendered markup for that view.
+	 * @param array<int,array<string,mixed>> $views      From Dashboard_Views::available().
+	 * @param string                         $current    The key of the view being read.
+	 * @param string                         $body       Already-rendered markup for that view.
+	 * @param string                         $base       The page's own address, which the view links are built on.
+	 * @param string                         $logout_url The signed sign-out address, or '' for no link.
 	 */
-	public static function page( array $views, string $current, string $title, string $lede, string $body, string $home_url, string $club_name ): string {
+	public static function page( array $views, string $current, string $title, string $lede, string $body, string $home_url, string $club_name, string $base = '', string $logout_url = '' ): string {
 		return '<div class="bw-admin bw-page clubhouse-member">'
-			. self::head( $title, $lede, $home_url, $club_name )
+			. self::head( $title, $lede, $home_url, $club_name, $logout_url )
 			. '<div class="bw-page__body">'
-			. self::nav( $views, $current )
+			. self::nav( $views, $current, $base )
 			. '<main class="bw-panels" id="clubhouse-member-view">' . $body . '</main>'
 			. '</div></div>';
 	}
@@ -69,7 +91,7 @@ final class Blueworx_Clubhouse_Dashboard_Shell {
 			. '</div></div>';
 	}
 
-	private static function head( string $title, string $lede, string $home_url, string $club_name ): string {
+	private static function head( string $title, string $lede, string $home_url, string $club_name, string $logout_url = '' ): string {
 		$out = '<header class="bw-pagehead"><div class="bw-pagehead__titles">';
 		if ( '' !== trim( $club_name ) ) {
 			$out .= '<p class="bw-pagehead__eyebrow">' . self::e( $club_name ) . '</p>';
@@ -80,21 +102,27 @@ final class Blueworx_Clubhouse_Dashboard_Shell {
 		}
 		$out .= '</div><div class="bw-pagehead__actions">'
 			. '<a class="bw-btn bw-btn--secondary" href="' . self::e( $home_url ) . '">'
-			. self::icon( 'arrow-left' ) . 'Back to the club site</a>'
-			. '</div></header>';
+			. self::icon( 'arrow-left' ) . 'Back to the club site</a>';
+		// The club's own header and footer are kept off this page, so this is the
+		// only way out of a signed-in session. Nothing is drawn when there is no
+		// address to sign out to — a dead link is worse than no link.
+		if ( '' !== trim( $logout_url ) ) {
+			$out .= '<a class="bw-btn bw-btn--secondary" href="' . self::e( $logout_url ) . '">Sign out</a>';
+		}
+		$out .= '</div></header>';
 		return $out;
 	}
 
 	/**
 	 * @param array<int,array<string,mixed>> $views
 	 */
-	private static function nav( array $views, string $current ): string {
+	private static function nav( array $views, string $current, string $base = '' ): string {
 		$out = '<nav class="bw-secnav" aria-label="Your account">';
 		foreach ( $views as $view ) {
 			$key    = (string) $view['key'];
 			$active = $key === $current;
 			$out   .= '<a class="bw-secnav__item' . ( $active ? ' is-active' : '' ) . '"'
-				. ' href="' . self::e( self::view_url( $key ) ) . '"'
+				. ' href="' . self::e( self::view_url( $key, $base ) ) . '"'
 				. ( $active ? ' aria-current="page"' : '' ) . '>'
 				. '<span class="clubhouse-member__navlabel">'
 				. self::icon( (string) $view['icon'] )
