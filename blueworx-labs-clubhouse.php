@@ -41,6 +41,7 @@ require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/admin/class-access-controll
 require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/admin/class-seo-controller.php';
 require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/admin/class-guide-controller.php';
 require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/admin/class-shop-pages-controller.php';
+require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/admin/class-wordpress-pages.php';
 require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/import/class-import-applier.php';
 require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/import/class-import-controller.php';
 
@@ -77,6 +78,7 @@ function blueworx_labs_clubhouse_init() {
 	Blueworx_Clubhouse_Guide_Controller::register();
 	Blueworx_Clubhouse_SureCart_Products::register();
 	Blueworx_Clubhouse_Shop_Pages_Controller::register();
+	Blueworx_Clubhouse_Wordpress_Pages::register();
 	add_action( 'admin_menu', array( Blueworx_Clubhouse_Collection_Types::class, 'register_content_menu' ) );
 }
 add_action( 'plugins_loaded', 'blueworx_labs_clubhouse_init' );

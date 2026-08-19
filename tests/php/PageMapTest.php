@@ -89,4 +89,22 @@ final class PageMapTest extends TestCase {
 		$this->assertStringNotContainsString( 'ch-nav', $html );
 		$this->assertStringNotContainsString( 'ch-footer', $html );
 	}
+
+	/**
+	 * What the SEO report is meant to walk: every servable page minus the
+	 * members-only one. Stands in for exercising Seo_Controller::build_model()
+	 * itself, which needs a WordPress runtime this harness does not provide
+	 * (get_bloginfo() and friends) — the controller's own guard is covered only
+	 * by inspection.
+	 */
+	public function test_available_pages_filtered_by_private_excludes_only_the_member_area(): void {
+		$public = array_values( array_filter(
+			Blueworx_Clubhouse_Page_Map::available(),
+			static fn( array $page ): bool => ! Blueworx_Clubhouse_Page_Map::is_private( $page['slug'] )
+		) );
+
+		$slugs = array_column( $public, 'slug' );
+		$this->assertNotContains( 'member-dashboard', $slugs );
+		$this->assertCount( count( Blueworx_Clubhouse_Page_Map::available() ) - 1, $public );
+	}
 }

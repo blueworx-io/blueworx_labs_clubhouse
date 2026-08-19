@@ -67,6 +67,12 @@ final class Blueworx_Clubhouse_Seo_Controller {
 		foreach ( Blueworx_Clubhouse_Page_Map::available() as $page ) {
 			$slug = (string) $page['slug'];
 			$key  = '' === $slug ? 'home' : $slug;
+			if ( Blueworx_Clubhouse_Page_Map::is_private( $slug ) ) {
+				// A members-only screen. Nobody arrives at it from a search
+				// result, so scoring its title and description would be advice
+				// about an audience it does not have.
+				continue;
+			}
 			if ( ! $ctx->visibility->is_page_visible( $key ) ) {
 				// A hidden page is not served, so reporting on it would be reporting on
 				// something nobody can reach.
