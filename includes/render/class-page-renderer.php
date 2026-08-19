@@ -448,6 +448,29 @@ final class Blueworx_Clubhouse_Page_Renderer {
 		return self::shell_footer( $club, $visibility, $branding, $content );
 	}
 
+	/**
+	 * The header's account button: label and address.
+	 *
+	 * One button carries the whole account journey — the way in when nobody is
+	 * signed in, and the way back to the member area when somebody is. Signing
+	 * out lives inside the member area, which is where a member goes to manage
+	 * everything else about their membership.
+	 *
+	 * A club that has switched the member area off keeps the old way out here,
+	 * so a signed-in member is never left without one.
+	 *
+	 * @return array{0:string,1:string} label, href
+	 */
+	public static function header_account( bool $signed_in, bool $member_area_on, string $logout_url ): array {
+		if ( ! $signed_in ) {
+			return array( 'Log in', Blueworx_Clubhouse_Links::url( 'login' ) );
+		}
+		if ( $member_area_on ) {
+			return array( 'Member area', Blueworx_Clubhouse_Links::url( 'member-dashboard' ) );
+		}
+		return array( 'Log out', $logout_url );
+	}
+
 	private static function shell_header(
 		string $club,
 		string $active,
@@ -463,19 +486,25 @@ final class Blueworx_Clubhouse_Page_Renderer {
 		$banner_text = $banner_on
 			? self::cget( $content, 'global', 'header', 'banner', 'Summer sign-ups are open — register your interest for 2026/27 →' )
 			: '';
-		// A signed-in member is offered the way out where they found the way in,
-		// rather than being sent to wp-admin to find it. Off WordPress the state
-		// seam is unset, so the preview keeps showing "Log in".
+		// The way in and the way back are the same button: "Log in" to a visitor,
+		// "Member area" to a member. Off WordPress the state seam is unset, so the
+		// preview keeps showing "Log in".
 		$auth        = Blueworx_Clubhouse_Auth_View::state();
 		$signed_in   = '' !== $auth['logged_in'] && '' !== $auth['logout_url'];
+		list( $account_label, $account_href ) = self::header_account(
+			$signed_in,
+			Blueworx_Clubhouse_Page_Map::is_available( 'member-dashboard' )
+				&& $visibility->is_page_visible( 'member-dashboard' ),
+			$auth['logout_url']
+		);
 		return Blueworx_Clubhouse_Sections::header( array(
 			'club_name'   => $club,
 			'banner'      => $banner_text,
 			'banner_href' => self::cget( $content, 'global', 'header', 'banner_href', Blueworx_Clubhouse_Links::url( 'membership' ) ),
 			'nav'         => Blueworx_Clubhouse_Menu::current()->items( $collections, $visibility ),
 			'active'      => $active,
-			'login'       => $signed_in ? 'Log out' : 'Log in',
-			'login_href'  => $signed_in ? $auth['logout_url'] : Blueworx_Clubhouse_Links::url( 'login' ),
+			'login'       => $account_label,
+			'login_href'  => $account_href,
 			'join'        => self::cget( $content, 'global', 'header', 'join', Blueworx_Clubhouse_Cta::JOIN ),
 			'join_href'   => self::cget( $content, 'global', 'header', 'join_href', Blueworx_Clubhouse_Links::url( 'membership' ) ),
 			'logo'        => $logo_url,

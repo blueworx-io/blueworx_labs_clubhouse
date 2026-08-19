@@ -482,4 +482,23 @@ final class PageRendererTest extends TestCase {
 		$this->assertStringContainsString( '>Membership<', $html );
 		$this->assertStringContainsString( '>Contact<', $html );
 	}
+
+	public function test_the_header_offers_the_way_in_when_nobody_is_signed_in(): void {
+		list( $label, $href ) = Blueworx_Clubhouse_Page_Renderer::header_account( false, true, '/out/' );
+		$this->assertSame( 'Log in', $label );
+		$this->assertStringContainsString( 'login', $href );
+	}
+
+	public function test_the_header_offers_the_member_area_to_a_signed_in_member(): void {
+		list( $label, $href ) = Blueworx_Clubhouse_Page_Renderer::header_account( true, true, '/out/' );
+		$this->assertSame( 'Member area', $label );
+		$this->assertStringContainsString( 'member-dashboard', $href );
+	}
+
+	/** A club that switched the member area off must not strand a signed-in member. */
+	public function test_the_header_keeps_the_way_out_when_there_is_no_member_area(): void {
+		list( $label, $href ) = Blueworx_Clubhouse_Page_Renderer::header_account( true, false, '/out/' );
+		$this->assertSame( 'Log out', $label );
+		$this->assertSame( '/out/', $href );
+	}
 }
