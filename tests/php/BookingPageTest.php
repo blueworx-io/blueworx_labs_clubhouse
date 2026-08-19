@@ -241,16 +241,19 @@ final class BookingPageTest extends TestCase {
 		$this->withLatePoint();
 		$inv = array();
 		foreach ( Blueworx_Clubhouse_Setup_Sections::inventory() as $p ) {
+			// A page with no sections has nothing to hold in lockstep — the member
+			// area is one: it carries a visibility switch, but every panel on it
+			// belongs to the shop or the booking plugin, so there is nothing of
+			// the club's to edit and no catalogue tab to match.
+			if ( array() === $p['sections'] ) {
+				continue;
+			}
 			$inv[ $p['page'] ] = array_column( $p['sections'], 'key' );
 			sort( $inv[ $p['page'] ] );
 		}
 		$seen = array();
 		foreach ( Blueworx_Clubhouse_Content_Catalogue::pages() as $page ) {
-			$vis_page          = 'global' === $page['tab'] ? 'home' : $page['tab'];
-			// Set even when a page (like the member area) has no sections at all —
-			// otherwise a genuinely sectionless tab never earns a key here, and reads
-			// as "no catalogue tab" even though one exists.
-			$seen[ $vis_page ] = $seen[ $vis_page ] ?? array();
+			$vis_page = 'global' === $page['tab'] ? 'home' : $page['tab'];
 			foreach ( $page['sections'] as $s ) {
 				$seen[ $vis_page ][] = $s['key'];
 			}
