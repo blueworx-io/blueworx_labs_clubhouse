@@ -40,6 +40,9 @@ require_once __DIR__ . '/membership/class-surecart-products.php';
 require_once __DIR__ . '/membership/class-shop-pages.php';
 require_once __DIR__ . '/membership/class-welcome-pack.php';
 
+// Member area. Pure first, then the page that uses them.
+require_once __DIR__ . '/dashboard/class-dashboard-assets.php';
+
 // Theme
 require_once __DIR__ . '/theme/interface-base-look.php';
 require_once __DIR__ . '/theme/class-base-look-registry.php';
