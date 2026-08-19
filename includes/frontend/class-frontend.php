@@ -412,6 +412,16 @@ final class Blueworx_Clubhouse_Frontend {
 			// components would hide a member's orders behind an animation.
 			Blueworx_Clubhouse_Dashboard_Assets::enqueue();
 			Blueworx_Clubhouse_Member_Dashboard::enqueue_shop_assets();
+			// Switching panels without a reload. Deferred and enhancement-only:
+			// the nav is real links, so the page works while this is still on
+			// its way and if it never arrives at all.
+			wp_enqueue_script(
+				'clubhouse-member-area',
+				BLUEWORX_LABS_CLUBHOUSE_URL . 'assets/js/member-area.js',
+				array(),
+				BLUEWORX_LABS_CLUBHOUSE_VERSION,
+				true
+			);
 			return;
 		}
 		if ( ! self::enqueue_look_styles() ) {
