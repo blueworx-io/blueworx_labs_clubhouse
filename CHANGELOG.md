@@ -5,6 +5,10 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.81.0
+
+- **The member area now looks the way it was designed, and moves like an app.** Your club's name and badge sit at the top of a proper side menu, with the member's own name at the foot of it, and the page title tells them where they are. Moving between bookings, orders, invoices and the rest no longer reloads the page — it switches instantly, and the back button still works. On a phone the side menu becomes a row of tabs along the bottom, thumb height, so a member can get around one-handed.
+
 ## 0.80.0
 
 - **Your members get their own page on your site, and you get one place to manage it.** The member area now lives at /member-dashboard/ on your own address, listed with your other pages and switchable off under Setup like any of them. Signed in, the Log in button in your header becomes Member area, so a member is always one click from their bookings, orders and membership. Anyone with the old link is taken to the new page automatically. WordPress's own Pages screen is gone from your menu — everything you edit lives under Club Pages and Setup now. Nothing has been deleted: the pages your shop and booking plugin rely on are all still there, doing their job quietly.
