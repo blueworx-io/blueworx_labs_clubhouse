@@ -60,21 +60,182 @@ final class Blueworx_Clubhouse_Dashboard_Shell {
 	}
 
 	/**
-	 * The whole member area: nav down the side, one view in the middle.
+	 * The whole member area: the club and the member down the left, the view
+	 * being read to the right of them.
 	 *
-	 * @param array<int,array<string,mixed>> $views      From Dashboard_Views::available().
-	 * @param string                         $current    The key of the view being read.
-	 * @param string                         $body       Already-rendered markup for that view.
-	 * @param string                         $base       The page's own address, which the view links are built on.
-	 * @param string                         $logout_url The signed sign-out address, or '' for no link.
+	 * Takes one array rather than a row of positional arguments — the design
+	 * needs the club's logo, the member's name and every panel's markup, and
+	 * eleven positional strings is a signature nobody can call correctly.
+	 *
+	 * Every panel is rendered, and every one but the current carries `hidden`.
+	 * The panels are other plugins' web components and shortcodes: they come
+	 * alive when the page loads, so a panel fetched later would render as an
+	 * empty box. Showing and hiding what is already there costs one attribute.
+	 *
+	 * @param array{
+	 *   views:array<int,array<string,mixed>>,
+	 *   current:string,
+	 *   panels:array<string,string>,
+	 *   home_url?:string, club_name?:string, logo_url?:string, base?:string,
+	 *   logout_url?:string, member_name?:string, member_email?:string
+	 * } $args
 	 */
-	public static function page( array $views, string $current, string $title, string $lede, string $body, string $home_url, string $club_name, string $base = '', string $logout_url = '' ): string {
-		return '<div class="bw-admin bw-page clubhouse-member">'
-			. self::head( $title, $lede, $home_url, $club_name, $logout_url )
-			. '<div class="bw-page__body">'
-			. self::nav( $views, $current, $base )
-			. '<main class="bw-panels" id="clubhouse-member-view">' . $body . '</main>'
+	public static function page( array $args ): string {
+		$views   = isset( $args['views'] ) && is_array( $args['views'] ) ? $args['views'] : array();
+		$current = (string) ( $args['current'] ?? '' );
+		$panels  = isset( $args['panels'] ) && is_array( $args['panels'] ) ? $args['panels'] : array();
+		$base    = (string) ( $args['base'] ?? '' );
+
+		return '<div class="bw-admin bw-page clubhouse-member" data-clubhouse-member data-view-initial="' . self::e( $current ) . '">'
+			. '<div class="clubhouse-member__shell">'
+			. self::sidebar( $views, $current, $base, $args )
+			. '<div class="clubhouse-member__main">'
+			. self::head( $views, $current, $args )
+			. '<main class="bw-panels" id="clubhouse-member-view">'
+			. self::panels( $views, $current, $panels )
+			. '</main>'
+			. '</div>'
+			. self::tabbar( $views, $current, $base )
 			. '</div></div>';
+	}
+
+	/**
+	 * Every panel, with all but one hidden. See page() for why they are all
+	 * drawn. A view with nothing rendered for it is skipped rather than drawn
+	 * empty.
+	 *
+	 * @param array<int,array<string,mixed>> $views
+	 * @param array<string,string>           $panels
+	 */
+	private static function panels( array $views, string $current, array $panels ): string {
+		$out = '';
+		foreach ( $views as $view ) {
+			$key  = (string) $view['key'];
+			$body = (string) ( $panels[ $key ] ?? '' );
+			if ( '' === $body ) {
+				continue;
+			}
+			$out .= '<div class="clubhouse-member__panel" data-view="' . self::e( $key ) . '"'
+				. ' role="tabpanel" aria-labelledby="clubhouse-member-tab-' . self::e( $key ) . '"'
+				. ( $key === $current ? '' : ' hidden' ) . '>'
+				. $body . '</div>';
+		}
+		return $out;
+	}
+
+	/**
+	 * The left column: who the club is, where a member can go, and who they are
+	 * signed in as. Full height, as the design draws it.
+	 *
+	 * @param array<int,array<string,mixed>> $views
+	 * @param array<string,mixed>            $args
+	 */
+	private static function sidebar( array $views, string $current, string $base, array $args ): string {
+		$club  = trim( (string) ( $args['club_name'] ?? '' ) );
+		$logo  = trim( (string) ( $args['logo_url'] ?? '' ) );
+		$home  = trim( (string) ( $args['home_url'] ?? '' ) );
+		$name  = trim( (string) ( $args['member_name'] ?? '' ) );
+		$email = trim( (string) ( $args['member_email'] ?? '' ) );
+
+		$out = '<aside class="clubhouse-member__side">';
+
+		// The brand block. A club with no logo set gets its initials in the same
+		// box, so the corner is never empty.
+		$out .= '<div class="clubhouse-member__brand">';
+		if ( '' !== $logo ) {
+			$out .= '<span class="clubhouse-member__brandmark"><img src="' . self::e( $logo ) . '" alt=""></span>';
+		} elseif ( '' !== $club ) {
+			$out .= '<span class="clubhouse-member__brandmark">' . self::e( self::initials( $club ) ) . '</span>';
+		}
+		if ( '' !== $club ) {
+			$out .= '<span class="clubhouse-member__brandtext">'
+				. '<span class="clubhouse-member__brandname">' . self::e( $club ) . '</span>'
+				. '<span class="clubhouse-member__brandsub">Member area</span>'
+				. '</span>';
+		}
+		$out .= '</div>';
+
+		$out .= self::nav( $views, $current, $base );
+
+		if ( '' !== $home ) {
+			$out .= '<a class="clubhouse-member__back" href="' . self::e( $home ) . '">'
+				. self::icon( 'arrow-left' ) . 'Back to the club site</a>';
+		}
+
+		// Who is signed in. The design shows a membership number here; nothing in
+		// Clubhouse holds one, so the address they signed in with does the job of
+		// telling a member which account they are looking at.
+		if ( '' !== $name ) {
+			$out .= '<div class="clubhouse-member__person"><div class="bw-person">'
+				. '<span class="bw-avatar clubhouse-member__avatar">' . self::e( self::initials( $name ) ) . '</span>'
+				. '<span class="clubhouse-member__persontext">'
+				. '<span class="bw-person__name">' . self::e( $name ) . '</span>';
+			if ( '' !== $email ) {
+				$out .= '<span class="bw-person__sub">' . self::e( $email ) . '</span>';
+			}
+			$out .= '</span></div></div>';
+		}
+
+		return $out . '</aside>';
+	}
+
+	/**
+	 * Up to two letters for an avatar: the first letter of the first word and of
+	 * the last. Pure, and safe on a single word, on extra whitespace, and on
+	 * nothing at all.
+	 */
+	public static function initials( string $name ): string {
+		$words = preg_split( '/\s+/', trim( $name ), -1, PREG_SPLIT_NO_EMPTY );
+		if ( ! is_array( $words ) || array() === $words ) {
+			return '';
+		}
+		$first = mb_substr( (string) $words[0], 0, 1 );
+		$last  = count( $words ) > 1 ? mb_substr( (string) $words[ count( $words ) - 1 ], 0, 1 ) : '';
+		return mb_strtoupper( $first . $last );
+	}
+
+	/**
+	 * The top bar: what this view is, and the two things a member does from
+	 * anywhere — leave, or sign out.
+	 *
+	 * @param array<int,array<string,mixed>> $views
+	 * @param array<string,mixed>            $args
+	 */
+	private static function head( array $views, string $current, array $args ): string {
+		$view   = self::view( $views, $current );
+		$title  = (string) ( $view['title'] ?? '' );
+		$lede   = (string) ( $view['lede'] ?? '' );
+		$logout = trim( (string) ( $args['logout_url'] ?? '' ) );
+
+		$out = '<header class="bw-pagehead clubhouse-member__head"><div class="bw-pagehead__titles">'
+			. '<h1 class="bw-pagehead__h1" data-member-title>' . self::e( $title ) . '</h1>';
+		if ( '' !== trim( $lede ) ) {
+			$out .= '<p class="bw-pagehead__lede" data-member-lede>' . self::e( $lede ) . '</p>';
+		} else {
+			$out .= '<p class="bw-pagehead__lede" data-member-lede hidden></p>';
+		}
+		$out .= '</div><div class="bw-pagehead__actions">';
+		// Nothing is drawn when there is no address to sign out to — a dead link
+		// is worse than no link.
+		if ( '' !== $logout ) {
+			$out .= '<a class="bw-btn bw-btn--secondary bw-btn--sm" href="' . self::e( $logout ) . '">Sign out</a>';
+		}
+		return $out . '</div></header>';
+	}
+
+	/**
+	 * One view's entry, or an empty array.
+	 *
+	 * @param array<int,array<string,mixed>> $views
+	 * @return array<string,mixed>
+	 */
+	private static function view( array $views, string $key ): array {
+		foreach ( $views as $view ) {
+			if ( (string) $view['key'] === $key ) {
+				return $view;
+			}
+		}
+		return array();
 	}
 
 	/**
@@ -84,44 +245,39 @@ final class Blueworx_Clubhouse_Dashboard_Shell {
 	 * six places to wander off to.
 	 */
 	public static function bare( string $title, string $lede, string $body, string $home_url, string $club_name ): string {
-		return '<div class="bw-admin bw-page clubhouse-member">'
-			. self::head( $title, $lede, $home_url, $club_name )
-			. '<div class="bw-page__body">'
-			. '<main class="bw-panels">' . $body . '</main>'
-			. '</div></div>';
-	}
-
-	private static function head( string $title, string $lede, string $home_url, string $club_name, string $logout_url = '' ): string {
-		$out = '<header class="bw-pagehead"><div class="bw-pagehead__titles">';
+		$head = '<header class="bw-pagehead"><div class="bw-pagehead__titles">';
 		if ( '' !== trim( $club_name ) ) {
-			$out .= '<p class="bw-pagehead__eyebrow">' . self::e( $club_name ) . '</p>';
+			$head .= '<p class="bw-pagehead__eyebrow">' . self::e( $club_name ) . '</p>';
 		}
-		$out .= '<h1 class="bw-pagehead__h1">' . self::e( $title ) . '</h1>';
+		$head .= '<h1 class="bw-pagehead__h1">' . self::e( $title ) . '</h1>';
 		if ( '' !== trim( $lede ) ) {
-			$out .= '<p class="bw-pagehead__lede">' . self::e( $lede ) . '</p>';
+			$head .= '<p class="bw-pagehead__lede">' . self::e( $lede ) . '</p>';
 		}
-		$out .= '</div><div class="bw-pagehead__actions">'
+		$head .= '</div><div class="bw-pagehead__actions">'
 			. '<a class="bw-btn bw-btn--secondary" href="' . self::e( $home_url ) . '">'
-			. self::icon( 'arrow-left' ) . 'Back to the club site</a>';
-		// The club's own header and footer are kept off this page, so this is the
-		// only way out of a signed-in session. Nothing is drawn when there is no
-		// address to sign out to — a dead link is worse than no link.
-		if ( '' !== trim( $logout_url ) ) {
-			$out .= '<a class="bw-btn bw-btn--secondary" href="' . self::e( $logout_url ) . '">Sign out</a>';
-		}
-		$out .= '</div></header>';
-		return $out;
+			. self::icon( 'arrow-left' ) . 'Back to the club site</a>'
+			. '</div></header>';
+		return '<div class="bw-admin bw-page clubhouse-member">' . $head
+			. '<div class="bw-page__body"><main class="bw-panels">' . $body . '</main></div></div>';
 	}
 
 	/**
+	 * The side nav. Links, not buttons: each view is its own address, openable
+	 * in a new tab and working with no JavaScript at all. The script upgrades
+	 * these in place — see assets/js/member-area.js.
+	 *
 	 * @param array<int,array<string,mixed>> $views
 	 */
 	private static function nav( array $views, string $current, string $base = '' ): string {
-		$out = '<nav class="bw-secnav" aria-label="Your account">';
+		$out = '<nav class="bw-secnav clubhouse-member__nav" aria-label="Your account">';
 		foreach ( $views as $view ) {
 			$key    = (string) $view['key'];
 			$active = $key === $current;
 			$out   .= '<a class="bw-secnav__item' . ( $active ? ' is-active' : '' ) . '"'
+				. ' id="clubhouse-member-tab-' . self::e( $key ) . '"'
+				. ' data-view-link="' . self::e( $key ) . '"'
+				. ' data-view-title="' . self::e( (string) ( $view['title'] ?? '' ) ) . '"'
+				. ' data-view-lede="' . self::e( (string) ( $view['lede'] ?? '' ) ) . '"'
 				. ' href="' . self::e( self::view_url( $key, $base ) ) . '"'
 				. ( $active ? ' aria-current="page"' : '' ) . '>'
 				. '<span class="clubhouse-member__navlabel">'
@@ -131,6 +287,40 @@ final class Blueworx_Clubhouse_Dashboard_Shell {
 		}
 		return $out . '</nav>';
 	}
+
+	/**
+	 * The bottom tab bar, which is what the sidebar becomes on a phone.
+	 *
+	 * Five at most, which is what the design draws and as many as fits a phone.
+	 * Anything past the fifth is reached from the last panel — see
+	 * Member_Dashboard::overflow_links().
+	 *
+	 * @param array<int,array<string,mixed>> $views
+	 */
+	private static function tabbar( array $views, string $current, string $base = '' ): string {
+		$shown = array_slice( $views, 0, self::TABBAR_MAX );
+		if ( count( $shown ) < 2 ) {
+			return '';
+		}
+		$out = '<nav class="clubhouse-member__tabbar" aria-label="Your account">';
+		foreach ( $shown as $view ) {
+			$key    = (string) $view['key'];
+			$active = $key === $current;
+			$out   .= '<a class="clubhouse-member__tab' . ( $active ? ' is-active' : '' ) . '"'
+				. ' data-view-link="' . self::e( $key ) . '"'
+				. ' data-view-title="' . self::e( (string) ( $view['title'] ?? '' ) ) . '"'
+				. ' data-view-lede="' . self::e( (string) ( $view['lede'] ?? '' ) ) . '"'
+				. ' href="' . self::e( self::view_url( $key, $base ) ) . '"'
+				. ( $active ? ' aria-current="page"' : '' ) . '>'
+				. self::icon( (string) $view['icon'] )
+				. '<span class="clubhouse-member__tablabel">' . self::e( (string) $view['label'] ) . '</span>'
+				. '</a>';
+		}
+		return $out . '</nav>';
+	}
+
+	/** How many views the phone's bottom bar can carry. The design draws five. */
+	public const TABBAR_MAX = 5;
 
 	/** One panel. A card with no title is a card with no head, not an empty one. */
 	public static function card( string $title, string $body ): string {

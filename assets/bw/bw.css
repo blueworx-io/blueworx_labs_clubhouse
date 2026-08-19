@@ -631,3 +631,28 @@
 .clubhouse-member .clubhouse-member__quick-icon{color:var(--bw-text-accent)}
 .clubhouse-member .clubhouse-member__quick-title{font-family:var(--bw-font-display);font-size:var(--bw-size-h3);font-weight:var(--bw-weight-semibold);color:var(--bw-text-heading)}
 .clubhouse-member .clubhouse-member__quick-lede{font-size:var(--bw-size-sm);color:var(--bw-text-muted)}
+
+/* The two-column shell the design draws: the club and the member down the
+   left, full height, with the page head to their right. */
+.clubhouse-member .clubhouse-member__shell{display:flex;align-items:stretch;min-height:100vh}
+.clubhouse-member .clubhouse-member__side{flex:0 0 268px;display:flex;flex-direction:column;gap:var(--bw-space-5);padding:var(--bw-space-7) var(--bw-space-6);border-right:1px solid var(--bw-border);background:var(--bw-surface-card)}
+.clubhouse-member .clubhouse-member__main{flex:1 1 auto;min-width:0;display:flex;flex-direction:column}
+.clubhouse-member .clubhouse-member__head{padding:var(--bw-space-7) var(--bw-space-8)}
+.clubhouse-member .bw-panels{padding:var(--bw-space-8);flex:1 1 auto}
+.clubhouse-member .clubhouse-member__brand{display:flex;align-items:center;gap:var(--bw-space-5);min-width:0;padding-bottom:var(--bw-space-5)}
+.clubhouse-member .clubhouse-member__brandmark{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;flex:none;border-radius:var(--bw-radius-sm);background:var(--bw-brand-wash);color:var(--bw-text-accent);font-family:var(--bw-font-display);font-weight:var(--bw-weight-semibold);overflow:hidden}
+.clubhouse-member .clubhouse-member__brandmark img{width:100%;height:100%;object-fit:contain}
+.clubhouse-member .clubhouse-member__brandtext{display:flex;flex-direction:column;min-width:0}
+.clubhouse-member .clubhouse-member__brandname{font-family:var(--bw-font-display);font-weight:var(--bw-weight-semibold);color:var(--bw-text-heading);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.clubhouse-member .clubhouse-member__brandsub{font-size:var(--bw-size-sm);color:var(--bw-text-muted)}
+.clubhouse-member .clubhouse-member__nav{flex:0 0 auto}
+/* The spacer the design uses to push the way out to the foot of the column. */
+.clubhouse-member .clubhouse-member__back{margin-top:auto;display:flex;align-items:center;gap:var(--bw-space-3);font-size:var(--bw-size-sm);color:var(--bw-text-muted);text-decoration:none}
+.clubhouse-member .clubhouse-member__back:hover{color:var(--bw-text-accent)}
+.clubhouse-member .clubhouse-member__person{padding-top:var(--bw-space-5);border-top:1px solid var(--bw-border)}
+.clubhouse-member .clubhouse-member__avatar{width:36px;height:36px;font-size:var(--bw-size-sm)}
+.clubhouse-member .clubhouse-member__persontext{min-width:0;overflow:hidden}
+.clubhouse-member .bw-person__name,.clubhouse-member .bw-person__sub{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* The phone's bottom bar is drawn only on a phone — see the media query in
+   Task 4. Hidden here so a desktop never sees two navs. */
+.clubhouse-member .clubhouse-member__tabbar{display:none}

@@ -128,34 +128,69 @@ final class Blueworx_Clubhouse_Member_Dashboard {
 			Blueworx_Clubhouse_Integrations::has_latepoint()
 		);
 		$current = Blueworx_Clubhouse_Dashboard_Views::resolve( self::requested_view(), $views );
-		$view    = Blueworx_Clubhouse_Dashboard_Views::find( $current, $views );
-		if ( null === $view ) {
-			return ''; // Cannot happen — resolve() only returns a key it found.
+		if ( array() === $views ) {
+			return '';
 		}
 
-		$welcome = Blueworx_Clubhouse_Dashboard_Views::DEFAULT_VIEW === $current ? self::welcome_pack() : '';
-		$body    = Blueworx_Clubhouse_Dashboard_Views::DEFAULT_VIEW === $current
-			? self::overview( $welcome, $views, $home, $base )
-			: self::view_body( $view, '', $home );
+		// Every panel is drawn, not just the one being read — see
+		// Dashboard_Shell::page() for why. The welcome pack belongs to the
+		// overview only.
+		$welcome = self::welcome_pack();
+		$panels  = array();
+		foreach ( $views as $view ) {
+			$key            = (string) $view['key'];
+			$panels[ $key ] = Blueworx_Clubhouse_Dashboard_Views::DEFAULT_VIEW === $key
+				? self::overview( $welcome, $views, $home, $base )
+				: self::view_body( $view, '', $home );
+		}
 
-		// The pack brings its own rules, so they are only worth printing on a
-		// view that actually draws one.
 		$style = '' !== $welcome
 			? '<style>' . Blueworx_Clubhouse_Welcome_Pack::css( ...self::accent() ) . '</style>'
 			: '';
 
-		return $style
-			. Blueworx_Clubhouse_Dashboard_Shell::page(
-				$views,
-				$current,
-				(string) $view['title'],
-				(string) $view['lede'],
-				$body,
-				$home,
-				self::club_name(),
-				$base,
-				self::logout_url()
-			);
+		return $style . Blueworx_Clubhouse_Dashboard_Shell::page( array(
+			'views'        => $views,
+			'current'      => $current,
+			'panels'       => $panels,
+			'home_url'     => $home,
+			'club_name'    => self::club_name(),
+			'logo_url'     => self::logo_url(),
+			'base'         => $base,
+			'logout_url'   => self::logout_url(),
+			'member_name'  => self::member_name(),
+			'member_email' => self::member_email(),
+		) );
+	}
+
+	/** The club's logo for the sidebar's brand block, or '' when none is set. */
+	private static function logo_url(): string {
+		if ( ! class_exists( 'Blueworx_Clubhouse_Frontend' ) || ! class_exists( 'Blueworx_Clubhouse_Options_Storage' ) ) {
+			return '';
+		}
+		$branding = new Blueworx_Clubhouse_Branding( new Blueworx_Clubhouse_Options_Storage() );
+		return Blueworx_Clubhouse_Frontend::resolve_logo( $branding->get_logo() );
+	}
+
+	/** The signed-in member's name, or '' off WordPress. */
+	private static function member_name(): string {
+		if ( ! function_exists( 'wp_get_current_user' ) ) {
+			return '';
+		}
+		$user = wp_get_current_user();
+		if ( ! is_object( $user ) ) {
+			return '';
+		}
+		$name = trim( (string) ( $user->display_name ?? '' ) );
+		return '' !== $name ? $name : trim( (string) ( $user->user_login ?? '' ) );
+	}
+
+	/** The address they signed in with, which tells them which account this is. */
+	private static function member_email(): string {
+		if ( ! function_exists( 'wp_get_current_user' ) ) {
+			return '';
+		}
+		$user = wp_get_current_user();
+		return is_object( $user ) ? trim( (string) ( $user->user_email ?? '' ) ) : '';
 	}
 
 	/**

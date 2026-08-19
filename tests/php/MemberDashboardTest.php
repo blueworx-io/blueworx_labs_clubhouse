@@ -141,9 +141,11 @@ final class MemberDashboardTest extends TestCase {
 		$store->set( Blueworx_Clubhouse_Welcome_Pack::STORE_PAGE, Blueworx_Clubhouse_Welcome_Pack::SECTION, 'body', 'Park behind the clubhouse.' );
 		$this->assertStringContainsString( '<style>', Blueworx_Clubhouse_Member_Dashboard::screen( '/member-dashboard/', '/' ) );
 
-		// And not on a view that draws no pack at all.
+		// screen() now renders every panel into the page, hidden but present, so
+		// the overview's pack — and its style block — is on the page even while
+		// a different view is the one being read.
 		$_GET['view'] = 'orders';
-		$this->assertStringNotContainsString( '<style>', Blueworx_Clubhouse_Member_Dashboard::screen( '/member-dashboard/', '/' ) );
+		$this->assertStringContainsString( '<style>', Blueworx_Clubhouse_Member_Dashboard::screen( '/member-dashboard/', '/' ) );
 	}
 
 	public function test_an_overview_with_neither_pack_nor_views_shows_the_honest_empty_state(): void {

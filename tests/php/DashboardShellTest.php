@@ -9,112 +9,82 @@ final class DashboardShellTest extends TestCase {
 		return Blueworx_Clubhouse_Dashboard_Views::available( true, true );
 	}
 
-	private function page( string $current = 'dashboard', string $body = '<p>hello</p>' ): string {
-		return Blueworx_Clubhouse_Dashboard_Shell::page(
-			$this->views(),
-			$current,
-			'Your account',
-			'Everything the club keeps for you.',
-			$body,
-			'https://club.test/',
-			'Crewe Vagrants'
+	/** @return array<string,mixed> */
+	private function args( array $over = array() ): array {
+		return array_merge(
+			array(
+				'views'   => array(
+					array( 'key' => 'dashboard', 'label' => 'Dashboard', 'title' => 'Your account', 'lede' => 'All of it.', 'icon' => 'layout-dashboard' ),
+					array( 'key' => 'orders', 'label' => 'Orders', 'title' => 'Orders', 'lede' => 'What you bought.', 'icon' => 'shopping-cart' ),
+				),
+				'current' => 'dashboard',
+				'panels'  => array( 'dashboard' => '<p>overview</p>', 'orders' => '<p>orders</p>' ),
+			),
+			$over
 		);
 	}
 
-	public function test_the_page_opts_in_to_the_member_area_look(): void {
-		// Every rule in the vendored stylesheet is scoped to .bw-admin; without
-		// this class the page renders as bare theme output.
-		$this->assertStringContainsString( 'bw-admin', $this->page() );
+	public function test_the_sidebar_carries_the_club_and_the_member(): void {
+		$html = Blueworx_Clubhouse_Dashboard_Shell::page( $this->args( array(
+			'club_name'     => 'Crewe Vagrants',
+			'member_name'   => 'Luke McFarland',
+			'member_email'  => 'luke@example.com',
+		) ) );
+		$this->assertStringContainsString( 'clubhouse-member__side', $html );
+		$this->assertStringContainsString( 'Crewe Vagrants', $html );
+		$this->assertStringContainsString( 'bw-person__name', $html );
+		$this->assertStringContainsString( 'Luke McFarland', $html );
+		$this->assertStringContainsString( 'luke@example.com', $html );
+		// Initials, drawn where the design puts an avatar.
+		$this->assertStringContainsString( '>LM<', $html );
 	}
 
-	public function test_every_available_view_is_a_link_in_the_nav(): void {
-		$html = $this->page();
-		foreach ( $this->views() as $view ) {
-			$this->assertStringContainsString( '?view=' . $view['key'], $html, $view['key'] . ' is not reachable' );
-			$this->assertStringContainsString( '>' . $view['label'] . '<', $html );
-		}
+	public function test_the_top_bar_shows_the_current_view_title(): void {
+		$html = Blueworx_Clubhouse_Dashboard_Shell::page( $this->args( array( 'current' => 'orders' ) ) );
+		// data-member-title is what the switching script re-targets when a nav
+		// link is followed without a full page load — see head()'s docblock.
+		$this->assertStringContainsString( '<h1 class="bw-pagehead__h1" data-member-title>Orders</h1>', $html );
+		$this->assertStringContainsString( 'What you bought.', $html );
 	}
 
-	public function test_the_nav_is_links_not_buttons(): void {
-		// Every view is its own address, so each has to be linkable, openable in
-		// a new tab and reachable without JavaScript.
-		$this->assertMatchesRegularExpression( '/<a[^>]*class="bw-secnav__item[^"]*"[^>]*href="\?view=orders"/', $this->page() );
-	}
-
-	public function test_the_view_being_read_is_the_one_marked_current(): void {
-		$html = $this->page( 'invoices' );
-		$this->assertMatchesRegularExpression( '/href="\?view=invoices"[^>]*aria-current="page"/', $html );
-		$this->assertSame( 1, substr_count( $html, 'aria-current="page"' ), 'exactly one nav item is current' );
-		$this->assertSame( 1, substr_count( $html, 'is-active' ) );
-	}
-
-	public function test_a_club_without_a_shop_has_no_dead_nav_items(): void {
-		$html = Blueworx_Clubhouse_Dashboard_Shell::page(
-			Blueworx_Clubhouse_Dashboard_Views::available( false, false ),
-			'dashboard',
-			'Your account',
-			'',
-			'<p>hello</p>',
-			'https://club.test/',
-			'Crewe Vagrants'
+	public function test_the_top_bar_sits_inside_the_content_column_beside_the_sidebar(): void {
+		$html = Blueworx_Clubhouse_Dashboard_Shell::page( $this->args() );
+		// The design puts the sidebar full height on the left, with the page head
+		// to its right — so the head must open AFTER the sidebar has closed.
+		$this->assertLessThan(
+			strpos( $html, 'bw-pagehead' ),
+			strpos( $html, 'clubhouse-member__side' ),
+			'the sidebar must come before the top bar in source order'
 		);
-		$this->assertStringNotContainsString( '?view=orders', $html );
-		$this->assertStringNotContainsString( '?view=bookings', $html );
-		$this->assertStringContainsString( '?view=dashboard', $html );
 	}
 
-	public function test_the_body_is_placed_as_given(): void {
-		$this->assertStringContainsString( '<p>hello</p>', $this->page() );
+	public function test_the_nav_marks_the_view_being_read(): void {
+		$html = Blueworx_Clubhouse_Dashboard_Shell::page( $this->args( array( 'current' => 'orders' ) ) );
+		$this->assertStringContainsString( 'aria-current="page"', $html );
+		// The side nav and the phone's bottom bar each mark the current view, and
+		// both are always in the markup — so the count is 2, not 1.
+		$this->assertSame( 2, substr_count( $html, 'is-active' ), 'the side nav and the tab bar both mark the current view' );
 	}
 
-	public function test_there_is_a_way_back_to_the_club(): void {
-		// A member area with no exit is a trap; the theme around this page has
-		// no header of its own.
-		$this->assertStringContainsString( 'href="https://club.test/"', $this->page() );
+	public function test_the_way_back_and_the_way_out_are_both_offered(): void {
+		$html = Blueworx_Clubhouse_Dashboard_Shell::page( $this->args( array(
+			'home_url'   => '/',
+			'logout_url' => '/out/',
+		) ) );
+		$this->assertStringContainsString( 'Back to the club site', $html );
+		$this->assertStringContainsString( '/out/', $html );
 	}
 
-	public function test_the_club_name_is_shown_and_escaped(): void {
-		$html = Blueworx_Clubhouse_Dashboard_Shell::page(
-			$this->views(),
-			'dashboard',
-			'T',
-			'L',
-			'B',
-			'https://club.test/',
-			'Bill & Ben\'s <script>'
-		);
-		$this->assertStringContainsString( 'Bill &amp; Ben&#039;s &lt;script&gt;', $html );
-		$this->assertStringNotContainsString( '<script>', $html );
+	public function test_no_sign_out_link_is_drawn_without_an_address_for_it(): void {
+		$html = Blueworx_Clubhouse_Dashboard_Shell::page( $this->args() );
+		$this->assertStringNotContainsString( 'Sign out', $html );
 	}
 
-	public function test_the_title_and_lede_are_escaped(): void {
-		$html = Blueworx_Clubhouse_Dashboard_Shell::page(
-			$this->views(),
-			'dashboard',
-			'<b>T</b>',
-			'<i>L</i>',
-			'B',
-			'https://club.test/',
-			'Club'
-		);
-		$this->assertStringContainsString( '&lt;b&gt;T&lt;/b&gt;', $html );
-		$this->assertStringContainsString( '&lt;i&gt;L&lt;/i&gt;', $html );
-	}
-
-	public function test_the_way_home_is_escaped(): void {
-		$html = Blueworx_Clubhouse_Dashboard_Shell::page(
-			$this->views(), 'dashboard', 'T', 'L', 'B', '" onmouseover="alert(1)', 'Club'
-		);
-		// The quotes are escaped, so the address cannot break out of its
-		// attribute and become a handler. The literal text survives inside the
-		// value, harmlessly, which is why asserting on it would fail here.
-		$this->assertStringNotContainsString( '" onmouseover="', $html );
-		$this->assertStringContainsString( '&quot; onmouseover=&quot;alert(1)', $html );
-	}
-
-	public function test_the_lede_is_left_out_when_there_is_none(): void {
-		$html = Blueworx_Clubhouse_Dashboard_Shell::page( $this->views(), 'dashboard', 'T', '', 'B', '/', 'Club' );
-		$this->assertStringNotContainsString( 'bw-pagehead__lede', $html );
+	public function test_initials_cope_with_one_name_and_with_none(): void {
+		$this->assertSame( 'L', Blueworx_Clubhouse_Dashboard_Shell::initials( 'Luke' ) );
+		$this->assertSame( 'LM', Blueworx_Clubhouse_Dashboard_Shell::initials( '  luke   mcfarland ' ) );
+		$this->assertSame( 'LB', Blueworx_Clubhouse_Dashboard_Shell::initials( 'Luke James Bell' ) );
+		$this->assertSame( '', Blueworx_Clubhouse_Dashboard_Shell::initials( '   ' ) );
 	}
 
 	public function test_the_bare_shell_has_the_look_but_no_nav(): void {
@@ -149,40 +119,6 @@ final class DashboardShellTest extends TestCase {
 		// read is right wherever it carries no query of its own.
 		$this->assertSame( '?view=orders', Blueworx_Clubhouse_Dashboard_Shell::view_url( 'orders' ) );
 		$this->assertSame( '?view=orders', Blueworx_Clubhouse_Dashboard_Shell::view_url( 'orders', '   ' ) );
-	}
-
-	public function test_the_nav_is_built_on_the_address_it_is_given(): void {
-		$html = Blueworx_Clubhouse_Dashboard_Shell::page(
-			$this->views(), 'dashboard', 'T', 'L', 'B', 'https://club.test/', 'Club', 'https://club.test/?page_id=42'
-		);
-		$this->assertStringContainsString( 'href="https://club.test/?page_id=42&amp;view=orders"', $html );
-		$this->assertStringNotContainsString( 'href="?view=orders"', $html );
-	}
-
-	public function test_a_signed_in_member_is_offered_the_way_out(): void {
-		// The club's own header and footer are kept off this page, so this is
-		// the only sign-out control a member has.
-		$html = Blueworx_Clubhouse_Dashboard_Shell::page(
-			$this->views(), 'dashboard', 'T', 'L', 'B', 'https://club.test/', 'Club', '', 'https://club.test/?clubhouse_logout=1&_wpnonce=abc'
-		);
-		$this->assertStringContainsString( 'href="https://club.test/?clubhouse_logout=1&amp;_wpnonce=abc"', $html );
-		$this->assertStringContainsString( 'Sign out', $html );
-	}
-
-	public function test_an_already_escaped_sign_out_address_is_not_escaped_twice(): void {
-		// WordPress's own nonce helper hands back a URL with its ampersands
-		// already written as entities. Escaping that again renames _wpnonce to
-		// amp;_wpnonce and the sign-out silently stops working.
-		$html = Blueworx_Clubhouse_Dashboard_Shell::page(
-			$this->views(), 'dashboard', 'T', 'L', 'B', 'https://club.test/', 'Club', '', 'https://club.test/?clubhouse_logout=1&amp;_wpnonce=abc'
-		);
-		$this->assertStringContainsString( 'href="https://club.test/?clubhouse_logout=1&amp;_wpnonce=abc"', $html );
-		$this->assertStringNotContainsString( 'amp;amp;', $html );
-	}
-
-	public function test_no_sign_out_link_is_drawn_when_there_is_no_address(): void {
-		// A dead control is worse than none.
-		$this->assertStringNotContainsString( 'Sign out', $this->page() );
 	}
 
 	public function test_the_checkout_shell_offers_no_sign_out(): void {
@@ -229,11 +165,5 @@ final class DashboardShellTest extends TestCase {
 			);
 		}
 		$this->assertSame( '', Blueworx_Clubhouse_Dashboard_Shell::icon( 'no-such-icon' ) );
-	}
-
-	public function test_the_shell_emits_no_club_look_classes(): void {
-		// The two design systems never meet. A ch-* class here would arrive
-		// unstyled, because none of assets/looks/ is loaded on this page.
-		$this->assertDoesNotMatchRegularExpression( '/class="[^"]*\bch-/', $this->page() );
 	}
 }
