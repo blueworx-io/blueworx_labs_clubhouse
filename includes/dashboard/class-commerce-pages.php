@@ -37,6 +37,17 @@ final class Blueworx_Clubhouse_Commerce_Pages {
 		),
 	);
 
+	/**
+	 * Guards against this filter re-entering itself.
+	 *
+	 * The page's own content is the shop's checkout, and a block or shortcode
+	 * inside it is free to apply the_content itself. On the same post that would
+	 * come straight back in here and recurse until the request ran out of
+	 * memory — a white screen where someone is trying to pay. The shop does not
+	 * do it today; the guard costs a boolean and makes it impossible.
+	 */
+	private static bool $rendering = false;
+
 	public static function register(): void {
 		if ( ! function_exists( 'add_filter' ) ) {
 			return;
@@ -68,26 +79,34 @@ final class Blueworx_Clubhouse_Commerce_Pages {
 	 */
 	public static function dress( $content ): string {
 		$content = (string) $content;
+		if ( self::$rendering ) {
+			return $content;
+		}
 		if ( ! function_exists( 'is_singular' ) || ! is_singular() || ! in_the_loop() || ! is_main_query() ) {
 			return $content;
 		}
-		$key = self::page_key(
-			(int) get_the_ID(),
-			Blueworx_Clubhouse_Shop_Pages::page_id( 'checkout' ),
-			Blueworx_Clubhouse_Shop_Pages::page_id( 'order-confirmation' )
-		);
-		if ( '' === $key ) {
+		$key = Blueworx_Clubhouse_Dashboard_Assets::page_key( (int) get_the_ID() );
+		if ( ! isset( self::PAGES[ $key ] ) ) {
 			return $content;
 		}
+		// No check on whether anyone is signed in, unlike the member dashboard:
+		// a club sells to guests, and someone paying without an account is an
+		// ordinary sale rather than a mistake. Nothing here needs to know who
+		// they are — the page's own content is the shop's, and it decides.
 
-		Blueworx_Clubhouse_Dashboard_Assets::enqueue();
+		self::$rendering = true;
+		try {
+			Blueworx_Clubhouse_Dashboard_Assets::enqueue();
 
-		return Blueworx_Clubhouse_Dashboard_Shell::bare(
-			self::PAGES[ $key ]['title'],
-			self::PAGES[ $key ]['lede'],
-			Blueworx_Clubhouse_Dashboard_Shell::card( '', $content ),
-			function_exists( 'home_url' ) ? (string) home_url( '/' ) : '/',
-			Blueworx_Clubhouse_Member_Dashboard::club_name()
-		);
+			return Blueworx_Clubhouse_Dashboard_Shell::bare(
+				self::PAGES[ $key ]['title'],
+				self::PAGES[ $key ]['lede'],
+				Blueworx_Clubhouse_Dashboard_Shell::card( '', $content ),
+				function_exists( 'home_url' ) ? (string) home_url( '/' ) : '/',
+				Blueworx_Clubhouse_Member_Dashboard::club_name()
+			);
+		} finally {
+			self::$rendering = false;
+		}
 	}
 }

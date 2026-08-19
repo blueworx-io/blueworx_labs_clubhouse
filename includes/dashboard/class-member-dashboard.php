@@ -37,10 +37,20 @@ final class Blueworx_Clubhouse_Member_Dashboard {
 		add_filter( 'the_content', array( self::class, 'take_over' ), self::PRIORITY );
 	}
 
+	/**
+	 * Guards against this filter re-entering itself.
+	 *
+	 * The body below renders other plugins' blocks and shortcodes, and any one
+	 * of them is free to apply the_content itself. On the same post that would
+	 * come straight back in here and recurse until the memory limit killed the
+	 * request — a white screen on the member's own account page. Neither plugin
+	 * does it today; the guard costs a boolean and makes it impossible.
+	 */
+	private static bool $rendering = false;
+
 	/** Whether this post is the page the member area is on. */
 	public static function owns( int $post_id ): bool {
-		$dashboard = Blueworx_Clubhouse_Shop_Pages::page_id( 'dashboard' );
-		return $post_id > 0 && $post_id === $dashboard;
+		return 'dashboard' === Blueworx_Clubhouse_Dashboard_Assets::page_key( $post_id );
 	}
 
 	/**
@@ -54,13 +64,37 @@ final class Blueworx_Clubhouse_Member_Dashboard {
 	 */
 	public static function take_over( $content ): string {
 		$content = (string) $content;
+		if ( self::$rendering ) {
+			return $content;
+		}
 		if ( ! function_exists( 'is_singular' ) || ! is_singular() || ! in_the_loop() || ! is_main_query() ) {
 			return $content;
 		}
 		if ( ! self::owns( (int) get_the_ID() ) ) {
 			return $content;
 		}
+		if ( function_exists( 'is_user_logged_in' ) && ! is_user_logged_in() ) {
+			// Nobody is signed in, so there is no account to show. The page's own
+			// content is the shop's sign-in form, which is exactly what a visitor
+			// who bookmarked this address needs — our frame would tell them the
+			// club had set nothing up, which is not true and not their problem.
+			return $content;
+		}
 
+		self::$rendering = true;
+		try {
+			return self::render( $content );
+		} finally {
+			self::$rendering = false;
+		}
+	}
+
+	/**
+	 * The member area itself, once take_over() has decided this request is ours.
+	 *
+	 * @param string $content The page's own content, returned untouched if a view cannot be drawn.
+	 */
+	private static function render( string $content ): string {
 		Blueworx_Clubhouse_Dashboard_Assets::enqueue();
 		self::enqueue_shop_assets();
 
@@ -74,13 +108,25 @@ final class Blueworx_Clubhouse_Member_Dashboard {
 			return $content; // Cannot happen — resolve() only returns a key it found.
 		}
 
-		$home    = function_exists( 'home_url' ) ? (string) home_url( '/' ) : '/';
-		$welcome = self::welcome_pack();
+		$home = function_exists( 'home_url' ) ? (string) home_url( '/' ) : '/';
+		$base = self::page_url();
+		// The page's own content is dropped rather than kept. On this page it is
+		// the shop's dashboard block — the stack of panels this whole screen
+		// exists to replace — so showing it as well would print the member's
+		// orders twice. Checkout keeps its content for the opposite reason: what
+		// is on that page is the payment form, and only the shop can draw it.
+		$welcome = Blueworx_Clubhouse_Dashboard_Views::DEFAULT_VIEW === $current ? self::welcome_pack() : '';
 		$body    = Blueworx_Clubhouse_Dashboard_Views::DEFAULT_VIEW === $current
-			? self::overview( $welcome, $views, $home )
+			? self::overview( $welcome, $views, $home, $base )
 			: self::view_body( $view, '', $home );
 
-		return '<style>' . Blueworx_Clubhouse_Welcome_Pack::css( ...self::accent() ) . '</style>'
+		// The pack brings its own rules, so they are only worth printing on a
+		// view that actually draws one.
+		$style = '' !== $welcome
+			? '<style>' . Blueworx_Clubhouse_Welcome_Pack::css( ...self::accent() ) . '</style>'
+			: '';
+
+		return $style
 			. Blueworx_Clubhouse_Dashboard_Shell::page(
 				$views,
 				$current,
@@ -88,8 +134,41 @@ final class Blueworx_Clubhouse_Member_Dashboard {
 				(string) $view['lede'],
 				$body,
 				$home,
-				self::club_name()
+				self::club_name(),
+				$base,
+				self::logout_url()
 			);
+	}
+
+	/**
+	 * This page's own address, which every view link is built on.
+	 *
+	 * Resolved here rather than in the shell, which stays free of WordPress. It
+	 * matters on a club whose permalinks are set to Plain, where the dashboard
+	 * lives at /?page_id=42: a bare '?view=orders' would replace the whole query
+	 * and send the member to the front page instead.
+	 */
+	private static function page_url(): string {
+		if ( ! function_exists( 'get_permalink' ) ) {
+			return '';
+		}
+		$url = get_permalink();
+		return is_string( $url ) ? $url : '';
+	}
+
+	/**
+	 * The signed sign-out address, or '' when nothing can build one.
+	 *
+	 * The club's own header and footer are deliberately kept off this page, so
+	 * without this a signed-in member has no way out of it. It is the same link
+	 * the club site's header offers — one logout journey, already nonced and
+	 * already returning wherever the club chose.
+	 */
+	private static function logout_url(): string {
+		if ( ! class_exists( 'Blueworx_Clubhouse_Auth' ) || ! function_exists( 'wp_nonce_url' ) ) {
+			return '';
+		}
+		return (string) Blueworx_Clubhouse_Auth::logout_url();
 	}
 
 	/** The view named in the address, unfiltered — resolve() decides what it means. */
@@ -141,8 +220,9 @@ final class Blueworx_Clubhouse_Member_Dashboard {
 	 * links, and the records stay where the plugins draw them.
 	 *
 	 * @param array<int,array<string,mixed>> $views
+	 * @param string                         $base The dashboard page's own address, for the links.
 	 */
-	public static function overview( string $welcome, array $views, string $home_url ): string {
+	public static function overview( string $welcome, array $views, string $home_url, string $base = '' ): string {
 		$links = '';
 		foreach ( $views as $view ) {
 			$key = (string) $view['key'];
@@ -150,7 +230,7 @@ final class Blueworx_Clubhouse_Member_Dashboard {
 				continue; // A link to the page you are on is a dead control.
 			}
 			$links .= '<a class="bw-card clubhouse-member__quick" href="'
-				. htmlspecialchars( Blueworx_Clubhouse_Dashboard_Shell::view_url( $key ), ENT_QUOTES, 'UTF-8' ) . '">'
+				. htmlspecialchars( Blueworx_Clubhouse_Dashboard_Shell::view_url( $key, $base ), ENT_QUOTES, 'UTF-8' ) . '">'
 				. '<span class="clubhouse-member__quick-icon">' . Blueworx_Clubhouse_Dashboard_Shell::icon( (string) $view['icon'] ) . '</span>'
 				. '<span class="clubhouse-member__quick-title">' . htmlspecialchars( (string) $view['label'], ENT_QUOTES, 'UTF-8' ) . '</span>'
 				. '<span class="clubhouse-member__quick-lede">' . htmlspecialchars( (string) $view['lede'], ENT_QUOTES, 'UTF-8' ) . '</span>'
