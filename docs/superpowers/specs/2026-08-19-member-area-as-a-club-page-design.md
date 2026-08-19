@@ -24,8 +24,9 @@ page id and a broken one costs a club a sale.
 ## Goals
 
 - The Pages menu is gone from wp-admin. A club manages its site in one place.
-- The member area is listed in Club Pages and switchable under Setup, exactly
-  like About or Membership.
+- The member area is switchable under Setup, exactly like About or Membership.
+  It does not appear in Club Pages: that screen edits a page's words, and this
+  page has none of its own.
 - The member area has its own address, `/member-dashboard/`, on the club's own
   domain and permalink structure.
 - Anyone who bookmarked SureCart's dashboard page still arrives somewhere right.
@@ -59,7 +60,7 @@ page id and a broken one costs a club a sale.
 
 **`Page_Map`** gains one entry: slug `member-dashboard`, label "Member area",
 method `member_dashboard`. That single line is what puts the page into the
-rewrite rules, Club Pages, the visibility toggles and the link catalogue —
+rewrite rules, the visibility toggles and the link catalogue —
 the existing machinery does the rest.
 
 The page is registered unconditionally, like every other. It does not declare a
@@ -107,9 +108,9 @@ and does not belong in a list every visitor sees.
 
 ## What a club sees
 
-Club Pages lists Member area beside About, Membership and the rest. Setup →
-Visibility can switch it off, which takes the address to a proper 404 like any
-other switched-off page. The Pages menu is gone.
+Setup → Visibility lists Member area beside About, Membership and the rest, and
+can switch it off — which takes the address to a proper 404 like any other
+switched-off page. The Pages menu is gone.
 
 ## What a member sees
 
