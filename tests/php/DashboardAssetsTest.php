@@ -69,7 +69,7 @@ final class DashboardAssetsTest extends TestCase {
 				if ( '' === $selector || str_starts_with( $selector, '@' ) ) {
 					continue;
 				}
-				if ( ':root' === $selector || str_starts_with( $selector, '.bw-' ) ) {
+				if ( ':root' === $selector || str_starts_with( $selector, '.bw-' ) || str_starts_with( $selector, '.clubhouse-member' ) ) {
 					continue;
 				}
 				$offenders[] = $selector;

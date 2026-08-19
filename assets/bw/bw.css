@@ -618,3 +618,10 @@
 .bw-admin a:hover{color:var(--bw-text-link-hover)}
 .bw-admin a:focus-visible,.bw-admin button:focus-visible,.bw-admin input:focus-visible,.bw-admin select:focus-visible,.bw-admin textarea:focus-visible{outline:var(--bw-focus-width) solid var(--bw-focus-color);outline-offset:var(--bw-focus-offset)}
 .bw-admin code,.bw-admin kbd{font-family:var(--bw-font-mono);font-size:var(--bw-size-code)}
+
+/* Clubhouse additions — layout the design draws inline, not part of the
+   vendored system. Same token vocabulary, same scoping rules. */
+.clubhouse-member .clubhouse-member__navlabel{display:flex;align-items:center;gap:10px}
+.clubhouse-member .bw-secnav__item .bw-icon{flex:none}
+.clubhouse-member .bw-pagehead__actions .bw-icon{margin-right:6px}
+.clubhouse-member .bw-panels>*+*{margin-top:var(--bw-stack-gap)}
