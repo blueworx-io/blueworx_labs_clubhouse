@@ -4,8 +4,73 @@ use PHPUnit\Framework\TestCase;
 
 final class DashboardAssetsTest extends TestCase {
 
+	protected function setUp(): void {
+		wp_stub_reset();
+	}
+
+	protected function tearDown(): void {
+		wp_stub_reset();
+	}
+
 	private function root(): string {
 		return dirname( __DIR__, 2 );
+	}
+
+	/** The handles put on the page so far. */
+	private function enqueued(): array {
+		return array_map(
+			static fn ( array $c ): string => (string) ( $c['args'][0] ?? '' ),
+			wp_stub_calls( 'wp_enqueue_style' )
+		);
+	}
+
+	/** Record which page of the shop's is which, and which one is being read. */
+	private function reading( string $page ): void {
+		update_option( Blueworx_Clubhouse_Shop_Pages::option_name( 'dashboard' ), 42 );
+		update_option( Blueworx_Clubhouse_Shop_Pages::option_name( 'checkout' ), 43 );
+		update_option( Blueworx_Clubhouse_Shop_Pages::option_name( 'order-confirmation' ), 44 );
+		$ids                                  = array(
+			'dashboard'          => 42,
+			'checkout'           => 43,
+			'order-confirmation' => 44,
+			'something-else'     => 99,
+		);
+		$GLOBALS['wp_stub_queried_object_id'] = $ids[ $page ];
+	}
+
+	public function test_each_page_we_take_over_is_named_and_nothing_else_is(): void {
+		$this->reading( 'dashboard' );
+		$this->assertSame( 'dashboard', Blueworx_Clubhouse_Dashboard_Assets::page_key( 42 ) );
+		$this->assertSame( 'checkout', Blueworx_Clubhouse_Dashboard_Assets::page_key( 43 ) );
+		$this->assertSame( 'order-confirmation', Blueworx_Clubhouse_Dashboard_Assets::page_key( 44 ) );
+		$this->assertSame( '', Blueworx_Clubhouse_Dashboard_Assets::page_key( 99 ) );
+		// 0 means "no page recorded", and must never match anything.
+		$this->assertSame( '', Blueworx_Clubhouse_Dashboard_Assets::page_key( 0 ) );
+	}
+
+	public function test_the_stylesheet_is_asked_for_before_the_page_is_drawn(): void {
+		// Queued while WordPress is still collecting styles for the head. Left
+		// to the content filter it would arrive in the footer instead, and the
+		// member would watch the page snap into shape after it had loaded.
+		foreach ( array( 'dashboard', 'checkout', 'order-confirmation' ) as $page ) {
+			wp_stub_reset();
+			$this->reading( $page );
+			Blueworx_Clubhouse_Dashboard_Assets::declare_style();
+			$this->assertContains( Blueworx_Clubhouse_Dashboard_Assets::handle(), $this->enqueued(), $page . ' renders unstyled' );
+		}
+	}
+
+	public function test_no_other_page_on_the_club_site_is_given_it(): void {
+		// The two design systems never meet.
+		$this->reading( 'something-else' );
+		Blueworx_Clubhouse_Dashboard_Assets::declare_style();
+		$this->assertNotContains( Blueworx_Clubhouse_Dashboard_Assets::handle(), $this->enqueued() );
+	}
+
+	public function test_a_site_with_no_shop_pages_recorded_is_left_alone(): void {
+		$GLOBALS['wp_stub_queried_object_id'] = 0;
+		Blueworx_Clubhouse_Dashboard_Assets::declare_style();
+		$this->assertNotContains( Blueworx_Clubhouse_Dashboard_Assets::handle(), $this->enqueued() );
 	}
 
 	public function test_the_vendored_stylesheet_is_on_disk(): void {

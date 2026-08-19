@@ -44,6 +44,10 @@ require_once dirname( __DIR__, 2 ) . '/includes/frontend/class-clubhouse-context
 require_once dirname( __DIR__, 2 ) . '/includes/frontend/class-frontend.php';
 require_once dirname( __DIR__, 2 ) . '/includes/frontend/class-demo-mode.php';
 require_once dirname( __DIR__, 2 ) . '/includes/frontend/class-external-chrome.php';
+// Loaded by the main plugin file rather than includes/bootstrap.php. The member
+// area asks it for the sign-out link, so without this the tests would exercise
+// the "nothing can build one" branch and never the real one.
+require_once dirname( __DIR__, 2 ) . '/includes/frontend/class-auth.php';
 require_once dirname( __DIR__, 2 ) . '/includes/frontend/class-seo-head.php';
 require_once dirname( __DIR__, 2 ) . '/includes/admin/class-admin-menu-icons.php';
 require_once dirname( __DIR__, 2 ) . '/includes/admin/class-setup-controller.php';

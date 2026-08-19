@@ -26,6 +26,10 @@ $GLOBALS['wp_stub_delete_fail']   = array();
 $GLOBALS['wp_stub_permalinks']    = array();
 $GLOBALS['wp_stub_post_status']   = array();
 $GLOBALS['wp_stub_referer']       = false;
+$GLOBALS['wp_stub_queried_object_id'] = 0;
+$GLOBALS['wp_stub_is_singular']       = false;
+$GLOBALS['wp_stub_post_type']         = 'page';
+$GLOBALS['wp_stub_the_id']            = 0;
 
 function wp_stub_reset(): void {
 	$GLOBALS['wp_stub_calls']       = array();
@@ -48,6 +52,10 @@ function wp_stub_reset(): void {
 	$GLOBALS['wp_stub_permalinks']    = array();
 	$GLOBALS['wp_stub_post_status']   = array();
 	$GLOBALS['wp_stub_referer']       = false;
+	$GLOBALS['wp_stub_queried_object_id'] = 0;
+	$GLOBALS['wp_stub_is_singular']       = false;
+	$GLOBALS['wp_stub_post_type']         = 'page';
+	$GLOBALS['wp_stub_the_id']            = 0;
 	unset( $GLOBALS['menu'], $GLOBALS['wp_meta_boxes'] );
 }
 
@@ -361,6 +369,53 @@ if ( ! function_exists( 'is_front_page' ) ) {
 if ( ! function_exists( 'get_query_var' ) ) {
 	function get_query_var( string $var, $default = '' ) { return $GLOBALS['wp_stub_query_vars'][ $var ] ?? $default; }
 }
+// The loop shims. Everything defaults to "this is not a post being rendered",
+// which is what the function_exists() fallbacks these replace already assumed,
+// so a test that never calls wp_stub_render_page() behaves exactly as before.
+if ( ! function_exists( 'is_singular' ) ) {
+	function is_singular( $post_types = '' ): bool {
+		$is = (bool) ( $GLOBALS['wp_stub_is_singular'] ?? false );
+		if ( '' === $post_types || array() === $post_types ) {
+			return $is;
+		}
+		return $is && in_array( (string) ( $GLOBALS['wp_stub_post_type'] ?? 'page' ), (array) $post_types, true );
+	}
+}
+if ( ! function_exists( 'in_the_loop' ) ) {
+	function in_the_loop(): bool {
+		return (bool) ( $GLOBALS['wp_stub_is_singular'] ?? false );
+	}
+}
+if ( ! function_exists( 'is_main_query' ) ) {
+	function is_main_query(): bool {
+		return (bool) ( $GLOBALS['wp_stub_is_singular'] ?? false );
+	}
+}
+if ( ! function_exists( 'get_the_ID' ) ) {
+	function get_the_ID() {
+		return (int) ( $GLOBALS['wp_stub_the_id'] ?? 0 );
+	}
+}
+if ( ! function_exists( 'wp_register_style' ) ) {
+	function wp_register_style( ...$a ) { wp_stub_record( 'wp_register_style', $a ); return true; }
+}
+
+/** Put the request inside the main loop on one post, as a page being rendered. */
+function wp_stub_render_page( int $post_id, string $post_type = 'page' ): void {
+	$GLOBALS['wp_stub_is_singular']       = true;
+	$GLOBALS['wp_stub_post_type']         = $post_type;
+	$GLOBALS['wp_stub_the_id']            = $post_id;
+	$GLOBALS['wp_stub_queried_object_id'] = $post_id;
+}
+
+if ( ! function_exists( 'get_queried_object_id' ) ) {
+	// What WordPress already knows the request is about while it is still
+	// collecting styles for the head — which is how the member area decides,
+	// that early, whether its stylesheet belongs on this page.
+	function get_queried_object_id(): int {
+		return (int) ( $GLOBALS['wp_stub_queried_object_id'] ?? 0 );
+	}
+}
 if ( ! function_exists( 'get_permalink' ) ) {
 	// Recorded (unlike get_option()) so tests can assert whether this ran at
 	// all — needed to prove Frontend::register() never resolves a checkout
@@ -369,6 +424,10 @@ if ( ! function_exists( 'get_permalink' ) ) {
 	function get_permalink( $post = 0 ) {
 		wp_stub_record( 'get_permalink', array( $post ) );
 		$id = is_object( $post ) ? (int) ( $post->ID ?? 0 ) : (int) $post;
+		if ( 0 === $id ) {
+			// No post named means "the one being rendered", as it does in WordPress.
+			$id = (int) ( $GLOBALS['wp_stub_the_id'] ?? 0 );
+		}
 		return $GLOBALS['wp_stub_permalinks'][ $id ] ?? false;
 	}
 }

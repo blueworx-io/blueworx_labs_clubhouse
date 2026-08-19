@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * assets/bw/README.md.
  *
  * Registered rather than enqueued at load: whether a request is one of ours is
- * decided per request by Member_Dashboard, which calls enqueue() once it knows.
+ * decided per request, by page_key() below.
  *
  * @package BlueworxLabsClubhouse
  */
@@ -40,8 +40,36 @@ final class Blueworx_Clubhouse_Dashboard_Assets {
 	}
 
 	/**
-	 * Tell WordPress the stylesheet exists. Nothing is put on the page here —
-	 * enqueue() does that, and only for a request we are rendering.
+	 * Which page this plugin takes over a post is — 'dashboard', 'checkout' or
+	 * 'order-confirmation' — and '' for every other post on the site.
+	 *
+	 * The one place that answers it. The stylesheet has to be queued while
+	 * WordPress is still collecting styles for the head, but the two content
+	 * filters ask the same question much later, once the page is being written.
+	 * A second copy of the rule is how a page comes to be dressed by one of
+	 * them and left without its stylesheet by the other.
+	 */
+	public static function page_key( int $post_id ): string {
+		if ( $post_id > 0 && $post_id === Blueworx_Clubhouse_Shop_Pages::page_id( 'dashboard' ) ) {
+			return 'dashboard';
+		}
+		return Blueworx_Clubhouse_Commerce_Pages::page_key(
+			$post_id,
+			Blueworx_Clubhouse_Shop_Pages::page_id( 'checkout' ),
+			Blueworx_Clubhouse_Shop_Pages::page_id( 'order-confirmation' )
+		);
+	}
+
+	/**
+	 * Tell WordPress the stylesheet exists, and put it on the page when this
+	 * request is one of ours.
+	 *
+	 * The decision is made here, on wp_enqueue_scripts, rather than left to the
+	 * content filters that draw the page: by the time those run the head has
+	 * already been printed, so the stylesheet arrives in the footer and the
+	 * member watches the page snap into shape after it has loaded. On checkout
+	 * that flash lands on a payment form, which is the worst place for it.
+	 * The queried object is known this early, which is all the decision needs.
 	 */
 	public static function declare_style(): void {
 		if ( ! function_exists( 'wp_register_style' ) || ! defined( 'BLUEWORX_LABS_CLUBHOUSE_URL' ) ) {
@@ -53,6 +81,12 @@ final class Blueworx_Clubhouse_Dashboard_Assets {
 			array(),
 			defined( 'BLUEWORX_LABS_CLUBHOUSE_VERSION' ) ? BLUEWORX_LABS_CLUBHOUSE_VERSION : null
 		);
+		if ( ! function_exists( 'get_queried_object_id' ) ) {
+			return;
+		}
+		if ( '' !== self::page_key( (int) get_queried_object_id() ) ) {
+			self::enqueue();
+		}
 	}
 
 	/** Put it on this page. Safe to call more than once. */
