@@ -57,13 +57,30 @@ final class Blueworx_Clubhouse_Plugin_Slot {
 		try {
 			$out = $source( $name );
 		} catch ( \Throwable $e ) {
-			// One panel failing must not take the member's account page with it.
+			// The page must survive a broken source, so the failure is swallowed
+			// here rather than left to propagate. But swallowed silently, it is
+			// not diagnosable: a club reporting "my orders page is blank" would
+			// leave nobody anything to go on. Record one line and move on.
+			self::log_failure( $name, $e );
 			return '';
 		}
 		if ( ! is_string( $out ) || '' === trim( $out ) ) {
 			return '';
 		}
 		return $out;
+	}
+
+	/**
+	 * Write one line to the PHP error log naming the slot that failed and why.
+	 * Guarded the same way the WordPress calls elsewhere in this file are, so a
+	 * host without error_log() available cannot turn a recorded failure into a
+	 * second one.
+	 */
+	private static function log_failure( string $name, \Throwable $e ): void {
+		if ( ! function_exists( 'error_log' ) ) {
+			return;
+		}
+		error_log( sprintf( 'Blueworx Clubhouse: plugin slot "%s" failed to render: %s', $name, $e->getMessage() ) );
 	}
 
 	/**
