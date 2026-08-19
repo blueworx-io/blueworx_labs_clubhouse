@@ -158,6 +158,12 @@ final class Blueworx_Clubhouse_Welcome_Pack {
 		if ( 0 === $dashboard || get_the_ID() !== $dashboard ) {
 			return $content;
 		}
+		// The member area draws the pack itself, at the top of its overview.
+		// Without this the pack would render twice on the same page.
+		if ( class_exists( 'Blueworx_Clubhouse_Member_Dashboard' )
+			&& Blueworx_Clubhouse_Member_Dashboard::owns( (int) get_the_ID() ) ) {
+			return $content;
+		}
 		$storage = new Blueworx_Clubhouse_Options_Storage();
 		if ( ! ( new Blueworx_Clubhouse_Visibility( $storage ) )->is_section_visible( 'home', self::SECTION ) ) {
 			return $content;

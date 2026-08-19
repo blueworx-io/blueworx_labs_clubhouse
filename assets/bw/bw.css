@@ -625,3 +625,9 @@
 .clubhouse-member .bw-secnav__item .bw-icon{flex:none}
 .clubhouse-member .bw-pagehead__actions .bw-icon{margin-right:6px}
 .clubhouse-member .bw-panels>*+*{margin-top:var(--bw-stack-gap)}
+.clubhouse-member .clubhouse-member__quicks{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:var(--bw-stack-gap)}
+.clubhouse-member .clubhouse-member__quick{display:flex;flex-direction:column;gap:var(--bw-space-3);padding:var(--bw-panel-pad);text-decoration:none;color:var(--bw-text-body);transition:var(--bw-transition-control)}
+.clubhouse-member .clubhouse-member__quick:hover{border-color:var(--bw-brand);color:var(--bw-text-accent)}
+.clubhouse-member .clubhouse-member__quick-icon{color:var(--bw-text-accent)}
+.clubhouse-member .clubhouse-member__quick-title{font-family:var(--bw-font-display);font-size:var(--bw-size-h3);font-weight:var(--bw-weight-semibold);color:var(--bw-text-heading)}
+.clubhouse-member .clubhouse-member__quick-lede{font-size:var(--bw-size-sm);color:var(--bw-text-muted)}
