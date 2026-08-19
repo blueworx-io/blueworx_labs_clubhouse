@@ -92,12 +92,59 @@ test('clicking a nav item swaps panels without navigating @wordpress', async ({ 
   await expect(page.locator('[data-view="test-second-view"]')).toBeFocused();
 });
 
-test('a phone gets the bottom bar and not the sidebar nav @wordpress', async ({ page }) => {
+// The harness has neither SureCart nor LatePoint, so the real page draws only
+// one view and the tab bar never renders at all (Dashboard_Shell::tabbar()
+// returns '' below two views). Proving the phone layout honestly means giving
+// it enough views to fill the bar and overflow it — six — the same
+// response-splicing approach the click test above uses, extended to the
+// sidebar nav, the tab bar and the overflow rows.
+test('a phone gets the bottom bar and the overflow rows, not the sidebar nav @wordpress', async ({ page }) => {
+  await page.route('**/member-dashboard/', async (route) => {
+    const response = await route.fetch();
+    let body = await response.text();
+
+    const extraNavItems = ['bookings', 'orders', 'invoices', 'plans', 'account']
+      .map((key) => '<a class="bw-secnav__item" data-view-link="' + key + '"'
+        + ' data-view-title="' + key + '" data-view-lede=""'
+        + ' href="/member-dashboard/?view=' + key + '">'
+        + '<span class="clubhouse-member__navlabel">' + key + '</span></a>')
+      .join('');
+    body = body.replace('Dashboard</span></a></nav>', 'Dashboard</span></a>' + extraNavItems + '</nav>');
+
+    // Five fit the bar; the sixth ("account") is what overflow_links() offers
+    // instead — see includes/dashboard/class-member-dashboard.php.
+    const tabbarItems = ['dashboard', 'bookings', 'orders', 'invoices', 'plans']
+      .map((key) => '<a class="clubhouse-member__tab" data-view-link="' + key + '"'
+        + ' data-view-title="' + key + '" data-view-lede=""'
+        + ' href="/member-dashboard/?view=' + key + '">'
+        + '<span class="clubhouse-member__tablabel">' + key + '</span></a>')
+      .join('');
+    const tabbar = '<nav class="clubhouse-member__tabbar" aria-label="Your account">' + tabbarItems + '</nav>';
+    const more = '<nav class="clubhouse-member__more" aria-label="More of your account">'
+      + '<a class="clubhouse-member__morelink" data-view-link="account" data-view-title="account" data-view-lede=""'
+      + ' href="/member-dashboard/?view=account"><span>account</span></a></nav>';
+
+    // The real markup places the overflow rows inside the panel (main) and
+    // the tab bar as the shell's last child, after main closes — see
+    // Dashboard_Shell::page().
+    body = body.replace('</main></div></div></div>', more + '</main></div>' + tabbar + '</div></div>');
+
+    await route.fulfill({ response, body });
+  });
+
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/member-dashboard/');
+
+  await expect(page.locator('.clubhouse-member__tabbar')).toBeVisible();
+  await expect(page.locator('.clubhouse-member__tab')).toHaveCount(5);
   await expect(page.locator('.clubhouse-member__side .bw-secnav')).toBeHidden();
-  // The bar is drawn only when there is more than one place to go, and the
-  // harness has neither SureCart nor LatePoint — so assert on the rule, not on
-  // the element: the sidebar's nav must not be what a phone navigates with.
-  await expect(page.locator('.clubhouse-member__brand')).toBeVisible();
+  await expect(page.locator('.clubhouse-member__more')).toBeVisible();
+  await expect(page.locator('.clubhouse-member__more [data-view-link="account"]')).toBeVisible();
+
+  // The reverse above the phone breakpoint: the sidebar carries every view,
+  // so the bar and the overflow rows are noise.
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await expect(page.locator('.clubhouse-member__tabbar')).toBeHidden();
+  await expect(page.locator('.clubhouse-member__side .bw-secnav')).toBeVisible();
+  await expect(page.locator('.clubhouse-member__more')).toBeHidden();
 });
