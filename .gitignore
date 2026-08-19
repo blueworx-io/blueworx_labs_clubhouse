@@ -17,3 +17,5 @@ composer.lock
 # real saved content on the previous version.
 .wp-test/
 .wp-smoke/
+
+.design-source/
