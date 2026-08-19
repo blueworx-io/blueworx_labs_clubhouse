@@ -85,4 +85,9 @@ test('clicking a nav item swaps panels without navigating @wordpress', async ({ 
   await expect(page.locator('[data-view="test-second-view"]')).toBeVisible();
   await expect(page).toHaveURL(/view=test-second-view/);
   await expect(page.locator('[data-member-title]')).toHaveText('Second view');
+
+  // Focus should land on the shown panel itself — it carries role="tabpanel"
+  // and aria-labelledby, so a screen reader gets the panel's own name rather
+  // than the generic "main" landmark around it.
+  await expect(page.locator('[data-view="test-second-view"]')).toBeFocused();
 });

@@ -33,17 +33,26 @@
 	}
 
 	function show(key, push, href) {
-		var found = false;
+		var target = null;
 		var j;
 		for (j = 0; j < panels.length; j++) {
-			var mine = panels[j].getAttribute('data-view') === key;
-			panels[j].hidden = !mine;
-			if (mine) {
-				found = true;
+			if (panels[j].getAttribute('data-view') === key) {
+				target = panels[j];
+				break;
 			}
 		}
-		if (!found) {
+		// Find the match before touching a single `hidden` attribute. On the
+		// click path an unmatched key is harmless either way — preventDefault()
+		// never fires, so the browser navigates for real. But popstate has no
+		// navigation to fall back on: hiding every panel before knowing one
+		// matches would leave a member staring at a blank page with only a
+		// reload to get out of it.
+		if (!target) {
 			return false;
+		}
+
+		for (j = 0; j < panels.length; j++) {
+			panels[j].hidden = panels[j] !== target;
 		}
 
 		for (j = 0; j < links.length; j++) {
@@ -75,12 +84,10 @@
 			window.history.pushState({ clubhouseView: key }, '', href);
 		}
 		// The panel is what changed, so that is what a screen reader should be
-		// taken to — the same place a page load would have left them.
-		var view = document.getElementById('clubhouse-member-view');
-		if (view) {
-			view.setAttribute('tabindex', '-1');
-			view.focus();
-		}
+		// taken to — its own name via role="tabpanel"/aria-labelledby, not the
+		// generic "main" landmark around it.
+		target.setAttribute('tabindex', '-1');
+		target.focus();
 		return true;
 	}
 
