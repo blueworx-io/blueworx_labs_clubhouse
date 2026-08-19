@@ -103,4 +103,5 @@ test('a signed-out visitor keeps the page own content @wordpress', async ({ page
   await context.clearCookies();
   await page.goto(DASHBOARD);
   await expect(page.locator('.bw-admin.clubhouse-member')).toHaveCount(0);
+  await expect(page.locator('#foreign-content')).toHaveText('FOREIGN CONTENT');
 });

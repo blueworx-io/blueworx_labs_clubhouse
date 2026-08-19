@@ -12,6 +12,7 @@ const { test, expect } = require('@playwright/test');
 const DASHBOARD = '/member-area-fixture/';
 
 test('a member sees the club welcome pack on their dashboard @wordpress', async ({ page }) => {
+  await loginAsAdmin(page);
   await page.goto(DASHBOARD);
 
   const pack = page.locator('.clubhouse-welcome');
@@ -32,6 +33,7 @@ test('the pack greets a member above everything else on the page @wordpress', as
   // under the tabs and an empty appointments list — the last thing a new
   // member would see, if they scrolled at all. The member area now draws the
   // pack itself, first thing in the overview.
+  await loginAsAdmin(page);
   await page.goto(DASHBOARD);
 
   const order = await page.evaluate(() => {
@@ -49,6 +51,7 @@ test('the pack greets a member above everything else on the page @wordpress', as
 // deliberately carries none of the club's look. A pack reaching for design
 // tokens that are not there would arrive unstyled.
 test('the dashboard still stands alone, with no club chrome @wordpress', async ({ page }) => {
+  await loginAsAdmin(page);
   await page.goto(DASHBOARD);
 
   await expect(page.locator('.clubhouse-welcome')).toHaveCount(1);
@@ -133,4 +136,18 @@ test('the welcome pack appears on the dashboard and nowhere else @wordpress', as
     await page.goto(url);
     await expect(page.locator('.clubhouse-welcome'), `pack leaked onto ${url}`).toHaveCount(0);
   }
+});
+
+test('a signed-out visitor is left with the shop own content, not the pack @wordpress', async ({
+  page,
+  context,
+}) => {
+  // The member area's own early return leaves this page undressed for a
+  // stranger, and the pack stands down whenever the member area owns the
+  // page — so a signed-out visitor gets neither. On a real club that leaves
+  // SureCart's own sign-in form, which is honest; a pack on a page nobody is
+  // signed into would not be.
+  await context.clearCookies();
+  await page.goto(DASHBOARD);
+  await expect(page.locator('.clubhouse-welcome')).toHaveCount(0);
 });

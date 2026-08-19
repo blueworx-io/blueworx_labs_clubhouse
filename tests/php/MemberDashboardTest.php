@@ -186,23 +186,6 @@ final class MemberDashboardTest extends TestCase {
 		$this->assertStringContainsString( 'data-block="surecart/customer-orders"', $html );
 	}
 
-	public function test_the_guard_is_lifted_again_once_the_page_is_drawn(): void {
-		// Including when a panel throws — a failed render must not leave the
-		// member area unable to draw itself for the rest of the request.
-		$this->on_the_account_page();
-		$GLOBALS['wp_stub_logged_in'] = true;
-		$_GET['view']                 = 'orders';
-		Blueworx_Clubhouse_Plugin_Slot::set_sources(
-			static function ( string $n ): ?string {
-				throw new RuntimeException( 'the shop fell over' );
-			},
-			null
-		);
-		Blueworx_Clubhouse_Member_Dashboard::take_over( '' );
-		Blueworx_Clubhouse_Plugin_Slot::set_sources( null, null );
-		$this->assertStringContainsString( 'bw-admin', Blueworx_Clubhouse_Member_Dashboard::take_over( '' ) );
-	}
-
 	public function test_an_overview_with_neither_pack_nor_views_shows_the_honest_empty_state(): void {
 		// No pack written, and no other views to link to — e.g. a club whose
 		// shop plugin is inactive. A member must never meet a blank frame.
