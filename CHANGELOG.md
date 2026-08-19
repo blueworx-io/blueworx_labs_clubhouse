@@ -5,6 +5,10 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.80.0
+
+- **Your members get their own page on your site, and you get one place to manage it.** The member area now lives at /member-dashboard/ on your own address, listed with your other pages and switchable off under Setup like any of them. Signed in, the Log in button in your header becomes Member area, so a member is always one click from their bookings, orders and membership. Anyone with the old link is taken to the new page automatically. WordPress's own Pages screen is gone from your menu — everything you edit lives under Club Pages and Setup now. Nothing has been deleted: the pages your shop and booking plugin rely on are all still there, doing their job quietly.
+
 ## 0.79.0
 
 - **Your members now have one account page instead of three plugins in a stack.** Signing in takes a member to a proper member area: a menu down the side for their bookings, orders, invoices, membership and account details, with each one still run by the plugin that owns it. Your welcome pack greets them at the top. If you have no shop, or no bookings, those menu items simply are not there — nothing to set up and nothing to switch on. Your checkout and thank-you pages now match it, and every address on your site stays exactly as it was. One thing to know: if you had typed anything onto the account page itself, it is no longer shown there — the new member area takes the whole page over. Nothing has been deleted, and anything you want members to read there belongs in your welcome pack, which greets them at the top of the same page.
