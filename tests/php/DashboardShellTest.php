@@ -60,9 +60,11 @@ final class DashboardShellTest extends TestCase {
 
 	public function test_the_nav_marks_the_view_being_read(): void {
 		$html = Blueworx_Clubhouse_Dashboard_Shell::page( $this->args( array( 'current' => 'orders' ) ) );
-		$this->assertStringContainsString( 'aria-current="page"', $html );
+		// Tied to the active view's own href, not just present anywhere on the page.
+		$this->assertMatchesRegularExpression( '/href="\?view=orders"[^>]*aria-current="page"/', $html );
 		// The side nav and the phone's bottom bar each mark the current view, and
 		// both are always in the markup — so the count is 2, not 1.
+		$this->assertSame( 2, substr_count( $html, 'aria-current="page"' ), 'the side nav and the tab bar both mark the current view' );
 		$this->assertSame( 2, substr_count( $html, 'is-active' ), 'the side nav and the tab bar both mark the current view' );
 	}
 
@@ -71,8 +73,97 @@ final class DashboardShellTest extends TestCase {
 			'home_url'   => '/',
 			'logout_url' => '/out/',
 		) ) );
+		$this->assertStringContainsString( '<a class="clubhouse-member__back" href="/">', $html );
 		$this->assertStringContainsString( 'Back to the club site', $html );
-		$this->assertStringContainsString( '/out/', $html );
+		$this->assertStringContainsString( '<a class="bw-btn bw-btn--secondary bw-btn--sm" href="/out/">Sign out</a>', $html );
+	}
+
+	public function test_the_sidebar_escapes_the_club_and_the_member(): void {
+		// Ported from the old page()-signature test of the same intent, plus the
+		// member name and email — the sidebar is new code that prints both.
+		$html = Blueworx_Clubhouse_Dashboard_Shell::page( $this->args( array(
+			'club_name'    => 'Bill & Ben\'s <script>',
+			'member_name'  => 'Bill & Ben\'s <script>',
+			'member_email' => 'bill&ben@<script>.test',
+		) ) );
+		$this->assertStringContainsString( 'Bill &amp; Ben&#039;s &lt;script&gt;', $html );
+		$this->assertStringContainsString( 'bill&amp;ben@&lt;script&gt;.test', $html );
+		$this->assertStringNotContainsString( '<script>', $html );
+	}
+
+	public function test_the_top_bar_escapes_the_title_and_lede(): void {
+		$html = Blueworx_Clubhouse_Dashboard_Shell::page( $this->args( array(
+			'views'   => array(
+				array( 'key' => 'dashboard', 'label' => 'Dashboard', 'title' => '<b>T</b>', 'lede' => '<i>L</i>', 'icon' => 'layout-dashboard' ),
+			),
+			'current' => 'dashboard',
+			'panels'  => array( 'dashboard' => '<p>hello</p>' ),
+		) ) );
+		$this->assertStringContainsString( '&lt;b&gt;T&lt;/b&gt;', $html );
+		$this->assertStringContainsString( '&lt;i&gt;L&lt;/i&gt;', $html );
+		$this->assertStringNotContainsString( '<b>T</b>', $html );
+	}
+
+	public function test_the_way_home_is_escaped(): void {
+		$html = Blueworx_Clubhouse_Dashboard_Shell::page( $this->args( array(
+			'home_url' => '" onmouseover="alert(1)',
+		) ) );
+		// The quotes are escaped, so the address cannot break out of its
+		// attribute and become a handler. The literal text survives inside the
+		// value, harmlessly, which is why asserting on it would fail here.
+		$this->assertStringNotContainsString( '" onmouseover="', $html );
+		$this->assertStringContainsString( '&quot; onmouseover=&quot;alert(1)', $html );
+	}
+
+	public function test_an_already_escaped_sign_out_address_is_not_escaped_twice(): void {
+		// WordPress's own nonce helper hands back a URL with its ampersands
+		// already written as entities. Escaping that again renames _wpnonce to
+		// amp;_wpnonce and the sign-out silently stops working.
+		$html = Blueworx_Clubhouse_Dashboard_Shell::page( $this->args( array(
+			'logout_url' => 'https://club.test/?clubhouse_logout=1&amp;_wpnonce=abc',
+		) ) );
+		$this->assertStringContainsString( 'href="https://club.test/?clubhouse_logout=1&amp;_wpnonce=abc"', $html );
+		$this->assertStringNotContainsString( 'amp;amp;', $html );
+	}
+
+	public function test_a_panels_body_is_rendered_and_a_hidden_views_body_still_carries_it(): void {
+		$html = Blueworx_Clubhouse_Dashboard_Shell::page( $this->args() ); // current = dashboard
+		$this->assertStringContainsString(
+			'<div class="clubhouse-member__panel" data-view="dashboard" role="tabpanel" aria-labelledby="clubhouse-member-tab-dashboard"><p>overview</p></div>',
+			$html
+		);
+		// Not the current view — hidden, but its body is still on the page,
+		// because the panels are other plugins' web components that come alive
+		// on page load and a panel fetched later would render as an empty box.
+		$this->assertStringContainsString(
+			'<div class="clubhouse-member__panel" data-view="orders" role="tabpanel" aria-labelledby="clubhouse-member-tab-orders" hidden><p>orders</p></div>',
+			$html
+		);
+	}
+
+	public function test_a_club_without_a_shop_has_no_dead_nav_items(): void {
+		// Only two views on offer — orders is omitted, as available() does for a
+		// club with no shop plugin active.
+		$views = array(
+			array( 'key' => 'dashboard', 'label' => 'Dashboard', 'title' => 'Your account', 'lede' => '', 'icon' => 'layout-dashboard' ),
+			array( 'key' => 'invoices', 'label' => 'Invoices', 'title' => 'Invoices', 'lede' => '', 'icon' => 'file-spreadsheet' ),
+		);
+		$html = Blueworx_Clubhouse_Dashboard_Shell::page( $this->args( array(
+			'views'   => $views,
+			'current' => 'dashboard',
+			'panels'  => array( 'dashboard' => '<p>hello</p>', 'invoices' => '<p>invoices</p>' ),
+		) ) );
+		// Neither the side nav nor the phone's tab bar link to it — both use
+		// data-view-link.
+		$this->assertStringNotContainsString( 'data-view-link="orders"', $html );
+		$this->assertStringNotContainsString( '?view=orders', $html );
+		$this->assertStringContainsString( 'data-view-link="dashboard"', $html );
+	}
+
+	public function test_the_shell_emits_no_club_look_classes(): void {
+		// The two design systems never meet. A ch-* class here would arrive
+		// unstyled, because none of assets/looks/ is loaded on this page.
+		$this->assertDoesNotMatchRegularExpression( '/class="[^"]*\bch-/', Blueworx_Clubhouse_Dashboard_Shell::page( $this->args() ) );
 	}
 
 	public function test_no_sign_out_link_is_drawn_without_an_address_for_it(): void {
