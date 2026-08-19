@@ -162,4 +162,60 @@ final class MemberDashboardTest extends TestCase {
 		$this->assertStringContainsString( 'bw-admin', $html );
 		$this->assertStringContainsString( '/member-dashboard/', $html );
 	}
+
+	private function redirect( array $over = array() ): string {
+		$args = array_merge(
+			array(
+				'queried'    => 0,
+				'dashboard'  => 0,
+				'on_member'  => false,
+				'signed_in'  => false,
+				'view'       => '',
+				'member_url' => '/member-dashboard/',
+				'login_url'  => '/login/',
+			),
+			$over
+		);
+		return Blueworx_Clubhouse_Member_Dashboard::redirect_to(
+			$args['queried'],
+			$args['dashboard'],
+			$args['on_member'],
+			$args['signed_in'],
+			$args['view'],
+			$args['member_url'],
+			$args['login_url']
+		);
+	}
+
+	public function test_the_shops_old_account_page_is_carried_across(): void {
+		$this->assertSame( '/member-dashboard/', $this->redirect( array( 'queried' => 42, 'dashboard' => 42 ) ) );
+	}
+
+	public function test_the_panel_asked_for_is_carried_across_with_it(): void {
+		$this->assertSame(
+			'/member-dashboard/?view=orders',
+			$this->redirect( array( 'queried' => 42, 'dashboard' => 42, 'view' => 'orders' ) )
+		);
+	}
+
+	public function test_every_other_page_is_left_alone(): void {
+		$this->assertSame( '', $this->redirect( array( 'queried' => 7, 'dashboard' => 42 ) ) );
+		$this->assertSame( '', $this->redirect( array( 'queried' => 0, 'dashboard' => 0 ) ) );
+		// A shop with no dashboard page recorded must not swallow post id 0.
+		$this->assertSame( '', $this->redirect( array( 'queried' => 0, 'dashboard' => 0, 'view' => 'orders' ) ) );
+	}
+
+	public function test_a_signed_out_visitor_to_the_member_area_is_sent_to_log_in(): void {
+		$this->assertSame( '/login/', $this->redirect( array( 'on_member' => true ) ) );
+	}
+
+	public function test_a_signed_in_member_stays_on_the_member_area(): void {
+		$this->assertSame( '', $this->redirect( array( 'on_member' => true, 'signed_in' => true ) ) );
+	}
+
+	/** Nothing is worth redirecting to an address we could not build. */
+	public function test_no_redirect_when_the_target_address_is_unknown(): void {
+		$this->assertSame( '', $this->redirect( array( 'queried' => 42, 'dashboard' => 42, 'member_url' => '' ) ) );
+		$this->assertSame( '', $this->redirect( array( 'on_member' => true, 'login_url' => '' ) ) );
+	}
 }

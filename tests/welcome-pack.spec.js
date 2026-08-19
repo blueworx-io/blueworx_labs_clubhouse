@@ -1,15 +1,8 @@
 const { test, expect } = require('@playwright/test');
 
-// @wordpress only: the welcome pack renders on the customer dashboard, which is
-// a real WordPress page the DB-free preview does not have.
-//
-// The fixture is member-area-fixture — an ordinary page carrying SureCart's
-// dashboard template slug — with the dashboard page option pointed at it by
-// tests/global-setup.js. That option is what the code keys off and what
-// SureCart itself writes, so the fixture is the real contract rather than a
-// stand-in for it. Installing SureCart to assert our own block would be
-// testing SureCart, the same reasoning external-chrome.spec.js records.
-const DASHBOARD = '/member-area-fixture/';
+// @wordpress only: the welcome pack renders on the member area, which is a
+// real WordPress route the DB-free preview does not have.
+const DASHBOARD = '/member-dashboard/';
 
 test('a member sees the club welcome pack on their dashboard @wordpress', async ({ page }) => {
   await loginAsAdmin(page);
@@ -138,16 +131,8 @@ test('the welcome pack appears on the dashboard and nowhere else @wordpress', as
   }
 });
 
-test('a signed-out visitor is left with the shop own content, not the pack @wordpress', async ({
-  page,
-  context,
-}) => {
-  // The member area's own early return leaves this page undressed for a
-  // stranger, and the pack stands down whenever the member area owns the
-  // page — so a signed-out visitor gets neither. On a real club that leaves
-  // SureCart's own sign-in form, which is honest; a pack on a page nobody is
-  // signed into would not be.
-  await context.clearCookies();
-  await page.goto(DASHBOARD);
-  await expect(page.locator('.clubhouse-welcome')).toHaveCount(0);
+test('a signed-out visitor is sent to the club login page @wordpress', async ({ page }) => {
+  await page.context().clearCookies();
+  await page.goto('/member-dashboard/');
+  await expect(page).toHaveURL(/\/login\/?$/);
 });

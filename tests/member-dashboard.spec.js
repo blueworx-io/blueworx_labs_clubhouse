@@ -1,14 +1,13 @@
 const { test, expect } = require('@playwright/test');
 
-// @wordpress only: the member area renders on the customer dashboard, which is
+// @wordpress only: the member area renders at the plugin's own route, which is
 // a real WordPress page the DB-free preview does not have.
 //
-// The fixture is member-area-fixture — an ordinary page carrying SureCart's
-// dashboard template slug, with the dashboard page option pointed at it by
-// tests/global-setup.js. That option is what the code keys off and what
-// SureCart itself writes. It is a separate fixture from external-chrome's:
-// that one proves a foreign page is left untouched, while this one is the
-// page the member area replaces the content of.
+// member-area-fixture — an ordinary page carrying SureCart's dashboard
+// template slug, with the dashboard page option pointed at it by
+// tests/global-setup.js — is no longer where the member area renders. It is
+// now the shop's old address, and a visit there redirects here. That redirect
+// has its own test, added in Task 7.
 //
 // The harness has neither SureCart nor LatePoint installed, so what these
 // assertions cover is the empty path: the frame renders, no dead nav items are
@@ -16,10 +15,9 @@ const { test, expect } = require('@playwright/test');
 // SureCart, the same reasoning external-chrome.spec.js records.
 //
 // Every test signs in first: the member area is for members, and a signed-out
-// visitor is deliberately left with the page's own content (which on a real
-// club is SureCart's sign-in form) rather than a frame telling them the club
-// has set nothing up.
-const DASHBOARD = '/member-area-fixture/';
+// visitor is sent to the club's own login page rather than shown a frame with
+// nothing in it.
+const DASHBOARD = '/member-dashboard/';
 
 async function signIn(page) {
   await page.goto('/wp-login.php');
@@ -59,7 +57,7 @@ test('a club with no shop and no bookings is offered no dead nav items @wordpres
   // Built on the page's own address, not a bare query that would replace it.
   await expect(page.locator('.bw-secnav__item')).toHaveAttribute(
     'href',
-    /member-area-fixture\/\?view=dashboard$/,
+    /member-dashboard\/\?view=dashboard$/,
   );
 });
 

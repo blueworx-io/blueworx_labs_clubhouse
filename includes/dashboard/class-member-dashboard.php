@@ -25,11 +25,79 @@ if ( ! defined( 'ABSPATH' ) ) {
 final class Blueworx_Clubhouse_Member_Dashboard {
 
 	public static function register(): void {
-		if ( ! function_exists( 'add_filter' ) ) {
+		if ( ! function_exists( 'add_action' ) ) {
 			return;
 		}
 		Blueworx_Clubhouse_Plugin_Slot::install_wordpress();
 		Blueworx_Clubhouse_Dashboard_Assets::register();
+		// Priority 5: before Frontend's own 404 pass at the default 10, so a
+		// signed-out visitor is moved on rather than shown a page they cannot use.
+		add_action( 'template_redirect', array( self::class, 'route' ), 5 );
+	}
+
+	/**
+	 * Where this request should be sent instead, or '' to stay put.
+	 *
+	 * Two journeys meet here. A member who followed the shop's own account link,
+	 * or an old bookmark, lands on the page SureCart seeded and is carried
+	 * across to ours with the panel they asked for intact. A signed-out visitor
+	 * who reaches the member area is sent to the club's own login page, rather
+	 * than a frame with nothing in it and no way to sign in.
+	 *
+	 * Pure, so both journeys are testable without a WordPress runtime.
+	 *
+	 * @param int    $queried_id    The post this request resolved to, 0 for none.
+	 * @param int    $dashboard_id  The page id the shop recorded, 0 when it has none.
+	 * @param bool   $on_member_area Whether this request is our own member-area route.
+	 * @param bool   $signed_in     Whether anyone is signed in.
+	 * @param string $view          The panel named in the address, '' for the overview.
+	 * @param string $member_url    The member area's address, '' when it cannot be built.
+	 * @param string $login_url     The club's login page, '' when it cannot be built.
+	 */
+	public static function redirect_to(
+		int $queried_id,
+		int $dashboard_id,
+		bool $on_member_area,
+		bool $signed_in,
+		string $view,
+		string $member_url,
+		string $login_url
+	): string {
+		if ( $on_member_area ) {
+			return $signed_in ? '' : $login_url;
+		}
+		if ( $dashboard_id <= 0 || $queried_id !== $dashboard_id || '' === $member_url ) {
+			return '';
+		}
+		return '' === $view ? $member_url : Blueworx_Clubhouse_Dashboard_Shell::view_url( $view, $member_url );
+	}
+
+	/**
+	 * Act on that decision.
+	 *
+	 * template_redirect, so the answer is settled before WordPress picks a
+	 * template and long before anything has been sent to the browser.
+	 */
+	public static function route(): void {
+		if ( ! function_exists( 'wp_safe_redirect' ) || ! function_exists( 'get_queried_object_id' ) ) {
+			return;
+		}
+		$target = self::redirect_to(
+			(int) get_queried_object_id(),
+			Blueworx_Clubhouse_Shop_Pages::page_id( 'dashboard' ),
+			Blueworx_Clubhouse_Frontend::MEMBER_AREA === Blueworx_Clubhouse_Frontend::current_page_slug(),
+			function_exists( 'is_user_logged_in' ) && is_user_logged_in(),
+			self::requested_view(),
+			// link_url() rather than Links::url(): the link resolver is not
+			// installed until rendering starts, which is after this runs.
+			Blueworx_Clubhouse_Frontend::link_url( Blueworx_Clubhouse_Frontend::MEMBER_AREA ),
+			Blueworx_Clubhouse_Frontend::link_url( 'login' )
+		);
+		if ( '' === $target ) {
+			return;
+		}
+		wp_safe_redirect( $target, 302 );
+		exit;
 	}
 
 	/**
