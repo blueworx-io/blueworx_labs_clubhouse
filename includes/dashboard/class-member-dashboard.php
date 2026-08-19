@@ -314,8 +314,13 @@ final class Blueworx_Clubhouse_Member_Dashboard {
 	 * customer blocks declare no script of their own, so without this a panel
 	 * can render correct markup that never comes alive. Guarded, so a shop that
 	 * registers these under other names, or no shop at all, costs nothing.
+	 *
+	 * Public and called from the asset pass rather than from the render, so the
+	 * shop's stylesheet reaches the head. Called during rendering it arrived in
+	 * the footer, and a member watched their account page snap into shape after
+	 * it had loaded.
 	 */
-	private static function enqueue_shop_assets(): void {
+	public static function enqueue_shop_assets(): void {
 		if ( ! function_exists( 'wp_script_is' ) || ! function_exists( 'wp_enqueue_script' ) ) {
 			return;
 		}

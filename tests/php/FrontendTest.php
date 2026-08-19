@@ -471,4 +471,18 @@ final class FrontendTest extends TestCase {
 		$this->assertFalse( Blueworx_Clubhouse_Frontend::is_gone( '', $visibility ) );
 		$this->assertFalse( Blueworx_Clubhouse_Frontend::is_gone( null, $visibility ) );
 	}
+
+	public function test_style_family_picks_the_member_design_for_the_member_area(): void {
+		$this->assertSame( 'member', Blueworx_Clubhouse_Frontend::style_family( 'member-dashboard', false ) );
+	}
+
+	public function test_style_family_picks_the_club_look_for_club_pages_and_articles(): void {
+		$this->assertSame( 'look', Blueworx_Clubhouse_Frontend::style_family( 'about', false ) );
+		$this->assertSame( 'look', Blueworx_Clubhouse_Frontend::style_family( '', false ) );
+		$this->assertSame( 'look', Blueworx_Clubhouse_Frontend::style_family( null, true ) );
+	}
+
+	public function test_style_family_loads_nothing_off_our_pages(): void {
+		$this->assertSame( 'none', Blueworx_Clubhouse_Frontend::style_family( null, false ) );
+	}
 }
