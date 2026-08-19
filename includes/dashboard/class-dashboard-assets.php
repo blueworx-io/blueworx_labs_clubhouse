@@ -9,9 +9,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * The member area's stylesheet: the BlueWorx admin design system, vendored.
  *
- * Loaded on the three pages this plugin takes over and nowhere else. The club's
- * public site is styled by assets/looks/ and the two systems never meet — see
- * assets/bw/README.md.
+ * Loaded on the two commerce pages this plugin dresses, plus the member area's
+ * own route, and nowhere else. The club's public site is styled by
+ * assets/looks/ and the two systems never meet — see assets/bw/README.md.
  *
  * Registered rather than enqueued at load: whether a request is one of ours is
  * decided per request, by page_key() below.
@@ -40,19 +40,13 @@ final class Blueworx_Clubhouse_Dashboard_Assets {
 	}
 
 	/**
-	 * Which page this plugin takes over a post is — 'dashboard', 'checkout' or
+	 * Which page this plugin dresses a post is — 'checkout' or
 	 * 'order-confirmation' — and '' for every other post on the site.
 	 *
-	 * The one place that answers it. The stylesheet has to be queued while
-	 * WordPress is still collecting styles for the head, but the two content
-	 * filters ask the same question much later, once the page is being written.
-	 * A second copy of the rule is how a page comes to be dressed by one of
-	 * them and left without its stylesheet by the other.
+	 * The member area is not here any more: it is a Clubhouse route with no
+	 * WordPress post under it, and its stylesheet is queued by Frontend.
 	 */
 	public static function page_key( int $post_id ): string {
-		if ( $post_id > 0 && $post_id === Blueworx_Clubhouse_Shop_Pages::page_id( 'dashboard' ) ) {
-			return 'dashboard';
-		}
 		return Blueworx_Clubhouse_Commerce_Pages::page_key(
 			$post_id,
 			Blueworx_Clubhouse_Shop_Pages::page_id( 'checkout' ),

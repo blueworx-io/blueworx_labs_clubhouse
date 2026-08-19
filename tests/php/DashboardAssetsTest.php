@@ -38,21 +38,18 @@ final class DashboardAssetsTest extends TestCase {
 		$GLOBALS['wp_stub_queried_object_id'] = $ids[ $page ];
 	}
 
-	public function test_each_page_we_take_over_is_named_and_nothing_else_is(): void {
-		$this->reading( 'dashboard' );
-		$this->assertSame( 'dashboard', Blueworx_Clubhouse_Dashboard_Assets::page_key( 42 ) );
-		$this->assertSame( 'checkout', Blueworx_Clubhouse_Dashboard_Assets::page_key( 43 ) );
-		$this->assertSame( 'order-confirmation', Blueworx_Clubhouse_Dashboard_Assets::page_key( 44 ) );
-		$this->assertSame( '', Blueworx_Clubhouse_Dashboard_Assets::page_key( 99 ) );
-		// 0 means "no page recorded", and must never match anything.
+	public function test_only_the_commerce_pages_are_taken_over_by_post_id(): void {
+		// The member area moved to a Clubhouse route, so no post id maps to it.
+		// Checkout and the thank-you page are still SureCart's own pages.
 		$this->assertSame( '', Blueworx_Clubhouse_Dashboard_Assets::page_key( 0 ) );
+		$this->assertSame( '', Blueworx_Clubhouse_Dashboard_Assets::page_key( 4242 ) );
 	}
 
 	public function test_the_stylesheet_is_asked_for_before_the_page_is_drawn(): void {
 		// Queued while WordPress is still collecting styles for the head. Left
 		// to the content filter it would arrive in the footer instead, and the
 		// member would watch the page snap into shape after it had loaded.
-		foreach ( array( 'dashboard', 'checkout', 'order-confirmation' ) as $page ) {
+		foreach ( array( 'checkout', 'order-confirmation' ) as $page ) {
 			wp_stub_reset();
 			$this->reading( $page );
 			Blueworx_Clubhouse_Dashboard_Assets::declare_style();

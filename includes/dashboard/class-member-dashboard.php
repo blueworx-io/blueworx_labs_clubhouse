@@ -15,18 +15,14 @@ if ( ! defined( 'ABSPATH' ) ) {
  * by whichever plugin owns that data. We do not re-render their records — see
  * the spec's non-goals.
  *
- * Taken over by filtering the_content rather than by a template, for the same
- * reason the welcome pack does it: the page is SureCart's and its template is
- * theirs to change. Priority 30, after SureCart expands its own dashboard at
- * 10 and after the welcome pack's old filter at 20, so whatever was there is
- * replaced rather than raced.
+ * Served as a Clubhouse page at /member-dashboard/, the same way About and
+ * Membership are, rather than by rewriting the page the shop seeds. So there is
+ * no other plugin's template to be surprised by, no re-entrancy to guard, and
+ * no page whose own content has to be judged and thrown away.
  *
  * @package BlueworxLabsClubhouse
  */
 final class Blueworx_Clubhouse_Member_Dashboard {
-
-	/** After SureCart (10) and after the welcome pack's own filter (20). */
-	private const PRIORITY = 30;
 
 	public static function register(): void {
 		if ( ! function_exists( 'add_filter' ) ) {
@@ -34,59 +30,6 @@ final class Blueworx_Clubhouse_Member_Dashboard {
 		}
 		Blueworx_Clubhouse_Plugin_Slot::install_wordpress();
 		Blueworx_Clubhouse_Dashboard_Assets::register();
-		add_filter( 'the_content', array( self::class, 'take_over' ), self::PRIORITY );
-	}
-
-	/**
-	 * Guards against this filter re-entering itself.
-	 *
-	 * The body below renders other plugins' blocks and shortcodes, and any one
-	 * of them is free to apply the_content itself. On the same post that would
-	 * come straight back in here and recurse until the memory limit killed the
-	 * request — a white screen on the member's own account page. Neither plugin
-	 * does it today; the guard costs a boolean and makes it impossible.
-	 */
-	private static bool $rendering = false;
-
-	/** Whether this post is the page the member area is on. */
-	public static function owns( int $post_id ): bool {
-		return 'dashboard' === Blueworx_Clubhouse_Dashboard_Assets::page_key( $post_id );
-	}
-
-	/**
-	 * Replace the customer dashboard with ours, and leave every other page
-	 * alone.
-	 *
-	 * The cheap checks come first so the vast majority of requests leave after
-	 * one comparison.
-	 *
-	 * @param string $content
-	 */
-	public static function take_over( $content ): string {
-		$content = (string) $content;
-		if ( self::$rendering ) {
-			return $content;
-		}
-		if ( ! function_exists( 'is_singular' ) || ! is_singular() || ! in_the_loop() || ! is_main_query() ) {
-			return $content;
-		}
-		if ( ! self::owns( (int) get_the_ID() ) ) {
-			return $content;
-		}
-		if ( function_exists( 'is_user_logged_in' ) && ! is_user_logged_in() ) {
-			// Nobody is signed in, so there is no account to show. The page's own
-			// content is the shop's sign-in form, which is exactly what a visitor
-			// who bookmarked this address needs — our frame would tell them the
-			// club had set nothing up, which is not true and not their problem.
-			return $content;
-		}
-
-		self::$rendering = true;
-		try {
-			return self::render( $content );
-		} finally {
-			self::$rendering = false;
-		}
 	}
 
 	/**
@@ -138,35 +81,6 @@ final class Blueworx_Clubhouse_Member_Dashboard {
 	}
 
 	/**
-	 * The member area itself, once take_over() has decided this request is ours.
-	 *
-	 * @param string $content The page's own content, returned untouched if a view cannot be drawn.
-	 */
-	private static function render( string $content ): string {
-		Blueworx_Clubhouse_Dashboard_Assets::enqueue();
-		self::enqueue_shop_assets();
-		$home = function_exists( 'home_url' ) ? (string) home_url( '/' ) : '/';
-		$out  = self::screen( self::page_url(), $home );
-		return '' !== $out ? $out : $content;
-	}
-
-	/**
-	 * This page's own address, which every view link is built on.
-	 *
-	 * Resolved here rather than in the shell, which stays free of WordPress. It
-	 * matters on a club whose permalinks are set to Plain, where the dashboard
-	 * lives at /?page_id=42: a bare '?view=orders' would replace the whole query
-	 * and send the member to the front page instead.
-	 */
-	private static function page_url(): string {
-		if ( ! function_exists( 'get_permalink' ) ) {
-			return '';
-		}
-		$url = get_permalink();
-		return is_string( $url ) ? $url : '';
-	}
-
-	/**
 	 * The signed sign-out address, or '' when nothing can build one.
 	 *
 	 * The club's own header and footer are deliberately kept off this page, so
@@ -215,9 +129,9 @@ final class Blueworx_Clubhouse_Member_Dashboard {
 		if ( '' === $out ) {
 			return self::not_set_up( $home_url );
 		}
-		// $welcome is always '' here in production — take_over() only ever
-		// passes the pack into overview(). Kept as a parameter so the brief's
-		// direct calls to view_body() can still exercise it; not a live path.
+		// $welcome is always '' here in production — screen() only ever passes
+		// the pack into overview(). Kept as a parameter so the brief's direct
+		// calls to view_body() can still exercise it; not a live path.
 		return ( '' !== $welcome ? $welcome : '' ) . $out;
 	}
 
