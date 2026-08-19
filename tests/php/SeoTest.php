@@ -191,6 +191,19 @@ final class SeoTest extends TestCase {
 	}
 
 	/**
+	 * A private page (the member area) has nothing for a signed-out visitor and
+	 * nothing worth a search engine ranking — Page_Map marks it private, and the
+	 * head must actually say so. A filtered view keeps its own reason to noindex,
+	 * and the two never fight over the one meta tag.
+	 */
+	public function test_a_private_page_is_told_not_to_be_indexed(): void {
+		$this->assertTrue( Blueworx_Clubhouse_Seo_Head::noindex( false, true ) );
+		$this->assertTrue( Blueworx_Clubhouse_Seo_Head::noindex( true, false ) );
+		$this->assertTrue( Blueworx_Clubhouse_Seo_Head::noindex( true, true ) );
+		$this->assertFalse( Blueworx_Clubhouse_Seo_Head::noindex( false, false ) );
+	}
+
+	/**
 	 * Search & sharing carries the same top-bar access chips as every other
 	 * ClubHouse page. It was one of the two screens that never asked for them.
 	 */

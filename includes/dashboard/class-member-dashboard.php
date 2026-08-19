@@ -46,18 +46,24 @@ final class Blueworx_Clubhouse_Member_Dashboard {
 	 *
 	 * Pure, so both journeys are testable without a WordPress runtime.
 	 *
-	 * @param int    $queried_id    The post this request resolved to, 0 for none.
-	 * @param int    $dashboard_id  The page id the shop recorded, 0 when it has none.
-	 * @param bool   $on_member_area Whether this request is our own member-area route.
-	 * @param bool   $signed_in     Whether anyone is signed in.
-	 * @param string $view          The panel named in the address, '' for the overview.
-	 * @param string $member_url    The member area's address, '' when it cannot be built.
-	 * @param string $login_url     The club's login page, '' when it cannot be built.
+	 * @param int    $queried_id          The post this request resolved to, 0 for none.
+	 * @param int    $dashboard_id        The page id the shop recorded, 0 when it has none.
+	 * @param bool   $on_member_area      Whether this request is our own member-area route.
+	 * @param bool   $member_area_serving Whether this site is actually serving the member
+	 *                                    area — Page_Map thinks it available, and the club
+	 *                                    has not switched it off under Setup → Visibility.
+	 *                                    A club that has switched it off must keep SureCart's
+	 *                                    own dashboard page rendering, not be 302'd into a 404.
+	 * @param bool   $signed_in           Whether anyone is signed in.
+	 * @param string $view                The panel named in the address, '' for the overview.
+	 * @param string $member_url          The member area's address, '' when it cannot be built.
+	 * @param string $login_url           The club's login page, '' when it cannot be built.
 	 */
 	public static function redirect_to(
 		int $queried_id,
 		int $dashboard_id,
 		bool $on_member_area,
+		bool $member_area_serving,
 		bool $signed_in,
 		string $view,
 		string $member_url,
@@ -66,7 +72,7 @@ final class Blueworx_Clubhouse_Member_Dashboard {
 		if ( $on_member_area ) {
 			return $signed_in ? '' : $login_url;
 		}
-		if ( $dashboard_id <= 0 || $queried_id !== $dashboard_id || '' === $member_url ) {
+		if ( ! $member_area_serving || $dashboard_id <= 0 || $queried_id !== $dashboard_id || '' === $member_url ) {
 			return '';
 		}
 		return '' === $view ? $member_url : Blueworx_Clubhouse_Dashboard_Shell::view_url( $view, $member_url );
@@ -86,6 +92,10 @@ final class Blueworx_Clubhouse_Member_Dashboard {
 			(int) get_queried_object_id(),
 			Blueworx_Clubhouse_Shop_Pages::page_id( 'dashboard' ),
 			Blueworx_Clubhouse_Frontend::MEMBER_AREA === Blueworx_Clubhouse_Frontend::current_page_slug(),
+			// Same condition Page_Renderer::header_account()'s call site uses to
+			// decide whether the header can offer the member area at all.
+			Blueworx_Clubhouse_Page_Map::is_available( Blueworx_Clubhouse_Frontend::MEMBER_AREA )
+				&& ( new Blueworx_Clubhouse_Visibility( new Blueworx_Clubhouse_Options_Storage() ) )->is_page_visible( Blueworx_Clubhouse_Frontend::MEMBER_AREA ),
 			function_exists( 'is_user_logged_in' ) && is_user_logged_in(),
 			self::requested_view(),
 			// link_url() rather than Links::url(): the link resolver is not

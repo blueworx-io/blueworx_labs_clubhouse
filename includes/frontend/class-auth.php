@@ -94,6 +94,27 @@ final class Blueworx_Clubhouse_Auth {
 		return new Blueworx_Clubhouse_Auth_Settings( new Blueworx_Clubhouse_Options_Storage() );
 	}
 
+	/**
+	 * Where a member with no configured post-login setting lands.
+	 *
+	 * The member area now exists as our own route, so it is the useful default —
+	 * the front page was a dead end on a club with no shop, and the shop's own
+	 * account page was a pointless second hop even on a club with one. Only this
+	 * default changes: post_login_target() still lets a configured setting win
+	 * outright, and a club that has switched the member area off keeps today's
+	 * behaviour (the shop's dashboard, or the front page with no shop either).
+	 *
+	 * Same condition Page_Renderer::header_account()'s call site uses to decide
+	 * whether the header itself can offer the member area.
+	 */
+	private static function default_dashboard_url(): string {
+		$serving = Blueworx_Clubhouse_Page_Map::is_available( Blueworx_Clubhouse_Frontend::MEMBER_AREA )
+			&& ( new Blueworx_Clubhouse_Visibility( new Blueworx_Clubhouse_Options_Storage() ) )->is_page_visible( Blueworx_Clubhouse_Frontend::MEMBER_AREA );
+		return $serving
+			? Blueworx_Clubhouse_Frontend::link_url( Blueworx_Clubhouse_Frontend::MEMBER_AREA )
+			: Blueworx_Clubhouse_Shop_Pages::url( 'dashboard' );
+	}
+
 	/** The raw ?redirect_to from the request, unslashed and untrusted. */
 	private static function requested_redirect(): string {
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only; the value is validated by Auth_View::safe_target before use.
@@ -224,7 +245,7 @@ final class Blueworx_Clubhouse_Auth {
 		self::go(
 			Blueworx_Clubhouse_Auth_View::post_login_target(
 				self::settings()->get_post_login(),
-				Blueworx_Clubhouse_Shop_Pages::url( 'dashboard' )
+				self::default_dashboard_url()
 			)
 		);
 		return array(

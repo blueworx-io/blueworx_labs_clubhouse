@@ -169,6 +169,7 @@ final class MemberDashboardTest extends TestCase {
 				'queried'    => 0,
 				'dashboard'  => 0,
 				'on_member'  => false,
+				'serving'    => true,
 				'signed_in'  => false,
 				'view'       => '',
 				'member_url' => '/member-dashboard/',
@@ -180,6 +181,7 @@ final class MemberDashboardTest extends TestCase {
 			$args['queried'],
 			$args['dashboard'],
 			$args['on_member'],
+			$args['serving'],
 			$args['signed_in'],
 			$args['view'],
 			$args['member_url'],
@@ -217,5 +219,29 @@ final class MemberDashboardTest extends TestCase {
 	public function test_no_redirect_when_the_target_address_is_unknown(): void {
 		$this->assertSame( '', $this->redirect( array( 'queried' => 42, 'dashboard' => 42, 'member_url' => '' ) ) );
 		$this->assertSame( '', $this->redirect( array( 'on_member' => true, 'login_url' => '' ) ) );
+	}
+
+	/**
+	 * A club that has switched the member area off must not have SureCart's own
+	 * account page redirected into it — that page would 404, taking the shop's
+	 * account links, every member's bookmark, and the post-login default with it.
+	 */
+	public function test_the_shops_old_account_page_is_left_alone_when_the_member_area_is_off(): void {
+		$this->assertSame(
+			'',
+			$this->redirect( array( 'queried' => 42, 'dashboard' => 42, 'serving' => false ) )
+		);
+		$this->assertSame(
+			'',
+			$this->redirect( array( 'queried' => 42, 'dashboard' => 42, 'view' => 'orders', 'serving' => false ) )
+		);
+	}
+
+	/** With the member area on, the existing behaviour is unchanged. */
+	public function test_the_shops_old_account_page_still_carries_across_when_the_member_area_is_on(): void {
+		$this->assertSame(
+			'/member-dashboard/',
+			$this->redirect( array( 'queried' => 42, 'dashboard' => 42, 'serving' => true ) )
+		);
 	}
 }
