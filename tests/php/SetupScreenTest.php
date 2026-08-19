@@ -125,7 +125,9 @@ final class SetupScreenTest extends TestCase {
 		$panel_end = strpos( $html, 'data-vispanel=', $panel_start + 1 );
 		$panel     = substr( $html, $panel_start, ( false === $panel_end ? strlen( $html ) : $panel_end ) - $panel_start );
 
-		$this->assertStringNotContainsString( '0/0', $panel );
+		// The count chip is emitted in the tab list, which is written before any
+		// data-vispanel= — outside $panel — so this must check the whole $html.
+		$this->assertStringNotContainsString( '0/0', $html );
 		$this->assertStringNotContainsString( 'Member area sections', $panel );
 		$this->assertStringNotContainsString( 'clubhouse-toggle-grid', $panel );
 	}
