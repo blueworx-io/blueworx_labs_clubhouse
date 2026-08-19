@@ -5,6 +5,10 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.79.0
+
+- **Your members now have one account page instead of three plugins in a stack.** Signing in takes a member to a proper member area: a menu down the side for their bookings, orders, invoices, membership and account details, with each one still run by the plugin that owns it. Your welcome pack greets them at the top. If you have no shop, or no bookings, those menu items simply are not there — nothing to set up and nothing to switch on. Your checkout and thank-you pages now match it, and every address on your site stays exactly as it was.
+
 ## 0.78.0
 
 - **Members can now be shown monthly or annual prices.** Give a tier an annual price as well as a monthly one, under Club Pages → Membership → Tiers, and your Membership and Home pages get a Monthly / Annual switch above the tiers. If paying annually works out cheaper, the card says how much a member saves. A tier priced only one way simply shows that price and says so, and nothing you have already entered changes — your current prices are the monthly ones.

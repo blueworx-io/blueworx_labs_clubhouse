@@ -15,6 +15,7 @@ it current: when an issue closes, strike it here.
 | --- | --- | --- |
 | 1 | ~~[#221](../../issues/221) Revert to the old builder~~ | **Done** — v0.76.0. |
 | 2 | ~~[#219](../../issues/219) Social feed section, stage one~~ | **Done** — v0.77.0. Posts are pasted in; connecting Facebook or Instagram directly is stage two and still open. |
+| 3 | ~~[#231](../../issues/231) One member account page~~ | **Done** — v0.79.0. |
 
 **What is left:** one thing on this list is a person's, and stage two of the social feed ([#219](../../issues/219)) needs Meta app review before it can start. Each club has to replace the
 example wording on its own privacy and terms pages before the site takes real
