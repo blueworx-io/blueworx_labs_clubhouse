@@ -431,6 +431,13 @@ final class Blueworx_Clubhouse_Content_Catalogue {
 					'note' => 'Ships with the Bookings agents list. Switch the section off under Site setup → Visibility to drop it.',
 					'fields' => self::booking_slot_fields() ),
 			) ),
+			// The member area has nothing stored in Content_Store to edit — every
+			// panel on it belongs to the shop or the booking plugin — so its tab
+			// carries no sections. It still has to appear here with the same empty
+			// shape, or the lockstep test against Setup_Sections::inventory() (which
+			// gives every available page a page-level visibility switch, sections
+			// or not) finds a visibility page with no matching catalogue tab.
+			array( 'tab' => 'member-dashboard', 'label' => 'Member area', 'sections' => array() ),
 			array( 'tab' => 'privacy', 'label' => 'Privacy', 'sections' => array(
 				array( 'key' => 'hero', 'label' => 'Hero', 'type' => 'fields', 'store_page' => 'privacy', 'fields' => self::legal_hero_fields() ),
 				array( 'key' => 'body', 'label' => 'Policy', 'type' => 'loop', 'store_page' => 'privacy',

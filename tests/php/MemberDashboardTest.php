@@ -195,4 +195,11 @@ final class MemberDashboardTest extends TestCase {
 		$this->assertStringContainsString( 'bw-empty', $html );
 		$this->assertStringContainsString( 'href="https://club.test/"', $html );
 	}
+
+	/** The frame, addressed at a URL of ours, with no WordPress page under it. */
+	public function test_screen_renders_the_frame_at_a_given_address(): void {
+		$html = Blueworx_Clubhouse_Member_Dashboard::screen( '/member-dashboard/', '/' );
+		$this->assertStringContainsString( 'bw-admin', $html );
+		$this->assertStringContainsString( '/member-dashboard/', $html );
+	}
 }

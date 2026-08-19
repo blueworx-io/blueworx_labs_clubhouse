@@ -1464,6 +1464,33 @@ final class Blueworx_Clubhouse_Page_Renderer {
 		return $out;
 	}
 
+	/**
+	 * The member's account area.
+	 *
+	 * The one page this plugin serves with no club header and no club footer.
+	 * It is a BlueWorx admin screen: the shell it returns is already a whole
+	 * page, so unlike every other method here it wraps nothing around it.
+	 *
+	 * The trailing arguments are the shared page-method signature Page_Map
+	 * dispatches with; this page has no branding-driven chrome and no filter.
+	 *
+	 * @param string $logo_url Unused — the member area carries no club logo.
+	 * @param string $filter   Unused — the member area has no filter pills.
+	 */
+	public static function member_dashboard(
+		Blueworx_Clubhouse_Branding $branding,
+		Blueworx_Clubhouse_Visibility $visibility,
+		Blueworx_Clubhouse_Collections $collections,
+		string $logo_url = '',
+		?Blueworx_Clubhouse_Content_Store $content = null,
+		string $filter = ''
+	): string {
+		return Blueworx_Clubhouse_Member_Dashboard::screen(
+			Blueworx_Clubhouse_Links::url( 'member-dashboard' ),
+			Blueworx_Clubhouse_Links::url( 'home' )
+		);
+	}
+
 	public static function sports(
 		Blueworx_Clubhouse_Branding $branding,
 		Blueworx_Clubhouse_Visibility $visibility,

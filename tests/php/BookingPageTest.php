@@ -246,7 +246,11 @@ final class BookingPageTest extends TestCase {
 		}
 		$seen = array();
 		foreach ( Blueworx_Clubhouse_Content_Catalogue::pages() as $page ) {
-			$vis_page = 'global' === $page['tab'] ? 'home' : $page['tab'];
+			$vis_page          = 'global' === $page['tab'] ? 'home' : $page['tab'];
+			// Set even when a page (like the member area) has no sections at all —
+			// otherwise a genuinely sectionless tab never earns a key here, and reads
+			// as "no catalogue tab" even though one exists.
+			$seen[ $vis_page ] = $seen[ $vis_page ] ?? array();
 			foreach ( $page['sections'] as $s ) {
 				$seen[ $vis_page ][] = $s['key'];
 			}

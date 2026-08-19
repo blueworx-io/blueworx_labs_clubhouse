@@ -90,14 +90,18 @@ final class Blueworx_Clubhouse_Member_Dashboard {
 	}
 
 	/**
-	 * The member area itself, once take_over() has decided this request is ours.
+	 * The member area itself: the nav, the panel that was asked for, and the
+	 * club's welcome above the overview.
 	 *
-	 * @param string $content The page's own content, returned untouched if a view cannot be drawn.
+	 * Takes its two addresses as arguments rather than reaching for them, so
+	 * the screen can be rendered from a Clubhouse route, from the preview, and
+	 * from a unit test without a WordPress runtime under it.
+	 *
+	 * @param string $base The member area's own address — every view link is built on it.
+	 * @param string $home The club site's front page, for the way back out.
+	 * @return string '' when no view can be drawn at all, which callers treat as "render nothing".
 	 */
-	private static function render( string $content ): string {
-		Blueworx_Clubhouse_Dashboard_Assets::enqueue();
-		self::enqueue_shop_assets();
-
+	public static function screen( string $base, string $home ): string {
 		$views   = Blueworx_Clubhouse_Dashboard_Views::available(
 			Blueworx_Clubhouse_SureCart_Products::is_active(),
 			Blueworx_Clubhouse_Integrations::has_latepoint()
@@ -105,16 +109,9 @@ final class Blueworx_Clubhouse_Member_Dashboard {
 		$current = Blueworx_Clubhouse_Dashboard_Views::resolve( self::requested_view(), $views );
 		$view    = Blueworx_Clubhouse_Dashboard_Views::find( $current, $views );
 		if ( null === $view ) {
-			return $content; // Cannot happen — resolve() only returns a key it found.
+			return ''; // Cannot happen — resolve() only returns a key it found.
 		}
 
-		$home = function_exists( 'home_url' ) ? (string) home_url( '/' ) : '/';
-		$base = self::page_url();
-		// The page's own content is dropped rather than kept. On this page it is
-		// the shop's dashboard block — the stack of panels this whole screen
-		// exists to replace — so showing it as well would print the member's
-		// orders twice. Checkout keeps its content for the opposite reason: what
-		// is on that page is the payment form, and only the shop can draw it.
 		$welcome = Blueworx_Clubhouse_Dashboard_Views::DEFAULT_VIEW === $current ? self::welcome_pack() : '';
 		$body    = Blueworx_Clubhouse_Dashboard_Views::DEFAULT_VIEW === $current
 			? self::overview( $welcome, $views, $home, $base )
@@ -138,6 +135,19 @@ final class Blueworx_Clubhouse_Member_Dashboard {
 				$base,
 				self::logout_url()
 			);
+	}
+
+	/**
+	 * The member area itself, once take_over() has decided this request is ours.
+	 *
+	 * @param string $content The page's own content, returned untouched if a view cannot be drawn.
+	 */
+	private static function render( string $content ): string {
+		Blueworx_Clubhouse_Dashboard_Assets::enqueue();
+		self::enqueue_shop_assets();
+		$home = function_exists( 'home_url' ) ? (string) home_url( '/' ) : '/';
+		$out  = self::screen( self::page_url(), $home );
+		return '' !== $out ? $out : $content;
 	}
 
 	/**
