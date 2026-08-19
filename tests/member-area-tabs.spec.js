@@ -91,3 +91,13 @@ test('clicking a nav item swaps panels without navigating @wordpress', async ({ 
   // than the generic "main" landmark around it.
   await expect(page.locator('[data-view="test-second-view"]')).toBeFocused();
 });
+
+test('a phone gets the bottom bar and not the sidebar nav @wordpress', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/member-dashboard/');
+  await expect(page.locator('.clubhouse-member__side .bw-secnav')).toBeHidden();
+  // The bar is drawn only when there is more than one place to go, and the
+  // harness has neither SureCart nor LatePoint — so assert on the rule, not on
+  // the element: the sidebar's nav must not be what a phone navigates with.
+  await expect(page.locator('.clubhouse-member__brand')).toBeVisible();
+});

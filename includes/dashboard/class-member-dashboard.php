@@ -136,12 +136,13 @@ final class Blueworx_Clubhouse_Member_Dashboard {
 		// Dashboard_Shell::page() for why. The welcome pack belongs to the
 		// overview only.
 		$welcome = self::welcome_pack();
+		$more    = self::overflow_links( $views, $base );
 		$panels  = array();
 		foreach ( $views as $view ) {
 			$key            = (string) $view['key'];
-			$panels[ $key ] = Blueworx_Clubhouse_Dashboard_Views::DEFAULT_VIEW === $key
+			$panels[ $key ] = ( Blueworx_Clubhouse_Dashboard_Views::DEFAULT_VIEW === $key
 				? self::overview( $welcome, $views, $home, $base )
-				: self::view_body( $view, '', $home );
+				: self::view_body( $view, '', $home ) ) . $more;
 		}
 
 		$style = '' !== $welcome
@@ -160,6 +161,35 @@ final class Blueworx_Clubhouse_Member_Dashboard {
 			'member_name'  => self::member_name(),
 			'member_email' => self::member_email(),
 		) );
+	}
+
+	/**
+	 * The views the phone's bottom bar has no room for, offered as link rows.
+	 *
+	 * The bar holds five, which is what the design draws and as many as fits a
+	 * phone. The design solves the same problem the same way — its phone layout
+	 * reaches "Plan and renewal" from the account panel rather than the bar.
+	 * Drawn on every panel and hidden above the phone breakpoint, where the
+	 * sidebar carries every view already.
+	 *
+	 * @param array<int,array<string,mixed>> $views
+	 */
+	public static function overflow_links( array $views, string $base ): string {
+		$extra = array_slice( $views, Blueworx_Clubhouse_Dashboard_Shell::TABBAR_MAX );
+		if ( array() === $extra ) {
+			return '';
+		}
+		$out = '<nav class="clubhouse-member__more" aria-label="More of your account">';
+		foreach ( $extra as $view ) {
+			$out .= '<a class="clubhouse-member__morelink" data-view-link="' . htmlspecialchars( (string) $view['key'], ENT_QUOTES, 'UTF-8' ) . '"'
+				. ' data-view-title="' . htmlspecialchars( (string) ( $view['title'] ?? '' ), ENT_QUOTES, 'UTF-8' ) . '"'
+				. ' data-view-lede="' . htmlspecialchars( (string) ( $view['lede'] ?? '' ), ENT_QUOTES, 'UTF-8' ) . '"'
+				. ' href="' . htmlspecialchars( Blueworx_Clubhouse_Dashboard_Shell::view_url( (string) $view['key'], $base ), ENT_QUOTES, 'UTF-8' ) . '">'
+				. Blueworx_Clubhouse_Dashboard_Shell::icon( (string) $view['icon'] )
+				. '<span>' . htmlspecialchars( (string) $view['label'], ENT_QUOTES, 'UTF-8' ) . '</span>'
+				. '</a>';
+		}
+		return $out . '</nav>';
 	}
 
 	/** The club's logo for the sidebar's brand block, or '' when none is set. */

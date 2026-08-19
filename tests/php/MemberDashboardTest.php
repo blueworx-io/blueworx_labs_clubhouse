@@ -246,4 +246,24 @@ final class MemberDashboardTest extends TestCase {
 			$this->redirect( array( 'queried' => 42, 'dashboard' => 42, 'serving' => true ) )
 		);
 	}
+
+	/** @return array<int,array<string,mixed>> */
+	private function sixViews(): array {
+		$out = array();
+		foreach ( array( 'dashboard', 'bookings', 'orders', 'invoices', 'plans', 'account' ) as $key ) {
+			$out[] = array( 'key' => $key, 'label' => ucfirst( $key ), 'title' => ucfirst( $key ), 'lede' => '', 'icon' => 'users' );
+		}
+		return $out;
+	}
+
+	public function test_views_the_phone_bar_cannot_carry_are_linked_from_the_last_panel(): void {
+		$html = Blueworx_Clubhouse_Member_Dashboard::overflow_links( $this->sixViews(), '/member-dashboard/' );
+		// Five fit; the sixth does not, so it is offered here instead.
+		$this->assertStringContainsString( 'view=account', $html );
+		$this->assertStringNotContainsString( 'view=orders', $html );
+	}
+
+	public function test_nothing_is_offered_when_every_view_fits(): void {
+		$this->assertSame( '', Blueworx_Clubhouse_Member_Dashboard::overflow_links( array_slice( $this->sixViews(), 0, 3 ), '/x/' ) );
+	}
 }
