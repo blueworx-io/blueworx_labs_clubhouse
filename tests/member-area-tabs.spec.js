@@ -84,7 +84,10 @@ test('clicking a nav item swaps panels without navigating @wordpress', async ({ 
   await expect(firstPanel).toHaveAttribute('hidden', '');
   await expect(page.locator('[data-view="test-second-view"]')).toBeVisible();
   await expect(page).toHaveURL(/view=test-second-view/);
-  await expect(page.locator('[data-member-title]')).toHaveText('Second view');
+  // Two now — the page head's and the brand block's phone-only pair — and
+  // the script updates every one of them (see member-area.js), not just the
+  // first it finds.
+  await expect(page.locator('[data-member-title]')).toHaveText(['Second view', 'Second view']);
 
   // Focus should land on the shown panel itself — it carries role="tabpanel"
   // and aria-labelledby, so a screen reader gets the panel's own name rather
@@ -175,9 +178,29 @@ test('the bar shows exactly the curated list on a club with no shop and no booki
   await expect(tabs.nth(0)).toContainText('Dashboard');
   await expect(tabs.nth(1)).toContainText('Billing');
   await expect(tabs.nth(2)).toContainText('Account');
-  await expect(tabs.nth(3)).toContainText('Back to the club site');
+  await expect(tabs.nth(3)).toContainText('Back home');
 
   await expect(page.locator('.clubhouse-member__side .bw-secnav')).toBeHidden();
   // The way out lives in the bar now, not beside the club badge.
   await expect(page.locator('.clubhouse-member__side .clubhouse-member__back')).toBeHidden();
+});
+
+// The page head (.clubhouse-member__head) is dropped on a phone; its title,
+// lede and sign-out move into the top row instead — see the phone-only pair
+// in Dashboard_Shell::sidebar() and the media query in assets/bw/bw.css.
+test('a phone drops the page head in favour of the top row, the desktop keeps it @wordpress', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/member-dashboard/');
+
+  await expect(page.locator('.clubhouse-member__head')).toBeHidden();
+  await expect(page.locator('.clubhouse-member__viewtext')).toBeVisible();
+  await expect(page.locator('.clubhouse-member__viewtitle')).toHaveText('Your account');
+  await expect(page.locator('.clubhouse-member__brandsignout')).toBeVisible();
+  await expect(page.locator('.clubhouse-member__tab').last()).toContainText('Back home');
+
+  // The reverse above the phone breakpoint: the page head is back, and the
+  // phone-only pair is gone rather than sitting hidden but present twice.
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await expect(page.locator('.clubhouse-member__head')).toBeVisible();
+  await expect(page.locator('.clubhouse-member__viewtext')).toBeHidden();
 });

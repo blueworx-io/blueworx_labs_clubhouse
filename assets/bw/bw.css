@@ -635,7 +635,12 @@
 /* The two-column shell the design draws: the club and the member down the
    left, full height, with the page head to their right. */
 .clubhouse-member .clubhouse-member__shell{display:flex;align-items:stretch;min-height:100vh}
-.clubhouse-member .clubhouse-member__side{flex:0 0 268px;display:flex;flex-direction:column;gap:var(--bw-space-5);padding:var(--bw-space-7) var(--bw-space-6);border-right:1px solid var(--bw-border);background:var(--bw-surface-card)}
+/* Sticky and capped to the window (Task 5): the sidebar stays put while the
+   panel scrolls. overflow:hidden here so only the nav (below) scrolls when
+   it has more items than fit — the brand block and the person block must
+   stay put too. Undone in the phone media query, where the sidebar is a
+   short row, not a full-height column. */
+.clubhouse-member .clubhouse-member__side{flex:0 0 268px;display:flex;flex-direction:column;gap:var(--bw-space-5);padding:var(--bw-space-7) var(--bw-space-6);border-right:1px solid var(--bw-border);background:var(--bw-surface-card);position:sticky;top:0;height:100vh;overflow:hidden}
 .clubhouse-member .clubhouse-member__main{flex:1 1 auto;min-width:0;display:flex;flex-direction:column}
 .clubhouse-member .clubhouse-member__head{padding:var(--bw-space-7) var(--bw-space-8)}
 .clubhouse-member .bw-panels{padding:var(--bw-space-8);flex:1 1 auto}
@@ -645,7 +650,12 @@
 .clubhouse-member .clubhouse-member__brandtext{display:flex;flex-direction:column;min-width:0}
 .clubhouse-member .clubhouse-member__brandname{font-family:var(--bw-font-display);font-weight:var(--bw-weight-semibold);color:var(--bw-text-heading);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .clubhouse-member .clubhouse-member__brandsub{font-size:var(--bw-size-sm);color:var(--bw-text-muted)}
-.clubhouse-member .clubhouse-member__nav{flex:0 0 auto}
+/* The phone-only title/lede pair and sign-out link (Tasks 2 and 3), hidden
+   above the phone breakpoint. Must sit before the media query below, same
+   selectors, same specificity, so the query can override them. */
+.clubhouse-member .clubhouse-member__viewtext{display:none}
+.clubhouse-member .clubhouse-member__brandsignout{display:none}
+.clubhouse-member .clubhouse-member__nav{flex:0 0 auto;overflow-y:auto;min-height:0}
 /* The spacer the design uses to push the way out to the foot of the column. */
 .clubhouse-member .clubhouse-member__back{margin-top:auto;display:flex;align-items:center;gap:var(--bw-space-3);font-size:var(--bw-size-sm);color:var(--bw-text-muted);text-decoration:none}
 .clubhouse-member .clubhouse-member__back:hover{color:var(--bw-text-accent)}
@@ -667,18 +677,30 @@
    of this stylesheet already uses. */
 @media (max-width:782px){
 	.clubhouse-member .clubhouse-member__shell{flex-direction:column;min-height:auto}
-	.clubhouse-member .clubhouse-member__side{flex:none;width:100%;border-right:0;border-bottom:1px solid var(--bw-border);padding:var(--bw-space-5) var(--bw-space-6);gap:var(--bw-space-4)}
+	/* Undoes the desktop's sticky, capped-height column (Task 5) — on a phone
+	   the sidebar is a short row, not a full-height rail, and its nav is
+	   already hidden below, so there is nothing left to scroll inside it. */
+	.clubhouse-member .clubhouse-member__side{flex:none;width:100%;border-right:0;border-bottom:1px solid var(--bw-border);padding:var(--bw-space-5) var(--bw-space-6);gap:var(--bw-space-4);position:static;height:auto}
 	/* The sidebar keeps the club and the member on a phone; its nav is the
 	   bottom bar's job, so only the nav is hidden here. The way out now has an
 	   equivalent in the bar — its last item — so the sidebar's own copy is
 	   hidden too, rather than showing beside the brand twice over. */
 	.clubhouse-member .clubhouse-member__side .clubhouse-member__nav{display:none}
 	.clubhouse-member .clubhouse-member__side .clubhouse-member__back{display:none}
-	.clubhouse-member .clubhouse-member__brand{padding-bottom:0}
+	/* flex:1 so the sign-out link's margin-left:auto below has room to push it
+	   to the right of the row, rather than sitting flush against the title. */
+	.clubhouse-member .clubhouse-member__brand{padding-bottom:0;flex:1 1 auto}
+	/* The page head (Task 1) is replaced by the pair drawn in the brand block
+	   instead — see Tasks 2 and 3. */
+	.clubhouse-member .clubhouse-member__head{display:none}
+	.clubhouse-member .clubhouse-member__brandtext{display:none}
+	.clubhouse-member .clubhouse-member__viewtext{display:flex;flex-direction:column;min-width:0}
+	.clubhouse-member .clubhouse-member__viewtitle{font-family:var(--bw-font-display);font-weight:var(--bw-weight-semibold);color:var(--bw-text-heading);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+	.clubhouse-member .clubhouse-member__viewlede{font-size:var(--bw-size-sm);color:var(--bw-text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+	.clubhouse-member .clubhouse-member__brandsignout{display:inline-flex;margin-left:auto}
 	.clubhouse-member .clubhouse-member__person{padding-top:0;border-top:0;margin-left:auto}
 	.clubhouse-member .clubhouse-member__person .bw-person__sub{display:none}
 	.clubhouse-member .clubhouse-member__side{flex-direction:row;align-items:center}
-	.clubhouse-member .clubhouse-member__head{padding:var(--bw-space-6)}
 	.clubhouse-member .bw-panels{padding:var(--bw-space-6)}
 	/* Clear of the fixed bar, so the last card is never trapped behind it. */
 	.clubhouse-member .clubhouse-member__main{padding-bottom:calc(76px + env(safe-area-inset-bottom))}

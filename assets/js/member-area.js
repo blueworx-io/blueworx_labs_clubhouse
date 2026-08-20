@@ -69,15 +69,18 @@
 		}
 
 		var head = TITLES[key] || { title: '', lede: '' };
-		var h1 = root.querySelector('[data-member-title]');
-		var lede = root.querySelector('[data-member-lede]');
-		if (h1 && head.title) {
-			h1.textContent = head.title;
+		var titles = root.querySelectorAll('[data-member-title]');
+		var ledes = root.querySelectorAll('[data-member-lede]');
+		var k;
+		if (head.title) {
+			for (k = 0; k < titles.length; k++) {
+				titles[k].textContent = head.title;
+			}
 			document.title = head.title;
 		}
-		if (lede) {
-			lede.textContent = head.lede;
-			lede.hidden = !head.lede;
+		for (k = 0; k < ledes.length; k++) {
+			ledes[k].textContent = head.lede;
+			ledes[k].hidden = !head.lede;
 		}
 
 		if (push && href) {

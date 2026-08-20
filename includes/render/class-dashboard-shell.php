@@ -147,6 +147,15 @@ final class Blueworx_Clubhouse_Dashboard_Shell {
 		$name  = trim( (string) ( $args['member_name'] ?? '' ) );
 		$email = trim( (string) ( $args['member_email'] ?? '' ) );
 
+		// The current view's title and lede, and the way to sign out — both
+		// needed a second time here because on a phone the page head (head())
+		// is hidden and this row carries its job instead. See the phone media
+		// query in bw.css for which pair is shown at which width.
+		$view   = self::view( $views, $current );
+		$vtitle = (string) ( $view['title'] ?? '' );
+		$vlede  = (string) ( $view['lede'] ?? '' );
+		$logout = trim( (string) ( $args['logout_url'] ?? '' ) );
+
 		$out = '<aside class="clubhouse-member__side">';
 
 		// The brand block. A club with no logo set gets its initials in the same
@@ -163,13 +172,30 @@ final class Blueworx_Clubhouse_Dashboard_Shell {
 				. '<span class="clubhouse-member__brandsub">Member area</span>'
 				. '</span>';
 		}
+		// The phone-only pair, re-targeted by member-area.js the same way as the
+		// pair in head() — see that method's docblock. Its own classes, not
+		// brandname/brandsub, so the CSS can show one pair and hide the other.
+		$out .= '<span class="clubhouse-member__viewtext">'
+			. '<span class="clubhouse-member__viewtitle" data-member-title>' . self::e( $vtitle ) . '</span>';
+		if ( '' !== trim( $vlede ) ) {
+			$out .= '<span class="clubhouse-member__viewlede" data-member-lede>' . self::e( $vlede ) . '</span>';
+		} else {
+			$out .= '<span class="clubhouse-member__viewlede" data-member-lede hidden></span>';
+		}
+		$out .= '</span>';
+		// The phone-only sign out. Desktop keeps the one in head(); drawn only
+		// when there is an address to sign out to — a dead link is worse than
+		// no link, exactly as head() already treats it.
+		if ( '' !== $logout ) {
+			$out .= '<a class="clubhouse-member__brandsignout bw-btn bw-btn--secondary bw-btn--sm" href="' . self::e( $logout ) . '">Sign out</a>';
+		}
 		$out .= '</div>';
 
 		$out .= self::nav( $views, $current, $base );
 
 		if ( '' !== $home ) {
 			$out .= '<a class="clubhouse-member__back" href="' . self::e( $home ) . '">'
-				. self::icon( 'arrow-left' ) . 'Back to the club site</a>';
+				. self::icon( 'arrow-left' ) . 'Back home</a>';
 		}
 
 		// Who is signed in. The design shows a membership number here; nothing in
@@ -336,7 +362,7 @@ final class Blueworx_Clubhouse_Dashboard_Shell {
 			// panel to switch to, so member-area.js must leave it alone.
 			$out .= '<a class="clubhouse-member__tab" href="' . self::e( $home ) . '">'
 				. self::icon( 'arrow-left' )
-				. '<span class="clubhouse-member__tablabel">Back to the club site</span>'
+				. '<span class="clubhouse-member__tablabel">Back home</span>'
 				. '</a>';
 		}
 		return $out . '</nav>';

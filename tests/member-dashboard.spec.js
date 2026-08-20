@@ -84,7 +84,7 @@ test('the welcome pack greets a member at the top of the overview @wordpress', a
 
 test('there is a way back to the club site @wordpress', async ({ page }) => {
   await page.goto(DASHBOARD);
-  await expect(page.getByRole('link', { name: 'Back to the club site' }).first()).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Back home' }).first()).toBeVisible();
 });
 
 test('a signed-in member is offered the way out @wordpress', async ({ page }) => {

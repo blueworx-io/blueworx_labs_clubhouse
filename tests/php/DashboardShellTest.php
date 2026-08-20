@@ -47,6 +47,55 @@ final class DashboardShellTest extends TestCase {
 		$this->assertStringContainsString( 'What you bought.', $html );
 	}
 
+	/**
+	 * The brand block carries a second title/lede pair for the current view —
+	 * what the phone shows in place of the page head, which it hides. Its own
+	 * classes, distinct from the page head's, so the CSS can tell the two
+	 * pairs apart and the id-uniqueness test still passes with two of each.
+	 */
+	public function test_the_brand_block_carries_the_current_views_title_and_lede(): void {
+		$html = Blueworx_Clubhouse_Dashboard_Shell::page( $this->args( array( 'current' => 'orders' ) ) );
+		$this->assertStringContainsString(
+			'<span class="clubhouse-member__viewtitle" data-member-title>Orders</span>',
+			$html
+		);
+		$this->assertStringContainsString(
+			'<span class="clubhouse-member__viewlede" data-member-lede>What you bought.</span>',
+			$html
+		);
+		// Two of each now — the page head's and the brand block's.
+		$this->assertSame( 2, substr_count( $html, 'data-member-title' ) );
+		$this->assertSame( 2, substr_count( $html, 'data-member-lede' ) );
+	}
+
+	public function test_the_brand_blocks_lede_is_drawn_hidden_when_there_is_none(): void {
+		$html = Blueworx_Clubhouse_Dashboard_Shell::page( $this->args( array(
+			'views'   => array(
+				array( 'key' => 'dashboard', 'label' => 'Dashboard', 'title' => 'Your account', 'lede' => '', 'icon' => 'layout-dashboard', 'where' => 'both' ),
+			),
+			'current' => 'dashboard',
+			'panels'  => array( 'dashboard' => '<p>hello</p>' ),
+		) ) );
+		$this->assertStringContainsString( '<span class="clubhouse-member__viewlede" data-member-lede hidden></span>', $html );
+	}
+
+	/** The phone-only sign out — see head() for the desktop's, which stays put. */
+	public function test_the_brand_block_offers_sign_out_when_there_is_an_address_for_it(): void {
+		$html = Blueworx_Clubhouse_Dashboard_Shell::page( $this->args( array( 'logout_url' => '/out/' ) ) );
+		$this->assertStringContainsString(
+			'<a class="clubhouse-member__brandsignout bw-btn bw-btn--secondary bw-btn--sm" href="/out/">Sign out</a>',
+			$html
+		);
+		// Once in the brand block, once in the page head.
+		$this->assertSame( 2, substr_count( $html, '>Sign out<' ) );
+	}
+
+	public function test_the_brand_block_offers_no_sign_out_without_an_address_for_it(): void {
+		$html = Blueworx_Clubhouse_Dashboard_Shell::page( $this->args() );
+		$this->assertStringNotContainsString( 'clubhouse-member__brandsignout', $html );
+		$this->assertStringNotContainsString( 'Sign out', $html );
+	}
+
 	public function test_the_top_bar_sits_inside_the_content_column_beside_the_sidebar(): void {
 		$html = Blueworx_Clubhouse_Dashboard_Shell::page( $this->args() );
 		// The design puts the sidebar full height on the left, with the page head
@@ -74,7 +123,7 @@ final class DashboardShellTest extends TestCase {
 			'logout_url' => '/out/',
 		) ) );
 		$this->assertStringContainsString( '<a class="clubhouse-member__back" href="/">', $html );
-		$this->assertStringContainsString( 'Back to the club site', $html );
+		$this->assertStringContainsString( 'Back home', $html );
 		$this->assertStringContainsString( '<a class="bw-btn bw-btn--secondary bw-btn--sm" href="/out/">Sign out</a>', $html );
 	}
 
@@ -221,14 +270,14 @@ final class DashboardShellTest extends TestCase {
 	public function test_the_bars_last_item_is_the_way_back_and_carries_no_data_view_link(): void {
 		$html = Blueworx_Clubhouse_Dashboard_Shell::page( $this->args( array( 'home_url' => '/' ) ) );
 		$this->assertMatchesRegularExpression(
-			'/<a class="clubhouse-member__tab" href="\/"><svg[^>]*>.*?<\/svg><span class="clubhouse-member__tablabel">Back to the club site<\/span><\/a><\/nav>/s',
+			'/<a class="clubhouse-member__tab" href="\/"><svg[^>]*>.*?<\/svg><span class="clubhouse-member__tablabel">Back home<\/span><\/a><\/nav>/s',
 			$html
 		);
 	}
 
 	public function test_the_bars_back_link_is_absent_with_no_home_url(): void {
 		$html = Blueworx_Clubhouse_Dashboard_Shell::page( $this->args() );
-		$this->assertStringNotContainsString( 'Back to the club site</span></a></nav>', $html );
+		$this->assertStringNotContainsString( 'Back home</span></a></nav>', $html );
 	}
 
 	public function test_the_lede_is_drawn_hidden_when_there_is_none(): void {
