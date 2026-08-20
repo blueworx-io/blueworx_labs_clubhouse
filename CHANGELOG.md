@@ -5,6 +5,10 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.83.0
+
+- **The member area on a phone now uses the top of the screen for what a member is actually looking at.** The section's name and description sit across the top where your site name used to, sign out is in the top right, and the separate heading below it has gone — so a member sees their bookings or their bill sooner, without scrolling past a repeat of the title. "Back to the club site" now reads "Back home", which fits the tab it lives in. On desktop the side menu stays put as the page scrolls, and scrolls within itself if a club ever has more sections than fit.
+
 ## 0.82.0
 
 - **The row of tabs on a phone is now a fixed set: your dashboard, bookings, billing, account, and the way back to your club site.** Billing and account are always there, even before you have added a shop — a member who taps one is told plainly that part is not set up yet, rather than finding the tab missing. Bookings appears once you have the booking plugin. The way back to your site has moved into that row, so it is where a thumb can reach it instead of at the top of the screen. Your desktop side menu is unchanged, with orders and invoices still listed separately.
