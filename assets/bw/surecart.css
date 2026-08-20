@@ -79,3 +79,14 @@
   .clubhouse-checkout__links a { display: flex; align-items: center; min-height: 44px; }
   .clubhouse-checkout__back { min-height: 44px; }
 }
+
+/* The two columns are SureCart's own blocks; these give them the member
+   area's rhythm and keep the summary in view while the form is scrolled. */
+.clubhouse-checkout__cols { display: flex; align-items: flex-start; gap: 32px; max-width: 1160px; margin: 0 auto; padding: 32px; }
+.clubhouse-checkout__main { flex: 1 1 auto; min-width: 0; }
+.clubhouse-checkout__rail { flex: 0 0 400px; position: sticky; top: 32px; }
+
+@media (max-width: 900px) {
+  .clubhouse-checkout__cols { flex-direction: column; gap: 20px; padding: 16px; }
+  .clubhouse-checkout__rail { flex: 1 1 auto; width: 100%; position: static; }
+}

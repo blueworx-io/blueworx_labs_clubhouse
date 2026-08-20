@@ -137,6 +137,10 @@ final class Blueworx_Clubhouse_Frontend {
 				static fn(): string => Blueworx_Clubhouse_SureCart_Products::checkout_url()
 			);
 		}
+		// Answers SureCart's own seeder filter regardless of is_active(): the
+		// seeder runs on activation, before a store has necessarily connected,
+		// and the filter is a no-op on a site with no shop.
+		Blueworx_Clubhouse_Checkout_Form::register();
 		add_action( 'init', array( self::class, 'register_rewrites' ) );
 		// Priority 11: after register_rewrites() above, so a flush writes the rules
 		// this version actually declares.

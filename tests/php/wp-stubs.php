@@ -99,6 +99,16 @@ if ( ! function_exists( 'add_action' ) ) {
 if ( ! function_exists( 'add_filter' ) ) {
 	function add_filter( ...$a ) { wp_stub_record( 'add_filter', $a ); return true; }
 }
+if ( ! function_exists( 'has_filter' ) ) {
+	function has_filter( string $hook, $callback = false ) {
+		foreach ( $GLOBALS['wp_stub_calls'] as $call ) {
+			if ( 'add_filter' === $call['fn'] && ( $call['args'][0] ?? null ) === $hook ) {
+				return true;
+			}
+		}
+		return false;
+	}
+}
 if ( ! function_exists( 'add_rewrite_rule' ) ) {
 	function add_rewrite_rule( ...$a ) { wp_stub_record( 'add_rewrite_rule', $a ); }
 }
