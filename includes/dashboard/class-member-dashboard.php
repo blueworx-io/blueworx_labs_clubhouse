@@ -201,13 +201,19 @@ final class Blueworx_Clubhouse_Member_Dashboard {
 		return $out . '</nav>';
 	}
 
-	/** The club's logo for the sidebar's brand block, or '' when none is set. */
+	/**
+	 * The mark for the sidebar's brand block, or '' when the club has set
+	 * neither. The favicon wins: it is the square, small-size mark, which is
+	 * exactly what the 44px corner box wants — a wide logo shrinks to nothing
+	 * in it. Falls back to the logo, then to the club's initials in the shell.
+	 */
 	private static function logo_url(): string {
 		if ( ! class_exists( 'Blueworx_Clubhouse_Frontend' ) || ! class_exists( 'Blueworx_Clubhouse_Options_Storage' ) ) {
 			return '';
 		}
 		$branding = new Blueworx_Clubhouse_Branding( new Blueworx_Clubhouse_Options_Storage() );
-		return Blueworx_Clubhouse_Frontend::resolve_logo( $branding->get_logo() );
+		$favicon  = Blueworx_Clubhouse_Frontend::resolve_logo( $branding->get_favicon() );
+		return '' !== $favicon ? $favicon : Blueworx_Clubhouse_Frontend::resolve_logo( $branding->get_logo() );
 	}
 
 	/** The signed-in member's name, or '' off WordPress. */

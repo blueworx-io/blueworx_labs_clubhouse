@@ -276,4 +276,26 @@ final class MemberDashboardTest extends TestCase {
 		);
 		$this->assertSame( '', Blueworx_Clubhouse_Member_Dashboard::overflow_links( $views, '/x/' ) );
 	}
+
+	/** Store a club's brand marks the way the setup screen does. */
+	private function brand_marks( string $logo, string $favicon ): void {
+		update_option( 'clubhouse_branding', array( 'logo' => $logo, 'favicon' => $favicon ) );
+	}
+
+	public function test_the_favicon_is_the_brand_mark_when_one_is_set(): void {
+		$this->on_the_account_page();
+		$this->everything_installed();
+		$this->brand_marks( 'https://club.test/logo.png', 'https://club.test/icon.png' );
+		$html = Blueworx_Clubhouse_Member_Dashboard::screen( '/member-dashboard/', 'https://club.test/' );
+		$this->assertStringContainsString( 'https://club.test/icon.png', $html );
+		$this->assertStringNotContainsString( 'https://club.test/logo.png', $html );
+	}
+
+	public function test_the_logo_is_the_brand_mark_when_no_favicon_is_set(): void {
+		$this->on_the_account_page();
+		$this->everything_installed();
+		$this->brand_marks( 'https://club.test/logo.png', '' );
+		$html = Blueworx_Clubhouse_Member_Dashboard::screen( '/member-dashboard/', 'https://club.test/' );
+		$this->assertStringContainsString( 'https://club.test/logo.png', $html );
+	}
 }

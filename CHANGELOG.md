@@ -5,6 +5,12 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.83.2
+
+- **Your favicon now shows in the corner of the member area.** If you have set one, it is used as the mark next to your club name — it is square, so it fits the small box far better than a wide logo. Your logo is still used when there is no favicon.
+- **Removed a gap above the panel on every member area screen**, so each section starts where it should.
+- **The booking plugin's own "Logout" link and "Welcome ..." heading are hidden** on the bookings screen — the member area already has both, so members no longer see them twice.
+
 ## 0.83.1
 
 - **A member's own name and picture no longer take up room at the top of a phone screen.** The row there now carries the section they are looking at, its description and the way out, and nothing else. On desktop the side menu still shows who is signed in.
