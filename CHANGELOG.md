@@ -5,6 +5,11 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.83.4
+
+- **No more underlines on the menus, tabs and shortcut cards** in the member area — only real links in your writing are underlined now.
+- **The heading at the top of each member area screen is smaller**, so it sits better against the rest of the page.
+
 ## 0.83.3
 
 - **The top bar reads as one block.** The heading and the line under it sit closer together, and the buttons on the right now line up with the middle of them instead of the bottom.

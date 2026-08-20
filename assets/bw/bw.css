@@ -625,12 +625,24 @@
    buttons centre against that block rather than hanging off its baseline. */
 .bw-pagehead{align-items:center}
 .bw-pagehead__eyebrow{margin-bottom:var(--bw-space-2)}
+.bw-pagehead__h1{font-size:var(--bw-size-h2)}
 .bw-pagehead__lede{margin-top:var(--bw-space-2)}
-/* A link drawn as a button is a button, not a link. .bw-admin a's underline
-   outranks .bw-btn's own text-decoration:none, so it has to be undone here.
-   .bw-btn--link is the exception — it is meant to read as a link. */
-.bw-admin a.bw-btn{text-decoration:none}
+/* A link drawn as a control is a control, not a link. Each of these already
+   asks for no underline, but .bw-admin a's prose-link underline outranks
+   them, so it has to be undone here. .bw-btn--link is the exception — it is
+   meant to read as a link. */
+.bw-admin a.bw-btn,
+.bw-admin a.bw-secnav__item,
+.bw-admin a.bw-tab,
+.bw-admin a.bw-menu__item,
+.bw-admin a.bw-rowactions__link,
+.bw-admin .bw-crumbs a,
+.bw-admin a.clubhouse-member__back,
+.bw-admin a.clubhouse-member__tab,
+.bw-admin a.clubhouse-member__morelink,
+.bw-admin a.clubhouse-member__quick{text-decoration:none}
 .bw-admin a.bw-btn--link{text-decoration:underline}
+.bw-admin a.bw-rowactions__link:hover{text-decoration:underline}
 .clubhouse-member .clubhouse-member__navlabel{display:flex;align-items:center;gap:10px}
 .clubhouse-member .bw-secnav__item .bw-icon{flex:none}
 .clubhouse-member .bw-pagehead__actions .bw-icon{margin-right:6px}
