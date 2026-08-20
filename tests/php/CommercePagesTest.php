@@ -136,6 +136,40 @@ final class CommercePagesTest extends TestCase {
 		$this->assertStringNotContainsString( 'clubhouse-checkout', $confirmation );
 	}
 
+	public function test_the_theme_s_own_title_block_is_blanked_on_a_dressed_page(): void {
+		// A block theme draws core/post-title above the_content, which duplicated
+		// the frame's own h1 until a browser test caught it. render_block is the
+		// only hook that can drop it before it reaches the page.
+		$this->on_the_checkout_page();
+		$block = array( 'blockName' => 'core/post-title' );
+		$this->assertSame(
+			'',
+			Blueworx_Clubhouse_Commerce_Pages::strip_post_title( '<h1 class="wp-block-post-title">Checkout</h1>', $block )
+		);
+	}
+
+	public function test_the_theme_s_title_block_is_left_alone_on_any_other_page(): void {
+		update_option( Blueworx_Clubhouse_Shop_Pages::option_name( 'checkout' ), 43 );
+		wp_stub_render_page( 99 );
+		$block = array( 'blockName' => 'core/post-title' );
+		$this->assertSame(
+			'<h1 class="wp-block-post-title">A news post</h1>',
+			Blueworx_Clubhouse_Commerce_Pages::strip_post_title( '<h1 class="wp-block-post-title">A news post</h1>', $block )
+		);
+	}
+
+	public function test_a_different_block_on_a_dressed_page_is_left_alone(): void {
+		// The filter's job is one specific block. Anything else that renders on
+		// the checkout page — the frame's own markup included — must pass
+		// through untouched.
+		$this->on_the_checkout_page();
+		$block = array( 'blockName' => 'core/paragraph' );
+		$this->assertSame(
+			'<p>Some other block</p>',
+			Blueworx_Clubhouse_Commerce_Pages::strip_post_title( '<p>Some other block</p>', $block )
+		);
+	}
+
 	public function test_the_way_back_names_the_club_when_it_has_a_name(): void {
 		$this->assertSame( 'Back to Crewe Vagrants', Blueworx_Clubhouse_Commerce_Pages::back_label( 'Crewe Vagrants' ) );
 		$this->assertSame( 'Back to the club site', Blueworx_Clubhouse_Commerce_Pages::back_label( '  ' ) );

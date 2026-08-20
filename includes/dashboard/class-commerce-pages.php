@@ -57,6 +57,40 @@ final class Blueworx_Clubhouse_Commerce_Pages {
 			return;
 		}
 		add_filter( 'the_content', array( self::class, 'dress' ), self::PRIORITY );
+		// A block theme draws its own core/post-title block above whatever
+		// the_content returns. A browser test caught it: on the checkout fixture
+		// the page carried two h1s — the theme's own title, then the frame's
+		// "Checkout" heading right underneath it — on the one page where a buyer
+		// is mid-payment. render_block sees each block before it lands on the
+		// page, so the theme's title is dropped here rather than fought after
+		// the fact once both are already in the markup.
+		add_filter( 'render_block', array( self::class, 'strip_post_title' ), 10, 3 );
+	}
+
+	/**
+	 * Blanks the theme's own core/post-title block on the pages this plugin
+	 * dresses, so the frame's own heading is the only one on the page.
+	 *
+	 * @param string              $block_content
+	 * @param array<string,mixed> $block
+	 * @param mixed               $instance
+	 */
+	public static function strip_post_title( $block_content, $block, $instance = null ): string {
+		$block_content = (string) $block_content;
+		// render_block fires for every block on every page of the site, and
+		// core/post-title appears at most once or twice on any of them. Bail on
+		// the block name alone — an array lookup — before page_key() below,
+		// which reads options, ever runs.
+		if ( ! is_array( $block ) || 'core/post-title' !== ( $block['blockName'] ?? '' ) ) {
+			return $block_content;
+		}
+		$post_id = 0;
+		if ( is_object( $instance ) && isset( $instance->context['postId'] ) ) {
+			$post_id = (int) $instance->context['postId'];
+		} elseif ( function_exists( 'get_the_ID' ) ) {
+			$post_id = (int) get_the_ID();
+		}
+		return '' === Blueworx_Clubhouse_Dashboard_Assets::page_key( $post_id ) ? $block_content : '';
 	}
 
 	/**
