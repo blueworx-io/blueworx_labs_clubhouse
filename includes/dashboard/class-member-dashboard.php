@@ -164,18 +164,27 @@ final class Blueworx_Clubhouse_Member_Dashboard {
 	}
 
 	/**
-	 * The views the phone's bottom bar has no room for, offered as link rows.
+	 * Every available view the bar does not carry, offered as link rows.
 	 *
-	 * The bar holds five, which is what the design draws and as many as fits a
-	 * phone. The design solves the same problem the same way — its phone layout
-	 * reaches "Plan and renewal" from the account panel rather than the bar.
-	 * Drawn on every panel and hidden above the phone breakpoint, where the
-	 * sidebar carries every view already.
+	 * The bar is a curated list now — Dashboard, Bookings, Billing, Account,
+	 * and the way out — not "whichever views fit". On a full club that leaves
+	 * Orders, Invoices and Plans reachable only from here, so nothing a member
+	 * could otherwise see in the sidebar becomes unreachable on a phone. Drawn
+	 * on every panel and hidden above the phone breakpoint, where the sidebar
+	 * carries every view already.
 	 *
 	 * @param array<int,array<string,mixed>> $views
 	 */
 	public static function overflow_links( array $views, string $base ): string {
-		$extra = array_slice( $views, Blueworx_Clubhouse_Dashboard_Shell::TABBAR_MAX );
+		$carried = array_column( Blueworx_Clubhouse_Dashboard_Views::bar( $views ), 'key' );
+		$extra   = array_values(
+			array_filter(
+				$views,
+				static function ( array $view ) use ( $carried ): bool {
+					return ! in_array( (string) $view['key'], $carried, true );
+				}
+			)
+		);
 		if ( array() === $extra ) {
 			return '';
 		}

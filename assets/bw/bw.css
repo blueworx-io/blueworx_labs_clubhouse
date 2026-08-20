@@ -669,12 +669,11 @@
 	.clubhouse-member .clubhouse-member__shell{flex-direction:column;min-height:auto}
 	.clubhouse-member .clubhouse-member__side{flex:none;width:100%;border-right:0;border-bottom:1px solid var(--bw-border);padding:var(--bw-space-5) var(--bw-space-6);gap:var(--bw-space-4)}
 	/* The sidebar keeps the club and the member on a phone; its nav is the
-	   bottom bar's job, so only the nav is hidden here. The way out has no
-	   equivalent in the bar, so it stays in the sidebar's row, beside the
-	   brand — see Member Dashboard Mobile.dc.html, which carries no separate
-	   exit control of its own either. */
+	   bottom bar's job, so only the nav is hidden here. The way out now has an
+	   equivalent in the bar — its last item — so the sidebar's own copy is
+	   hidden too, rather than showing beside the brand twice over. */
 	.clubhouse-member .clubhouse-member__side .clubhouse-member__nav{display:none}
-	.clubhouse-member .clubhouse-member__side .clubhouse-member__back{margin-top:0;flex:none;white-space:nowrap}
+	.clubhouse-member .clubhouse-member__side .clubhouse-member__back{display:none}
 	.clubhouse-member .clubhouse-member__brand{padding-bottom:0}
 	.clubhouse-member .clubhouse-member__person{padding-top:0;border-top:0;margin-left:auto}
 	.clubhouse-member .clubhouse-member__person .bw-person__sub{display:none}

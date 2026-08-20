@@ -92,18 +92,19 @@ test('clicking a nav item swaps panels without navigating @wordpress', async ({ 
   await expect(page.locator('[data-view="test-second-view"]')).toBeFocused();
 });
 
-// The harness has neither SureCart nor LatePoint, so the real page draws only
-// one view and the tab bar never renders at all (Dashboard_Shell::tabbar()
-// returns '' below two views). Proving the phone layout honestly means giving
-// it enough views to fill the bar and overflow it — six — the same
-// response-splicing approach the click test above uses, extended to the
-// sidebar nav, the tab bar and the overflow rows.
+// The harness has neither SureCart nor LatePoint, so the real page already
+// carries Dashboard, Billing and Account — see Dashboard_Views::all(): Billing
+// and Account no longer require a shop. The bar is a curated list now (Task 1
+// of the bar-report brief), so faking a full club means adding Bookings to the
+// bar, Orders/Invoices/Plans to the sidebar and the overflow rows only — not
+// to the bar, which never carries them — the same response-splicing approach
+// the click test above uses.
 test('a phone gets the bottom bar and the overflow rows, not the sidebar nav @wordpress', async ({ page }) => {
   await page.route('**/member-dashboard/', async (route) => {
     const response = await route.fetch();
     let body = await response.text();
 
-    const extraNavItems = ['bookings', 'orders', 'invoices', 'plans', 'account']
+    const extraNavItems = ['bookings', 'orders', 'invoices', 'plans']
       .map((key) => '<a class="bw-secnav__item" data-view-link="' + key + '"'
         + ' data-view-title="' + key + '" data-view-lede=""'
         + ' href="/member-dashboard/?view=' + key + '">'
@@ -111,22 +112,23 @@ test('a phone gets the bottom bar and the overflow rows, not the sidebar nav @wo
       .join('');
     body = body.replace('Dashboard</span></a></nav>', 'Dashboard</span></a>' + extraNavItems + '</nav>');
 
-    // The server already draws the bar, carrying this club's one view, so
-    // four more are spliced into it rather than a second bar being injected.
-    // Five fit; the sixth ("account") is what overflow_links() offers instead
-    // — see includes/dashboard/class-member-dashboard.php.
-    const tabbarItems = ['bookings', 'orders', 'invoices', 'plans']
-      .map((key) => '<a class="clubhouse-member__tab" data-view-link="' + key + '"'
-        + ' data-view-title="' + key + '" data-view-lede=""'
-        + ' href="/member-dashboard/?view=' + key + '">'
-        + '<span class="clubhouse-member__tablabel">' + key + '</span></a>')
-      .join('');
+    // The server already draws the bar, carrying Dashboard, Billing and
+    // Account for this club. Bookings is the one extra view the bar can carry
+    // — Orders, Invoices and Plans are sidebar-only and never appear here, so
+    // they are what overflow_links() offers instead.
     const barOpen = '<nav class="clubhouse-member__tabbar" aria-label="Your account">';
-    body = body.replace(barOpen, barOpen + tabbarItems);
+    const bookingsTab = '<a class="clubhouse-member__tab" data-view-link="bookings"'
+      + ' data-view-title="bookings" data-view-lede="" href="/member-dashboard/?view=bookings">'
+      + '<span class="clubhouse-member__tablabel">bookings</span></a>';
+    body = body.replace(barOpen, barOpen + bookingsTab);
 
     const more = '<nav class="clubhouse-member__more" aria-label="More of your account">'
-      + '<a class="clubhouse-member__morelink" data-view-link="account" data-view-title="account" data-view-lede=""'
-      + ' href="/member-dashboard/?view=account"><span>account</span></a></nav>';
+      + ['orders', 'invoices', 'plans']
+        .map((key) => '<a class="clubhouse-member__morelink" data-view-link="' + key + '"'
+          + ' data-view-title="' + key + '" data-view-lede=""'
+          + ' href="/member-dashboard/?view=' + key + '"><span>' + key + '</span></a>')
+        .join('')
+      + '</nav>';
 
     // The real markup places the overflow rows inside the panel (main).
     body = body.replace('</main>', more + '</main>');
@@ -138,32 +140,44 @@ test('a phone gets the bottom bar and the overflow rows, not the sidebar nav @wo
   await page.goto('/member-dashboard/');
 
   await expect(page.locator('.clubhouse-member__tabbar')).toBeVisible();
+  // Dashboard, Bookings, Billing, Account, and the way back: five tabs.
   await expect(page.locator('.clubhouse-member__tab')).toHaveCount(5);
   await expect(page.locator('.clubhouse-member__side .bw-secnav')).toBeHidden();
   await expect(page.locator('.clubhouse-member__more')).toBeVisible();
-  await expect(page.locator('.clubhouse-member__more [data-view-link="account"]')).toBeVisible();
-  // The bottom bar carries no way out of the member area — the sidebar's own
-  // "Back to the club site" link has to stay reachable on a phone.
-  await expect(page.locator('.clubhouse-member__back')).toBeVisible();
+  await expect(page.locator('.clubhouse-member__more [data-view-link="orders"]')).toBeVisible();
+  await expect(page.locator('.clubhouse-member__more [data-view-link="invoices"]')).toBeVisible();
+  await expect(page.locator('.clubhouse-member__more [data-view-link="plans"]')).toBeVisible();
+  // The way out is now the bar's own last item, not a separate control beside
+  // the club badge — see the media query in assets/bw/bw.css.
+  await expect(page.locator('.clubhouse-member__side .clubhouse-member__back')).toBeHidden();
 
   // The reverse above the phone breakpoint: the sidebar carries every view,
-  // so the bar and the overflow rows are noise.
+  // so the bar and the overflow rows are noise, and the way back returns to
+  // the sidebar's own row beside the brand.
   await page.setViewportSize({ width: 1280, height: 900 });
   await expect(page.locator('.clubhouse-member__tabbar')).toBeHidden();
   await expect(page.locator('.clubhouse-member__side .bw-secnav')).toBeVisible();
   await expect(page.locator('.clubhouse-member__more')).toBeHidden();
+  await expect(page.locator('.clubhouse-member__side .clubhouse-member__back')).toBeVisible();
 });
 
 // No splicing here: this is the club the harness actually is — no shop, no
-// bookings, so one view. The bar is drawn for it all the same, so the member
-// area looks the same on every club rather than growing a bar the day a plugin
-// is installed.
-test('a club with a single view still gets the bottom bar @wordpress', async ({ page }) => {
+// bookings. Dashboard, Billing and Account are still offered — see
+// Dashboard_Views::all() — so the bar is a curated list of exactly those
+// three plus the way out, never "the first five views" or a single one.
+test('the bar shows exactly the curated list on a club with no shop and no bookings @wordpress', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/member-dashboard/');
 
   await expect(page.locator('.clubhouse-member__tabbar')).toBeVisible();
-  await expect(page.locator('.clubhouse-member__tab')).toHaveCount(1);
+  const tabs = page.locator('.clubhouse-member__tab');
+  await expect(tabs).toHaveCount(4);
+  await expect(tabs.nth(0)).toContainText('Dashboard');
+  await expect(tabs.nth(1)).toContainText('Billing');
+  await expect(tabs.nth(2)).toContainText('Account');
+  await expect(tabs.nth(3)).toContainText('Back to the club site');
+
   await expect(page.locator('.clubhouse-member__side .bw-secnav')).toBeHidden();
-  await expect(page.locator('.clubhouse-member__back')).toBeVisible();
+  // The way out lives in the bar now, not beside the club badge.
+  await expect(page.locator('.clubhouse-member__side .clubhouse-member__back')).toBeHidden();
 });

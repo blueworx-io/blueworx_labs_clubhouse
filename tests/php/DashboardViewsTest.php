@@ -11,7 +11,7 @@ final class DashboardViewsTest extends TestCase {
 
 	public function test_the_views_are_in_the_order_the_design_draws_them(): void {
 		$this->assertSame(
-			array( 'dashboard', 'bookings', 'orders', 'invoices', 'plans', 'account' ),
+			array( 'dashboard', 'bookings', 'orders', 'invoices', 'billing', 'plans', 'account' ),
 			$this->keys( Blueworx_Clubhouse_Dashboard_Views::all() )
 		);
 	}
@@ -30,15 +30,16 @@ final class DashboardViewsTest extends TestCase {
 	public function test_a_club_with_both_plugins_gets_every_view(): void {
 		$views = Blueworx_Clubhouse_Dashboard_Views::available( true, true );
 		$this->assertSame(
-			array( 'dashboard', 'bookings', 'orders', 'invoices', 'plans', 'account' ),
+			array( 'dashboard', 'bookings', 'orders', 'invoices', 'billing', 'plans', 'account' ),
 			$this->keys( $views )
 		);
 	}
 
-	public function test_a_club_with_no_shop_is_not_offered_shop_views(): void {
-		// A nav item that cannot render is worse than an absent one.
+	public function test_a_club_with_no_shop_is_not_offered_shop_only_views(): void {
+		// Orders, Invoices and Plans need the shop and are absent. Billing and
+		// Account do not — they render the honest empty state instead.
 		$views = Blueworx_Clubhouse_Dashboard_Views::available( false, true );
-		$this->assertSame( array( 'dashboard', 'bookings' ), $this->keys( $views ) );
+		$this->assertSame( array( 'dashboard', 'bookings', 'billing', 'account' ), $this->keys( $views ) );
 	}
 
 	public function test_a_club_with_no_bookings_is_not_offered_bookings(): void {
@@ -48,9 +49,61 @@ final class DashboardViewsTest extends TestCase {
 
 	public function test_a_club_with_neither_still_has_somewhere_to_land(): void {
 		// The welcome pack lives here, and a club that has not set up a shop
-		// should still have a member area that greets a member.
+		// should still have a member area that greets a member. Billing and
+		// Account are offered too, empty though they render.
 		$views = Blueworx_Clubhouse_Dashboard_Views::available( false, false );
-		$this->assertSame( array( 'dashboard' ), $this->keys( $views ) );
+		$this->assertSame( array( 'dashboard', 'billing', 'account' ), $this->keys( $views ) );
+	}
+
+	public function test_account_is_available_with_no_shop_at_all(): void {
+		// Its requires was dropped deliberately — an empty Billing or Account
+		// panel is the wanted outcome, not a reason to hide the tab.
+		$views   = Blueworx_Clubhouse_Dashboard_Views::available( false, false );
+		$account = Blueworx_Clubhouse_Dashboard_Views::find( 'account', $views );
+		$this->assertIsArray( $account );
+	}
+
+	public function test_side_offers_the_desktop_sidebars_views(): void {
+		$views = Blueworx_Clubhouse_Dashboard_Views::available( true, true );
+		$this->assertSame(
+			array( 'dashboard', 'bookings', 'orders', 'invoices', 'plans', 'account' ),
+			$this->keys( Blueworx_Clubhouse_Dashboard_Views::side( $views ) )
+		);
+	}
+
+	public function test_side_does_not_offer_billing(): void {
+		// Billing is a phone-only grouping — the owner's explicit choice.
+		$views = Blueworx_Clubhouse_Dashboard_Views::available( true, true );
+		$this->assertNotContains( 'billing', $this->keys( Blueworx_Clubhouse_Dashboard_Views::side( $views ) ) );
+	}
+
+	public function test_bar_offers_the_curated_list_on_a_full_club(): void {
+		$views = Blueworx_Clubhouse_Dashboard_Views::available( true, true );
+		$this->assertSame(
+			array( 'dashboard', 'bookings', 'billing', 'account' ),
+			$this->keys( Blueworx_Clubhouse_Dashboard_Views::bar( $views ) )
+		);
+	}
+
+	public function test_bar_carries_billing_and_account_on_a_club_with_no_shop(): void {
+		$views = Blueworx_Clubhouse_Dashboard_Views::available( false, false );
+		$this->assertSame(
+			array( 'dashboard', 'billing', 'account' ),
+			$this->keys( Blueworx_Clubhouse_Dashboard_Views::bar( $views ) )
+		);
+	}
+
+	public function test_bar_does_not_offer_orders_invoices_or_plans(): void {
+		$views = Blueworx_Clubhouse_Dashboard_Views::available( true, true );
+		$bar   = $this->keys( Blueworx_Clubhouse_Dashboard_Views::bar( $views ) );
+		$this->assertNotContains( 'orders', $bar );
+		$this->assertNotContains( 'invoices', $bar );
+		$this->assertNotContains( 'plans', $bar );
+	}
+
+	public function test_bar_drops_bookings_when_latepoint_is_absent(): void {
+		$views = Blueworx_Clubhouse_Dashboard_Views::available( true, false );
+		$this->assertNotContains( 'bookings', $this->keys( Blueworx_Clubhouse_Dashboard_Views::bar( $views ) ) );
 	}
 
 	public function test_an_address_naming_a_real_view_lands_on_it(): void {

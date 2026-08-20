@@ -88,6 +88,7 @@ final class Blueworx_Clubhouse_Dashboard_Shell {
 		$current = (string) ( $args['current'] ?? '' );
 		$panels  = isset( $args['panels'] ) && is_array( $args['panels'] ) ? $args['panels'] : array();
 		$base    = (string) ( $args['base'] ?? '' );
+		$home    = trim( (string) ( $args['home_url'] ?? '' ) );
 
 		return '<div class="bw-admin bw-page clubhouse-member" data-clubhouse-member data-view-initial="' . self::e( $current ) . '">'
 			. '<div class="clubhouse-member__shell">'
@@ -98,7 +99,7 @@ final class Blueworx_Clubhouse_Dashboard_Shell {
 			. self::panels( $views, $current, $panels )
 			. '</main>'
 			. '</div>'
-			. self::tabbar( $views, $current, $base )
+			. self::tabbar( $views, $current, $base, $home )
 			. '</div></div>';
 	}
 
@@ -279,7 +280,7 @@ final class Blueworx_Clubhouse_Dashboard_Shell {
 	 */
 	private static function nav( array $views, string $current, string $base = '' ): string {
 		$out = '<nav class="bw-secnav clubhouse-member__nav" aria-label="Your account">';
-		foreach ( $views as $view ) {
+		foreach ( Blueworx_Clubhouse_Dashboard_Views::side( $views ) as $view ) {
 			$key    = (string) $view['key'];
 			$active = $key === $current;
 			$out   .= '<a class="bw-secnav__item' . ( $active ? ' is-active' : '' ) . '"'
@@ -300,18 +301,19 @@ final class Blueworx_Clubhouse_Dashboard_Shell {
 	/**
 	 * The bottom tab bar, which is what the sidebar becomes on a phone.
 	 *
-	 * Five at most, which is what the design draws and as many as fits a phone.
-	 * Anything past the fifth is reached from the last panel — see
-	 * Member_Dashboard::overflow_links().
+	 * A curated list — Dashboard_Views::bar() — not "whichever views fit", so
+	 * there is no slicing here. The last item is always the way out: a plain
+	 * link to the club site, carrying no data-view-link so the switching
+	 * script leaves it alone and it navigates for real.
 	 *
 	 * @param array<int,array<string,mixed>> $views
 	 */
-	private static function tabbar( array $views, string $current, string $base = '' ): string {
-		$shown = array_slice( $views, 0, self::TABBAR_MAX );
+	private static function tabbar( array $views, string $current, string $base = '', string $home = '' ): string {
+		$shown = Blueworx_Clubhouse_Dashboard_Views::bar( $views );
 		// Drawn for a single view too. A club with neither a shop nor bookings
 		// still gets the bar, so the member area looks and behaves the same on
 		// every club rather than growing a bar the day a plugin is installed.
-		if ( array() === $shown ) {
+		if ( array() === $shown && '' === $home ) {
 			return '';
 		}
 		$out = '<nav class="clubhouse-member__tabbar" aria-label="Your account">';
@@ -329,11 +331,16 @@ final class Blueworx_Clubhouse_Dashboard_Shell {
 				. '<span class="clubhouse-member__tablabel">' . self::e( (string) $view['label'] ) . '</span>'
 				. '</a>';
 		}
+		if ( '' !== $home ) {
+			// No data-view-link: this is a real exit from the member area, not a
+			// panel to switch to, so member-area.js must leave it alone.
+			$out .= '<a class="clubhouse-member__tab" href="' . self::e( $home ) . '">'
+				. self::icon( 'arrow-left' )
+				. '<span class="clubhouse-member__tablabel">Back to the club site</span>'
+				. '</a>';
+		}
 		return $out . '</nav>';
 	}
-
-	/** How many views the phone's bottom bar can carry. The design draws five. */
-	public const TABBAR_MAX = 5;
 
 	/** One panel. A card with no title is a card with no head, not an empty one. */
 	public static function card( string $title, string $body ): string {

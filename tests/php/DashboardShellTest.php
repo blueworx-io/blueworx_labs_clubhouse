@@ -14,8 +14,8 @@ final class DashboardShellTest extends TestCase {
 		return array_merge(
 			array(
 				'views'   => array(
-					array( 'key' => 'dashboard', 'label' => 'Dashboard', 'title' => 'Your account', 'lede' => 'All of it.', 'icon' => 'layout-dashboard' ),
-					array( 'key' => 'orders', 'label' => 'Orders', 'title' => 'Orders', 'lede' => 'What you bought.', 'icon' => 'shopping-cart' ),
+					array( 'key' => 'dashboard', 'label' => 'Dashboard', 'title' => 'Your account', 'lede' => 'All of it.', 'icon' => 'layout-dashboard', 'where' => 'both' ),
+					array( 'key' => 'orders', 'label' => 'Orders', 'title' => 'Orders', 'lede' => 'What you bought.', 'icon' => 'shopping-cart', 'where' => 'both' ),
 				),
 				'current' => 'dashboard',
 				'panels'  => array( 'dashboard' => '<p>overview</p>', 'orders' => '<p>orders</p>' ),
@@ -94,7 +94,7 @@ final class DashboardShellTest extends TestCase {
 	public function test_the_top_bar_escapes_the_title_and_lede(): void {
 		$html = Blueworx_Clubhouse_Dashboard_Shell::page( $this->args( array(
 			'views'   => array(
-				array( 'key' => 'dashboard', 'label' => 'Dashboard', 'title' => '<b>T</b>', 'lede' => '<i>L</i>', 'icon' => 'layout-dashboard' ),
+				array( 'key' => 'dashboard', 'label' => 'Dashboard', 'title' => '<b>T</b>', 'lede' => '<i>L</i>', 'icon' => 'layout-dashboard', 'where' => 'both' ),
 			),
 			'current' => 'dashboard',
 			'panels'  => array( 'dashboard' => '<p>hello</p>' ),
@@ -160,7 +160,7 @@ final class DashboardShellTest extends TestCase {
 	public function test_the_phone_bar_is_drawn_for_a_single_view(): void {
 		$html = Blueworx_Clubhouse_Dashboard_Shell::page( $this->args( array(
 			'views'   => array(
-				array( 'key' => 'dashboard', 'label' => 'Dashboard', 'title' => 'Your account', 'lede' => '', 'icon' => 'layout-dashboard' ),
+				array( 'key' => 'dashboard', 'label' => 'Dashboard', 'title' => 'Your account', 'lede' => '', 'icon' => 'layout-dashboard', 'where' => 'both' ),
 			),
 			'current' => 'dashboard',
 			'panels'  => array( 'dashboard' => '<p>hello</p>' ),
@@ -175,13 +175,69 @@ final class DashboardShellTest extends TestCase {
 		$this->assertStringNotContainsString( 'clubhouse-member__tabbar', $html );
 	}
 
+	/**
+	 * The bar is a curated list now, not "however many fit" — TABBAR_MAX and
+	 * its slice are gone, so every 'both'/'bar' view is drawn, however many.
+	 */
+	public function test_the_bar_carries_every_bar_view_with_no_slicing(): void {
+		$views = array(
+			array( 'key' => 'dashboard', 'label' => 'Dashboard', 'title' => 'D', 'lede' => '', 'icon' => 'layout-dashboard', 'where' => 'both' ),
+			array( 'key' => 'bookings', 'label' => 'Bookings', 'title' => 'B', 'lede' => '', 'icon' => 'calendar', 'where' => 'both' ),
+			array( 'key' => 'billing', 'label' => 'Billing', 'title' => 'Bi', 'lede' => '', 'icon' => 'file-spreadsheet', 'where' => 'bar' ),
+			array( 'key' => 'account', 'label' => 'Account', 'title' => 'A', 'lede' => '', 'icon' => 'users', 'where' => 'both' ),
+			array( 'key' => 'orders', 'label' => 'Orders', 'title' => 'O', 'lede' => '', 'icon' => 'shopping-cart', 'where' => 'side' ),
+		);
+		$html = Blueworx_Clubhouse_Dashboard_Shell::page( $this->args( array(
+			'views'   => $views,
+			'current' => 'dashboard',
+			'panels'  => array( 'dashboard' => '<p>hello</p>' ),
+		) ) );
+		foreach ( array( 'dashboard', 'bookings', 'billing', 'account' ) as $key ) {
+			$this->assertStringContainsString( 'clubhouse-member-tab-' . $key, $html );
+		}
+		$this->assertStringNotContainsString( 'clubhouse-member-tab-orders', $html );
+	}
+
+	/** The sidebar carries every desktop view, never a bar-only one. */
+	public function test_the_sidebar_does_not_offer_a_bar_only_view(): void {
+		$views = array(
+			array( 'key' => 'dashboard', 'label' => 'Dashboard', 'title' => 'D', 'lede' => '', 'icon' => 'layout-dashboard', 'where' => 'both' ),
+			array( 'key' => 'billing', 'label' => 'Billing', 'title' => 'Bi', 'lede' => '', 'icon' => 'file-spreadsheet', 'where' => 'bar' ),
+		);
+		$html = Blueworx_Clubhouse_Dashboard_Shell::page( $this->args( array(
+			'views'   => $views,
+			'current' => 'dashboard',
+			'panels'  => array( 'dashboard' => '<p>hello</p>' ),
+		) ) );
+		$this->assertStringNotContainsString( 'clubhouse-member-navtab-billing', $html );
+		$this->assertStringContainsString( 'clubhouse-member-navtab-dashboard', $html );
+	}
+
+	/**
+	 * The bar's last item is the way out of the member area — a plain link to
+	 * the club site, carrying no data-view-link so the switching script leaves
+	 * it alone and it navigates for real.
+	 */
+	public function test_the_bars_last_item_is_the_way_back_and_carries_no_data_view_link(): void {
+		$html = Blueworx_Clubhouse_Dashboard_Shell::page( $this->args( array( 'home_url' => '/' ) ) );
+		$this->assertMatchesRegularExpression(
+			'/<a class="clubhouse-member__tab" href="\/"><svg[^>]*>.*?<\/svg><span class="clubhouse-member__tablabel">Back to the club site<\/span><\/a><\/nav>/s',
+			$html
+		);
+	}
+
+	public function test_the_bars_back_link_is_absent_with_no_home_url(): void {
+		$html = Blueworx_Clubhouse_Dashboard_Shell::page( $this->args() );
+		$this->assertStringNotContainsString( 'Back to the club site</span></a></nav>', $html );
+	}
+
 	public function test_the_lede_is_drawn_hidden_when_there_is_none(): void {
 		// The old markup drew no <p> at all when a view had no lede; the current
 		// markup always draws the <p> so the switching script has a node to
 		// re-target, carrying `hidden` instead — see head()'s docblock.
 		$html = Blueworx_Clubhouse_Dashboard_Shell::page( $this->args( array(
 			'views'   => array(
-				array( 'key' => 'dashboard', 'label' => 'Dashboard', 'title' => 'Your account', 'lede' => '', 'icon' => 'layout-dashboard' ),
+				array( 'key' => 'dashboard', 'label' => 'Dashboard', 'title' => 'Your account', 'lede' => '', 'icon' => 'layout-dashboard', 'where' => 'both' ),
 			),
 			'current' => 'dashboard',
 			'panels'  => array( 'dashboard' => '<p>hello</p>' ),
@@ -193,8 +249,8 @@ final class DashboardShellTest extends TestCase {
 		// Only two views on offer — orders is omitted, as available() does for a
 		// club with no shop plugin active.
 		$views = array(
-			array( 'key' => 'dashboard', 'label' => 'Dashboard', 'title' => 'Your account', 'lede' => '', 'icon' => 'layout-dashboard' ),
-			array( 'key' => 'invoices', 'label' => 'Invoices', 'title' => 'Invoices', 'lede' => '', 'icon' => 'file-spreadsheet' ),
+			array( 'key' => 'dashboard', 'label' => 'Dashboard', 'title' => 'Your account', 'lede' => '', 'icon' => 'layout-dashboard', 'where' => 'both' ),
+			array( 'key' => 'invoices', 'label' => 'Invoices', 'title' => 'Invoices', 'lede' => '', 'icon' => 'file-spreadsheet', 'where' => 'side' ),
 		);
 		$html = Blueworx_Clubhouse_Dashboard_Shell::page( $this->args( array(
 			'views'   => $views,

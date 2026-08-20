@@ -97,8 +97,10 @@ final class MemberDashboardTest extends TestCase {
 	}
 
 	public function test_an_overview_with_nothing_to_link_to_still_says_something(): void {
-		// A club with neither plugin: the pack, and no empty grid of links.
-		$views = Blueworx_Clubhouse_Dashboard_Views::available( false, false );
+		// Only the dashboard itself on offer: the pack, and no empty grid of
+		// links. (available() no longer produces this shape on its own — Billing
+		// and Account are offered even with no shop at all, see Dashboard_Views.)
+		$views = array( array( 'key' => 'dashboard', 'label' => 'Dashboard', 'title' => '', 'lede' => '', 'icon' => 'layout-dashboard' ) );
 		$html  = Blueworx_Clubhouse_Member_Dashboard::overview( '<section class="clubhouse-welcome">hi</section>', $views, 'https://club.test/' );
 		$this->assertStringContainsString( 'clubhouse-welcome', $html );
 		$this->assertStringNotContainsString( '?view=', $html );
@@ -149,9 +151,10 @@ final class MemberDashboardTest extends TestCase {
 	}
 
 	public function test_an_overview_with_neither_pack_nor_views_shows_the_honest_empty_state(): void {
-		// No pack written, and no other views to link to — e.g. a club whose
-		// shop plugin is inactive. A member must never meet a blank frame.
-		$views = Blueworx_Clubhouse_Dashboard_Views::available( false, false );
+		// No pack written, and no other views to link to. A member must never
+		// meet a blank frame. (available() no longer produces this shape on its
+		// own — Billing and Account are offered even with no shop at all.)
+		$views = array( array( 'key' => 'dashboard', 'label' => 'Dashboard', 'title' => '', 'lede' => '', 'icon' => 'layout-dashboard' ) );
 		$html  = Blueworx_Clubhouse_Member_Dashboard::overview( '', $views, 'https://club.test/' );
 		$this->assertNotSame( '', trim( $html ) );
 		$this->assertStringContainsString( 'bw-empty', $html );
@@ -247,23 +250,30 @@ final class MemberDashboardTest extends TestCase {
 		);
 	}
 
-	/** @return array<int,array<string,mixed>> */
-	private function sixViews(): array {
-		$out = array();
-		foreach ( array( 'dashboard', 'bookings', 'orders', 'invoices', 'plans', 'account' ) as $key ) {
-			$out[] = array( 'key' => $key, 'label' => ucfirst( $key ), 'title' => ucfirst( $key ), 'lede' => '', 'icon' => 'users' );
-		}
-		return $out;
+	/** A full club: both plugins, so every view is on offer. */
+	private function fullClub(): array {
+		return Blueworx_Clubhouse_Dashboard_Views::available( true, true );
 	}
 
-	public function test_views_the_phone_bar_cannot_carry_are_linked_from_the_last_panel(): void {
-		$html = Blueworx_Clubhouse_Member_Dashboard::overflow_links( $this->sixViews(), '/member-dashboard/' );
-		// Five fit; the sixth does not, so it is offered here instead.
-		$this->assertStringContainsString( 'view=account', $html );
-		$this->assertStringNotContainsString( 'view=orders', $html );
+	public function test_views_the_bar_does_not_carry_are_linked_from_the_last_panel(): void {
+		// On a full club the bar carries Dashboard, Bookings, Billing and
+		// Account (plus the way out) — Orders, Invoices and Plans are reached
+		// from here instead, so nothing is unreachable on a phone.
+		$html = Blueworx_Clubhouse_Member_Dashboard::overflow_links( $this->fullClub(), '/member-dashboard/' );
+		$this->assertStringContainsString( 'view=orders', $html );
+		$this->assertStringContainsString( 'view=invoices', $html );
+		$this->assertStringContainsString( 'view=plans', $html );
+		$this->assertStringNotContainsString( 'view=dashboard', $html );
+		$this->assertStringNotContainsString( 'view=bookings', $html );
+		$this->assertStringNotContainsString( 'view=billing', $html );
+		$this->assertStringNotContainsString( 'view=account', $html );
 	}
 
-	public function test_nothing_is_offered_when_every_view_fits(): void {
-		$this->assertSame( '', Blueworx_Clubhouse_Member_Dashboard::overflow_links( array_slice( $this->sixViews(), 0, 3 ), '/x/' ) );
+	public function test_nothing_is_offered_when_the_bar_carries_every_view(): void {
+		$views = array(
+			array( 'key' => 'dashboard', 'label' => 'Dashboard', 'title' => 'Dashboard', 'lede' => '', 'icon' => 'users', 'where' => 'both' ),
+			array( 'key' => 'billing', 'label' => 'Billing', 'title' => 'Billing', 'lede' => '', 'icon' => 'users', 'where' => 'bar' ),
+		);
+		$this->assertSame( '', Blueworx_Clubhouse_Member_Dashboard::overflow_links( $views, '/x/' ) );
 	}
 }

@@ -38,7 +38,11 @@ final class Blueworx_Clubhouse_Dashboard_Views {
 	 * order, each in its own card. 'shortcode' takes the whole view — LatePoint
 	 * brings its own tabs and does not belong boxed inside a card.
 	 *
-	 * @return array<int,array{key:string,label:string,title:string,lede:string,icon:string,requires:string,blocks:array<int,string>,shortcode:string}>
+	 * 'where' names which of the phone's bottom bar and the desktop sidebar a
+	 * view belongs to: 'both', 'side' or 'bar'. The bar is a curated list, not
+	 * "whichever views fit" — see side() and bar().
+	 *
+	 * @return array<int,array{key:string,label:string,title:string,lede:string,icon:string,requires:string,where:string,blocks:array<int,string>,shortcode:string}>
 	 */
 	public static function all(): array {
 		return array(
@@ -49,6 +53,7 @@ final class Blueworx_Clubhouse_Dashboard_Views {
 				'lede'      => 'Everything the club keeps for you, in one place.',
 				'icon'      => 'layout-dashboard',
 				'requires'  => '',
+				'where'     => 'both',
 				'blocks'    => array(),
 				'shortcode' => '',
 			),
@@ -59,6 +64,7 @@ final class Blueworx_Clubhouse_Dashboard_Views {
 				'lede'      => 'What you have booked, and anything coming up.',
 				'icon'      => 'calendar',
 				'requires'  => self::NEEDS_LATEPOINT,
+				'where'     => 'both',
 				'blocks'    => array(),
 				'shortcode' => 'latepoint_customer_dashboard',
 			),
@@ -69,6 +75,7 @@ final class Blueworx_Clubhouse_Dashboard_Views {
 				'lede'      => 'Everything you have bought from the club.',
 				'icon'      => 'shopping-cart',
 				'requires'  => self::NEEDS_SURECART,
+				'where'     => 'side',
 				'blocks'    => array( 'surecart/customer-orders' ),
 				'shortcode' => '',
 			),
@@ -79,7 +86,19 @@ final class Blueworx_Clubhouse_Dashboard_Views {
 				'lede'      => 'Your receipts, and anything still to pay.',
 				'icon'      => 'file-spreadsheet',
 				'requires'  => self::NEEDS_SURECART,
+				'where'     => 'side',
 				'blocks'    => array( 'surecart/customer-invoices' ),
+				'shortcode' => '',
+			),
+			array(
+				'key'       => 'billing',
+				'label'     => 'Billing',
+				'title'     => 'Billing',
+				'lede'      => 'What you have bought, and what you owe.',
+				'icon'      => 'file-spreadsheet',
+				'requires'  => '',
+				'where'     => 'bar',
+				'blocks'    => array( 'surecart/customer-orders', 'surecart/customer-invoices' ),
 				'shortcode' => '',
 			),
 			array(
@@ -89,6 +108,7 @@ final class Blueworx_Clubhouse_Dashboard_Views {
 				'lede'      => 'What you pay, how often, and when it renews.',
 				'icon'      => 'refresh-cw',
 				'requires'  => self::NEEDS_SURECART,
+				'where'     => 'side',
 				'blocks'    => array( 'surecart/customer-subscriptions' ),
 				'shortcode' => '',
 			),
@@ -98,7 +118,12 @@ final class Blueworx_Clubhouse_Dashboard_Views {
 				'title'     => 'Account details',
 				'lede'      => 'Your details and how you pay.',
 				'icon'      => 'users',
-				'requires'  => self::NEEDS_SURECART,
+				// Dropped deliberately: without SureCart the blocks below render
+				// nothing and view_body() falls back to the honest empty state,
+				// which is the wanted outcome on a phone — not a reason to hide
+				// the tab that carries it.
+				'requires'  => '',
+				'where'     => 'both',
 				'blocks'    => array( 'surecart/customer-billing-details', 'surecart/customer-payment-methods' ),
 				'shortcode' => '',
 			),
@@ -127,6 +152,40 @@ final class Blueworx_Clubhouse_Dashboard_Views {
 			$out[] = $view;
 		}
 		return $out;
+	}
+
+	/**
+	 * The views the desktop sidebar offers.
+	 *
+	 * @param array<int,array<string,mixed>> $views
+	 * @return array<int,array<string,mixed>>
+	 */
+	public static function side( array $views ): array {
+		return array_values(
+			array_filter(
+				$views,
+				static function ( array $view ): bool {
+					return in_array( (string) ( $view['where'] ?? '' ), array( 'both', 'side' ), true );
+				}
+			)
+		);
+	}
+
+	/**
+	 * The views the phone's bottom bar offers, in bar order.
+	 *
+	 * @param array<int,array<string,mixed>> $views
+	 * @return array<int,array<string,mixed>>
+	 */
+	public static function bar( array $views ): array {
+		return array_values(
+			array_filter(
+				$views,
+				static function ( array $view ): bool {
+					return in_array( (string) ( $view['where'] ?? '' ), array( 'both', 'bar' ), true );
+				}
+			)
+		);
 	}
 
 	/**
