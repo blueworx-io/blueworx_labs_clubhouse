@@ -26,6 +26,10 @@ final class Blueworx_Clubhouse_Commerce_Pages {
 	 *
 	 * @var array<string,array{title:string,lede:string}>
 	 */
+	// Checkout no longer reads its own title and lede — it draws its heading
+	// from Dashboard_Shell::checkout() instead — but the entry stays: dress()
+	// gates on isset( self::PAGES[ $key ] ) to decide whether a post is one of
+	// ours at all, and removing it would stop the page being dressed.
 	public const PAGES = array(
 		'checkout'           => array(
 			'title' => 'Checkout',
@@ -98,6 +102,26 @@ final class Blueworx_Clubhouse_Commerce_Pages {
 		try {
 			Blueworx_Clubhouse_Dashboard_Assets::enqueue();
 
+			if ( 'checkout' === $key ) {
+				return Blueworx_Clubhouse_Dashboard_Shell::checkout(
+					array(
+						'club_name'  => Blueworx_Clubhouse_Member_Dashboard::club_name(),
+						'logo_url'   => '',
+						'home_url'   => function_exists( 'home_url' ) ? (string) home_url( '/' ) : '/',
+						'home_label' => self::back_label( Blueworx_Clubhouse_Member_Dashboard::club_name() ),
+						'body'       => $content,
+						'footnote'   => '',
+						'links'      => self::footer_links(
+							static function ( string $slug ): bool {
+								$visibility = Blueworx_Clubhouse_Frontend::context()->visibility ?? null;
+								return null === $visibility || $visibility->is_page_visible( $slug );
+							},
+							static fn ( string $slug ): string => Blueworx_Clubhouse_Frontend::link_url( $slug )
+						),
+					)
+				);
+			}
+
 			return Blueworx_Clubhouse_Dashboard_Shell::bare(
 				self::PAGES[ $key ]['title'],
 				self::PAGES[ $key ]['lede'],
@@ -108,5 +132,49 @@ final class Blueworx_Clubhouse_Commerce_Pages {
 		} finally {
 			self::$rendering = false;
 		}
+	}
+
+	/**
+	 * The club pages a buyer is entitled to read before paying, and their
+	 * addresses. Pure — the callers hand in the two questions this cannot
+	 * answer itself.
+	 *
+	 * Contact is here as well as the two legal pages: someone who has hit a
+	 * problem halfway through paying needs a way to ask about it, and the
+	 * header offers none.
+	 *
+	 * @param callable(string):bool   $visible
+	 * @param callable(string):string $url
+	 * @return array<int,array{label:string,href:string}>
+	 */
+	public static function footer_links( callable $visible, callable $url ): array {
+		$out = array();
+		foreach ( array(
+			'terms'   => 'Terms and conditions',
+			'privacy' => 'Privacy notice',
+			'contact' => 'Contact the club',
+		) as $slug => $label ) {
+			if ( ! $visible( $slug ) ) {
+				continue;
+			}
+			$href = trim( $url( $slug ) );
+			if ( '' === $href ) {
+				continue;
+			}
+			$out[] = array(
+				'label' => $label,
+				'href'  => $href,
+			);
+		}
+		return $out;
+	}
+
+	/**
+	 * "Back to Crewe Vagrants", or the generic wording when a club has not
+	 * named itself yet. Pure.
+	 */
+	public static function back_label( string $club_name ): string {
+		$club = trim( $club_name );
+		return '' !== $club ? 'Back to ' . $club : 'Back to the club site';
 	}
 }

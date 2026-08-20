@@ -93,4 +93,41 @@ final class CommercePagesTest extends TestCase {
 		$this->assertStringContainsString( '<form id="sc-checkout"></form>', $html );
 		$this->assertStringNotContainsString( 'bw-secnav', $html );
 	}
+
+	public function test_the_footer_offers_only_pages_the_club_has_switched_on(): void {
+		// A dead link on a payment page is the worst place for one. Terms and
+		// privacy are switchable like every other club page, so the footer has
+		// to ask rather than assume.
+		$visible = static fn ( string $slug ): bool => 'privacy' === $slug;
+		$url     = static fn ( string $slug ): string => 'https://club.test/' . $slug . '/';
+
+		$links = Blueworx_Clubhouse_Commerce_Pages::footer_links( $visible, $url );
+
+		$this->assertSame(
+			array( array( 'label' => 'Privacy notice', 'href' => 'https://club.test/privacy/' ) ),
+			$links
+		);
+	}
+
+	public function test_a_club_with_nothing_switched_on_gets_no_links(): void {
+		$this->assertSame(
+			array(),
+			Blueworx_Clubhouse_Commerce_Pages::footer_links(
+				static fn ( string $slug ): bool => false,
+				static fn ( string $slug ): string => 'https://club.test/' . $slug . '/'
+			)
+		);
+	}
+
+	public function test_checkout_gets_the_checkout_frame_and_confirmation_keeps_the_bare_one(): void {
+		// Two different pages with two different jobs. The confirmation page is
+		// a receipt, so it keeps the heading-and-panel shell it has always had.
+		$this->assertSame( 'checkout', Blueworx_Clubhouse_Commerce_Pages::page_key( 7, 7, 9 ) );
+		$this->assertSame( 'order-confirmation', Blueworx_Clubhouse_Commerce_Pages::page_key( 9, 7, 9 ) );
+	}
+
+	public function test_the_way_back_names_the_club_when_it_has_a_name(): void {
+		$this->assertSame( 'Back to Crewe Vagrants', Blueworx_Clubhouse_Commerce_Pages::back_label( 'Crewe Vagrants' ) );
+		$this->assertSame( 'Back to the club site', Blueworx_Clubhouse_Commerce_Pages::back_label( '  ' ) );
+	}
 }
