@@ -145,4 +145,28 @@ final class DashboardAssetsTest extends TestCase {
 		$this->assertSame( 'assets/bw/bw.css', Blueworx_Clubhouse_Dashboard_Assets::relative_path() );
 		$this->assertFileExists( $this->root() . '/' . Blueworx_Clubhouse_Dashboard_Assets::relative_path() );
 	}
+
+	public function test_the_surecart_stylesheet_is_queued_on_checkout_only(): void {
+		// The token mapping is the only thing that makes SureCart's own fields
+		// look like the member area, so it has to be on the page where they
+		// render — and on no other, because it would otherwise leak the
+		// member-area look onto a club's public shop pages.
+		$this->assertTrue(
+			Blueworx_Clubhouse_Dashboard_Assets::wants_surecart_style( 'checkout' )
+		);
+		$this->assertFalse(
+			Blueworx_Clubhouse_Dashboard_Assets::wants_surecart_style( 'order-confirmation' )
+		);
+		$this->assertFalse(
+			Blueworx_Clubhouse_Dashboard_Assets::wants_surecart_style( '' )
+		);
+	}
+
+	public function test_the_surecart_stylesheet_is_a_real_file(): void {
+		// A handle pointing at nothing registers happily and 404s in the
+		// browser, which looks like SureCart's default rather than a bug.
+		$this->assertFileExists(
+			dirname( __DIR__, 2 ) . '/' . Blueworx_Clubhouse_Dashboard_Assets::surecart_relative_path()
+		);
+	}
 }
