@@ -142,7 +142,12 @@ final class Blueworx_Clubhouse_Member_Dashboard {
 			$key            = (string) $view['key'];
 			$panels[ $key ] = ( Blueworx_Clubhouse_Dashboard_Views::DEFAULT_VIEW === $key
 				? self::overview( $welcome, $views, $home, $base )
-				: self::view_body( $view, '', $home ) ) . $more;
+				: self::view_body( $view, '', $home ) )
+				// Orders, Invoices and Plans hang off Billing alone. They were on
+				// every panel, which read as a stray menu at the foot of each
+				// screen; Billing is where a member looks for them anyway, and
+				// one home for them keeps them reachable on a phone.
+				. ( 'billing' === $key ? $more : '' );
 		}
 
 		$style = '' !== $welcome

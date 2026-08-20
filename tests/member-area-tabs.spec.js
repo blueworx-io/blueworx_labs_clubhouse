@@ -133,8 +133,12 @@ test('a phone gets the bottom bar and the overflow rows, not the sidebar nav @wo
         .join('')
       + '</nav>';
 
-    // The real markup places the overflow rows inside the panel (main).
-    body = body.replace('</main>', more + '</main>');
+    // The real markup places the overflow rows at the foot of the Billing
+    // panel and nowhere else, so splice them exactly there.
+    body = body.replace(
+      /(<div class="clubhouse-member__panel" data-view="billing"[\s\S]*?)(<\/div>)(?=<div class="clubhouse-member__panel"|<\/main>)/,
+      '$1' + more + '$2'
+    );
 
     await route.fulfill({ response, body });
   });
@@ -146,6 +150,14 @@ test('a phone gets the bottom bar and the overflow rows, not the sidebar nav @wo
   // Dashboard, Bookings, Billing, Account, and the way back: five tabs.
   await expect(page.locator('.clubhouse-member__tab')).toHaveCount(5);
   await expect(page.locator('.clubhouse-member__side .bw-secnav')).toBeHidden();
+
+  // Orders, Invoices and Plans live at the foot of Billing alone — one copy on
+  // the page, inside that panel, so they are not a stray menu under every
+  // screen. Hidden while Dashboard is up; there when Billing is.
+  await expect(page.locator('.clubhouse-member__more')).toHaveCount(1);
+  await expect(page.locator('.clubhouse-member__panel[data-view="billing"] .clubhouse-member__more')).toHaveCount(1);
+  await expect(page.locator('.clubhouse-member__more')).toBeHidden();
+  await page.locator('.clubhouse-member__tab[data-view-link="billing"]').click();
   await expect(page.locator('.clubhouse-member__more')).toBeVisible();
   await expect(page.locator('.clubhouse-member__more [data-view-link="orders"]')).toBeVisible();
   await expect(page.locator('.clubhouse-member__more [data-view-link="invoices"]')).toBeVisible();

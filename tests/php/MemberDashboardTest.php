@@ -277,6 +277,21 @@ final class MemberDashboardTest extends TestCase {
 		$this->assertSame( '', Blueworx_Clubhouse_Member_Dashboard::overflow_links( $views, '/x/' ) );
 	}
 
+	public function test_the_overflow_rows_are_drawn_on_billing_and_nowhere_else(): void {
+		$this->on_the_account_page();
+		$this->everything_installed();
+		$html = Blueworx_Clubhouse_Member_Dashboard::screen( '/member-dashboard/', 'https://club.test/' );
+		$this->assertSame( 1, substr_count( $html, 'class="clubhouse-member__more"' ) );
+		$billing = strpos( $html, 'data-view="billing"' );
+		$this->assertIsInt( $billing );
+		$more = strpos( $html, 'class="clubhouse-member__more"' );
+		$this->assertIsInt( $more );
+		$this->assertGreaterThan( $billing, $more );
+		// And still inside that panel, not floating after every one of them.
+		$next = strpos( $html, 'data-view=', $billing + 1 );
+		$this->assertTrue( false === $next || $more < $next );
+	}
+
 	/** Store a club's brand marks the way the setup screen does. */
 	private function brand_marks( string $logo, string $favicon ): void {
 		update_option( 'clubhouse_branding', array( 'logo' => $logo, 'favicon' => $favicon ) );
