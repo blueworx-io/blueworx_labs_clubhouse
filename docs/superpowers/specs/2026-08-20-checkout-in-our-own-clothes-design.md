@@ -95,15 +95,21 @@ Loaded on the checkout page only, beside the existing `bw.css`, by
 `Dashboard_Shell::checkout()` — a third shell beside `page()` and `bare()`.
 
 `bare()` draws a page heading and drops the content in a panel. The approved
-design is a different shape: a fixed header carrying the club's crest, name and
-the Stripe reassurance; a scrolling form column; a sticky order-summary rail;
-and a footer with the club's legal links and registration number. On a phone the
-rail becomes a collapsible strip under the header and the pay button becomes a
-fixed bar at the bottom.
+design is a different shape: a header carrying the club's crest, name and the
+Stripe reassurance, and a footer with the club's legal links and registration
+number, with the form between them.
 
-The rail and the pay bar are positions in the frame, not content. What goes in
-them is SureCart's — the summary blocks and the submit block — so the frame does
-not need to know what is being sold.
+**The shell draws the chrome only; the two columns belong to the form.** The
+obvious alternative — having the shell lay out a form column and a summary rail
+— would mean cutting SureCart's rendered content in half, and `the_content` hands
+it over as one string with no seam to cut on. SureCart's own `columns` and
+`column` blocks already do this, including sticky positioning and stacking on a
+phone, so the form carries its own two-column layout and the shell never has to
+know what is inside it.
+
+The same reasoning covers the collapsible summary on a phone: it is
+`surecart/totals` with its `collapsedOnMobile` attribute, not something the frame
+implements.
 
 `Commerce_Pages::dress()` calls `checkout()` for the checkout page and keeps
 `bare()` for order confirmation.
@@ -118,7 +124,9 @@ It filters `surecart/create_forms`, which SureCart applies inside its own
 writes the `sc_form` post, so the form comes into being through SureCart's own
 machinery rather than ours.
 
-The form, in order:
+The form, in order. The whole of it sits inside `surecart/columns` with two
+`surecart/column` children — the fields on the left, the summary on the right,
+sticky on a desktop and stacked on a phone:
 
 | Region | Blocks |
 |---|---|
