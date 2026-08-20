@@ -651,7 +651,16 @@
    is left alone. */
 .clubhouse-member .latepoint-w>a[href*="customer_cabinet__logout"],
 .clubhouse-member .latepoint-w>h4{display:none}
-.clubhouse-member .clubhouse-member__quicks{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:var(--bw-stack-gap)}
+/* The member area's own rhythm: half the stack gap the admin screens use, so
+   the shortcut grid and the cards inside a panel sit closer together. */
+.clubhouse-member{--bw-member-gap:var(--bw-space-5)}
+.clubhouse-member .clubhouse-member__quicks{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:var(--bw-member-gap)}
+/* A panel holding more than one card — Billing's three, Account's two — spaces
+   them itself. .bw-panels' gap falls between panels, of which only one is ever
+   shown, so without this the cards sit flush against one another. The [hidden]
+   rule must follow, or display:flex would show every panel at once. */
+.clubhouse-member .clubhouse-member__panel{display:flex;flex-direction:column;gap:var(--bw-member-gap)}
+.clubhouse-member .clubhouse-member__panel[hidden]{display:none}
 .clubhouse-member .clubhouse-member__quick{display:flex;flex-direction:column;gap:var(--bw-space-3);padding:var(--bw-panel-pad);text-decoration:none;color:var(--bw-text-body);transition:var(--bw-transition-control)}
 .clubhouse-member .clubhouse-member__quick:hover{border-color:var(--bw-brand);color:var(--bw-text-accent)}
 .clubhouse-member .clubhouse-member__quick-icon{color:var(--bw-text-accent)}
