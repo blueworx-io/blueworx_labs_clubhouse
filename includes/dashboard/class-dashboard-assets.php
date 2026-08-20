@@ -35,10 +35,6 @@ final class Blueworx_Clubhouse_Dashboard_Assets {
 		return self::PATH;
 	}
 
-	public static function surecart_handle(): string {
-		return self::SURECART_HANDLE;
-	}
-
 	/** Where the SureCart token mapping is, relative to the plugin root. */
 	public static function surecart_relative_path(): string {
 		return self::SURECART_PATH;

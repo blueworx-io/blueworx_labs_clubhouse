@@ -146,10 +146,13 @@ final class Blueworx_Clubhouse_Commerce_Pages {
 				return Blueworx_Clubhouse_Dashboard_Shell::checkout(
 					array(
 						'club_name'  => Blueworx_Clubhouse_Member_Dashboard::club_name(),
-						'logo_url'   => '',
+						'logo_url'   => Blueworx_Clubhouse_Member_Dashboard::logo_url(),
 						'home_url'   => function_exists( 'home_url' ) ? (string) home_url( '/' ) : '/',
 						'home_label' => self::back_label( Blueworx_Clubhouse_Member_Dashboard::club_name() ),
 						'body'       => $content,
+						// Nothing in the plugin stores a club's registration number, and
+						// adding a settings field for it is outside this work — left
+						// blank on purpose, not an oversight.
 						'footnote'   => '',
 						'links'      => self::footer_links(
 							static fn ( string $slug ): bool => $visibility->is_page_visible( $slug ),

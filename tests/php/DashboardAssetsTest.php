@@ -103,12 +103,20 @@ final class DashboardAssetsTest extends TestCase {
 		}
 	}
 
-	public function test_nothing_in_it_can_reach_markup_that_has_not_opted_in(): void {
-		// The club's own pages must be untouchable from here. Every selector has
-		// to be a .bw- class or sit under .bw-admin; a bare element selector
-		// would restyle whatever page this is ever loaded on, including
-		// SureCart's own controls inside our panels.
-		$css = (string) file_get_contents( $this->root() . '/assets/bw/bw.css' );
+	/**
+	 * The club's own pages must be untouchable from here. Every selector has
+	 * to be a .bw- class, a .clubhouse-member class, or (in surecart.css only)
+	 * one of that file's own .clubhouse-checkout frame selectors — sit under
+	 * .bw-admin, or a bare element/tag selector would restyle whatever page
+	 * this is ever loaded on, including SureCart's own controls inside our
+	 * panels or a light-DOM component like sc-button.
+	 *
+	 * @param array<int,string> $extra_allowed_prefixes Selector prefixes this
+	 *                                                   file is allowed to use
+	 *                                                   beyond the shared set.
+	 */
+	private function assert_nothing_unscoped( string $relative_path, array $extra_allowed_prefixes = array() ): void {
+		$css = (string) file_get_contents( $this->root() . '/' . $relative_path );
 		$css = (string) preg_replace( '#/\*.*?\*/#s', '', $css );
 		// @keyframes nests one level deeper than every other rule here (its
 		// body is itself made of percentage/from/to blocks), which the flat
@@ -118,6 +126,8 @@ final class DashboardAssetsTest extends TestCase {
 		// a single-brace header to strip.
 		$css = (string) preg_replace( '/@keyframes[^{]*\{(?:[^{}]*\{[^{}]*\})*[^{}]*\}/', '', $css );
 		$css = (string) preg_replace( '/@(font-face|media|supports)[^{]*\{/', '{', $css );
+
+		$allowed_prefixes = array_merge( array( '.bw-', '.clubhouse-member' ), $extra_allowed_prefixes );
 
 		$offenders = array();
 		foreach ( explode( '}', $css ) as $chunk ) {
@@ -131,13 +141,32 @@ final class DashboardAssetsTest extends TestCase {
 				if ( '' === $selector || str_starts_with( $selector, '@' ) ) {
 					continue;
 				}
-				if ( ':root' === $selector || str_starts_with( $selector, '.bw-' ) || str_starts_with( $selector, '.clubhouse-member' ) ) {
+				if ( ':root' === $selector ) {
 					continue;
 				}
-				$offenders[] = $selector;
+				$allowed = false;
+				foreach ( $allowed_prefixes as $prefix ) {
+					if ( str_starts_with( $selector, $prefix ) ) {
+						$allowed = true;
+						break;
+					}
+				}
+				if ( ! $allowed ) {
+					$offenders[] = $selector;
+				}
 			}
 		}
-		$this->assertSame( array(), array_unique( $offenders ), 'unscoped selectors in the vendored stylesheet' );
+		$this->assertSame( array(), array_unique( $offenders ), 'unscoped selectors in ' . $relative_path );
+	}
+
+	public function test_nothing_in_it_can_reach_markup_that_has_not_opted_in(): void {
+		$this->assert_nothing_unscoped( 'assets/bw/bw.css' );
+	}
+
+	public function test_nothing_in_the_surecart_stylesheet_can_reach_markup_that_has_not_opted_in(): void {
+		// Its own frame selectors are legitimate — they draw the checkout's
+		// own header, footer and pay bar, not a club's public pages.
+		$this->assert_nothing_unscoped( 'assets/bw/surecart.css', array( '.clubhouse-checkout' ) );
 	}
 
 	public function test_the_handle_and_path_agree(): void {

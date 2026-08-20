@@ -98,11 +98,11 @@ final class Blueworx_Clubhouse_Checkout_Form {
 	 * a desktop and stacked underneath on a phone.
 	 */
 	public static function content(): string {
-		return '<!-- wp:surecart/columns {"isStackedOnMobile":true,"isReversedOnMobile":true} -->'
+		return '<!-- wp:surecart/columns {"isStackedOnMobile":true,"isReversedOnMobile":true,"className":"clubhouse-checkout__cols"} -->'
 			. '<sc-columns is-stacked-on-mobile="1" is-reversed-on-mobile="1" class="wp-block-surecart-columns clubhouse-checkout__cols">'
 
 			// The fields.
-			. '<!-- wp:surecart/column {"layout":{"type":"constrained","contentSize":"640px"}} -->'
+			. '<!-- wp:surecart/column {"layout":{"type":"constrained","contentSize":"640px"},"className":"clubhouse-checkout__main"} -->'
 			. '<sc-column class="wp-block-surecart-column clubhouse-checkout__main">'
 
 			. '<!-- wp:surecart/checkout-errors --><sc-checkout-form-errors></sc-checkout-form-errors><!-- /wp:surecart/checkout-errors -->'
@@ -126,30 +126,30 @@ final class Blueworx_Clubhouse_Checkout_Form {
 			. '<!-- wp:surecart/address {"label":"Where should we send it?","full":false} /-->'
 			. '<!-- wp:surecart/shipping-choices /-->'
 
-			. '<!-- wp:surecart/payment {"secure_notice":"Your card is handled by Stripe. The club never sees it."} -->'
+			. '<!-- wp:surecart/payment {"label":"Payment","secure_notice":"Your card is handled by Stripe. The club never sees it."} -->'
 			. '<sc-payment label="Payment" secure-notice="Your card is handled by Stripe. The club never sees it." class="wp-block-surecart-payment"></sc-payment>'
 			. '<!-- /wp:surecart/payment -->'
 
-			. '<!-- wp:surecart/submit {"show_total":true,"full":true} -->'
+			. '<!-- wp:surecart/submit {"show_total":true,"full":true,"text":"Pay now"} -->'
 			. '<sc-order-submit type="primary" full="true" size="large" show-total="true" class="wp-block-surecart-submit">Pay now</sc-order-submit>'
 			. '<!-- /wp:surecart/submit -->'
 
 			. '</sc-column><!-- /wp:surecart/column -->'
 
 			// The summary.
-			. '<!-- wp:surecart/column {"sticky":true,"layout":{"type":"constrained","contentSize":"400px"}} -->'
+			. '<!-- wp:surecart/column {"sticky":true,"layout":{"type":"constrained","contentSize":"400px"},"className":"clubhouse-checkout__rail bw-card"} -->'
 			. '<sc-column class="wp-block-surecart-column is-sticky clubhouse-checkout__rail bw-card">'
 
 			. '<!-- wp:surecart/totals {"collapsible":true,"collapsedOnMobile":true,"closed_text":"Show order summary","open_text":"Hide order summary"} -->'
 			. '<sc-order-summary collapsible="1" collapsed-on-mobile="1" closed-text="Show order summary" open-text="Hide order summary" class="wp-block-surecart-totals">'
-			. '<!-- wp:surecart/line-items --><sc-line-items editable="1" class="wp-block-surecart-line-items"></sc-line-items><!-- /wp:surecart/line-items -->'
+			. '<!-- wp:surecart/line-items {"editable":false} --><sc-line-items class="wp-block-surecart-line-items"></sc-line-items><!-- /wp:surecart/line-items -->'
 			. '<!-- wp:surecart/divider --><sc-divider></sc-divider><!-- /wp:surecart/divider -->'
 			. '<!-- wp:surecart/subtotal --><sc-line-item-total total="subtotal" class="wp-block-surecart-subtotal"><span slot="description">Subtotal</span></sc-line-item-total><!-- /wp:surecart/subtotal -->'
 			. '<!-- wp:surecart/coupon {"text":"Got a code?","button_text":"Apply"} --><sc-order-coupon-form></sc-order-coupon-form><!-- /wp:surecart/coupon -->'
 			. '<!-- wp:surecart/tax-line-item --><sc-line-item-tax class="wp-block-surecart-tax-line-item"></sc-line-item-tax><!-- /wp:surecart/tax-line-item -->'
 			. '<!-- wp:surecart/trial-line-item /-->'
 			. '<!-- wp:surecart/divider --><sc-divider></sc-divider><!-- /wp:surecart/divider -->'
-			. '<!-- wp:surecart/total --><sc-line-item-total total="total" size="large" show-currency="1" class="wp-block-surecart-total"><span slot="title">Due today</span><span slot="subscription-title">Due today</span></sc-line-item-total><!-- /wp:surecart/total -->'
+			. '<!-- wp:surecart/total {"text":"Due today","subscription_text":"Due today"} --><sc-line-item-total total="total" size="large" show-currency="1" class="wp-block-surecart-total"><span slot="title">Due today</span><span slot="subscription-title">Due today</span></sc-line-item-total><!-- /wp:surecart/total -->'
 			. '</sc-order-summary>'
 			. '<!-- /wp:surecart/totals -->'
 

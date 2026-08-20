@@ -52,6 +52,19 @@
   --sc-color-primary-500: var(--bw-brand);
 }
 
+/* The pay button itself. sc-order-submit renders straight into light DOM
+   (SureCart 4.6.4, order-submit/sc-order-submit.js: render() returns
+   h("sc-button", …)), so bw-btn classes on the host would double-paint a
+   button-shaped background behind the real one — see the class docblock on
+   Checkout_Form. <sc-button> is its own shadow-DOM component, so the way in
+   is the same custom properties .bw-input uses (height, radius) plus the
+   font, scoped to just this button rather than every field. */
+.bw-admin sc-order-submit sc-button {
+  --sc-input-height-large: var(--bw-control-h);
+  --sc-input-border-radius-large: var(--bw-control-radius);
+  --sc-input-font-family: var(--bw-font-display);
+}
+
 /* The frame itself. Chrome only — the columns inside are SureCart's. */
 .clubhouse-checkout { display: flex; flex-direction: column; min-height: 100dvh; background: var(--bw-surface-page); }
 .clubhouse-checkout__head { display: flex; align-items: center; gap: var(--bw-space-6, 24px); padding: 0 var(--bw-space-8, 32px); min-height: 64px; background: var(--bw-surface-card); border-bottom: 1px solid var(--bw-border); }
@@ -78,6 +91,22 @@
   .clubhouse-checkout__links { flex-direction: column; align-items: stretch; gap: 0; margin-left: 0; }
   .clubhouse-checkout__links a { display: flex; align-items: center; min-height: 44px; }
   .clubhouse-checkout__back { min-height: 44px; }
+
+  /* The pay bar: stays in view rather than scrolling away with the form.
+     Sticky, not fixed, so it only takes over the bottom of the viewport once
+     the form has scrolled that far, and never covers content on a short
+     phone screen. The fields column gets matching bottom padding so the bar
+     can never sit on top of the last field. */
+  .bw-admin .wp-block-surecart-submit {
+    position: sticky;
+    bottom: 0;
+    z-index: 10;
+    margin: 0 -16px;
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+    background: var(--bw-surface-card);
+    border-top: 1px solid var(--bw-border);
+  }
+  .clubhouse-checkout__main { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
 }
 
 /* The two columns are SureCart's own blocks; these give them the member

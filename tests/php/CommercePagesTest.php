@@ -174,4 +174,24 @@ final class CommercePagesTest extends TestCase {
 		$this->assertSame( 'Back to Crewe Vagrants', Blueworx_Clubhouse_Commerce_Pages::back_label( 'Crewe Vagrants' ) );
 		$this->assertSame( 'Back to the club site', Blueworx_Clubhouse_Commerce_Pages::back_label( '  ' ) );
 	}
+
+	/** Store a club's brand marks the way the setup screen does. */
+	private function brand_marks( string $logo, string $favicon ): void {
+		update_option( 'clubhouse_branding', array( 'logo' => $logo, 'favicon' => $favicon ) );
+	}
+
+	public function test_a_club_with_a_logo_gets_it_in_the_checkout_header(): void {
+		$this->on_the_checkout_page();
+		$this->brand_marks( 'https://club.test/logo.png', '' );
+		$html = Blueworx_Clubhouse_Commerce_Pages::dress( '<form></form>' );
+		$this->assertStringContainsString( '<img class="clubhouse-checkout__crest" src="https://club.test/logo.png"', $html );
+	}
+
+	public function test_a_club_with_no_logo_gets_its_initials_in_the_checkout_header(): void {
+		$this->on_the_checkout_page();
+		$this->brand_marks( '', '' );
+		$html = Blueworx_Clubhouse_Commerce_Pages::dress( '<form></form>' );
+		$this->assertStringNotContainsString( '<img class="clubhouse-checkout__crest"', $html );
+		$this->assertStringContainsString( '<span class="clubhouse-checkout__crest"', $html );
+	}
 }

@@ -65,6 +65,41 @@ final class CheckoutFormTest extends TestCase {
 		$this->assertStringContainsString( 'bw-card', Blueworx_Clubhouse_Checkout_Form::content() );
 	}
 
+	/**
+	 * Every class or attribute written onto a rendered element has to be named
+	 * in that block's own comment, or Gutenberg strips it the first time an
+	 * owner opens and re-saves the form — see the design's block validation
+	 * note. This is the regression that fix covers.
+	 */
+	public function test_every_custom_class_is_declared_on_its_block_comment(): void {
+		$content = Blueworx_Clubhouse_Checkout_Form::content();
+		foreach ( array(
+			'clubhouse-checkout__cols',
+			'clubhouse-checkout__main',
+			'clubhouse-checkout__rail bw-card',
+		) as $class ) {
+			$this->assertStringContainsString(
+				'"className":"' . $class . '"',
+				$content,
+				$class . ' is on the element but not declared on its block comment'
+			);
+		}
+	}
+
+	public function test_quantities_are_not_editable(): void {
+		// A basket holds a single price today, and editable quantities are an
+		// explicit non-goal of the design.
+		$content = Blueworx_Clubhouse_Checkout_Form::content();
+		$this->assertStringNotContainsString( 'editable="1"', $content );
+		$this->assertStringContainsString( '"editable":false', $content );
+	}
+
+	public function test_shipping_choices_is_kept(): void {
+		// It self-hides when there is nothing to ship; removing it would leave
+		// a club that enables shipping with no way to pick a rate.
+		$this->assertStringContainsString( 'wp:surecart/shipping-choices', Blueworx_Clubhouse_Checkout_Form::content() );
+	}
+
 	public function test_the_filter_supplies_our_content_for_the_checkout_form(): void {
 		$out = Blueworx_Clubhouse_Checkout_Form::filter_forms(
 			array(
