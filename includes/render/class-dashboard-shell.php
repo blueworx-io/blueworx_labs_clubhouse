@@ -303,6 +303,100 @@ final class Blueworx_Clubhouse_Dashboard_Shell {
 	}
 
 	/**
+	 * The checkout page's frame: a header, the shop's own form, and a footer.
+	 *
+	 * Chrome only. The two columns a buyer sees are not drawn here — they are
+	 * SureCart's own column blocks, inside the form. The alternative would be
+	 * cutting the rendered content in two, and the_content hands it over as a
+	 * single string with no seam to cut on. See the design doc.
+	 *
+	 * No nav, for the same reason bare() has none: someone mid-purchase should
+	 * not be offered six places to wander off to. The footer's links are the
+	 * exception, because a buyer is entitled to read the terms before paying.
+	 *
+	 * Pure: everything drawn arrives in $args.
+	 *
+	 * @param array{club_name?:string, logo_url?:string, home_url?:string,
+	 *              home_label?:string, body?:string, footnote?:string,
+	 *              links?:array<int,array{label:string,href:string}>} $args
+	 */
+	public static function checkout( array $args ): string {
+		$club     = trim( (string) ( $args['club_name'] ?? '' ) );
+		$logo     = trim( (string) ( $args['logo_url'] ?? '' ) );
+		$home     = trim( (string) ( $args['home_url'] ?? '' ) );
+		$label    = trim( (string) ( $args['home_label'] ?? '' ) );
+		$body     = (string) ( $args['body'] ?? '' );
+		$footnote = trim( (string) ( $args['footnote'] ?? '' ) );
+		$links    = is_array( $args['links'] ?? null ) ? $args['links'] : array();
+
+		$out = '<div class="bw-admin clubhouse-checkout">'
+			. self::checkout_head( $club, $logo )
+			. '<main class="clubhouse-checkout__body">' . $body . '</main>'
+			. self::checkout_foot( $home, $label, $links, $footnote )
+			. '</div>';
+		return $out;
+	}
+
+	/**
+	 * The checkout header: the club's crest and name, and the one reassurance
+	 * that matters on a payment page — that the club never sees the card.
+	 */
+	private static function checkout_head( string $club, string $logo ): string {
+		$crest = '' !== $logo
+			? '<img class="clubhouse-checkout__crest" src="' . self::e( $logo ) . '" alt="" width="34" height="34">'
+			: '<span class="clubhouse-checkout__crest" aria-hidden="true">' . self::e( self::initials( $club ) ) . '</span>';
+
+		$out = '<header class="clubhouse-checkout__head">'
+			. '<div class="clubhouse-checkout__brand">' . $crest
+			. '<span class="clubhouse-checkout__titles">';
+		if ( '' !== $club ) {
+			$out .= '<span class="clubhouse-checkout__club">' . self::e( $club ) . '</span>';
+		}
+		$out .= '<h1 class="clubhouse-checkout__h1">Checkout</h1>'
+			. '</span></div>'
+			. '<p class="clubhouse-checkout__secure">' . self::icon( 'lock' )
+			. 'Your card is handled by Stripe. The club never sees it.</p>'
+			. '</header>';
+		return $out;
+	}
+
+	/**
+	 * The checkout footer: the way back, the club's legal pages, and whatever
+	 * the club has to say about itself in law.
+	 *
+	 * Every part is drawn only when there is something to draw. An empty nav
+	 * announces a navigation landmark holding nothing, which is worse for a
+	 * screen reader than no nav at all.
+	 *
+	 * @param array<int,array{label:string,href:string}> $links
+	 */
+	private static function checkout_foot( string $home, string $label, array $links, string $footnote ): string {
+		$out = '<footer class="clubhouse-checkout__foot">';
+		if ( '' !== $home ) {
+			$out .= '<a class="clubhouse-checkout__back" href="' . self::e( $home ) . '">'
+				. self::icon( 'arrow-left' )
+				. self::e( '' !== $label ? $label : 'Back to the club site' )
+				. '</a>';
+		}
+		if ( array() !== $links ) {
+			$out .= '<nav class="clubhouse-checkout__links" aria-label="Terms and policies">';
+			foreach ( $links as $link ) {
+				$href = trim( (string) ( $link['href'] ?? '' ) );
+				$text = trim( (string) ( $link['label'] ?? '' ) );
+				if ( '' === $href || '' === $text ) {
+					continue;
+				}
+				$out .= '<a href="' . self::e( $href ) . '">' . self::e( $text ) . '</a>';
+			}
+			$out .= '</nav>';
+		}
+		if ( '' !== $footnote ) {
+			$out .= '<p class="clubhouse-checkout__footnote">' . self::e( $footnote ) . '</p>';
+		}
+		return $out . '</footer>';
+	}
+
+	/**
 	 * The side nav. Links, not buttons: each view is its own address, openable
 	 * in a new tab and working with no JavaScript at all. The script upgrades
 	 * these in place — see assets/js/member-area.js.

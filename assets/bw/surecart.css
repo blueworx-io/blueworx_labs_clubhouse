@@ -51,3 +51,31 @@
   /* The pay button. */
   --sc-color-primary-500: var(--bw-brand);
 }
+
+/* The frame itself. Chrome only — the columns inside are SureCart's. */
+.clubhouse-checkout { display: flex; flex-direction: column; min-height: 100dvh; background: var(--bw-surface-page); }
+.clubhouse-checkout__head { display: flex; align-items: center; gap: var(--bw-space-6, 24px); padding: 0 var(--bw-space-8, 32px); min-height: 64px; background: var(--bw-surface-card); border-bottom: 1px solid var(--bw-border); }
+.clubhouse-checkout__brand { display: flex; align-items: center; gap: 12px; flex: 1 1 auto; min-width: 0; }
+.clubhouse-checkout__crest { display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; flex: none; border-radius: 8px; object-fit: cover; background: var(--bw-brand-wash); color: var(--bw-text-accent); font-family: var(--bw-font-display); font-size: 13px; font-weight: 700; }
+.clubhouse-checkout__titles { display: flex; flex-direction: column; min-width: 0; }
+.clubhouse-checkout__club { font-size: 12px; color: var(--bw-text-muted); }
+.clubhouse-checkout__h1 { margin: 0; font-family: var(--bw-font-display); font-size: 15px; font-weight: 600; color: var(--bw-text-heading); }
+.clubhouse-checkout__secure { display: inline-flex; align-items: center; gap: 6px; margin: 0; font-size: 12px; color: var(--bw-text-muted); }
+.clubhouse-checkout__body { flex: 1 1 auto; }
+.clubhouse-checkout__foot { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; padding: 14px var(--bw-space-8, 32px); background: var(--bw-surface-card); border-top: 1px solid var(--bw-border); }
+.clubhouse-checkout__back { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; }
+.clubhouse-checkout__links { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; margin-left: auto; }
+.clubhouse-checkout__links a { font-size: 12px; color: var(--bw-text-muted); text-decoration: none; }
+.clubhouse-checkout__links a:hover { color: var(--bw-text-link); }
+.clubhouse-checkout__footnote { margin: 0; font-size: 12px; color: var(--bw-text-faint); }
+
+/* On a phone the header stacks and the footer becomes a list, so every link
+   is a full-width target rather than three words wedged against a neighbour. */
+@media (max-width: 640px) {
+  .clubhouse-checkout__head { flex-wrap: wrap; gap: 8px; padding: 12px 16px; }
+  .clubhouse-checkout__secure { width: 100%; }
+  .clubhouse-checkout__foot { flex-direction: column; align-items: stretch; padding: 16px; }
+  .clubhouse-checkout__links { flex-direction: column; align-items: stretch; gap: 0; margin-left: 0; }
+  .clubhouse-checkout__links a { display: flex; align-items: center; min-height: 44px; }
+  .clubhouse-checkout__back { min-height: 44px; }
+}
