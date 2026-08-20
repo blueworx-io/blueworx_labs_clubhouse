@@ -111,23 +111,25 @@ test('a phone gets the bottom bar and the overflow rows, not the sidebar nav @wo
       .join('');
     body = body.replace('Dashboard</span></a></nav>', 'Dashboard</span></a>' + extraNavItems + '</nav>');
 
-    // Five fit the bar; the sixth ("account") is what overflow_links() offers
-    // instead — see includes/dashboard/class-member-dashboard.php.
-    const tabbarItems = ['dashboard', 'bookings', 'orders', 'invoices', 'plans']
+    // The server already draws the bar, carrying this club's one view, so
+    // four more are spliced into it rather than a second bar being injected.
+    // Five fit; the sixth ("account") is what overflow_links() offers instead
+    // — see includes/dashboard/class-member-dashboard.php.
+    const tabbarItems = ['bookings', 'orders', 'invoices', 'plans']
       .map((key) => '<a class="clubhouse-member__tab" data-view-link="' + key + '"'
         + ' data-view-title="' + key + '" data-view-lede=""'
         + ' href="/member-dashboard/?view=' + key + '">'
         + '<span class="clubhouse-member__tablabel">' + key + '</span></a>')
       .join('');
-    const tabbar = '<nav class="clubhouse-member__tabbar" aria-label="Your account">' + tabbarItems + '</nav>';
+    const barOpen = '<nav class="clubhouse-member__tabbar" aria-label="Your account">';
+    body = body.replace(barOpen, barOpen + tabbarItems);
+
     const more = '<nav class="clubhouse-member__more" aria-label="More of your account">'
       + '<a class="clubhouse-member__morelink" data-view-link="account" data-view-title="account" data-view-lede=""'
       + ' href="/member-dashboard/?view=account"><span>account</span></a></nav>';
 
-    // The real markup places the overflow rows inside the panel (main) and
-    // the tab bar as the shell's last child, after main closes — see
-    // Dashboard_Shell::page().
-    body = body.replace('</main></div></div></div>', more + '</main></div>' + tabbar + '</div></div>');
+    // The real markup places the overflow rows inside the panel (main).
+    body = body.replace('</main>', more + '</main>');
 
     await route.fulfill({ response, body });
   });
@@ -150,4 +152,18 @@ test('a phone gets the bottom bar and the overflow rows, not the sidebar nav @wo
   await expect(page.locator('.clubhouse-member__tabbar')).toBeHidden();
   await expect(page.locator('.clubhouse-member__side .bw-secnav')).toBeVisible();
   await expect(page.locator('.clubhouse-member__more')).toBeHidden();
+});
+
+// No splicing here: this is the club the harness actually is — no shop, no
+// bookings, so one view. The bar is drawn for it all the same, so the member
+// area looks the same on every club rather than growing a bar the day a plugin
+// is installed.
+test('a club with a single view still gets the bottom bar @wordpress', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/member-dashboard/');
+
+  await expect(page.locator('.clubhouse-member__tabbar')).toBeVisible();
+  await expect(page.locator('.clubhouse-member__tab')).toHaveCount(1);
+  await expect(page.locator('.clubhouse-member__side .bw-secnav')).toBeHidden();
+  await expect(page.locator('.clubhouse-member__back')).toBeVisible();
 });

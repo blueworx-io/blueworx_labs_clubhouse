@@ -152,6 +152,29 @@ final class DashboardShellTest extends TestCase {
 		$this->assertSame( $matches[1], array_unique( $matches[1] ), 'every id in the document must be unique' );
 	}
 
+	/**
+	 * A club with neither a shop nor bookings has one view, and still gets the
+	 * phone's bottom bar. The member area looks and behaves the same on every
+	 * club, rather than growing a bar the day a plugin is installed.
+	 */
+	public function test_the_phone_bar_is_drawn_for_a_single_view(): void {
+		$html = Blueworx_Clubhouse_Dashboard_Shell::page( $this->args( array(
+			'views'   => array(
+				array( 'key' => 'dashboard', 'label' => 'Dashboard', 'title' => 'Your account', 'lede' => '', 'icon' => 'layout-dashboard' ),
+			),
+			'current' => 'dashboard',
+			'panels'  => array( 'dashboard' => '<p>hello</p>' ),
+		) ) );
+		$this->assertStringContainsString( 'clubhouse-member__tabbar', $html );
+		$this->assertSame( 1, substr_count( $html, 'clubhouse-member__tab"' ) + substr_count( $html, 'clubhouse-member__tab is-active"' ) );
+	}
+
+	/** Nothing to navigate to is the only case that draws no bar. */
+	public function test_no_phone_bar_without_a_single_view(): void {
+		$html = Blueworx_Clubhouse_Dashboard_Shell::page( array( 'views' => array(), 'current' => '', 'panels' => array() ) );
+		$this->assertStringNotContainsString( 'clubhouse-member__tabbar', $html );
+	}
+
 	public function test_the_lede_is_drawn_hidden_when_there_is_none(): void {
 		// The old markup drew no <p> at all when a view had no lede; the current
 		// markup always draws the <p> so the switching script has a node to

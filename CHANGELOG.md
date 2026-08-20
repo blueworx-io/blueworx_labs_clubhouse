@@ -5,6 +5,10 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.81.1
+
+- **The row of tabs along the bottom now shows on a phone even before you have added a shop or bookings.** It used to appear only once there was more than one section to move between, so a new club saw a different member area from an established one.
+
 ## 0.81.0
 
 - **The member area now looks the way it was designed, and moves like an app.** Your club's name and badge sit at the top of a proper side menu, with the member's own name at the foot of it, and the page title tells them where they are. Moving between bookings, orders, invoices and the rest no longer reloads the page — it switches instantly, and the back button still works. On a phone the side menu becomes a row of tabs along the bottom, thumb height, so a member can get around one-handed.

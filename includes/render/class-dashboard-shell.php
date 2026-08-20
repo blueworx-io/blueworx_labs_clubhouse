@@ -308,7 +308,10 @@ final class Blueworx_Clubhouse_Dashboard_Shell {
 	 */
 	private static function tabbar( array $views, string $current, string $base = '' ): string {
 		$shown = array_slice( $views, 0, self::TABBAR_MAX );
-		if ( count( $shown ) < 2 ) {
+		// Drawn for a single view too. A club with neither a shop nor bookings
+		// still gets the bar, so the member area looks and behaves the same on
+		// every club rather than growing a bar the day a plugin is installed.
+		if ( array() === $shown ) {
 			return '';
 		}
 		$out = '<nav class="clubhouse-member__tabbar" aria-label="Your account">';
