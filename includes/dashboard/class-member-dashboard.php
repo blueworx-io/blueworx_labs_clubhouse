@@ -181,12 +181,12 @@ final class Blueworx_Clubhouse_Member_Dashboard {
 		}
 		$out = '<nav class="clubhouse-member__more" aria-label="More of your account">';
 		foreach ( $extra as $view ) {
-			$out .= '<a class="clubhouse-member__morelink" data-view-link="' . htmlspecialchars( (string) $view['key'], ENT_QUOTES, 'UTF-8' ) . '"'
-				. ' data-view-title="' . htmlspecialchars( (string) ( $view['title'] ?? '' ), ENT_QUOTES, 'UTF-8' ) . '"'
-				. ' data-view-lede="' . htmlspecialchars( (string) ( $view['lede'] ?? '' ), ENT_QUOTES, 'UTF-8' ) . '"'
-				. ' href="' . htmlspecialchars( Blueworx_Clubhouse_Dashboard_Shell::view_url( (string) $view['key'], $base ), ENT_QUOTES, 'UTF-8' ) . '">'
+			$out .= '<a class="clubhouse-member__morelink" data-view-link="' . Blueworx_Clubhouse_Dashboard_Shell::e( (string) $view['key'] ) . '"'
+				. ' data-view-title="' . Blueworx_Clubhouse_Dashboard_Shell::e( (string) ( $view['title'] ?? '' ) ) . '"'
+				. ' data-view-lede="' . Blueworx_Clubhouse_Dashboard_Shell::e( (string) ( $view['lede'] ?? '' ) ) . '"'
+				. ' href="' . Blueworx_Clubhouse_Dashboard_Shell::e( Blueworx_Clubhouse_Dashboard_Shell::view_url( (string) $view['key'], $base ) ) . '">'
 				. Blueworx_Clubhouse_Dashboard_Shell::icon( (string) $view['icon'] )
-				. '<span>' . htmlspecialchars( (string) $view['label'], ENT_QUOTES, 'UTF-8' ) . '</span>'
+				. '<span>' . Blueworx_Clubhouse_Dashboard_Shell::e( (string) $view['label'] ) . '</span>'
 				. '</a>';
 		}
 		return $out . '</nav>';

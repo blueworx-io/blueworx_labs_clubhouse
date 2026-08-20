@@ -36,8 +36,11 @@ final class Blueworx_Clubhouse_Dashboard_Shell {
 	 * helpers, which hand back a URL with its ampersands already written as
 	 * entities; escaping that again would turn &amp; into &amp;amp; and quietly
 	 * rename the query argument behind it.
+	 *
+	 * Public: shared with Member_Dashboard::overflow_links(), which interpolates
+	 * the same kind of values and must not re-implement this rule.
 	 */
-	private static function e( string $v ): string {
+	public static function e( string $v ): string {
 		return htmlspecialchars( html_entity_decode( $v, ENT_QUOTES | ENT_HTML5, 'UTF-8' ), ENT_QUOTES, 'UTF-8' );
 	}
 
@@ -115,8 +118,14 @@ final class Blueworx_Clubhouse_Dashboard_Shell {
 			if ( '' === $body ) {
 				continue;
 			}
+			// Named from both the sidebar's link and the tab bar's — whichever
+			// breakpoint is live, exactly one of the two is display:none, and a
+			// hidden node referenced by aria-labelledby contributes no text, so
+			// the visible one alone supplies the accessible name. Two ids, not
+			// one shared between the links, so neither document has a duplicate.
 			$out .= '<div class="clubhouse-member__panel" data-view="' . self::e( $key ) . '"'
-				. ' role="tabpanel" aria-labelledby="clubhouse-member-tab-' . self::e( $key ) . '"'
+				. ' role="tabpanel" aria-labelledby="clubhouse-member-navtab-' . self::e( $key )
+				. ' clubhouse-member-tab-' . self::e( $key ) . '"'
 				. ( $key === $current ? '' : ' hidden' ) . '>'
 				. $body . '</div>';
 		}
@@ -274,7 +283,7 @@ final class Blueworx_Clubhouse_Dashboard_Shell {
 			$key    = (string) $view['key'];
 			$active = $key === $current;
 			$out   .= '<a class="bw-secnav__item' . ( $active ? ' is-active' : '' ) . '"'
-				. ' id="clubhouse-member-tab-' . self::e( $key ) . '"'
+				. ' id="clubhouse-member-navtab-' . self::e( $key ) . '"'
 				. ' data-view-link="' . self::e( $key ) . '"'
 				. ' data-view-title="' . self::e( (string) ( $view['title'] ?? '' ) ) . '"'
 				. ' data-view-lede="' . self::e( (string) ( $view['lede'] ?? '' ) ) . '"'
@@ -307,6 +316,7 @@ final class Blueworx_Clubhouse_Dashboard_Shell {
 			$key    = (string) $view['key'];
 			$active = $key === $current;
 			$out   .= '<a class="clubhouse-member__tab' . ( $active ? ' is-active' : '' ) . '"'
+				. ' id="clubhouse-member-tab-' . self::e( $key ) . '"'
 				. ' data-view-link="' . self::e( $key ) . '"'
 				. ' data-view-title="' . self::e( (string) ( $view['title'] ?? '' ) ) . '"'
 				. ' data-view-lede="' . self::e( (string) ( $view['lede'] ?? '' ) ) . '"'

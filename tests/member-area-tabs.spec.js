@@ -140,6 +140,9 @@ test('a phone gets the bottom bar and the overflow rows, not the sidebar nav @wo
   await expect(page.locator('.clubhouse-member__side .bw-secnav')).toBeHidden();
   await expect(page.locator('.clubhouse-member__more')).toBeVisible();
   await expect(page.locator('.clubhouse-member__more [data-view-link="account"]')).toBeVisible();
+  // The bottom bar carries no way out of the member area — the sidebar's own
+  // "Back to the club site" link has to stay reachable on a phone.
+  await expect(page.locator('.clubhouse-member__back')).toBeVisible();
 
   // The reverse above the phone breakpoint: the sidebar carries every view,
   // so the bar and the overflow rows are noise.

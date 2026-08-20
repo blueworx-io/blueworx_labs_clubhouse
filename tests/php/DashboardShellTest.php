@@ -128,17 +128,42 @@ final class DashboardShellTest extends TestCase {
 
 	public function test_a_panels_body_is_rendered_and_a_hidden_views_body_still_carries_it(): void {
 		$html = Blueworx_Clubhouse_Dashboard_Shell::page( $this->args() ); // current = dashboard
+		// aria-labelledby names the panel from both the sidebar's link and the
+		// tab bar's — see panels()'s docblock: on any breakpoint exactly one of
+		// the two is display:none, so only the visible one supplies the name.
 		$this->assertStringContainsString(
-			'<div class="clubhouse-member__panel" data-view="dashboard" role="tabpanel" aria-labelledby="clubhouse-member-tab-dashboard"><p>overview</p></div>',
+			'<div class="clubhouse-member__panel" data-view="dashboard" role="tabpanel" aria-labelledby="clubhouse-member-navtab-dashboard clubhouse-member-tab-dashboard"><p>overview</p></div>',
 			$html
 		);
 		// Not the current view — hidden, but its body is still on the page,
 		// because the panels are other plugins' web components that come alive
 		// on page load and a panel fetched later would render as an empty box.
 		$this->assertStringContainsString(
-			'<div class="clubhouse-member__panel" data-view="orders" role="tabpanel" aria-labelledby="clubhouse-member-tab-orders" hidden><p>orders</p></div>',
+			'<div class="clubhouse-member__panel" data-view="orders" role="tabpanel" aria-labelledby="clubhouse-member-navtab-orders clubhouse-member-tab-orders" hidden><p>orders</p></div>',
 			$html
 		);
+	}
+
+	public function test_the_id_naming_the_panel_is_never_duplicated(): void {
+		// panels(), nav() and tabbar() each mint an id per view — a collision
+		// would mean two elements answering to the same id.
+		$html = Blueworx_Clubhouse_Dashboard_Shell::page( $this->args() );
+		preg_match_all( '/\sid="([^"]+)"/', $html, $matches );
+		$this->assertSame( $matches[1], array_unique( $matches[1] ), 'every id in the document must be unique' );
+	}
+
+	public function test_the_lede_is_drawn_hidden_when_there_is_none(): void {
+		// The old markup drew no <p> at all when a view had no lede; the current
+		// markup always draws the <p> so the switching script has a node to
+		// re-target, carrying `hidden` instead — see head()'s docblock.
+		$html = Blueworx_Clubhouse_Dashboard_Shell::page( $this->args( array(
+			'views'   => array(
+				array( 'key' => 'dashboard', 'label' => 'Dashboard', 'title' => 'Your account', 'lede' => '', 'icon' => 'layout-dashboard' ),
+			),
+			'current' => 'dashboard',
+			'panels'  => array( 'dashboard' => '<p>hello</p>' ),
+		) ) );
+		$this->assertStringContainsString( '<p class="bw-pagehead__lede" data-member-lede hidden></p>', $html );
 	}
 
 	public function test_a_club_without_a_shop_has_no_dead_nav_items(): void {
