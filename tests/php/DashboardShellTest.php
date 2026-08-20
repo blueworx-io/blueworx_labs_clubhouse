@@ -122,7 +122,9 @@ final class DashboardShellTest extends TestCase {
 			'home_url'   => '/',
 			'logout_url' => '/out/',
 		) ) );
-		$this->assertStringContainsString( '<a class="clubhouse-member__back" href="/">', $html );
+		// Carries the nav item's class as well as its own: it is drawn like
+		// every other row in the column, and still pushed to the foot of it.
+		$this->assertStringContainsString( '<a class="bw-secnav__item clubhouse-member__back" href="/">', $html );
 		$this->assertStringContainsString( 'Back home', $html );
 		$this->assertStringContainsString( '<a class="bw-btn bw-btn--secondary bw-btn--sm" href="/out/">Sign out</a>', $html );
 	}

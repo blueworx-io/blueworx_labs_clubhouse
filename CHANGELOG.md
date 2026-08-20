@@ -5,6 +5,10 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.83.5
+
+- **"Back home" now looks like the rest of the side menu**, arrow and all, instead of a small grey line under it. It still sits at the foot of the column, and on a phone it stays in the bottom bar.
+
 ## 0.83.4
 
 - **No more underlines on the menus, tabs and shortcut cards** in the member area — only real links in your writing are underlined now.

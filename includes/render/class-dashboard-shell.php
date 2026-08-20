@@ -194,8 +194,13 @@ final class Blueworx_Clubhouse_Dashboard_Shell {
 		$out .= self::nav( $views, $current, $base );
 
 		if ( '' !== $home ) {
-			$out .= '<a class="clubhouse-member__back" href="' . self::e( $home ) . '">'
-				. self::icon( 'arrow-left' ) . 'Back home</a>';
+			// Drawn as a nav item, because that is what it is — one more place
+			// to go from this column. Its own class stays on it so the CSS can
+			// still push it to the foot of the column and hide it on a phone,
+			// where the tab bar carries the way home instead.
+			$out .= '<a class="bw-secnav__item clubhouse-member__back" href="' . self::e( $home ) . '">'
+				. '<span class="clubhouse-member__navlabel">'
+				. self::icon( 'arrow-left' ) . 'Back home</span></a>';
 		}
 
 		// Who is signed in. The design shows a membership number here; nothing in

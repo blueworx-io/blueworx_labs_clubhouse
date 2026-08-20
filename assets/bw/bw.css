@@ -684,8 +684,9 @@
 .clubhouse-member .clubhouse-member__brandsignout{display:none}
 .clubhouse-member .clubhouse-member__nav{flex:0 0 auto;overflow-y:auto;min-height:0}
 /* The spacer the design uses to push the way out to the foot of the column. */
-.clubhouse-member .clubhouse-member__back{margin-top:auto;display:flex;align-items:center;gap:var(--bw-space-3);font-size:var(--bw-size-sm);color:var(--bw-text-muted);text-decoration:none}
-.clubhouse-member .clubhouse-member__back:hover{color:var(--bw-text-accent)}
+/* Takes the whole of .bw-secnav__item's look from the nav above it — all this
+   adds is the push to the foot of the column. */
+.clubhouse-member .clubhouse-member__back{margin-top:auto}
 .clubhouse-member .clubhouse-member__person{padding-top:var(--bw-space-5);border-top:1px solid var(--bw-border)}
 .clubhouse-member .clubhouse-member__avatar{width:36px;height:36px;font-size:var(--bw-size-sm)}
 .clubhouse-member .clubhouse-member__persontext{min-width:0;overflow:hidden}
