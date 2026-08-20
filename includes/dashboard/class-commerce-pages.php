@@ -103,6 +103,12 @@ final class Blueworx_Clubhouse_Commerce_Pages {
 			Blueworx_Clubhouse_Dashboard_Assets::enqueue();
 
 			if ( 'checkout' === $key ) {
+				// Resolved once and closed over, rather than called from inside the
+				// visibility callback: context() rebuilds options storage, the full
+				// look registry and the demo lookup on every call, and the callback
+				// below runs once per candidate link. On the page where a buyer is
+				// waiting to pay, that would mean building it up to three times.
+				$visibility = Blueworx_Clubhouse_Frontend::context()->visibility;
 				return Blueworx_Clubhouse_Dashboard_Shell::checkout(
 					array(
 						'club_name'  => Blueworx_Clubhouse_Member_Dashboard::club_name(),
@@ -112,10 +118,7 @@ final class Blueworx_Clubhouse_Commerce_Pages {
 						'body'       => $content,
 						'footnote'   => '',
 						'links'      => self::footer_links(
-							static function ( string $slug ): bool {
-								$visibility = Blueworx_Clubhouse_Frontend::context()->visibility ?? null;
-								return null === $visibility || $visibility->is_page_visible( $slug );
-							},
+							static fn ( string $slug ): bool => $visibility->is_page_visible( $slug ),
 							static fn ( string $slug ): string => Blueworx_Clubhouse_Frontend::link_url( $slug )
 						),
 					)

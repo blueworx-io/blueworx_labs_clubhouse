@@ -122,8 +122,18 @@ final class CommercePagesTest extends TestCase {
 	public function test_checkout_gets_the_checkout_frame_and_confirmation_keeps_the_bare_one(): void {
 		// Two different pages with two different jobs. The confirmation page is
 		// a receipt, so it keeps the heading-and-panel shell it has always had.
-		$this->assertSame( 'checkout', Blueworx_Clubhouse_Commerce_Pages::page_key( 7, 7, 9 ) );
-		$this->assertSame( 'order-confirmation', Blueworx_Clubhouse_Commerce_Pages::page_key( 9, 7, 9 ) );
+		update_option( Blueworx_Clubhouse_Shop_Pages::option_name( 'checkout' ), 7 );
+		update_option( Blueworx_Clubhouse_Shop_Pages::option_name( 'order-confirmation' ), 9 );
+
+		wp_stub_render_page( 7 );
+		$checkout = Blueworx_Clubhouse_Commerce_Pages::dress( '<form></form>' );
+		$this->assertStringContainsString( 'clubhouse-checkout', $checkout );
+		$this->assertStringNotContainsString( 'bw-pagehead', $checkout );
+
+		wp_stub_render_page( 9 );
+		$confirmation = Blueworx_Clubhouse_Commerce_Pages::dress( '<p>Thank you</p>' );
+		$this->assertStringContainsString( 'bw-pagehead', $confirmation );
+		$this->assertStringNotContainsString( 'clubhouse-checkout', $confirmation );
 	}
 
 	public function test_the_way_back_names_the_club_when_it_has_a_name(): void {
