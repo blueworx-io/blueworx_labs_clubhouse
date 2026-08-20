@@ -159,6 +159,11 @@ final class Blueworx_Clubhouse_Frontend {
 		// while WordPress can still pick the theme's 404 template for it.
 		add_action( 'template_redirect', array( self::class, 'maybe_404' ) );
 		add_filter( 'template_include', array( self::class, 'filter_template' ) );
+		// A second pass, keyed off the queried post rather than the route: a club
+		// page reached because WordPress's own page rule now answers for it (see
+		// Club_Pages::ensure()) never sets QUERY_VAR, so filter_template() above
+		// leaves $template untouched and this is what actually serves it.
+		add_filter( 'template_include', array( self::class, 'serve_club_page_template' ) );
 		// The template used to print its own <title> and then call wp_head(), which
 		// prints WordPress's — so every clubhouse page shipped two titles and the
 		// consumer chose. Let WordPress own the tag and supply the text instead, so
@@ -244,14 +249,26 @@ final class Blueworx_Clubhouse_Frontend {
 			if ( '' === $page['slug'] ) {
 				continue;
 			}
+			// Once a slug has a real page behind it (Club_Pages::ensure()), this
+			// literal rule is left out: WordPress's own generic pagename rule sits
+			// further down the same rules list and, unlike this one, is only
+			// accepted once it has confirmed a published page actually exists (see
+			// WP::parse_request()'s verbose-page-rules check) — so leaving both in
+			// would mean this rule, being first, always wins and the real page is
+			// never reached. Nothing is deleted: a page whose real page is later
+			// trashed or removed loses its stored id, and this rule reappears on
+			// the next flush, exactly as reversible as it was before.
+			if ( Blueworx_Clubhouse_Club_Pages::post_id( $page['slug'] ) <= 0 ) {
+				add_rewrite_rule(
+					'^' . $page['slug'] . '/?$',
+					'index.php?' . self::QUERY_VAR . '=' . $page['slug'],
+					'top'
+				);
+			}
 			// The item rule goes in first: 'top' prepends, so the LAST rule added
 			// at the top is matched first, and /sports/rugby/ must not be eaten by
-			// the bare /sports/ rule.
-			add_rewrite_rule(
-				'^' . $page['slug'] . '/?$',
-				'index.php?' . self::QUERY_VAR . '=' . $page['slug'],
-				'top'
-			);
+			// the bare /sports/ rule. Registered regardless of the real page above:
+			// /sports/rugby/ has no real WordPress page of its own to be found by.
 			if ( in_array( $page['slug'], array( 'sports', 'teams' ), true ) ) {
 				add_rewrite_rule(
 					'^' . $page['slug'] . '/([^/]+)/?$',
@@ -262,9 +279,45 @@ final class Blueworx_Clubhouse_Frontend {
 		}
 	}
 
+	/**
+	 * On a rewrite-rule request the QUERY_VAR carries the slug. On a real page
+	 * request — WordPress's own page rule having taken over that URL now that a
+	 * real page exists behind it (see register_rewrites() and Club_Pages::ensure())
+	 * — the query var is absent, and the slug comes from the queried post
+	 * instead. Shared by current_slug() and maybe_404(), so a page reached
+	 * either way is found and refused the same way.
+	 */
+	private static function queried_slug_candidate(): string {
+		$qv = function_exists( 'get_query_var' ) ? get_query_var( self::QUERY_VAR ) : '';
+		if ( ( ! is_string( $qv ) || '' === $qv ) && function_exists( 'get_queried_object_id' ) ) {
+			$post_id = (int) get_queried_object_id();
+			if ( Blueworx_Clubhouse_Club_Pages::is_club_page( $post_id ) ) {
+				return Blueworx_Clubhouse_Club_Pages::slug_for( $post_id );
+			}
+		}
+		return is_string( $qv ) ? $qv : '';
+	}
+
+	/**
+	 * The visibility check in resolve_slug() applies either way a slug was
+	 * discovered — a page that is switched off must refuse to render whether
+	 * its URL was caught by the rewrite rule or found as a real page.
+	 *
+	 * 'home' is not a Page_Map slug — Home's real slug is '' — but it is a
+	 * long-standing literal query value for reaching Home under plain
+	 * permalinks, and is treated as home directly rather than through
+	 * is_front_page(). Home now being the site's static front page
+	 * (ensure_home_is_front_page()) means is_front_page() only reports true
+	 * for a request WordPress can prove is otherwise empty; an explicit
+	 * ?clubhouse_page=home alongside it no longer qualifies, which would
+	 * silently strand this one URL form outside the front page it names.
+	 */
 	private static function current_slug(): ?string {
+		$qv = self::queried_slug_candidate();
+		if ( 'home' === $qv ) {
+			return self::resolve_slug( true, '', self::context()->visibility );
+		}
 		$is_front = function_exists( 'is_front_page' ) ? is_front_page() : false;
-		$qv       = function_exists( 'get_query_var' ) ? get_query_var( self::QUERY_VAR ) : '';
 		return self::resolve_slug( (bool) $is_front, $qv, self::context()->visibility );
 	}
 
@@ -350,8 +403,12 @@ final class Blueworx_Clubhouse_Frontend {
 	 * does not exist — for a visitor and for a search engine.
 	 */
 	public static function maybe_404(): void {
-		$qv = function_exists( 'get_query_var' ) ? get_query_var( self::QUERY_VAR ) : '';
-		if ( ! self::is_gone( $qv, self::context()->visibility ) ) {
+		// A page reached because WordPress found its real page carries no
+		// QUERY_VAR either — see queried_slug_candidate() — so without this a
+		// switched-off page served that way would answer 200 with nothing on
+		// it instead of 404, repeating the bug Issue #211 fixed for the
+		// rewrite-rule route.
+		if ( ! self::is_gone( self::queried_slug_candidate(), self::context()->visibility ) ) {
 			return;
 		}
 		global $wp_query;
@@ -371,6 +428,44 @@ final class Blueworx_Clubhouse_Frontend {
 			return $template;
 		}
 		return dirname( __DIR__, 2 ) . '/templates/clubhouse.php';
+	}
+
+	/** Where this plugin's club-page template lives. */
+	private static function club_page_template_path(): string {
+		return dirname( __DIR__, 2 ) . '/templates/club-page.php';
+	}
+
+	/**
+	 * Which template a post should be served with. Pure.
+	 *
+	 * @param int    $post_id The queried post id, 0 when there is none.
+	 * @param string $default Whatever WordPress had chosen.
+	 * @param string $ours    This plugin's club-page template.
+	 */
+	public static function template_for_post( int $post_id, string $default, string $ours ): string {
+		return Blueworx_Clubhouse_Club_Pages::is_club_page( $post_id ) ? $ours : $default;
+	}
+
+	/**
+	 * Give a club page whose URL WordPress resolved to its own real page (rather
+	 * than our rewrite rule) the same document as the rewrite-served route.
+	 *
+	 * Follows Commerce_Pages::serve_template(), which solves the identical
+	 * problem for the checkout page: template_include is filtered a second
+	 * time, keyed off the queried post id rather than the route.
+	 *
+	 * @param string $template
+	 */
+	public static function serve_club_page_template( $template ): string {
+		$template = (string) $template;
+		if ( ! function_exists( 'get_queried_object_id' ) ) {
+			return $template;
+		}
+		return self::template_for_post(
+			(int) get_queried_object_id(),
+			$template,
+			self::club_page_template_path()
+		);
 	}
 
 	/** Build a Base Look registry with all packs registered (Court Side first = fallback). */

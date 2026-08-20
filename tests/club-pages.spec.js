@@ -18,3 +18,15 @@ test('every club page has a real page behind it @wordpress', async ({ page }) =>
     await expect(page.locator('#the-list a.row-title', { hasText: new RegExp(`^${title}$`) })).toHaveCount(1);
   }
 });
+
+test('a club page renders from its own page, not the rewrite rule @wordpress', async ({ page }) => {
+  await page.goto('/about/');
+  await expect(page.locator('.ch-nav')).toHaveCount(1);
+  const isPage = await page.evaluate(() => document.body.className.includes('page-id-'));
+  expect(isPage).toBe(true);
+});
+
+test('the front page is the club home page @wordpress', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.locator('.ch-nav')).toHaveCount(1);
+});

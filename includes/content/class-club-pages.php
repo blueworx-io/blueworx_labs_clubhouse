@@ -102,9 +102,11 @@ final class Blueworx_Clubhouse_Club_Pages {
 	 * rather than duplicated; anything else gets a fresh page and its id
 	 * stored. Idempotent — running it twice creates nothing.
 	 *
-	 * Does not touch show_on_front or page_on_front. Home gets an ordinary
-	 * page with slug 'home'; making it the site's front page is a later
-	 * task's job.
+	 * Also makes Home the site's static front page — Home's slug is '', so
+	 * without this the site root would never reach it. Only when the front
+	 * page is unset (posts on front, the fresh-install default), zero, or
+	 * names a page that no longer exists: a club that has deliberately chosen
+	 * a different front page keeps it.
 	 */
 	public static function ensure(): void {
 		if ( ! function_exists( 'wp_insert_post' ) ) {
@@ -113,6 +115,49 @@ final class Blueworx_Clubhouse_Club_Pages {
 		foreach ( Blueworx_Clubhouse_Page_Map::pages() as $page ) {
 			self::ensure_one( $page['slug'], $page['label'], (bool) ( $page['private'] ?? false ) );
 		}
+		self::ensure_home_is_front_page();
+	}
+
+	/**
+	 * Point show_on_front/page_on_front at Home, unless a club has deliberately
+	 * chosen its own front page. Pure decision in should_take_over_front_page();
+	 * this is only the WordPress-coupled shell around it.
+	 */
+	private static function ensure_home_is_front_page(): void {
+		if ( ! function_exists( 'update_option' ) || ! function_exists( 'get_option' ) ) {
+			return;
+		}
+		$home_id = self::post_id( '' );
+		if ( $home_id <= 0 ) {
+			return;
+		}
+		$show_on_front = (string) get_option( 'show_on_front', 'posts' );
+		$page_on_front = (int) get_option( 'page_on_front', 0 );
+		if ( ! self::should_take_over_front_page( $show_on_front, $page_on_front, self::current_status( $page_on_front ) ) ) {
+			return;
+		}
+		update_option( 'show_on_front', 'page' );
+		update_option( 'page_on_front', $home_id );
+	}
+
+	/**
+	 * Whether Home should become the front page. Pure, so the guard is
+	 * unit-testable without a WordPress runtime.
+	 *
+	 * A club that has already set show_on_front to 'page' with a
+	 * page_on_front naming a page that still exists has made a deliberate
+	 * choice, and keeps it. Anything else — posts on front, no page chosen,
+	 * or a chosen page that has since been trashed or deleted — is treated
+	 * as "nothing chosen" and Home takes over.
+	 */
+	public static function should_take_over_front_page( string $show_on_front, int $page_on_front, string $chosen_page_status ): bool {
+		if ( 'page' !== $show_on_front ) {
+			return true;
+		}
+		if ( $page_on_front <= 0 ) {
+			return true;
+		}
+		return self::PUBLIC_STATUS !== $chosen_page_status && self::PRIVATE_STATUS !== $chosen_page_status;
 	}
 
 	/** The create-or-repair for a single club page. */

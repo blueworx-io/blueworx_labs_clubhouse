@@ -66,4 +66,49 @@ final class ClubPagesTest extends TestCase {
 		// Club Pages. A body here would be a second, contradictory copy.
 		$this->assertSame( '', Blueworx_Clubhouse_Club_Pages::desired( 'about', 'About', false )['post_content'] );
 	}
+
+	/**
+	 * Home's slug is '' — the front page — so its real page must also be the
+	 * site's static front page, or '/' never reaches it. A fresh site (posts on
+	 * front, or nothing chosen at all) is switched over automatically.
+	 */
+	public function test_ensure_makes_home_the_front_page_when_none_is_set(): void {
+		Blueworx_Clubhouse_Club_Pages::ensure();
+
+		$home_id = Blueworx_Clubhouse_Club_Pages::post_id( '' );
+		$this->assertGreaterThan( 0, $home_id );
+		$this->assertSame( 'page', get_option( 'show_on_front' ) );
+		$this->assertSame( $home_id, get_option( 'page_on_front' ) );
+	}
+
+	/**
+	 * A club that switched show_on_front to a page of its own is left alone —
+	 * the fresh-install branch above must never override a deliberate choice.
+	 */
+	public function test_ensure_leaves_a_deliberately_chosen_front_page_alone(): void {
+		update_option( 'show_on_front', 'page' );
+		update_option( 'page_on_front', 4242 );
+		$GLOBALS['wp_stub_post_status'][4242] = 'publish';
+
+		Blueworx_Clubhouse_Club_Pages::ensure();
+
+		$this->assertSame( 'page', get_option( 'show_on_front' ) );
+		$this->assertSame( 4242, get_option( 'page_on_front' ) );
+	}
+
+	/**
+	 * page_on_front naming a page that no longer exists (deleted, or never
+	 * really there) is treated the same as "nothing chosen" — Home takes over
+	 * rather than leaving the site pointed at a dangling id.
+	 */
+	public function test_ensure_takes_over_when_the_chosen_front_page_no_longer_exists(): void {
+		update_option( 'show_on_front', 'page' );
+		update_option( 'page_on_front', 9999 );
+
+		Blueworx_Clubhouse_Club_Pages::ensure();
+
+		$home_id = Blueworx_Clubhouse_Club_Pages::post_id( '' );
+		$this->assertSame( 'page', get_option( 'show_on_front' ) );
+		$this->assertSame( $home_id, get_option( 'page_on_front' ) );
+	}
 }

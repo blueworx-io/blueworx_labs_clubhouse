@@ -485,4 +485,35 @@ final class FrontendTest extends TestCase {
 	public function test_style_family_loads_nothing_off_our_pages(): void {
 		$this->assertSame( 'none', Blueworx_Clubhouse_Frontend::style_family( null, false ) );
 	}
+
+	public function test_a_club_page_is_served_from_this_plugins_template(): void {
+		update_option( Blueworx_Clubhouse_Club_Pages::option_name( 'about' ), 42 );
+		$this->assertSame(
+			'/plugin/club-page.php',
+			Blueworx_Clubhouse_Frontend::template_for_post( 42, '/theme/page.php', '/plugin/club-page.php' )
+		);
+	}
+
+	public function test_any_other_page_keeps_the_themes_template(): void {
+		// This runs on every front-end request. Anything not ours comes back
+		// untouched or the plugin has taken over the whole site.
+		$this->assertSame(
+			'/theme/page.php',
+			Blueworx_Clubhouse_Frontend::template_for_post( 999, '/theme/page.php', '/plugin/club-page.php' )
+		);
+	}
+
+	/**
+	 * Once Home is the site's static front page, WordPress only substitutes
+	 * page_on_front for a request it can prove carries nothing else — the
+	 * long-standing ?clubhouse_page=home form fails that check and is_front_page()
+	 * comes back false even though this URL has always meant Home. Home must
+	 * still render rather than falling through to "not a clubhouse page".
+	 */
+	public function test_the_literal_home_query_value_still_renders_home_when_is_front_page_is_false(): void {
+		$GLOBALS['wp_stub_is_front_page'] = false;
+		$GLOBALS['wp_stub_query_vars']    = array( Blueworx_Clubhouse_Frontend::QUERY_VAR => 'home' );
+
+		$this->assertSame( '', Blueworx_Clubhouse_Frontend::current_page_slug() );
+	}
 }
