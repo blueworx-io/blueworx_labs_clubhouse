@@ -413,6 +413,15 @@ final class DashboardShellTest extends TestCase {
 		$this->assertSame( '', Blueworx_Clubhouse_Dashboard_Shell::icon( 'no-such-icon' ) );
 	}
 
+	public function test_every_icon_the_checkout_frame_asks_for_actually_draws(): void {
+		// icon() returns '' for a name it does not know, so a missing path is
+		// silent: the frame renders, just without the reassurance beside the
+		// line about Stripe. Assert the glyphs rather than the frame.
+		foreach ( array( 'lock', 'arrow-left' ) as $name ) {
+			$this->assertStringContainsString( '<svg', Blueworx_Clubhouse_Dashboard_Shell::icon( $name ), $name . ' has no path' );
+		}
+	}
+
 	/** @return array<string,mixed> */
 	private function checkout_args(): array {
 		return array(
