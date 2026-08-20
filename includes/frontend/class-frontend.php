@@ -218,6 +218,7 @@ final class Blueworx_Clubhouse_Frontend {
 		}
 		flush_rewrite_rules();
 		self::drop_block_data();
+		Blueworx_Clubhouse_Club_Pages::ensure();
 		// Autoload off: read once per upgrade, never on a normal request.
 		update_option( self::REWRITE_VERSION_OPTION, $running, false );
 	}
