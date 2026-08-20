@@ -106,6 +106,9 @@
     background: var(--bw-surface-card);
     border-top: 1px solid var(--bw-border);
   }
+  /* The pay button is the primary action on this screen; give it the same
+     44px finger target as the links above rather than the desktop 34px. */
+  .bw-admin sc-order-submit sc-button { --sc-input-height-large: 44px; }
   .clubhouse-checkout__main { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
 }
 

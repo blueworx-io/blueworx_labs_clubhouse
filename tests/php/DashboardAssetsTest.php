@@ -191,6 +191,24 @@ final class DashboardAssetsTest extends TestCase {
 		);
 	}
 
+	public function test_the_pay_button_gets_a_44px_target_on_a_phone(): void {
+		// Every other tappable target in the narrow-viewport block is at least
+		// 44px so a finger can hit it; the pay button is the primary action on
+		// the page and must not be the one target smaller than that.
+		$css   = (string) file_get_contents( $this->root() . '/assets/bw/surecart.css' );
+		$start = strpos( $css, '@media (max-width: 640px)' );
+		$this->assertIsInt( $start, 'no narrow-viewport block found in the stylesheet' );
+		$end = strpos( $css, '@media (max-width: 900px)', $start );
+		$this->assertIsInt( $end, 'no boundary found after the narrow-viewport block' );
+		$narrow = substr( $css, $start, $end - $start );
+
+		$this->assertMatchesRegularExpression(
+			'/sc-order-submit sc-button\s*\{[^}]*--sc-input-height-large:\s*44px/',
+			$narrow,
+			'the pay button is not raised to a 44px target inside the narrow-viewport block'
+		);
+	}
+
 	public function test_the_surecart_stylesheet_is_a_real_file(): void {
 		// A handle pointing at nothing registers happily and 404s in the
 		// browser, which looks like SureCart's default rather than a bug.
