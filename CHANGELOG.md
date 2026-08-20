@@ -5,6 +5,11 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.84.0
+
+- **The Billing page on a phone now shows your membership plan** above your orders and invoices, so everything you pay for is on one screen.
+- **The extra Orders, Invoices and Plans links are gone from Billing** — the page carries all three itself now.
+
 ## 0.83.6
 
 - **Orders, Invoices and Plans now sit under Billing on a phone, and only there.** They used to appear at the foot of every screen, which read as a stray menu following you around.

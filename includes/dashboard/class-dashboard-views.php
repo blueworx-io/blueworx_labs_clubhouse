@@ -94,11 +94,13 @@ final class Blueworx_Clubhouse_Dashboard_Views {
 				'key'       => 'billing',
 				'label'     => 'Billing',
 				'title'     => 'Billing',
-				'lede'      => 'What you have bought, and what you owe.',
+				'lede'      => 'What you pay, what you have bought, and what you owe.',
 				'icon'      => 'file-spreadsheet',
 				'requires'  => '',
 				'where'     => 'bar',
-				'blocks'    => array( 'surecart/customer-orders', 'surecart/customer-invoices' ),
+				// The phone's one money screen, so it carries the same three
+				// panels the sidebar splits into Plans, Orders and Invoices.
+				'blocks'    => array( 'surecart/customer-subscriptions', 'surecart/customer-orders', 'surecart/customer-invoices' ),
 				'shortcode' => '',
 			),
 			array(

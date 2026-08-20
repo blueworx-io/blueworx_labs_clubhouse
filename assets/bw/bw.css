@@ -639,7 +639,6 @@
 .bw-admin .bw-crumbs a,
 .bw-admin a.clubhouse-member__back,
 .bw-admin a.clubhouse-member__tab,
-.bw-admin a.clubhouse-member__morelink,
 .bw-admin a.clubhouse-member__quick{text-decoration:none}
 .bw-admin a.bw-btn--link{text-decoration:underline}
 .bw-admin a.bw-rowactions__link:hover{text-decoration:underline}
@@ -694,10 +693,6 @@
 /* The phone's bottom bar is drawn only on a phone — see the media query in
    Task 4. Hidden here so a desktop never sees two navs. */
 .clubhouse-member .clubhouse-member__tabbar{display:none}
-/* Above the phone breakpoint the sidebar carries every view, so the overflow
-   rows are noise. Must sit before the media query below — same selector,
-   same specificity, so whichever rule comes last wins, including on a phone. */
-.clubhouse-member .clubhouse-member__more{display:none}
 
 /* The phone. The sidebar becomes a fixed bar along the bottom, as the design
    draws it: five destinations, icon over label, and the page head shrinks to
@@ -738,7 +733,4 @@
 	.clubhouse-member .clubhouse-member__tab{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:var(--bw-space-4) 2px;color:var(--bw-text-muted);text-decoration:none;font-size:11px;text-align:center}
 	.clubhouse-member .clubhouse-member__tab.is-active{color:var(--bw-text-accent)}
 	.clubhouse-member .clubhouse-member__tablabel{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
-	.clubhouse-member .clubhouse-member__more{display:flex;flex-direction:column;border:1px solid var(--bw-border);border-radius:var(--bw-radius-sm);background:var(--bw-surface-card);overflow:hidden}
-	.clubhouse-member .clubhouse-member__morelink{display:flex;align-items:center;gap:var(--bw-space-4);padding:var(--bw-space-5) var(--bw-space-6);color:var(--bw-text-body);text-decoration:none}
-	.clubhouse-member .clubhouse-member__morelink+.clubhouse-member__morelink{border-top:1px solid var(--bw-border)}
 }

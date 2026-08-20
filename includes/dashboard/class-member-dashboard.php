@@ -136,18 +136,12 @@ final class Blueworx_Clubhouse_Member_Dashboard {
 		// Dashboard_Shell::page() for why. The welcome pack belongs to the
 		// overview only.
 		$welcome = self::welcome_pack();
-		$more    = self::overflow_links( $views, $base );
 		$panels  = array();
 		foreach ( $views as $view ) {
 			$key            = (string) $view['key'];
-			$panels[ $key ] = ( Blueworx_Clubhouse_Dashboard_Views::DEFAULT_VIEW === $key
+			$panels[ $key ] = Blueworx_Clubhouse_Dashboard_Views::DEFAULT_VIEW === $key
 				? self::overview( $welcome, $views, $home, $base )
-				: self::view_body( $view, '', $home ) )
-				// Orders, Invoices and Plans hang off Billing alone. They were on
-				// every panel, which read as a stray menu at the foot of each
-				// screen; Billing is where a member looks for them anyway, and
-				// one home for them keeps them reachable on a phone.
-				. ( 'billing' === $key ? $more : '' );
+				: self::view_body( $view, '', $home );
 		}
 
 		$style = '' !== $welcome
@@ -166,44 +160,6 @@ final class Blueworx_Clubhouse_Member_Dashboard {
 			'member_name'  => self::member_name(),
 			'member_email' => self::member_email(),
 		) );
-	}
-
-	/**
-	 * Every available view the bar does not carry, offered as link rows.
-	 *
-	 * The bar is a curated list now — Dashboard, Bookings, Billing, Account,
-	 * and the way out — not "whichever views fit". On a full club that leaves
-	 * Orders, Invoices and Plans reachable only from here, so nothing a member
-	 * could otherwise see in the sidebar becomes unreachable on a phone. Drawn
-	 * on every panel and hidden above the phone breakpoint, where the sidebar
-	 * carries every view already.
-	 *
-	 * @param array<int,array<string,mixed>> $views
-	 */
-	public static function overflow_links( array $views, string $base ): string {
-		$carried = array_column( Blueworx_Clubhouse_Dashboard_Views::bar( $views ), 'key' );
-		$extra   = array_values(
-			array_filter(
-				$views,
-				static function ( array $view ) use ( $carried ): bool {
-					return ! in_array( (string) $view['key'], $carried, true );
-				}
-			)
-		);
-		if ( array() === $extra ) {
-			return '';
-		}
-		$out = '<nav class="clubhouse-member__more" aria-label="More of your account">';
-		foreach ( $extra as $view ) {
-			$out .= '<a class="clubhouse-member__morelink" data-view-link="' . Blueworx_Clubhouse_Dashboard_Shell::e( (string) $view['key'] ) . '"'
-				. ' data-view-title="' . Blueworx_Clubhouse_Dashboard_Shell::e( (string) ( $view['title'] ?? '' ) ) . '"'
-				. ' data-view-lede="' . Blueworx_Clubhouse_Dashboard_Shell::e( (string) ( $view['lede'] ?? '' ) ) . '"'
-				. ' href="' . Blueworx_Clubhouse_Dashboard_Shell::e( Blueworx_Clubhouse_Dashboard_Shell::view_url( (string) $view['key'], $base ) ) . '">'
-				. Blueworx_Clubhouse_Dashboard_Shell::icon( (string) $view['icon'] )
-				. '<span>' . Blueworx_Clubhouse_Dashboard_Shell::e( (string) $view['label'] ) . '</span>'
-				. '</a>';
-		}
-		return $out . '</nav>';
 	}
 
 	/**

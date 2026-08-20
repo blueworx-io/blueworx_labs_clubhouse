@@ -250,46 +250,22 @@ final class MemberDashboardTest extends TestCase {
 		);
 	}
 
-	/** A full club: both plugins, so every view is on offer. */
-	private function fullClub(): array {
-		return Blueworx_Clubhouse_Dashboard_Views::available( true, true );
-	}
-
-	public function test_views_the_bar_does_not_carry_are_linked_from_the_last_panel(): void {
-		// On a full club the bar carries Dashboard, Bookings, Billing and
-		// Account (plus the way out) — Orders, Invoices and Plans are reached
-		// from here instead, so nothing is unreachable on a phone.
-		$html = Blueworx_Clubhouse_Member_Dashboard::overflow_links( $this->fullClub(), '/member-dashboard/' );
-		$this->assertStringContainsString( 'view=orders', $html );
-		$this->assertStringContainsString( 'view=invoices', $html );
-		$this->assertStringContainsString( 'view=plans', $html );
-		$this->assertStringNotContainsString( 'view=dashboard', $html );
-		$this->assertStringNotContainsString( 'view=bookings', $html );
-		$this->assertStringNotContainsString( 'view=billing', $html );
-		$this->assertStringNotContainsString( 'view=account', $html );
-	}
-
-	public function test_nothing_is_offered_when_the_bar_carries_every_view(): void {
-		$views = array(
-			array( 'key' => 'dashboard', 'label' => 'Dashboard', 'title' => 'Dashboard', 'lede' => '', 'icon' => 'users', 'where' => 'both' ),
-			array( 'key' => 'billing', 'label' => 'Billing', 'title' => 'Billing', 'lede' => '', 'icon' => 'users', 'where' => 'bar' ),
-		);
-		$this->assertSame( '', Blueworx_Clubhouse_Member_Dashboard::overflow_links( $views, '/x/' ) );
-	}
-
-	public function test_the_overflow_rows_are_drawn_on_billing_and_nowhere_else(): void {
+	/**
+	 * Billing is the phone's one money screen: it carries the subscriptions,
+	 * orders and invoices panels itself, and no link rows to the sidebar-only
+	 * views hang off it — or off any other panel.
+	 */
+	public function test_billing_carries_the_money_panels_and_no_link_rows(): void {
 		$this->on_the_account_page();
 		$this->everything_installed();
 		$html = Blueworx_Clubhouse_Member_Dashboard::screen( '/member-dashboard/', 'https://club.test/' );
-		$this->assertSame( 1, substr_count( $html, 'class="clubhouse-member__more"' ) );
-		$billing = strpos( $html, 'data-view="billing"' );
-		$this->assertIsInt( $billing );
-		$more = strpos( $html, 'class="clubhouse-member__more"' );
-		$this->assertIsInt( $more );
-		$this->assertGreaterThan( $billing, $more );
-		// And still inside that panel, not floating after every one of them.
-		$next = strpos( $html, 'data-view=', $billing + 1 );
-		$this->assertTrue( false === $next || $more < $next );
+		$this->assertStringNotContainsString( 'clubhouse-member__more', $html );
+
+		$billing = Blueworx_Clubhouse_Dashboard_Views::find( 'billing', Blueworx_Clubhouse_Dashboard_Views::all() );
+		$this->assertSame(
+			array( 'surecart/customer-subscriptions', 'surecart/customer-orders', 'surecart/customer-invoices' ),
+			$billing['blocks']
+		);
 	}
 
 	/** Store a club's brand marks the way the setup screen does. */

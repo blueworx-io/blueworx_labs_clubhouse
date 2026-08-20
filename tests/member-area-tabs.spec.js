@@ -99,10 +99,11 @@ test('clicking a nav item swaps panels without navigating @wordpress', async ({ 
 // carries Dashboard, Billing and Account — see Dashboard_Views::all(): Billing
 // and Account no longer require a shop. The bar is a curated list now (Task 1
 // of the bar-report brief), so faking a full club means adding Bookings to the
-// bar, Orders/Invoices/Plans to the sidebar and the overflow rows only — not
-// to the bar, which never carries them — the same response-splicing approach
-// the click test above uses.
-test('a phone gets the bottom bar and the overflow rows, not the sidebar nav @wordpress', async ({ page }) => {
+// bar and Orders/Invoices/Plans to the sidebar only — not to the bar, which
+// never carries them — the same response-splicing approach the click test
+// above uses. Billing carries their panels itself on a phone, so there are no
+// link rows under it any more.
+test('a phone gets the bottom bar, not the sidebar nav @wordpress', async ({ page }) => {
   await page.route('**/member-dashboard/', async (route) => {
     const response = await route.fetch();
     let body = await response.text();
@@ -117,28 +118,12 @@ test('a phone gets the bottom bar and the overflow rows, not the sidebar nav @wo
 
     // The server already draws the bar, carrying Dashboard, Billing and
     // Account for this club. Bookings is the one extra view the bar can carry
-    // — Orders, Invoices and Plans are sidebar-only and never appear here, so
-    // they are what overflow_links() offers instead.
+    // — Orders, Invoices and Plans are sidebar-only and never appear here.
     const barOpen = '<nav class="clubhouse-member__tabbar" aria-label="Your account">';
     const bookingsTab = '<a class="clubhouse-member__tab" data-view-link="bookings"'
       + ' data-view-title="bookings" data-view-lede="" href="/member-dashboard/?view=bookings">'
       + '<span class="clubhouse-member__tablabel">bookings</span></a>';
     body = body.replace(barOpen, barOpen + bookingsTab);
-
-    const more = '<nav class="clubhouse-member__more" aria-label="More of your account">'
-      + ['orders', 'invoices', 'plans']
-        .map((key) => '<a class="clubhouse-member__morelink" data-view-link="' + key + '"'
-          + ' data-view-title="' + key + '" data-view-lede=""'
-          + ' href="/member-dashboard/?view=' + key + '"><span>' + key + '</span></a>')
-        .join('')
-      + '</nav>';
-
-    // The real markup places the overflow rows at the foot of the Billing
-    // panel and nowhere else, so splice them exactly there.
-    body = body.replace(
-      /(<div class="clubhouse-member__panel" data-view="billing"[\s\S]*?)(<\/div>)(?=<div class="clubhouse-member__panel"|<\/main>)/,
-      '$1' + more + '$2'
-    );
 
     await route.fulfill({ response, body });
   });
@@ -151,28 +136,21 @@ test('a phone gets the bottom bar and the overflow rows, not the sidebar nav @wo
   await expect(page.locator('.clubhouse-member__tab')).toHaveCount(5);
   await expect(page.locator('.clubhouse-member__side .bw-secnav')).toBeHidden();
 
-  // Orders, Invoices and Plans live at the foot of Billing alone — one copy on
-  // the page, inside that panel, so they are not a stray menu under every
-  // screen. Hidden while Dashboard is up; there when Billing is.
-  await expect(page.locator('.clubhouse-member__more')).toHaveCount(1);
-  await expect(page.locator('.clubhouse-member__panel[data-view="billing"] .clubhouse-member__more')).toHaveCount(1);
-  await expect(page.locator('.clubhouse-member__more')).toBeHidden();
+  // Billing carries the Plans, Orders and Invoices panels itself, so no link
+  // rows are drawn under it — or under any other screen.
+  await expect(page.locator('.clubhouse-member__more')).toHaveCount(0);
   await page.locator('.clubhouse-member__tab[data-view-link="billing"]').click();
-  await expect(page.locator('.clubhouse-member__more')).toBeVisible();
-  await expect(page.locator('.clubhouse-member__more [data-view-link="orders"]')).toBeVisible();
-  await expect(page.locator('.clubhouse-member__more [data-view-link="invoices"]')).toBeVisible();
-  await expect(page.locator('.clubhouse-member__more [data-view-link="plans"]')).toBeVisible();
+  await expect(page.locator('.clubhouse-member__more')).toHaveCount(0);
   // The way out is now the bar's own last item, not a separate control beside
   // the club badge — see the media query in assets/bw/bw.css.
   await expect(page.locator('.clubhouse-member__side .clubhouse-member__back')).toBeHidden();
 
-  // The reverse above the phone breakpoint: the sidebar carries every view,
-  // so the bar and the overflow rows are noise, and the way back returns to
-  // the sidebar's own row beside the brand.
+  // The reverse above the phone breakpoint: the sidebar carries every view, so
+  // the bar is noise, and the way back returns to the sidebar's own row
+  // beside the brand.
   await page.setViewportSize({ width: 1280, height: 900 });
   await expect(page.locator('.clubhouse-member__tabbar')).toBeHidden();
   await expect(page.locator('.clubhouse-member__side .bw-secnav')).toBeVisible();
-  await expect(page.locator('.clubhouse-member__more')).toBeHidden();
   await expect(page.locator('.clubhouse-member__side .clubhouse-member__back')).toBeVisible();
 });
 

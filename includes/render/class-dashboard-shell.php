@@ -37,7 +37,7 @@ final class Blueworx_Clubhouse_Dashboard_Shell {
 	 * entities; escaping that again would turn &amp; into &amp;amp; and quietly
 	 * rename the query argument behind it.
 	 *
-	 * Public: shared with Member_Dashboard::overflow_links(), which interpolates
+	 * Public: shared with Member_Dashboard, which interpolates
 	 * the same kind of values and must not re-implement this rule.
 	 */
 	public static function e( string $v ): string {
