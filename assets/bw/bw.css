@@ -698,8 +698,10 @@
 	.clubhouse-member .clubhouse-member__viewtitle{font-family:var(--bw-font-display);font-weight:var(--bw-weight-semibold);color:var(--bw-text-heading);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 	.clubhouse-member .clubhouse-member__viewlede{font-size:var(--bw-size-sm);color:var(--bw-text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 	.clubhouse-member .clubhouse-member__brandsignout{display:inline-flex;margin-left:auto}
-	.clubhouse-member .clubhouse-member__person{padding-top:0;border-top:0;margin-left:auto}
-	.clubhouse-member .clubhouse-member__person .bw-person__sub{display:none}
+	/* Who is signed in is desktop-only: a phone's top row is already carrying
+	   the section's name, its description and the way out, and a member does
+	   not need telling whose account they are looking at on their own phone. */
+	.clubhouse-member .clubhouse-member__person{display:none}
 	.clubhouse-member .clubhouse-member__side{flex-direction:row;align-items:center}
 	.clubhouse-member .bw-panels{padding:var(--bw-space-6)}
 	/* Clear of the fixed bar, so the last card is never trapped behind it. */

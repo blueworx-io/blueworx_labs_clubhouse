@@ -5,6 +5,10 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.83.1
+
+- **A member's own name and picture no longer take up room at the top of a phone screen.** The row there now carries the section they are looking at, its description and the way out, and nothing else. On desktop the side menu still shows who is signed in.
+
 ## 0.83.0
 
 - **The member area on a phone now uses the top of the screen for what a member is actually looking at.** The section's name and description sit across the top where your site name used to, sign out is in the top right, and the separate heading below it has gone — so a member sees their bookings or their bill sooner, without scrolling past a repeat of the title. "Back to the club site" now reads "Back home", which fits the tab it lives in. On desktop the side menu stays put as the page scrolls, and scrolls within itself if a club ever has more sections than fit.

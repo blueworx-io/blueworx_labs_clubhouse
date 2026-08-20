@@ -204,3 +204,15 @@ test('a phone drops the page head in favour of the top row, the desktop keeps it
   await expect(page.locator('.clubhouse-member__head')).toBeVisible();
   await expect(page.locator('.clubhouse-member__viewtext')).toBeHidden();
 });
+
+// Who is signed in is desktop-only. A phone's top row already carries the
+// section's name, its description and the way out; the avatar and name on top
+// of that crowded the row and told a member nothing they did not know.
+test('a phone does not show who is signed in @wordpress', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/member-dashboard/');
+  await expect(page.locator('.clubhouse-member__person')).toBeHidden();
+
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await expect(page.locator('.clubhouse-member__person')).toBeVisible();
+});
