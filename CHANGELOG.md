@@ -5,6 +5,10 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.82.0
+
+- **The row of tabs on a phone is now a fixed set: your dashboard, bookings, billing, account, and the way back to your club site.** Billing and account are always there, even before you have added a shop — a member who taps one is told plainly that part is not set up yet, rather than finding the tab missing. Bookings appears once you have the booking plugin. The way back to your site has moved into that row, so it is where a thumb can reach it instead of at the top of the screen. Your desktop side menu is unchanged, with orders and invoices still listed separately.
+
 ## 0.81.1
 
 - **The row of tabs along the bottom now shows on a phone even before you have added a shop or bookings.** It used to appear only once there was more than one section to move between, so a new club saw a different member area from an established one.
