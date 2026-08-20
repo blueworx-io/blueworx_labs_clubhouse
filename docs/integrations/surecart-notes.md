@@ -167,3 +167,55 @@ not a failure.
   there is connectable to a real tier yet.
 - `/wp/v2/users`, `/wp/v2/comments` and the order and customer routes are
   withheld by the support-access plugin. No customer data was read.
+
+## The checkout form, and how to author our own
+
+**Read 20 August 2026 from SureCart 4.6.4**, downloaded from wordpress.org.
+
+The checkout form is not a black box. `templates/forms/checkout.php` is a plain
+block pattern — `<sc-email>`, `<sc-customer-name>`, `<sc-payment>`,
+`<sc-order-submit>` and an order summary, arranged in two columns. There is no
+hidden machinery: whatever markup ends up in the `sc_form` post is the form.
+
+`PageSeeder` runs three filters on the way past, and each takes the content it
+is about to write:
+
+| Filter | What it seeds |
+| --- | --- |
+| `surecart/create_forms` | The `sc_form` post — the checkout form itself |
+| `surecart/create_pages` | The checkout, order confirmation and dashboard pages |
+| `surecart/create_shop` | The shop page |
+
+So a plugin can hand SureCart its own checkout form and let SureCart write it,
+rather than writing the post itself. `createPosts()` skips anything that already
+exists, so a club that has edited its own form keeps it.
+
+### What blocks exist
+
+`packages/blocks/Blocks` lists them. The ones a checkout can use: `email`,
+`name`, `first-name`, `last-name`, `phone`, `address`, `password`, `input`,
+`textarea`, `checkbox`, `switch`, `radio`, `radio-group`, `payment`,
+`express-payment`, `submit`, `checkout-errors`, `conditional-form`,
+`shipping-choices`, `line-items`, `coupon`, `subtotal`, `tax-line-item`,
+`trial-line-item`, `total`, `totals`, `collapsible-row`, `divider`, `heading`,
+`columns`, `column`, `store-logo`, `confirmation`, `invoice-receipt-download`.
+
+Manual payment methods are a first-class concept (`Models/ManualPaymentMethod`,
+`Rest/ManualPaymentMethodsController`), which is what an offline or
+pay-on-account option maps to.
+
+There is **no card-number block**. Card entry belongs to `sc-payment`, which
+mounts Stripe's element. A design that draws its own card, expiry and CVC boxes
+cannot be built against SureCart without replacing payment handling entirely.
+
+### How far it can be restyled
+
+The components are Stencil web components and **406 of 482 use shadow DOM**
+(`dist/components/stats.json`), so ordinary CSS cannot reach inside them. They
+expose custom properties instead, and generously: `sc-input` alone reads
+thirty-nine, covering height, radius, border and its states, focus ring, font,
+letter spacing, placeholder, icon and disabled colours.
+
+Custom properties inherit through shadow boundaries, so setting `--sc-*` on an
+ancestor is the supported way to theme the checkout. A renamed token degrades to
+SureCart's default rather than breaking the page.
