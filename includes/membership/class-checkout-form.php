@@ -31,6 +31,22 @@ if ( ! defined( 'ABSPATH' ) ) {
  * see docs/integrations/surecart-notes.md. A block SureCart no longer has
  * renders as nothing, so the tests assert each one by name.
  *
+ * The address is shown only when something ships, but not through a
+ * surecart/conditional-form wrapper — that block's only attribute is
+ * rule_groups (packages/blocks/Blocks/ConditionalForm/block.json), and its
+ * rule conditions cover totals, prices, products, coupons, country and
+ * processors, never "shipping enabled". surecart/address has no "shipping"
+ * attribute either (packages/blocks/Blocks/Address/block.json). The real
+ * mechanism is on the address element itself: sc-order-shipping-address
+ * renders only when fullShippingAddressRequired() || full || requireName ||
+ * showName is true, and the block's "full" attribute defaults to true. Setting
+ * "full":false here removes the only reason it would always render, leaving
+ * the decision to SureCart's own fullShippingAddressRequired().
+ *
+ * sc-shipping-choices needs no such guard: its own render() returns a hidden
+ * host whenever the checkout does not require a shipping choice, so it is
+ * already silent on a membership purchase.
+ *
  * sc-order-submit is deliberately given no bw-btn classes: SureCart 4.6.4's
  * compiled component metadata marks it encapsulation: none, so it renders its
  * own <button> straight into the light DOM rather than a shadow root. Button
@@ -99,13 +115,16 @@ final class Blueworx_Clubhouse_Checkout_Form {
 
 			. '<!-- wp:surecart/phone {"label":"Mobile","required":false} /-->'
 
-			// Only when there is something to post. A membership is not.
-			. '<!-- wp:surecart/conditional-form {"conditions":[{"comparison":"contains","condition":"shipping_enabled"}]} -->'
-			. '<sc-conditional-form class="wp-block-surecart-conditional-form">'
-			. '<!-- wp:surecart/address {"label":"Where should we send it?","shipping":true} /-->'
+			// No conditional wrapper: surecart/address has no "shipping" attribute
+			// and surecart/conditional-form has no "shipping enabled" condition to
+			// give it — see the class docblock. "full":false hands the decision to
+			// SureCart's own fullShippingAddressRequired(), so the address only
+			// renders when something in the cart actually ships. shipping-choices
+			// self-hides the same way (sc-shipping-choices.js checks
+			// selected_shipping_choice_required before rendering anything), so a
+			// membership purchase shows neither.
+			. '<!-- wp:surecart/address {"label":"Where should we send it?","full":false} /-->'
 			. '<!-- wp:surecart/shipping-choices /-->'
-			. '</sc-conditional-form>'
-			. '<!-- /wp:surecart/conditional-form -->'
 
 			. '<!-- wp:surecart/payment {"secure_notice":"Your card is handled by Stripe. The club never sees it."} -->'
 			. '<sc-payment label="Payment" secure-notice="Your card is handled by Stripe. The club never sees it." class="wp-block-surecart-payment"></sc-payment>'

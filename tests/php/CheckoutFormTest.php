@@ -40,11 +40,25 @@ final class CheckoutFormTest extends TestCase {
 	}
 
 	public function test_the_address_only_appears_when_something_ships(): void {
-		// A membership is not posted anywhere. Asking a member for their
-		// address to buy one is a question with no purpose.
+		// A membership is not posted anywhere. There is no "shipping enabled"
+		// condition a conditional-form block could use to hide the address —
+		// SureCart's own sc-order-shipping-address decides that itself, via
+		// fullShippingAddressRequired(), and only once the block's "full"
+		// attribute is turned off (it defaults to true, which would otherwise
+		// force the address to always render). Asserting "full":false here is
+		// what actually makes the address conditional; nobody should reach for
+		// a conditional-form wrapper to do this again.
 		$content = Blueworx_Clubhouse_Checkout_Form::content();
-		$this->assertStringContainsString( 'wp:surecart/conditional-form', $content );
 		$this->assertStringContainsString( 'wp:surecart/address', $content );
+		$this->assertStringContainsString( '"full":false', $content );
+	}
+
+	public function test_no_conditional_form_wrapper_creeps_back_in(): void {
+		// surecart/conditional-form has no condition for "something ships" —
+		// its only attribute is rule_groups, and the rule conditions it
+		// supports are totals, prices, products, coupons, country and
+		// processors. Guard against reintroducing the invented wrapper.
+		$this->assertStringNotContainsString( 'conditional-form', Blueworx_Clubhouse_Checkout_Form::content() );
 	}
 
 	public function test_the_form_wears_the_member_areas_classes(): void {
