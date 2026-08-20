@@ -482,13 +482,35 @@ final class DashboardShellTest extends TestCase {
 		);
 	}
 
-	public function test_everything_drawn_is_escaped(): void {
-		$args              = $this->checkout_args();
-		$args['club_name'] = '<script>x</script>';
+	public function test_links_that_are_all_malformed_draw_no_nav(): void {
+		// Validating inside the loop is not enough — every entry can be
+		// dropped and still leave the wrapper behind, which announces a
+		// navigation landmark holding nothing.
+		$args          = $this->checkout_args();
+		$args['links'] = array(
+			array( 'href' => '', 'label' => '' ),
+			array( 'href' => '  ', 'label' => 'Terms' ),
+		);
 		$this->assertStringNotContainsString(
-			'<script>x</script>',
+			'clubhouse-checkout__links',
 			Blueworx_Clubhouse_Dashboard_Shell::checkout( $args )
 		);
+	}
+
+	public function test_everything_drawn_is_escaped(): void {
+		$args               = $this->checkout_args();
+		$args['club_name']  = '<script>x</script>';
+		$args['footnote']   = '<script>f</script>';
+		$args['home_label'] = '<script>h</script>';
+		$args['links']      = array(
+			array( 'label' => '<script>l</script>', 'href' => '"><script>href</script>' ),
+		);
+		$out = Blueworx_Clubhouse_Dashboard_Shell::checkout( $args );
+		$this->assertStringNotContainsString( '<script>x</script>', $out );
+		$this->assertStringNotContainsString( '<script>f</script>', $out );
+		$this->assertStringNotContainsString( '<script>h</script>', $out );
+		$this->assertStringNotContainsString( '<script>l</script>', $out );
+		$this->assertStringNotContainsString( '<script>href</script>', $out );
 	}
 
 	public function test_the_crest_falls_back_to_initials(): void {

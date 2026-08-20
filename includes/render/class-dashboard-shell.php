@@ -378,17 +378,20 @@ final class Blueworx_Clubhouse_Dashboard_Shell {
 				. self::e( '' !== $label ? $label : 'Back to the club site' )
 				. '</a>';
 		}
-		if ( array() !== $links ) {
-			$out .= '<nav class="clubhouse-checkout__links" aria-label="Terms and policies">';
-			foreach ( $links as $link ) {
-				$href = trim( (string) ( $link['href'] ?? '' ) );
-				$text = trim( (string) ( $link['label'] ?? '' ) );
-				if ( '' === $href || '' === $text ) {
-					continue;
-				}
-				$out .= '<a href="' . self::e( $href ) . '">' . self::e( $text ) . '</a>';
+		// Built first and only wrapped if anything survived validation — every
+		// entry can be malformed and dropped, and a <nav> left standing around
+		// that is empty announces a navigation landmark holding nothing.
+		$link_items = '';
+		foreach ( $links as $link ) {
+			$href = trim( (string) ( $link['href'] ?? '' ) );
+			$text = trim( (string) ( $link['label'] ?? '' ) );
+			if ( '' === $href || '' === $text ) {
+				continue;
 			}
-			$out .= '</nav>';
+			$link_items .= '<a href="' . self::e( $href ) . '">' . self::e( $text ) . '</a>';
+		}
+		if ( '' !== $link_items ) {
+			$out .= '<nav class="clubhouse-checkout__links" aria-label="Terms and policies">' . $link_items . '</nav>';
 		}
 		if ( '' !== $footnote ) {
 			$out .= '<p class="clubhouse-checkout__footnote">' . self::e( $footnote ) . '</p>';
