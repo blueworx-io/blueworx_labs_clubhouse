@@ -5,6 +5,12 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.85.0
+
+- **Your checkout is now your club's own.** It carries your club's name and crest, your terms and privacy links, and the same look as the rest of the member area, instead of a page that looked like a different product.
+- **You never have to build a checkout form.** One is set up for you, ready to take payments, and you can still change it if you want to.
+- Card details are still handled entirely by Stripe. The club never sees them.
+
 ## 0.84.1
 
 - **Space between the cards on each member area screen**, which used to sit flush against each other, and a tighter gap between the shortcut tiles.
