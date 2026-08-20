@@ -5,6 +5,10 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.85.1
+
+- **The checkout and thank-you pages no longer carry your site's footer as well as their own.** Both now fill the page on their own, the way they were designed to, instead of sitting inside the rest of your site with a second header above and a second footer below.
+
 ## 0.85.0
 
 - **Your checkout is now your club's own.** It carries your club's name and crest, your terms and privacy links, and the same look as the rest of the member area, instead of a page that looked like a different product.

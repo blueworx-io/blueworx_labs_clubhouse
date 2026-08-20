@@ -194,4 +194,36 @@ final class CommercePagesTest extends TestCase {
 		$this->assertStringNotContainsString( '<img class="clubhouse-checkout__crest"', $html );
 		$this->assertStringContainsString( '<span class="clubhouse-checkout__crest"', $html );
 	}
+
+	public function test_both_commerce_pages_serve_their_own_document(): void {
+		// Left to the theme, these render inside its page template, which draws
+		// its own header above and its own footer below — the club's site
+		// footer, several hundred pixels of it, under the frame's own 48px one.
+		// The frame is a full-screen checkout; it cannot be that while
+		// something else owns the page.
+		$this->assertSame(
+			'/plugin/templates/commerce.php',
+			Blueworx_Clubhouse_Commerce_Pages::template_for( 'checkout', '/theme/page.php', '/plugin/templates/commerce.php' )
+		);
+		$this->assertSame(
+			'/plugin/templates/commerce.php',
+			Blueworx_Clubhouse_Commerce_Pages::template_for( 'order-confirmation', '/theme/page.php', '/plugin/templates/commerce.php' )
+		);
+	}
+
+	public function test_every_other_page_keeps_the_theme_template(): void {
+		// template_include runs on every front-end request. Anything that is not
+		// one of ours must come back untouched, or the plugin has taken over the
+		// whole site.
+		$this->assertSame(
+			'/theme/page.php',
+			Blueworx_Clubhouse_Commerce_Pages::template_for( '', '/theme/page.php', '/plugin/templates/commerce.php' )
+		);
+	}
+
+	public function test_the_template_file_exists(): void {
+		// A template_include pointing at nothing gives a blank white page where
+		// someone is trying to pay.
+		$this->assertFileExists( dirname( __DIR__, 2 ) . '/templates/commerce.php' );
+	}
 }

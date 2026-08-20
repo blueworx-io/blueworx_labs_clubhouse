@@ -51,3 +51,25 @@ test('the footer stacks into full-width targets on a phone @wordpress', async ({
   const box = await back.boundingBox();
   expect(box.height).toBeGreaterThanOrEqual(44);
 });
+
+test('the checkout owns the whole page, with no theme chrome around it @wordpress', async ({ page }) => {
+  // The theme's own footer used to render below the frame's — its 442px under
+  // our 48px — and its header above. The frame is a self-contained checkout, so
+  // the page is served from the plugin's own template instead.
+  await page.goto(CHECKOUT);
+  await expect(page.locator('.wp-block-template-part')).toHaveCount(0);
+  await expect(page.locator('footer')).toHaveCount(1);
+  await expect(page.locator('footer')).toHaveClass(/clubhouse-checkout__foot/);
+});
+
+test('nothing renders below the checkout footer @wordpress', async ({ page }) => {
+  // The bug this guards is measured, not described: the page used to run on for
+  // more than a thousand pixels after the footer ended.
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto(CHECKOUT);
+  const slack = await page.evaluate(() => {
+    const foot = document.querySelector('.clubhouse-checkout__foot').getBoundingClientRect();
+    return document.documentElement.scrollHeight - (foot.bottom + window.scrollY);
+  });
+  expect(slack).toBeLessThanOrEqual(1);
+});

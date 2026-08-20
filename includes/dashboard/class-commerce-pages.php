@@ -65,6 +65,51 @@ final class Blueworx_Clubhouse_Commerce_Pages {
 		// page, so the theme's title is dropped here rather than fought after
 		// the fact once both are already in the markup.
 		add_filter( 'render_block', array( self::class, 'strip_post_title' ), 10, 3 );
+		// These two pages serve their own document — see serve_template() below.
+		add_filter( 'template_include', array( self::class, 'serve_template' ) );
+	}
+
+	/** Where this plugin's commerce template lives. */
+	private static function template_path(): string {
+		return dirname( __DIR__, 2 ) . '/templates/commerce.php';
+	}
+
+	/**
+	 * Which template a page should be served with. Pure.
+	 *
+	 * @param string $page_key Empty for any page this plugin does not dress.
+	 * @param string $default  Whatever WordPress had chosen.
+	 * @param string $ours     This plugin's commerce template.
+	 */
+	public static function template_for( string $page_key, string $default, string $ours ): string {
+		return isset( self::PAGES[ $page_key ] ) ? $ours : $default;
+	}
+
+	/**
+	 * Give checkout and the thank-you page a document of their own.
+	 *
+	 * Left to the theme, both render inside its page template, which draws its
+	 * own header above the frame and its own footer below it — so the checkout
+	 * carried the club's site footer, several hundred pixels of it, underneath
+	 * its own. The approved design is a self-contained checkout, and a page
+	 * cannot be self-contained while something else owns the document.
+	 *
+	 * The frame itself is untouched: templates/commerce.php runs WordPress's
+	 * ordinary loop, dress() is still a the_content filter, and it still fires
+	 * exactly where it did.
+	 *
+	 * @param string $template
+	 */
+	public static function serve_template( $template ): string {
+		$template = (string) $template;
+		if ( ! function_exists( 'get_queried_object_id' ) ) {
+			return $template;
+		}
+		return self::template_for(
+			Blueworx_Clubhouse_Dashboard_Assets::page_key( (int) get_queried_object_id() ),
+			$template,
+			self::template_path()
+		);
 	}
 
 	/**
