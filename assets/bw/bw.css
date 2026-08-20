@@ -621,6 +621,16 @@
 
 /* Clubhouse additions — layout the design draws inline, not part of the
    vendored system. Same token vocabulary, same scoping rules. */
+/* The top bar: the title and the line under it sit closer together, and the
+   buttons centre against that block rather than hanging off its baseline. */
+.bw-pagehead{align-items:center}
+.bw-pagehead__eyebrow{margin-bottom:var(--bw-space-2)}
+.bw-pagehead__lede{margin-top:var(--bw-space-2)}
+/* A link drawn as a button is a button, not a link. .bw-admin a's underline
+   outranks .bw-btn's own text-decoration:none, so it has to be undone here.
+   .bw-btn--link is the exception — it is meant to read as a link. */
+.bw-admin a.bw-btn{text-decoration:none}
+.bw-admin a.bw-btn--link{text-decoration:underline}
 .clubhouse-member .clubhouse-member__navlabel{display:flex;align-items:center;gap:10px}
 .clubhouse-member .bw-secnav__item .bw-icon{flex:none}
 .clubhouse-member .bw-pagehead__actions .bw-icon{margin-right:6px}
