@@ -93,4 +93,137 @@ final class CommercePagesTest extends TestCase {
 		$this->assertStringContainsString( '<form id="sc-checkout"></form>', $html );
 		$this->assertStringNotContainsString( 'bw-secnav', $html );
 	}
+
+	public function test_the_footer_offers_only_pages_the_club_has_switched_on(): void {
+		// A dead link on a payment page is the worst place for one. Terms and
+		// privacy are switchable like every other club page, so the footer has
+		// to ask rather than assume.
+		$visible = static fn ( string $slug ): bool => 'privacy' === $slug;
+		$url     = static fn ( string $slug ): string => 'https://club.test/' . $slug . '/';
+
+		$links = Blueworx_Clubhouse_Commerce_Pages::footer_links( $visible, $url );
+
+		$this->assertSame(
+			array( array( 'label' => 'Privacy notice', 'href' => 'https://club.test/privacy/' ) ),
+			$links
+		);
+	}
+
+	public function test_a_club_with_nothing_switched_on_gets_no_links(): void {
+		$this->assertSame(
+			array(),
+			Blueworx_Clubhouse_Commerce_Pages::footer_links(
+				static fn ( string $slug ): bool => false,
+				static fn ( string $slug ): string => 'https://club.test/' . $slug . '/'
+			)
+		);
+	}
+
+	public function test_checkout_gets_the_checkout_frame_and_confirmation_keeps_the_bare_one(): void {
+		// Two different pages with two different jobs. The confirmation page is
+		// a receipt, so it keeps the heading-and-panel shell it has always had.
+		update_option( Blueworx_Clubhouse_Shop_Pages::option_name( 'checkout' ), 7 );
+		update_option( Blueworx_Clubhouse_Shop_Pages::option_name( 'order-confirmation' ), 9 );
+
+		wp_stub_render_page( 7 );
+		$checkout = Blueworx_Clubhouse_Commerce_Pages::dress( '<form></form>' );
+		$this->assertStringContainsString( 'clubhouse-checkout', $checkout );
+		$this->assertStringNotContainsString( 'bw-pagehead', $checkout );
+
+		wp_stub_render_page( 9 );
+		$confirmation = Blueworx_Clubhouse_Commerce_Pages::dress( '<p>Thank you</p>' );
+		$this->assertStringContainsString( 'bw-pagehead', $confirmation );
+		$this->assertStringNotContainsString( 'clubhouse-checkout', $confirmation );
+	}
+
+	public function test_the_theme_s_own_title_block_is_blanked_on_a_dressed_page(): void {
+		// A block theme draws core/post-title above the_content, which duplicated
+		// the frame's own h1 until a browser test caught it. render_block is the
+		// only hook that can drop it before it reaches the page.
+		$this->on_the_checkout_page();
+		$block = array( 'blockName' => 'core/post-title' );
+		$this->assertSame(
+			'',
+			Blueworx_Clubhouse_Commerce_Pages::strip_post_title( '<h1 class="wp-block-post-title">Checkout</h1>', $block )
+		);
+	}
+
+	public function test_the_theme_s_title_block_is_left_alone_on_any_other_page(): void {
+		update_option( Blueworx_Clubhouse_Shop_Pages::option_name( 'checkout' ), 43 );
+		wp_stub_render_page( 99 );
+		$block = array( 'blockName' => 'core/post-title' );
+		$this->assertSame(
+			'<h1 class="wp-block-post-title">A news post</h1>',
+			Blueworx_Clubhouse_Commerce_Pages::strip_post_title( '<h1 class="wp-block-post-title">A news post</h1>', $block )
+		);
+	}
+
+	public function test_a_different_block_on_a_dressed_page_is_left_alone(): void {
+		// The filter's job is one specific block. Anything else that renders on
+		// the checkout page — the frame's own markup included — must pass
+		// through untouched.
+		$this->on_the_checkout_page();
+		$block = array( 'blockName' => 'core/paragraph' );
+		$this->assertSame(
+			'<p>Some other block</p>',
+			Blueworx_Clubhouse_Commerce_Pages::strip_post_title( '<p>Some other block</p>', $block )
+		);
+	}
+
+	public function test_the_way_back_names_the_club_when_it_has_a_name(): void {
+		$this->assertSame( 'Back to Crewe Vagrants', Blueworx_Clubhouse_Commerce_Pages::back_label( 'Crewe Vagrants' ) );
+		$this->assertSame( 'Back to the club site', Blueworx_Clubhouse_Commerce_Pages::back_label( '  ' ) );
+	}
+
+	/** Store a club's brand marks the way the setup screen does. */
+	private function brand_marks( string $logo, string $favicon ): void {
+		update_option( 'clubhouse_branding', array( 'logo' => $logo, 'favicon' => $favicon ) );
+	}
+
+	public function test_a_club_with_a_logo_gets_it_in_the_checkout_header(): void {
+		$this->on_the_checkout_page();
+		$this->brand_marks( 'https://club.test/logo.png', '' );
+		$html = Blueworx_Clubhouse_Commerce_Pages::dress( '<form></form>' );
+		$this->assertStringContainsString( '<img class="clubhouse-checkout__crest" src="https://club.test/logo.png"', $html );
+	}
+
+	public function test_a_club_with_no_logo_gets_its_initials_in_the_checkout_header(): void {
+		$this->on_the_checkout_page();
+		$this->brand_marks( '', '' );
+		$html = Blueworx_Clubhouse_Commerce_Pages::dress( '<form></form>' );
+		$this->assertStringNotContainsString( '<img class="clubhouse-checkout__crest"', $html );
+		$this->assertStringContainsString( '<span class="clubhouse-checkout__crest"', $html );
+	}
+
+	public function test_both_commerce_pages_serve_their_own_document(): void {
+		// Left to the theme, these render inside its page template, which draws
+		// its own header above and its own footer below — the club's site
+		// footer, several hundred pixels of it, under the frame's own 48px one.
+		// The frame is a full-screen checkout; it cannot be that while
+		// something else owns the page.
+		$this->assertSame(
+			'/plugin/templates/commerce.php',
+			Blueworx_Clubhouse_Commerce_Pages::template_for( 'checkout', '/theme/page.php', '/plugin/templates/commerce.php' )
+		);
+		$this->assertSame(
+			'/plugin/templates/commerce.php',
+			Blueworx_Clubhouse_Commerce_Pages::template_for( 'order-confirmation', '/theme/page.php', '/plugin/templates/commerce.php' )
+		);
+	}
+
+	public function test_every_other_page_keeps_the_theme_template(): void {
+		// template_include runs on every front-end request. Anything that is not
+		// one of ours must come back untouched, or the plugin has taken over the
+		// whole site.
+		$this->assertSame(
+			'/theme/page.php',
+			Blueworx_Clubhouse_Commerce_Pages::template_for( '', '/theme/page.php', '/plugin/templates/commerce.php' )
+		);
+	}
+
+	public function test_the_template_file_exists(): void {
+		// A template_include pointing at nothing gives a blank white page where
+		// someone is trying to pay.
+		$this->assertFileExists( dirname( __DIR__, 2 ) . '/templates/commerce.php' );
+	}
 }

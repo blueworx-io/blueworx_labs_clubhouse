@@ -1,0 +1,124 @@
+/*
+ * SureCart's checkout, wearing the member area's clothes.
+ *
+ * SureCart's fields are Stencil web components and 406 of its 482 components
+ * render into shadow DOM, so an ordinary selector cannot reach the input
+ * inside <sc-input>. Custom properties can — they inherit through the shadow
+ * boundary — and SureCart exposes a generous set of them (thirty-nine on the
+ * text input alone). Setting them on an ancestor is the supported way to theme
+ * the checkout, and it is the only way that survives their updates.
+ *
+ * Scoped to .bw-admin, like everything else in this folder, so it cannot reach
+ * a club's public shop pages.
+ *
+ * If SureCart renames a token, the declaration stops applying and their own
+ * default shows through. Ugly for a release, never broken.
+ *
+ * Token names read from SureCart 4.6.4 —
+ * dist/components/collection/components/ui/. See
+ * docs/integrations/surecart-notes.md.
+ */
+
+.bw-admin {
+  /* Type. SureCart sets its own stack on every control. */
+  --sc-font-sans: var(--bw-font-body);
+  --sc-input-font-family: var(--bw-font-body);
+
+  /* Fields, matching .bw-input. */
+  --sc-input-height-small: var(--bw-control-h-sm);
+  --sc-input-height-medium: var(--bw-control-h);
+  --sc-input-height-large: var(--bw-control-h);
+  --sc-input-border-radius-small: var(--bw-control-radius);
+  --sc-input-border-radius-medium: var(--bw-control-radius);
+  --sc-input-border-radius-large: var(--bw-control-radius);
+  --sc-input-border-color: var(--bw-border-field);
+  --sc-input-border-color-hover: var(--bw-border-strong);
+  --sc-input-border-color-focus: var(--bw-brand);
+  --sc-input-background-color: var(--bw-control-bg);
+  --sc-input-background-color-hover: var(--bw-control-bg-hover);
+  --sc-input-color: var(--bw-text-body);
+  --sc-input-placeholder-color: var(--bw-text-faint);
+
+  /* Labels, help and errors. */
+  --sc-input-label-color: var(--bw-text-heading);
+  --sc-input-help-text-color: var(--bw-text-muted);
+  --sc-input-error-text-color: var(--bw-danger);
+
+  /* The focus ring is the one thing a keyboard user depends on. */
+  --sc-focus-ring-color-primary: var(--bw-focus-color);
+  --sc-focus-ring-width: var(--bw-focus-width);
+
+  /* The pay button. */
+  --sc-color-primary-500: var(--bw-brand);
+}
+
+/* The pay button itself. sc-order-submit renders straight into light DOM
+   (SureCart 4.6.4, order-submit/sc-order-submit.js: render() returns
+   h("sc-button", …)), so bw-btn classes on the host would double-paint a
+   button-shaped background behind the real one — see the class docblock on
+   Checkout_Form. <sc-button> is its own shadow-DOM component, so the way in
+   is the same custom properties .bw-input uses (height, radius) plus the
+   font, scoped to just this button rather than every field. */
+.bw-admin sc-order-submit sc-button {
+  --sc-input-height-large: var(--bw-control-h);
+  --sc-input-border-radius-large: var(--bw-control-radius);
+  --sc-input-font-family: var(--bw-font-display);
+}
+
+/* The frame itself. Chrome only — the columns inside are SureCart's. */
+.clubhouse-checkout { display: flex; flex-direction: column; min-height: 100dvh; background: var(--bw-surface-page); }
+.clubhouse-checkout__head { display: flex; align-items: center; gap: var(--bw-space-6, 24px); padding: 0 var(--bw-space-8, 32px); min-height: 64px; background: var(--bw-surface-card); border-bottom: 1px solid var(--bw-border); }
+.clubhouse-checkout__brand { display: flex; align-items: center; gap: 12px; flex: 1 1 auto; min-width: 0; }
+.clubhouse-checkout__crest { display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; flex: none; border-radius: 8px; object-fit: cover; background: var(--bw-brand-wash); color: var(--bw-text-accent); font-family: var(--bw-font-display); font-size: 13px; font-weight: 700; }
+.clubhouse-checkout__titles { display: flex; flex-direction: column; min-width: 0; }
+.clubhouse-checkout__club { font-size: 12px; color: var(--bw-text-muted); }
+.clubhouse-checkout__h1 { margin: 0; font-family: var(--bw-font-display); font-size: 15px; font-weight: 600; color: var(--bw-text-heading); }
+.clubhouse-checkout__secure { display: inline-flex; align-items: center; gap: 6px; margin: 0; font-size: 12px; color: var(--bw-text-muted); }
+.clubhouse-checkout__body { flex: 1 1 auto; }
+.clubhouse-checkout__foot { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; padding: 14px var(--bw-space-8, 32px); background: var(--bw-surface-card); border-top: 1px solid var(--bw-border); }
+.clubhouse-checkout__back { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; }
+.clubhouse-checkout__links { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; margin-left: auto; }
+.clubhouse-checkout__links a { font-size: 12px; color: var(--bw-text-muted); text-decoration: none; }
+.clubhouse-checkout__links a:hover { color: var(--bw-text-link); }
+.clubhouse-checkout__footnote { margin: 0; font-size: 12px; color: var(--bw-text-faint); }
+
+/* On a phone the header stacks and the footer becomes a list, so every link
+   is a full-width target rather than three words wedged against a neighbour. */
+@media (max-width: 640px) {
+  .clubhouse-checkout__head { flex-wrap: wrap; gap: 8px; padding: 12px 16px; }
+  .clubhouse-checkout__secure { width: 100%; }
+  .clubhouse-checkout__foot { flex-direction: column; align-items: stretch; padding: 16px; }
+  .clubhouse-checkout__links { flex-direction: column; align-items: stretch; gap: 0; margin-left: 0; }
+  .clubhouse-checkout__links a { display: flex; align-items: center; min-height: 44px; }
+  .clubhouse-checkout__back { min-height: 44px; }
+
+  /* The pay bar: stays in view rather than scrolling away with the form.
+     Sticky, not fixed, so it only takes over the bottom of the viewport once
+     the form has scrolled that far, and never covers content on a short
+     phone screen. The fields column gets matching bottom padding so the bar
+     can never sit on top of the last field. */
+  .bw-admin .wp-block-surecart-submit {
+    position: sticky;
+    bottom: 0;
+    z-index: 10;
+    margin: 0 -16px;
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+    background: var(--bw-surface-card);
+    border-top: 1px solid var(--bw-border);
+  }
+  /* The pay button is the primary action on this screen; give it the same
+     44px finger target as the links above rather than the desktop 34px. */
+  .bw-admin sc-order-submit sc-button { --sc-input-height-large: 44px; }
+  .clubhouse-checkout__main { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
+}
+
+/* The two columns are SureCart's own blocks; these give them the member
+   area's rhythm and keep the summary in view while the form is scrolled. */
+.clubhouse-checkout__cols { display: flex; align-items: flex-start; gap: 32px; max-width: 1160px; margin: 0 auto; padding: 32px; }
+.clubhouse-checkout__main { flex: 1 1 auto; min-width: 0; }
+.clubhouse-checkout__rail { flex: 0 0 400px; position: sticky; top: 32px; }
+
+@media (max-width: 900px) {
+  .clubhouse-checkout__cols { flex-direction: column; gap: 20px; padding: 16px; }
+  .clubhouse-checkout__rail { flex: 1 1 auto; width: 100%; position: static; }
+}

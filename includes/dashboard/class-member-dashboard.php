@@ -167,8 +167,11 @@ final class Blueworx_Clubhouse_Member_Dashboard {
 	 * neither. The favicon wins: it is the square, small-size mark, which is
 	 * exactly what the 44px corner box wants — a wide logo shrinks to nothing
 	 * in it. Falls back to the logo, then to the club's initials in the shell.
+	 *
+	 * Public, beside club_name(): Commerce_Pages draws the same crest into the
+	 * checkout header, and needs the same answer this class already computes.
 	 */
-	private static function logo_url(): string {
+	public static function logo_url(): string {
 		if ( ! class_exists( 'Blueworx_Clubhouse_Frontend' ) || ! class_exists( 'Blueworx_Clubhouse_Options_Storage' ) ) {
 			return '';
 		}

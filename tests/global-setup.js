@@ -77,6 +77,21 @@ if ( is_int( $member_id ) && $member_id > 0 ) {
 	update_option( 'surecart_dashboard_page_id', $member_id );
 }
 
+// A page standing in for SureCart's checkout. CI has no SureCart, and
+// installing it to assert our own frame would be testing SureCart. The stored
+// page id IS the contract — Commerce_Pages dresses whichever post it names.
+$checkout_existing = get_page_by_path( 'checkout-fixture' );
+$checkout_id       = $checkout_existing instanceof WP_Post ? $checkout_existing->ID : wp_insert_post( array(
+	'post_type'    => 'page',
+	'post_status'  => 'publish',
+	'post_name'    => 'checkout-fixture',
+	'post_title'   => 'Checkout fixture',
+	'post_content' => '<p id="shop-content">SHOP CONTENT</p>',
+) );
+if ( is_int( $checkout_id ) && $checkout_id > 0 ) {
+	update_option( 'surecart_checkout_page_id', $checkout_id );
+}
+
 // A welcome pack for that dashboard to carry, written through the plugin's own
 // store rather than a hand-built option, so the fixture cannot drift from how
 // the admin screen saves.
