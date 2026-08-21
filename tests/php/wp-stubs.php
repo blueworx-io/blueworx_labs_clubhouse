@@ -30,6 +30,7 @@ $GLOBALS['wp_stub_queried_object_id'] = 0;
 $GLOBALS['wp_stub_is_singular']       = false;
 $GLOBALS['wp_stub_post_type']         = 'page';
 $GLOBALS['wp_stub_the_id']            = 0;
+$GLOBALS['wp_stub_is_404']            = false;
 
 function wp_stub_reset(): void {
 	$GLOBALS['wp_stub_calls']       = array();
@@ -56,6 +57,7 @@ function wp_stub_reset(): void {
 	$GLOBALS['wp_stub_is_singular']       = false;
 	$GLOBALS['wp_stub_post_type']         = 'page';
 	$GLOBALS['wp_stub_the_id']            = 0;
+	$GLOBALS['wp_stub_is_404']            = false;
 	unset( $GLOBALS['menu'], $GLOBALS['wp_meta_boxes'] );
 }
 
@@ -375,6 +377,11 @@ if ( ! function_exists( 'wp_add_dashboard_widget' ) ) {
 // fallback these replace, so tests that never touch them behave as before.
 if ( ! function_exists( 'is_front_page' ) ) {
 	function is_front_page(): bool { return (bool) ( $GLOBALS['wp_stub_is_front_page'] ?? false ); }
+}
+if ( ! function_exists( 'is_404' ) ) {
+	// set_404() cannot be stubbed against a real WP_Query in this harness — the
+	// tests that need is_404() true set this flag directly instead.
+	function is_404(): bool { return (bool) ( $GLOBALS['wp_stub_is_404'] ?? false ); }
 }
 if ( ! function_exists( 'get_query_var' ) ) {
 	function get_query_var( string $var, $default = '' ) { return $GLOBALS['wp_stub_query_vars'][ $var ] ?? $default; }

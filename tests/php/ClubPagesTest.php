@@ -47,24 +47,89 @@ final class ClubPagesTest extends TestCase {
 	}
 
 	public function test_the_page_args_carry_the_right_slug_title_and_status(): void {
-		$args = Blueworx_Clubhouse_Club_Pages::desired( 'about', 'About', false );
+		$args = Blueworx_Clubhouse_Club_Pages::desired( 'about', 'About' );
 		$this->assertSame( 'page', $args['post_type'] );
 		$this->assertSame( 'about', $args['post_name'] );
 		$this->assertSame( 'About', $args['post_title'] );
 		$this->assertSame( 'publish', $args['post_status'] );
 	}
 
-	public function test_the_member_area_page_is_never_public(): void {
-		// Nothing on it is for a signed-out visitor, and a published page would
-		// put it in the sitemap and in search results.
-		$args = Blueworx_Clubhouse_Club_Pages::desired( 'member-dashboard', 'Member area', true );
-		$this->assertSame( 'private', $args['post_status'] );
+	/**
+	 * The member area's page is published like every other club page.
+	 *
+	 * The page map's 'private' flag means "keep this out of the SEO report",
+	 * which is the SEO layer's own job via Page_Map::is_private() — it never
+	 * meant "make this a WordPress private post". A private post is filtered
+	 * out of WordPress's own page query for anyone without read_private_pages,
+	 * which is every ordinary member, so a private member area 404s for exactly
+	 * the people it exists for. Publishing widens nothing: the route is already
+	 * public, and the page does its own sign-in check, sending a signed-out
+	 * visitor to /login/.
+	 */
+	public function test_the_member_area_page_is_published_like_the_rest(): void {
+		$args = Blueworx_Clubhouse_Club_Pages::desired( 'member-dashboard', 'Member area' );
+		$this->assertSame( 'publish', $args['post_status'] );
+	}
+
+	/**
+	 * A page left 'private' by an earlier version of this plugin is republished
+	 * in place, not duplicated — otherwise every site upgraded from that version
+	 * keeps a member area no member can open.
+	 */
+	public function test_ensure_republishes_a_page_left_private_by_an_earlier_version(): void {
+		update_option( Blueworx_Clubhouse_Club_Pages::option_name( 'member-dashboard' ), 60 );
+		$GLOBALS['wp_stub_post_status'][60] = 'private';
+
+		Blueworx_Clubhouse_Club_Pages::ensure();
+
+		$updates = array_values(
+			array_filter(
+				wp_stub_calls( 'wp_update_post' ),
+				static fn( array $call ): bool => 60 === ( $call['args'][0]['ID'] ?? 0 )
+			)
+		);
+		$this->assertCount( 1, $updates, 'the stored page is repaired, not replaced' );
+		$this->assertSame( 'publish', $updates[0]['args'][0]['post_status'] );
+		$this->assertSame( 60, Blueworx_Clubhouse_Club_Pages::post_id( 'member-dashboard' ) );
+	}
+
+	/** A trashed page is still brought back rather than duplicated. */
+	public function test_ensure_republishes_a_trashed_page(): void {
+		update_option( Blueworx_Clubhouse_Club_Pages::option_name( 'about' ), 42 );
+		$GLOBALS['wp_stub_post_status'][42] = 'trash';
+
+		Blueworx_Clubhouse_Club_Pages::ensure();
+
+		$updates = array_values(
+			array_filter(
+				wp_stub_calls( 'wp_update_post' ),
+				static fn( array $call ): bool => 42 === ( $call['args'][0]['ID'] ?? 0 )
+			)
+		);
+		$this->assertCount( 1, $updates );
+		$this->assertSame( 'publish', $updates[0]['args'][0]['post_status'] );
+		$this->assertSame( 42, Blueworx_Clubhouse_Club_Pages::post_id( 'about' ) );
+	}
+
+	/** A page that is already published is left completely alone. */
+	public function test_ensure_leaves_a_published_page_alone(): void {
+		update_option( Blueworx_Clubhouse_Club_Pages::option_name( 'about' ), 42 );
+		$GLOBALS['wp_stub_post_status'][42] = 'publish';
+
+		Blueworx_Clubhouse_Club_Pages::ensure();
+
+		$touched = array_filter(
+			wp_stub_calls( 'wp_update_post' ),
+			static fn( array $call ): bool => 42 === ( $call['args'][0]['ID'] ?? 0 )
+		);
+		$this->assertCount( 0, $touched );
+		$this->assertSame( 42, Blueworx_Clubhouse_Club_Pages::post_id( 'about' ) );
 	}
 
 	public function test_the_body_is_left_empty(): void {
 		// The club's words stay in the content store and are still edited in
 		// Club Pages. A body here would be a second, contradictory copy.
-		$this->assertSame( '', Blueworx_Clubhouse_Club_Pages::desired( 'about', 'About', false )['post_content'] );
+		$this->assertSame( '', Blueworx_Clubhouse_Club_Pages::desired( 'about', 'About' )['post_content'] );
 	}
 
 	/**

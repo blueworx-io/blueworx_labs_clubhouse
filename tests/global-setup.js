@@ -92,6 +92,31 @@ if ( is_int( $checkout_id ) && $checkout_id > 0 ) {
 	update_option( 'surecart_checkout_page_id', $checkout_id );
 }
 
+// Clear the version stamp the plugin flushes its rewrite rules against, so the
+// next request re-runs Club_Pages::ensure() and re-computes the rules — the
+// same upgrade path a real site takes. The harness database survives between
+// runs, so without this a run would keep whatever pages and rules an older
+// build of the plugin left behind, and the specs would be testing that.
+delete_option( Blueworx_Clubhouse_Frontend::REWRITE_VERSION_OPTION );
+
+// A subscriber-level user — an ordinary signed-in member, who holds none of
+// admin's extra capabilities. member-dashboard.spec.js and
+// member-area-page.spec.js only ever sign in as admin, which also holds
+// read_private_pages — the one capability that hid the member area's original
+// bug from them: WordPress's own page query filters a private page out of its
+// results for anyone without it, which is every real member. A test that only
+// ever signs in as admin cannot see that.
+$member_user = get_user_by( 'login', 'member' );
+if ( ! $member_user ) {
+	$member_user_id = wp_create_user( 'member', 'wptest-member-pw', 'member@club.test' );
+	if ( is_int( $member_user_id ) ) {
+		$member_user = get_user_by( 'id', $member_user_id );
+	}
+}
+if ( $member_user instanceof WP_User ) {
+	$member_user->set_role( 'subscriber' );
+}
+
 // A welcome pack for that dashboard to carry, written through the plugin's own
 // store rather than a hand-built option, so the fixture cannot drift from how
 // the admin screen saves.

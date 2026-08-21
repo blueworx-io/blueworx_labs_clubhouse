@@ -187,6 +187,61 @@ final class FrontendTest extends TestCase {
 		$this->assertGreaterThan( $listing, $item, 'the item rule must be added after the listing to sit above it' );
 	}
 
+	/**
+	 * Once a slug has a real page, WordPress's own page routing answers for it
+	 * and the literal rewrite rule is skipped.
+	 */
+	public function test_register_rewrites_skips_the_literal_rule_for_a_real_page(): void {
+		update_option( Blueworx_Clubhouse_Club_Pages::option_name( 'about' ), 53 );
+
+		Blueworx_Clubhouse_Frontend::register_rewrites();
+
+		$all = implode( '|', array_map( static fn( $r ) => $r['args'][1], wp_stub_calls( 'add_rewrite_rule' ) ) );
+		$this->assertStringNotContainsString( 'clubhouse_page=about', $all );
+	}
+
+	/**
+	 * The member area is no different. Its page is published like every other
+	 * club page (Club_Pages::desired()), so WordPress's own routing can answer
+	 * for it too — a private post would have been filtered out of that query
+	 * for every member without read_private_pages, which is all of them.
+	 */
+	public function test_register_rewrites_skips_the_literal_rule_for_the_member_area_too(): void {
+		update_option( Blueworx_Clubhouse_Club_Pages::option_name( 'member-dashboard' ), 60 );
+
+		Blueworx_Clubhouse_Frontend::register_rewrites();
+
+		$all = implode( '|', array_map( static fn( $r ) => $r['args'][1], wp_stub_calls( 'add_rewrite_rule' ) ) );
+		$this->assertStringNotContainsString( 'clubhouse_page=member-dashboard', $all );
+	}
+
+	/**
+	 * The pages must exist before register_rewrites() runs on the same
+	 * request, or its per-slug decision is made against Club_Pages::post_id()
+	 * still reading 0 for every page — see maybe_ensure_pages_before_rewrites().
+	 */
+	public function test_register_hooks_ensure_pages_before_registering_rewrites(): void {
+		Blueworx_Clubhouse_Frontend::register();
+		$init = array_values( array_filter(
+			wp_stub_calls( 'add_action' ),
+			static fn( array $c ): bool => 'init' === $c['args'][0]
+		) );
+		$ensure = null;
+		$rules  = null;
+		foreach ( $init as $call ) {
+			$target = $call['args'][1];
+			if ( is_array( $target ) && 'maybe_ensure_pages_before_rewrites' === $target[1] ) {
+				$ensure = $call['args'][2] ?? 10;
+			}
+			if ( is_array( $target ) && 'register_rewrites' === $target[1] ) {
+				$rules = $call['args'][2] ?? 10;
+			}
+		}
+		$this->assertNotNull( $ensure, 'the pages are ensured on init' );
+		$this->assertNotNull( $rules, 'rules are registered on init' );
+		$this->assertLessThan( $rules, $ensure, 'the pages must exist before register_rewrites() decides which rules to keep' );
+	}
+
 	public function test_a_sport_page_rule_carries_the_item_through(): void {
 		Blueworx_Clubhouse_Frontend::register_rewrites();
 
@@ -500,6 +555,37 @@ final class FrontendTest extends TestCase {
 		$this->assertSame(
 			'/theme/page.php',
 			Blueworx_Clubhouse_Frontend::template_for_post( 999, '/theme/page.php', '/plugin/club-page.php' )
+		);
+	}
+
+	/**
+	 * maybe_404() sets $wp_query->set_404() for a switched-off page but cannot
+	 * clear the queried object it already resolved, and is_club_page() only
+	 * asks whether a real page exists — not whether it is visible right now.
+	 * Without this check a hidden page reached via its own real page would
+	 * still be handed club-page.php, whose render_body() returns '' for the
+	 * same visibility reason: right status, blank body, instead of the
+	 * theme's 404 page.
+	 */
+	public function test_serve_club_page_template_bails_out_on_a_404(): void {
+		update_option( Blueworx_Clubhouse_Club_Pages::option_name( 'about' ), 42 );
+		$GLOBALS['wp_stub_queried_object_id'] = 42;
+		$GLOBALS['wp_stub_is_404']            = true;
+
+		$this->assertSame(
+			'/theme/404.php',
+			Blueworx_Clubhouse_Frontend::serve_club_page_template( '/theme/404.php' )
+		);
+	}
+
+	public function test_serve_club_page_template_serves_ours_when_not_a_404(): void {
+		update_option( Blueworx_Clubhouse_Club_Pages::option_name( 'about' ), 42 );
+		$GLOBALS['wp_stub_queried_object_id'] = 42;
+		$GLOBALS['wp_stub_is_404']            = false;
+
+		$this->assertSame(
+			dirname( __DIR__, 2 ) . '/templates/club-page.php',
+			Blueworx_Clubhouse_Frontend::serve_club_page_template( '/theme/page.php' )
 		);
 	}
 

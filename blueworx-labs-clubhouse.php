@@ -86,6 +86,13 @@ add_action( 'plugins_loaded', 'blueworx_labs_clubhouse_init' );
 register_activation_hook(
 	__FILE__,
 	static function () {
+		// Before register_rewrites(): its per-slug decision reads
+		// Club_Pages::post_id(), so the real pages must exist first — otherwise
+		// every slug's literal rewrite rule gets registered and flushed as if
+		// none of them had a real page yet, and activation would ship a site
+		// that only routes through the rewrite rules until some later,
+		// unrelated flush noticed the pages were actually there.
+		Blueworx_Clubhouse_Club_Pages::ensure();
 		Blueworx_Clubhouse_Frontend::register_rewrites();
 		Blueworx_Clubhouse_Collection_Types::register();
 		Blueworx_Clubhouse_Collection_Seeder::seed();

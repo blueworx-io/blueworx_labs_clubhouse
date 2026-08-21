@@ -141,6 +141,13 @@ final class Blueworx_Clubhouse_Frontend {
 		// seeder runs on activation, before a store has necessarily connected,
 		// and the filter is a no-op on a site with no shop.
 		Blueworx_Clubhouse_Checkout_Form::register();
+		// Priority 5: before register_rewrites() below decides, for each slug,
+		// whether to keep or skip its literal rewrite rule. That decision reads
+		// Club_Pages::post_id(), so the real pages have to exist BEFORE
+		// register_rewrites() runs on this same request — see
+		// maybe_ensure_pages_before_rewrites()'s own comment for what went wrong
+		// when they didn't.
+		add_action( 'init', array( self::class, 'maybe_ensure_pages_before_rewrites' ), 5 );
 		add_action( 'init', array( self::class, 'register_rewrites' ) );
 		// Priority 11: after register_rewrites() above, so a flush writes the rules
 		// this version actually declares.
@@ -199,6 +206,36 @@ final class Blueworx_Clubhouse_Frontend {
 	}
 
 	/**
+	 * Create or repair the real pages behind every club page BEFORE
+	 * register_rewrites() runs on this same request, so a slug that gains a
+	 * real page here already has one by the time register_rewrites() decides
+	 * whether to keep or skip its literal rule.
+	 *
+	 * Splitting this out of maybe_flush_rewrites() below is not cosmetic:
+	 * add_rewrite_rule() appends into WP_Rewrite's in-memory rule list the
+	 * moment it is called, and there is no way to remove an entry once added.
+	 * register_rewrites() runs at the default 'init' priority (10); if
+	 * Club_Pages::ensure() ran any later than that — including inside
+	 * maybe_flush_rewrites() at priority 11, where it used to live — every
+	 * slug's literal rule would already be locked in for this request based
+	 * on Club_Pages::post_id() still reading 0, and the very flush meant to
+	 * fix that would instead persist the stale set. The site would keep
+	 * routing every club page through the rewrite rule until some later,
+	 * unrelated flush — the feature this version shipped would not actually
+	 * be on until then.
+	 *
+	 * Gated by the same version stamp maybe_flush_rewrites() checks, so this
+	 * costs one option read on every request and nothing more except on the
+	 * request that matters.
+	 */
+	public static function maybe_ensure_pages_before_rewrites(): void {
+		if ( ! self::rewrites_need_flush_now() ) {
+			return;
+		}
+		Blueworx_Clubhouse_Club_Pages::ensure();
+	}
+
+	/**
 	 * Flush rewrite rules once after an upgrade that added a page.
 	 *
 	 * The activation hook flushes, but activation does NOT re-run when a plugin is
@@ -211,21 +248,28 @@ final class Blueworx_Clubhouse_Frontend {
 	 * Stamped with the version rather than a boolean flag, so every future release
 	 * that changes the page map is covered without anyone remembering to do this.
 	 * Runs after register_rewrites() on the same hook, so the rules being flushed
-	 * into the cache are the current ones.
+	 * into the cache are the current ones — computed, thanks to
+	 * maybe_ensure_pages_before_rewrites() running first, with the real pages
+	 * already in place.
 	 */
 	public static function maybe_flush_rewrites(): void {
-		$running = defined( 'BLUEWORX_LABS_CLUBHOUSE_VERSION' ) ? (string) BLUEWORX_LABS_CLUBHOUSE_VERSION : '';
-		if ( '' === $running ) {
+		if ( ! self::rewrites_need_flush_now() ) {
 			return;
 		}
-		if ( ! self::rewrites_need_flush( $running, get_option( self::REWRITE_VERSION_OPTION, null ) ) ) {
-			return;
-		}
+		$running = (string) BLUEWORX_LABS_CLUBHOUSE_VERSION;
 		flush_rewrite_rules();
 		self::drop_block_data();
-		Blueworx_Clubhouse_Club_Pages::ensure();
 		// Autoload off: read once per upgrade, never on a normal request.
 		update_option( self::REWRITE_VERSION_OPTION, $running, false );
+	}
+
+	/** Shared gate for the two hooks above — same check, same version stamp. */
+	private static function rewrites_need_flush_now(): bool {
+		$running = defined( 'BLUEWORX_LABS_CLUBHOUSE_VERSION' ) ? (string) BLUEWORX_LABS_CLUBHOUSE_VERSION : '';
+		if ( '' === $running ) {
+			return false;
+		}
+		return self::rewrites_need_flush( $running, get_option( self::REWRITE_VERSION_OPTION, null ) );
 	}
 
 	/**
@@ -255,9 +299,11 @@ final class Blueworx_Clubhouse_Frontend {
 			// accepted once it has confirmed a published page actually exists (see
 			// WP::parse_request()'s verbose-page-rules check) — so leaving both in
 			// would mean this rule, being first, always wins and the real page is
-			// never reached. Nothing is deleted: a page whose real page is later
-			// trashed or removed loses its stored id, and this rule reappears on
-			// the next flush, exactly as reversible as it was before.
+			// never reached. Every club page is published, the member area
+			// included (Club_Pages::desired()), so WordPress's own routing can
+			// answer for all of them. Nothing is deleted: a page whose real page is
+			// later trashed or removed loses its stored id, and this rule reappears
+			// on the next flush, exactly as reversible as it was before.
 			if ( Blueworx_Clubhouse_Club_Pages::post_id( $page['slug'] ) <= 0 ) {
 				add_rewrite_rule(
 					'^' . $page['slug'] . '/?$',
@@ -459,6 +505,21 @@ final class Blueworx_Clubhouse_Frontend {
 	public static function serve_club_page_template( $template ): string {
 		$template = (string) $template;
 		if ( ! function_exists( 'get_queried_object_id' ) ) {
+			return $template;
+		}
+		// maybe_404() (template_redirect, earlier than this template_include
+		// filter) calls $wp_query->set_404() for a switched-off page, but does
+		// not — and cannot — clear the queried object it already resolved.
+		// is_club_page() only asks whether a real page exists, not whether it
+		// is currently visible, so without this check a hidden page reached
+		// through its own real page would still be handed club-page.php here,
+		// whose render_body() then returns '' for the same reason — the
+		// visibility check is in resolve_slug(), which current_slug() has
+		// already refused to answer. Right status, blank body, instead of the
+		// theme's own 404 page. filter_template() does not need this same
+		// check: it already returns $template unchanged whenever current_slug()
+		// is null, which a 404'd page always is.
+		if ( function_exists( 'is_404' ) && is_404() ) {
 			return $template;
 		}
 		return self::template_for_post(

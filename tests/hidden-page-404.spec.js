@@ -40,6 +40,11 @@ async function setPageVisible(page, slug, visible) {
 test('a page switched off answers 404, and a page that is on does not @wordpress', async ({
   page,
 }) => {
+  // Two full trips through the Setup screen — switch off, then switch back —
+  // on top of signing in. PHP's built-in server is single-threaded (see
+  // playwright.config.js), so that admin screen and its scripts alone can eat
+  // the default 30s budget. Slow by nature, not by failure.
+  test.slow();
   await loginAsAdmin(page);
 
   const on = await page.goto('/contact/');
@@ -50,6 +55,12 @@ test('a page switched off answers 404, and a page that is on does not @wordpress
 
     const off = await page.goto('/contact/');
     expect(off.status(), 'a switched-off page still answered').toBe(404);
+    // Regression: the real page behind /contact/ still exists and still
+    // matched, so the template filter that serves it kept doing so even after
+    // set_404() ran — right status, but an empty body instead of the theme's
+    // own 404 page.
+    const bodyText = await page.locator('body').innerText();
+    expect(bodyText.trim().length, 'a 404 must not render an empty body').toBeGreaterThan(0);
   } finally {
     // Always put it back. Visibility is stored site-wide, so a failure partway
     // through would leave every later spec looking at a site missing a page.

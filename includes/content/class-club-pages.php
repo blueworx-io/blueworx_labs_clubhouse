@@ -80,14 +80,23 @@ final class Blueworx_Clubhouse_Club_Pages {
 	 * page it describes always gets the post_name 'home'. The body is always
 	 * empty — the club's words live in the content store, not here.
 	 *
+	 * Every club page is published, the member area included. The page map's
+	 * 'private' flag means "keep this out of the SEO report", not "make this a
+	 * WordPress private post" — and the SEO layer reads that flag itself, via
+	 * Page_Map::is_private(). A private post is filtered out of WordPress's own
+	 * page query for anyone without read_private_pages, which is every ordinary
+	 * member, so a private member area 404s for exactly the people it is for.
+	 * Publishing it widens nothing: the member area route is already public and
+	 * does its own sign-in check, sending a signed-out visitor to /login/.
+	 *
 	 * @return array<string,string>
 	 */
-	public static function desired( string $slug, string $label, bool $private ): array {
+	public static function desired( string $slug, string $label ): array {
 		return array(
 			'post_type'    => 'page',
 			'post_name'    => '' === $slug ? 'home' : $slug,
 			'post_title'   => $label,
-			'post_status'  => $private ? self::PRIVATE_STATUS : self::PUBLIC_STATUS,
+			'post_status'  => self::PUBLIC_STATUS,
 			'post_content' => '',
 		);
 	}
@@ -97,10 +106,11 @@ final class Blueworx_Clubhouse_Club_Pages {
 	 *
 	 * Walks Page_Map::pages() — the full list, not available() — so a club
 	 * that installs an integration later already has the page waiting for it.
-	 * For each one: a stored id naming a published or private page of type
-	 * 'page' is left alone; a stored id naming a trashed page is restored
-	 * rather than duplicated; anything else gets a fresh page and its id
-	 * stored. Idempotent — running it twice creates nothing.
+	 * For each one: a stored id naming a published page of type 'page' is left
+	 * alone; a stored id naming a page in any other status — trashed, or left
+	 * 'private' by an earlier version of this plugin — is republished rather
+	 * than duplicated; anything else gets a fresh page and its id stored.
+	 * Idempotent — running it twice creates nothing.
 	 *
 	 * Also makes Home the site's static front page — Home's slug is '', so
 	 * without this the site root would never reach it. Only when the front
@@ -113,7 +123,7 @@ final class Blueworx_Clubhouse_Club_Pages {
 			return;
 		}
 		foreach ( Blueworx_Clubhouse_Page_Map::pages() as $page ) {
-			self::ensure_one( $page['slug'], $page['label'], (bool) ( $page['private'] ?? false ) );
+			self::ensure_one( $page['slug'], $page['label'] );
 		}
 		self::ensure_home_is_front_page();
 	}
@@ -161,34 +171,38 @@ final class Blueworx_Clubhouse_Club_Pages {
 	}
 
 	/** The create-or-repair for a single club page. */
-	private static function ensure_one( string $slug, string $label, bool $private ): void {
+	private static function ensure_one( string $slug, string $label ): void {
 		$post_id = self::post_id( $slug );
 		$status  = self::current_status( $post_id );
 
-		if ( self::PUBLIC_STATUS === $status || self::PRIVATE_STATUS === $status ) {
+		if ( self::PUBLIC_STATUS === $status ) {
 			return;
 		}
 
-		if ( 'trash' === $status ) {
-			self::restore( $post_id, $private );
+		// The page is there but is not published — trashed by an admin, or left
+		// 'private' by an earlier version of this plugin, which mistook the page
+		// map's SEO flag for a post status. Repaired in place rather than
+		// duplicated, so the club keeps the page and everything pointing at it.
+		if ( '' !== $status ) {
+			self::republish( $post_id );
 			return;
 		}
 
-		$inserted = wp_insert_post( self::desired( $slug, $label, $private ) );
+		$inserted = wp_insert_post( self::desired( $slug, $label ) );
 		if ( is_numeric( $inserted ) && (int) $inserted > 0 && function_exists( 'update_option' ) ) {
 			update_option( self::option_name( $slug ), (int) $inserted );
 		}
 	}
 
-	/** Bring a trashed page back to the status a club page needs. */
-	private static function restore( int $post_id, bool $private ): void {
+	/** Bring an existing page back to the published status a club page needs. */
+	private static function republish( int $post_id ): void {
 		if ( ! function_exists( 'wp_update_post' ) ) {
 			return;
 		}
 		wp_update_post(
 			array(
 				'ID'          => $post_id,
-				'post_status' => $private ? self::PRIVATE_STATUS : self::PUBLIC_STATUS,
+				'post_status' => self::PUBLIC_STATUS,
 			)
 		);
 	}
