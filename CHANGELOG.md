@@ -5,6 +5,13 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.86.0
+
+- **Your club's pages are now real WordPress pages.** They behave like any other page on your site, which is what lets everything below work.
+- **Switching a page off in Setup now unpublishes it**, so it disappears from your menu, your sitemap and search — not just from the site's own navigation. Switching it back on republishes it.
+- **A club page's status can no longer be changed from the Pages list**, by Quick Edit or Bulk Edit. Setup is the one place that decides whether a page is on, so the two can never disagree.
+- **Links to your pages now come from WordPress itself**, so they stay correct if you change your permalink settings or move a page.
+
 ## 0.85.1
 
 - **The checkout and thank-you pages no longer carry your site's footer as well as their own.** Both now fill the page on their own, the way they were designed to, instead of sitting inside the rest of your site with a second header above and a second footer below.
