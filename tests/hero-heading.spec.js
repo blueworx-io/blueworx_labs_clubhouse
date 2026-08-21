@@ -56,7 +56,15 @@ for (const vp of VIEWPORTS) {
   for (const hero of HEROES) {
     test(`${hero.block} highlight starts on line two at ${vp.name}`, async ({ page }) => {
       await page.setViewportSize({ width: vp.width, height: vp.height });
-      await page.goto(hero.page === '' ? '?clubhouse_page=' : `?clubhouse_page=${hero.page}`);
+      // Under WordPress a club page is a real page at its own address. The
+      // '?clubhouse_page=' form is the preview's, and its empty-value case no
+      // longer reaches the club home at all — it falls through to WordPress's
+      // own front page, which has no hero on it.
+      const address =
+        test.info().project.name === 'wordpress'
+          ? `/${hero.page}${'' === hero.page ? '' : '/'}`
+          : hero.page === '' ? '?clubhouse_page=' : `?clubhouse_page=${hero.page}`;
+      await page.goto(address);
 
       const h1 = page.locator(`.${hero.block}__title`).first();
       await expect(h1).toBeVisible();

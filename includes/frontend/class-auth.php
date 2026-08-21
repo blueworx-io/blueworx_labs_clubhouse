@@ -86,8 +86,10 @@ final class Blueworx_Clubhouse_Auth {
 
 	/** True when this request is the clubhouse login page. */
 	private static function is_login_page(): bool {
-		$qv = function_exists( 'get_query_var' ) ? get_query_var( Blueworx_Clubhouse_Frontend::QUERY_VAR ) : '';
-		return 'login' === $qv;
+		// Asked of the central resolver rather than the query var: the login page
+		// is a real WordPress page now, reached at /login/ with no query var set,
+		// and reading the var meant no sign-in form was ever handled there.
+		return 'login' === Blueworx_Clubhouse_Frontend::current_page_slug();
 	}
 
 	private static function settings(): Blueworx_Clubhouse_Auth_Settings {

@@ -21,6 +21,7 @@ require_once __DIR__ . '/core/class-registry.php';
 require_once __DIR__ . '/content/class-content-store.php';
 require_once __DIR__ . '/content/class-content-sanitiser.php';
 require_once __DIR__ . '/content/class-visibility.php';
+require_once __DIR__ . '/content/class-club-pages.php';
 require_once __DIR__ . '/content/class-link-catalogue.php';
 require_once __DIR__ . '/content/class-menu.php';
 require_once __DIR__ . '/content/class-shortcodes.php';
@@ -82,6 +83,7 @@ require_once __DIR__ . '/admin/class-access-screen.php';
 require_once __DIR__ . '/admin/class-seo-screen.php';
 require_once __DIR__ . '/admin/class-guide.php';
 require_once __DIR__ . '/admin/class-guide-screen.php';
+require_once __DIR__ . '/admin/class-club-page-editing.php';
 
 // Collections (pure)
 require_once __DIR__ . '/collections/interface-collections.php';

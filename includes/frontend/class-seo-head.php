@@ -40,8 +40,8 @@ final class Blueworx_Clubhouse_Seo_Head {
 	);
 
 	public static function register(): void {
-		// Priority 1: before wp_head's own canonical (10) so ours is the one that
-		// lands when we are the plugin doing this job.
+		// Priority 1: ahead of core's own canonical at 10, so render() can take
+		// that one off before it runs when this is a page we speak for.
 		add_action( 'wp_head', array( self::class, 'render' ), 1 );
 	}
 
@@ -93,6 +93,16 @@ final class Blueworx_Clubhouse_Seo_Head {
 
 		$ctx  = self::context();
 		$tags = Blueworx_Clubhouse_Seo::tags( $ctx );
+
+		// Now that a club page is a real WordPress page, core emits a canonical
+		// of its own at priority 10. Two canonicals is worse than either alone —
+		// a crawler is entitled to ignore both — and ours is the one that knows a
+		// filtered view should point at the page it is a view of. So core's comes
+		// off, here rather than in register(), where we do not yet know whether
+		// this is our page or whether a rival SEO plugin has the job.
+		if ( function_exists( 'remove_action' ) ) {
+			remove_action( 'wp_head', 'rel_canonical' );
+		}
 
 		// A filtered view is the same page with some of it hidden — a convenience
 		// for a reader, not a page of its own. Every one of them produced a
@@ -177,8 +187,11 @@ final class Blueworx_Clubhouse_Seo_Head {
 	}
 
 	private static function slug(): string {
-		$qv = get_query_var( Blueworx_Clubhouse_Frontend::QUERY_VAR );
-		return is_string( $qv ) ? $qv : '';
+		// The one answer to "which club page is this request?", which knows both
+		// the old query-var form and a real page reached at its own address.
+		// Reading the query var here instead made every club page describe
+		// itself as the home page once the pages became real.
+		return (string) ( Blueworx_Clubhouse_Frontend::current_page_slug() ?? '' );
 	}
 
 	/**

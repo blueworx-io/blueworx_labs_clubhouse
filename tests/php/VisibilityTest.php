@@ -81,4 +81,84 @@ final class VisibilityTest extends TestCase {
 		$v->set_page_visible( 'blog', true );
 		$this->assertTrue( $v->is_page_visible( 'blog' ) );
 	}
+
+	/**
+	 * Switching a page off drafts the real page behind it.
+	 *
+	 * The flag alone only told this plugin not to render — the page stayed
+	 * published, so it stayed in the sitemap and in search. A draft is out of
+	 * both and 404s to a visitor, which is what "switched off" always meant.
+	 */
+	public function test_switching_a_page_off_drafts_its_page(): void {
+		wp_stub_reset();
+		update_option( Blueworx_Clubhouse_Club_Pages::option_name( 'contact' ), 42 );
+		$GLOBALS['wp_stub_post_status'][42] = 'publish';
+
+		$this->vis()->set_page_visible( 'contact', false );
+
+		$updates = wp_stub_calls( 'wp_update_post' );
+		$this->assertCount( 1, $updates );
+		$this->assertSame( 42, $updates[0]['args'][0]['ID'] );
+		$this->assertSame( 'draft', $updates[0]['args'][0]['post_status'] );
+	}
+
+	public function test_switching_a_page_back_on_publishes_its_page(): void {
+		wp_stub_reset();
+		update_option( Blueworx_Clubhouse_Club_Pages::option_name( 'contact' ), 42 );
+		$GLOBALS['wp_stub_post_status'][42] = 'draft';
+
+		$this->vis()->set_page_visible( 'contact', true );
+
+		$updates = wp_stub_calls( 'wp_update_post' );
+		$this->assertCount( 1, $updates );
+		$this->assertSame( 'publish', $updates[0]['args'][0]['post_status'] );
+	}
+
+	/** Home's visibility key is 'home' but its slug is '' — never a truthiness check. */
+	public function test_switching_home_off_drafts_the_front_page(): void {
+		wp_stub_reset();
+		update_option( Blueworx_Clubhouse_Club_Pages::option_name( '' ), 7 );
+		$GLOBALS['wp_stub_post_status'][7] = 'publish';
+
+		$this->vis()->set_page_visible( 'home', false );
+
+		$updates = wp_stub_calls( 'wp_update_post' );
+		$this->assertCount( 1, $updates );
+		$this->assertSame( 7, $updates[0]['args'][0]['ID'] );
+		$this->assertSame( 'draft', $updates[0]['args'][0]['post_status'] );
+	}
+
+	/** The stored flag is still the record the Setup screen reads. */
+	public function test_the_flag_is_kept_as_well_as_the_status(): void {
+		wp_stub_reset();
+		update_option( Blueworx_Clubhouse_Club_Pages::option_name( 'contact' ), 42 );
+		$GLOBALS['wp_stub_post_status'][42] = 'publish';
+
+		$v = $this->vis();
+		$v->set_page_visible( 'contact', false );
+
+		$this->assertFalse( $v->is_page_visible( 'contact' ) );
+	}
+
+	/** A page whose status already matches is not written to again. */
+	public function test_a_page_already_in_the_right_status_is_left_alone(): void {
+		wp_stub_reset();
+		update_option( Blueworx_Clubhouse_Club_Pages::option_name( 'contact' ), 42 );
+		$GLOBALS['wp_stub_post_status'][42] = 'publish';
+
+		$this->vis()->set_page_visible( 'contact', true );
+
+		$this->assertSame( array(), wp_stub_calls( 'wp_update_post' ) );
+	}
+
+	/** A section switch is not a page switch and must never move a page's status. */
+	public function test_switching_a_section_off_never_touches_a_page_status(): void {
+		wp_stub_reset();
+		update_option( Blueworx_Clubhouse_Club_Pages::option_name( 'contact' ), 42 );
+		$GLOBALS['wp_stub_post_status'][42] = 'publish';
+
+		$this->vis()->set_section_visible( 'contact', 'form', false );
+
+		$this->assertSame( array(), wp_stub_calls( 'wp_update_post' ) );
+	}
 }
