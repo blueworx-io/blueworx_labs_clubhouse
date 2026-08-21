@@ -5,6 +5,10 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.84.2
+
+- **A club with no shop no longer sees empty Billing and Account screens** in the member area. They only appear once the shop is set up, so members are not offered menu items that lead nowhere.
+
 ## 0.84.1
 
 - **Space between the cards on each member area screen**, which used to sit flush against each other, and a tighter gap between the shortcut tiles.

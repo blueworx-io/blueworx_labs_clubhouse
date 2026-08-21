@@ -36,10 +36,10 @@ final class DashboardViewsTest extends TestCase {
 	}
 
 	public function test_a_club_with_no_shop_is_not_offered_shop_only_views(): void {
-		// Orders, Invoices and Plans need the shop and are absent. Billing and
-		// Account do not — they render the honest empty state instead.
+		// Orders, Invoices, Plans, Billing and Account are all built from the
+		// shop's own blocks, so none of them is offered without it.
 		$views = Blueworx_Clubhouse_Dashboard_Views::available( false, true );
-		$this->assertSame( array( 'dashboard', 'bookings', 'billing', 'account' ), $this->keys( $views ) );
+		$this->assertSame( array( 'dashboard', 'bookings' ), $this->keys( $views ) );
 	}
 
 	public function test_a_club_with_no_bookings_is_not_offered_bookings(): void {
@@ -49,18 +49,18 @@ final class DashboardViewsTest extends TestCase {
 
 	public function test_a_club_with_neither_still_has_somewhere_to_land(): void {
 		// The welcome pack lives here, and a club that has not set up a shop
-		// should still have a member area that greets a member. Billing and
-		// Account are offered too, empty though they render.
+		// should still have a member area that greets a member — with nothing
+		// else offered, because there is nothing behind it.
 		$views = Blueworx_Clubhouse_Dashboard_Views::available( false, false );
-		$this->assertSame( array( 'dashboard', 'billing', 'account' ), $this->keys( $views ) );
+		$this->assertSame( array( 'dashboard' ), $this->keys( $views ) );
 	}
 
-	public function test_account_is_available_with_no_shop_at_all(): void {
-		// Its requires was dropped deliberately — an empty Billing or Account
-		// panel is the wanted outcome, not a reason to hide the tab.
+	public function test_account_is_not_offered_with_no_shop_at_all(): void {
+		// Every panel it carries is the shop's, so without the shop it would be
+		// a nav item leading to an empty screen.
 		$views   = Blueworx_Clubhouse_Dashboard_Views::available( false, false );
 		$account = Blueworx_Clubhouse_Dashboard_Views::find( 'account', $views );
-		$this->assertIsArray( $account );
+		$this->assertNull( $account );
 	}
 
 	public function test_side_offers_the_desktop_sidebars_views(): void {
@@ -85,10 +85,10 @@ final class DashboardViewsTest extends TestCase {
 		);
 	}
 
-	public function test_bar_carries_billing_and_account_on_a_club_with_no_shop(): void {
+	public function test_bar_drops_billing_and_account_on_a_club_with_no_shop(): void {
 		$views = Blueworx_Clubhouse_Dashboard_Views::available( false, false );
 		$this->assertSame(
-			array( 'dashboard', 'billing', 'account' ),
+			array( 'dashboard' ),
 			$this->keys( Blueworx_Clubhouse_Dashboard_Views::bar( $views ) )
 		);
 	}

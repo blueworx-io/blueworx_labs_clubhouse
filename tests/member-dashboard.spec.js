@@ -53,9 +53,11 @@ test('the member area stylesheet loads, and before the page is drawn @wordpress'
 
 test('a club with no shop and no bookings is offered no dead nav items @wordpress', async ({ page }) => {
   await page.goto(DASHBOARD);
-  await expect(page.locator('.bw-secnav__item')).toHaveCount(1);
+  // Counts the view links only: 'Back home' is drawn as a sidebar item too,
+  // and it is the way out of the member area rather than a view to switch to.
+  await expect(page.locator('.bw-secnav__item[data-view-link]')).toHaveCount(1);
   // Built on the page's own address, not a bare query that would replace it.
-  await expect(page.locator('.bw-secnav__item')).toHaveAttribute(
+  await expect(page.locator('.bw-secnav__item[data-view-link]')).toHaveAttribute(
     'href',
     /member-dashboard\/\?view=dashboard$/,
   );
