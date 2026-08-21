@@ -16,6 +16,13 @@ const openDemo = async (page) => {
 // Berry -> accent #c2337a, block #4e2235. Signal Orange -> block #602e1b.
 const BERRY_BLOCK = 'rgb(78, 34, 53)';
 
+// A second page to navigate to, in the form each project understands. Under
+// WordPress the club pages are real pages at their own addresses, and 'page' is
+// WordPress's own pagination variable — '?page=about' is not an address there,
+// it is an invalid page number, and it answers 404.
+const secondPage = () =>
+  test.info().project.name === 'wordpress' ? '/about/?demo=1' : '?demo=1&page=about';
+
 const rootToken = (page, name) =>
   page.evaluate((n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim(), name);
 
@@ -46,7 +53,7 @@ test('the accent survives navigation via the cookie', async ({ page }) => {
   await page.goto('?demo=1');
   await openDemo(page);
   await page.locator('[data-clubhouse-accent="berry"]').click();
-  await page.goto('?demo=1&page=about');
+  await page.goto(secondPage());
   await openDemo(page);
   // Re-applied by the head script, before paint.
   expect(await rootToken(page, '--color-accent')).toBe('#c2337a');
@@ -89,7 +96,7 @@ test('the selected swatch survives navigation, like the accent itself', async ({
   await page.goto('?demo=1');
   await openDemo(page);
   await page.locator('[data-clubhouse-accent="berry"]').click();
-  await page.goto('?demo=1&page=about');
+  await page.goto(secondPage());
   await openDemo(page);
   // The head script republishes the applied slug; demo.js re-flags the swatch once
   // the footer markup exists. Without this the page is berry but no swatch says so.
