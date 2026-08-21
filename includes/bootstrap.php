@@ -83,6 +83,7 @@ require_once __DIR__ . '/admin/class-access-screen.php';
 require_once __DIR__ . '/admin/class-seo-screen.php';
 require_once __DIR__ . '/admin/class-guide.php';
 require_once __DIR__ . '/admin/class-guide-screen.php';
+require_once __DIR__ . '/admin/class-club-page-editing.php';
 
 // Collections (pure)
 require_once __DIR__ . '/collections/interface-collections.php';

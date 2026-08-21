@@ -79,6 +79,7 @@ function blueworx_labs_clubhouse_init() {
 	Blueworx_Clubhouse_SureCart_Products::register();
 	Blueworx_Clubhouse_Shop_Pages_Controller::register();
 	Blueworx_Clubhouse_Wordpress_Pages::register();
+	Blueworx_Clubhouse_Club_Page_Editing::register();
 	add_action( 'admin_menu', array( Blueworx_Clubhouse_Collection_Types::class, 'register_content_menu' ) );
 }
 add_action( 'plugins_loaded', 'blueworx_labs_clubhouse_init' );
