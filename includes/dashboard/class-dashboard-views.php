@@ -96,7 +96,7 @@ final class Blueworx_Clubhouse_Dashboard_Views {
 				'title'     => 'Billing',
 				'lede'      => 'What you pay, what you have bought, and what you owe.',
 				'icon'      => 'file-spreadsheet',
-				'requires'  => '',
+				'requires'  => self::NEEDS_SURECART,
 				'where'     => 'bar',
 				// The phone's one money screen, so it carries the same three
 				// panels the sidebar splits into Plans, Orders and Invoices.
@@ -120,11 +120,10 @@ final class Blueworx_Clubhouse_Dashboard_Views {
 				'title'     => 'Account details',
 				'lede'      => 'Your details and how you pay.',
 				'icon'      => 'users',
-				// Dropped deliberately: without SureCart the blocks below render
-				// nothing and view_body() falls back to the honest empty state,
-				// which is the wanted outcome on a phone — not a reason to hide
-				// the tab that carries it.
-				'requires'  => '',
+				// Every block below is SureCart's, so without it this view has
+				// nothing to show. Offered only when SureCart is there, like any
+				// other view whose plugin is absent.
+				'requires'  => self::NEEDS_SURECART,
 				'where'     => 'both',
 				'blocks'    => array( 'surecart/customer-billing-details', 'surecart/customer-payment-methods' ),
 				'shortcode' => '',

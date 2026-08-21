@@ -15,6 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **You never have to build a checkout form.** One is set up for you, ready to take payments, and you can still change it if you want to.
 - Card details are still handled entirely by Stripe. The club never sees them.
 
+## 0.84.2
+
+- **A club with no shop no longer sees empty Billing and Account screens** in the member area. They only appear once the shop is set up, so members are not offered menu items that lead nowhere.
+
 ## 0.84.1
 
 - **Space between the cards on each member area screen**, which used to sit flush against each other, and a tighter gap between the shortcut tiles.

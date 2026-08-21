@@ -95,14 +95,12 @@ test('clicking a nav item swaps panels without navigating @wordpress', async ({ 
   await expect(page.locator('[data-view="test-second-view"]')).toBeFocused();
 });
 
-// The harness has neither SureCart nor LatePoint, so the real page already
-// carries Dashboard, Billing and Account — see Dashboard_Views::all(): Billing
-// and Account no longer require a shop. The bar is a curated list now (Task 1
-// of the bar-report brief), so faking a full club means adding Bookings to the
-// bar and Orders/Invoices/Plans to the sidebar only — not to the bar, which
-// never carries them — the same response-splicing approach the click test
-// above uses. Billing carries their panels itself on a phone, so there are no
-// link rows under it any more.
+// The harness has neither SureCart nor LatePoint, so the real page carries
+// Dashboard alone — see Dashboard_Views::all(). Faking a full club therefore
+// means splicing Bookings, Billing and Account into the bar, and
+// Orders/Invoices/Plans into the sidebar only, which the bar never carries.
+// Same response-splicing approach the click test above uses. Billing carries
+// their panels itself on a phone, so there are no link rows under it.
 test('a phone gets the bottom bar, not the sidebar nav @wordpress', async ({ page }) => {
   await page.route('**/member-dashboard/', async (route) => {
     const response = await route.fetch();
@@ -116,14 +114,18 @@ test('a phone gets the bottom bar, not the sidebar nav @wordpress', async ({ pag
       .join('');
     body = body.replace('Dashboard</span></a></nav>', 'Dashboard</span></a>' + extraNavItems + '</nav>');
 
-    // The server already draws the bar, carrying Dashboard, Billing and
-    // Account for this club. Bookings is the one extra view the bar can carry
-    // — Orders, Invoices and Plans are sidebar-only and never appear here.
+    // The server draws only Dashboard in the bar for this club: Billing and
+    // Account are the shop's, and the harness has no shop. So faking a full
+    // club means splicing those two in alongside Bookings. Orders, Invoices
+    // and Plans are sidebar-only and never appear here.
     const barOpen = '<nav class="clubhouse-member__tabbar" aria-label="Your account">';
-    const bookingsTab = '<a class="clubhouse-member__tab" data-view-link="bookings"'
-      + ' data-view-title="bookings" data-view-lede="" href="/member-dashboard/?view=bookings">'
-      + '<span class="clubhouse-member__tablabel">bookings</span></a>';
-    body = body.replace(barOpen, barOpen + bookingsTab);
+    const extraTabs = ['bookings', 'billing', 'account']
+      .map((key) => '<a class="clubhouse-member__tab" data-view-link="' + key + '"'
+        + ' data-view-title="' + key + '" data-view-lede=""'
+        + ' href="/member-dashboard/?view=' + key + '">'
+        + '<span class="clubhouse-member__tablabel">' + key + '</span></a>')
+      .join('');
+    body = body.replace(barOpen, barOpen + extraTabs);
 
     await route.fulfill({ response, body });
   });
@@ -155,20 +157,19 @@ test('a phone gets the bottom bar, not the sidebar nav @wordpress', async ({ pag
 });
 
 // No splicing here: this is the club the harness actually is — no shop, no
-// bookings. Dashboard, Billing and Account are still offered — see
-// Dashboard_Views::all() — so the bar is a curated list of exactly those
-// three plus the way out, never "the first five views" or a single one.
+// bookings. Billing and Account are built from the shop's blocks, so neither
+// is offered — see Dashboard_Views::all() — leaving Dashboard and the way
+// out. The bar is still drawn for one view, rather than appearing the day a
+// plugin is installed.
 test('the bar shows exactly the curated list on a club with no shop and no bookings @wordpress', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/member-dashboard/');
 
   await expect(page.locator('.clubhouse-member__tabbar')).toBeVisible();
   const tabs = page.locator('.clubhouse-member__tab');
-  await expect(tabs).toHaveCount(4);
+  await expect(tabs).toHaveCount(2);
   await expect(tabs.nth(0)).toContainText('Dashboard');
-  await expect(tabs.nth(1)).toContainText('Billing');
-  await expect(tabs.nth(2)).toContainText('Account');
-  await expect(tabs.nth(3)).toContainText('Back home');
+  await expect(tabs.nth(1)).toContainText('Back home');
 
   await expect(page.locator('.clubhouse-member__side .bw-secnav')).toBeHidden();
   // The way out lives in the bar now, not beside the club badge.
