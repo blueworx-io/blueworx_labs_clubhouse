@@ -276,6 +276,11 @@ if ( ! function_exists( 'nocache_headers' ) ) {
 if ( ! function_exists( 'admin_url' ) ) {
 	function admin_url( $path = '' ) { return 'https://club.test/wp-admin/' . ltrim( (string) $path, '/' ); }
 }
+if ( ! function_exists( 'trailingslashit' ) ) {
+	function trailingslashit( $value ) {
+		return rtrim( (string) $value, "/\\" ) . '/';
+	}
+}
 if ( ! function_exists( 'home_url' ) ) {
 	function home_url( $path = '' ) { return 'https://club.test' . ( '' === (string) $path ? '/' : (string) $path ); }
 }

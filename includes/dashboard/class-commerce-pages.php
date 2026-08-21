@@ -192,7 +192,7 @@ final class Blueworx_Clubhouse_Commerce_Pages {
 					array(
 						'club_name'  => Blueworx_Clubhouse_Member_Dashboard::club_name(),
 						'logo_url'   => Blueworx_Clubhouse_Member_Dashboard::logo_url(),
-						'home_url'   => function_exists( 'home_url' ) ? (string) home_url( '/' ) : '/',
+						'home_url'   => Blueworx_Clubhouse_Frontend::link_url( 'home' ),
 						'home_label' => self::back_label( Blueworx_Clubhouse_Member_Dashboard::club_name() ),
 						'body'       => $content,
 						// Nothing in the plugin stores a club's registration number, and
@@ -211,7 +211,7 @@ final class Blueworx_Clubhouse_Commerce_Pages {
 				self::PAGES[ $key ]['title'],
 				self::PAGES[ $key ]['lede'],
 				Blueworx_Clubhouse_Dashboard_Shell::card( '', $content ),
-				function_exists( 'home_url' ) ? (string) home_url( '/' ) : '/',
+				Blueworx_Clubhouse_Frontend::link_url( 'home' ),
 				Blueworx_Clubhouse_Member_Dashboard::club_name()
 			);
 		} finally {

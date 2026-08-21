@@ -56,13 +56,29 @@ final class Blueworx_Clubhouse_Frontend {
 		return self::sanitize_filter( $raw );
 	}
 
-	/** /sports/rugby/ when permalinks allow it, the query form when they do not. */
+	/**
+	 * One sport or team, hung off its listing page's own address.
+	 *
+	 * Built on the listing page's permalink rather than an assumed '/sports/',
+	 * so moving or renaming that page carries every item link with it.
+	 */
 	public static function item_link_url( string $key, string $slug ): string {
+		$base = self::page_permalink( $key );
+		if ( '' !== $base ) {
+			// A plain-permalink page's address is already a query ('?page_id=61'),
+			// so the item goes on as another argument. Hanging '/rugby/' off the
+			// end of one would build an address that names nothing.
+			if ( str_contains( $base, '?' ) ) {
+				return $base . '&' . Blueworx_Clubhouse_Links::ITEM_PARAM . '=' . rawurlencode( $slug );
+			}
+			return trailingslashit( $base ) . rawurlencode( $slug ) . '/';
+		}
 		if ( '' !== (string) get_option( 'permalink_structure', '' ) ) {
 			return home_url( '/' . $key . '/' . rawurlencode( $slug ) . '/' );
 		}
 		return home_url( '/?' . self::QUERY_VAR . '=' . $key . '&' . Blueworx_Clubhouse_Links::ITEM_PARAM . '=' . rawurlencode( $slug ) );
 	}
+
 
 	public static function resolve_slug( bool $is_front_page, mixed $query_var, ?Blueworx_Clubhouse_Visibility $visibility = null ): ?string {
 		$slug = null;
@@ -705,6 +721,15 @@ final class Blueworx_Clubhouse_Frontend {
 	 */
 	public static function link_url( string $key ): string {
 		$slug = 'home' === $key ? '' : $key;
+
+		// The page's own address, which is right on any permalink structure and
+		// stays right if the page is moved. Everything below it is the answer
+		// for a site that has not been given its pages yet.
+		$permalink = self::page_permalink( $slug );
+		if ( '' !== $permalink ) {
+			return $permalink;
+		}
+
 		if ( '' === $slug ) {
 			return home_url( '/' );
 		}
@@ -713,6 +738,25 @@ final class Blueworx_Clubhouse_Frontend {
 		}
 		return home_url( '/?' . self::QUERY_VAR . '=' . $slug );
 	}
+
+	/**
+	 * The WordPress permalink of the real page behind a club page, or '' when
+	 * there is not one to ask for — no page recorded yet, or an id naming a
+	 * page that has since been deleted. '' means "fall back", never a URL: a
+	 * link built on get_permalink()'s false would silently be the site root.
+	 */
+	private static function page_permalink( string $slug ): string {
+		if ( ! class_exists( 'Blueworx_Clubhouse_Club_Pages' ) || ! function_exists( 'get_permalink' ) ) {
+			return '';
+		}
+		$post_id = Blueworx_Clubhouse_Club_Pages::post_id( $slug );
+		if ( $post_id <= 0 ) {
+			return '';
+		}
+		$url = get_permalink( $post_id );
+		return is_string( $url ) ? $url : '';
+	}
+
 
 	public static function club_name(): string {
 		return self::context()->branding->get_club_name();

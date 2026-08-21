@@ -116,6 +116,76 @@ final class FrontendTest extends TestCase {
 		$this->assertSame( 'https://club.test/?clubhouse_page=about', Blueworx_Clubhouse_Frontend::link_url( 'about' ) );
 	}
 
+	public function test_link_url_asks_wordpress_for_the_pages_permalink(): void {
+		// The page's own address, whatever the club's permalink structure is
+		// and wherever the page has been moved to. Building '/about/' by hand
+		// is what this replaces.
+		update_option( Blueworx_Clubhouse_Club_Pages::option_name( 'about' ), 53 );
+		$GLOBALS['wp_stub_permalinks'][53] = 'https://club.test/club/about-us/';
+		$this->assertSame( 'https://club.test/club/about-us/', Blueworx_Clubhouse_Frontend::link_url( 'about' ) );
+	}
+
+	public function test_link_url_home_asks_for_the_home_pages_permalink(): void {
+		// Home's slug is '', and its id is stored under its own option name.
+		update_option( Blueworx_Clubhouse_Club_Pages::option_name( '' ), 7 );
+		$GLOBALS['wp_stub_permalinks'][7] = 'https://club.test/';
+		$this->assertSame( 'https://club.test/', Blueworx_Clubhouse_Frontend::link_url( 'home' ) );
+	}
+
+	public function test_link_url_falls_back_when_the_page_is_not_there_yet(): void {
+		// A site part-way through the upgrade has the flag but no page. The old
+		// construction still answers, so no link goes dead in the gap.
+		update_option( 'permalink_structure', '/%postname%/' );
+		$this->assertSame( 'https://club.test/about/', Blueworx_Clubhouse_Frontend::link_url( 'about' ) );
+	}
+
+	public function test_link_url_falls_back_when_the_permalink_cannot_be_built(): void {
+		// A stored id naming a page that has since been deleted: get_permalink()
+		// answers false, and a link built on false would be the site root.
+		update_option( 'permalink_structure', '/%postname%/' );
+		update_option( Blueworx_Clubhouse_Club_Pages::option_name( 'about' ), 999 );
+		$this->assertSame( 'https://club.test/about/', Blueworx_Clubhouse_Frontend::link_url( 'about' ) );
+	}
+
+	public function test_item_link_url_is_built_on_the_listing_pages_permalink(): void {
+		// /sports/rugby/ follows wherever the Sports page itself lives, rather
+		// than assuming it sits at the site root.
+		update_option( Blueworx_Clubhouse_Club_Pages::option_name( 'sports' ), 61 );
+		$GLOBALS['wp_stub_permalinks'][61] = 'https://club.test/club/sports/';
+		$this->assertSame(
+			'https://club.test/club/sports/rugby/',
+			Blueworx_Clubhouse_Frontend::item_link_url( 'sports', 'rugby' )
+		);
+	}
+
+	public function test_item_link_url_escapes_the_item_slug(): void {
+		update_option( Blueworx_Clubhouse_Club_Pages::option_name( 'sports' ), 61 );
+		$GLOBALS['wp_stub_permalinks'][61] = 'https://club.test/sports/';
+		$this->assertSame(
+			'https://club.test/sports/under%2013s/',
+			Blueworx_Clubhouse_Frontend::item_link_url( 'sports', 'under 13s' )
+		);
+	}
+
+	public function test_item_link_url_falls_back_without_a_page(): void {
+		update_option( 'permalink_structure', '/%postname%/' );
+		$this->assertSame(
+			'https://club.test/sports/rugby/',
+			Blueworx_Clubhouse_Frontend::item_link_url( 'sports', 'rugby' )
+		);
+	}
+
+	public function test_item_link_url_uses_a_query_arg_when_the_permalink_has_one(): void {
+		// Plain permalinks: the listing page's own address is '?page_id=61', so
+		// hanging '/rugby/' off the end of it would build nonsense.
+		update_option( Blueworx_Clubhouse_Club_Pages::option_name( 'sports' ), 61 );
+		$GLOBALS['wp_stub_permalinks'][61] = 'https://club.test/?page_id=61';
+		$this->assertSame(
+			'https://club.test/?page_id=61&clubhouse_item=rugby',
+			Blueworx_Clubhouse_Frontend::item_link_url( 'sports', 'rugby' )
+		);
+	}
+
 	public function test_register_registers_expected_hooks(): void {
 		Blueworx_Clubhouse_Frontend::register();
 
