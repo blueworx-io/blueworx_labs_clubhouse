@@ -26,7 +26,7 @@ and a large slice of bespoke code. Each one is a real page now.
 | 4 | ~~[#239](../../issues/239) The Pages menu back, club pages read-only~~ | **Done** — v0.86.0. |
 | 5 | ~~[#240](../../issues/240) Switching a page off makes it a draft~~ | **Done** — v0.86.0, Bulk Edit guard included. |
 | 6 | ~~[#241](../../issues/241) Nav and internal links from permalinks~~ | **Done** — v0.86.0. |
-| 7 | [#244](../../issues/244) Prove an existing site upgrades cleanly | Before #243, while the old routes are still there to fall back on. |
+| 7 | ~~[#244](../../issues/244) Prove an existing site upgrades cleanly~~ | **Done** — v0.86.1. See [the record](upgrades/2026-08-21-club-pages-become-real-pages.md): nothing is lost, and a second upgrade is a no-op. |
 | 8 | [#243](../../issues/243) Retire the rewrite rules | Last. Where the maintenance saving lands; until it is done the plugin runs both systems. |
 
 **Parked, not dropped:** [#235](../../issues/235) and

@@ -5,6 +5,10 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.86.1
+
+- Checked that a site built on the previous version upgrades cleanly, and wrote down what happens — including what stays behind if you roll back. No change to the plugin itself.
+
 ## 0.86.0
 
 - **Your club's pages are now real WordPress pages.** They behave like any other page on your site, which is what lets everything below work.
