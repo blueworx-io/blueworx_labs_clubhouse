@@ -49,3 +49,29 @@ test('editing a club page lands in Club Pages, not the block editor @wordpress',
   expect(page.url()).toContain('tab=about');
   await expect(page.locator('#editor')).toHaveCount(0);
 });
+
+// The Pages list is somewhere to see club pages, not somewhere to edit them.
+// Quick Edit renames and retitles a page inline, and Trash removes it — both
+// break a site that routes through these pages, from a screen that looks
+// harmless. An ordinary page the club made itself keeps both.
+test('a club page is read-only in the Pages list @wordpress', async ({ page }) => {
+  await signIn(page);
+  await page.goto('/wp-admin/edit.php?post_type=page&post_status=all');
+
+  const club = page
+    .locator('#the-list tr', { has: page.locator('a.row-title', { hasText: /^About$/ }) })
+    .first();
+  await expect(club.locator('.row-actions .inline')).toHaveCount(0);
+  await expect(club.locator('.row-actions .trash')).toHaveCount(0);
+  await expect(club.locator('.row-actions .edit')).toHaveCount(1);
+  // And the column says which rows are ours.
+  await expect(club.locator('.column-clubhouse_club_page')).toHaveText('Club page');
+
+  // Seeded by global-setup.js — a page this plugin does not own.
+  const theirs = page
+    .locator('#the-list tr', { has: page.locator('a.row-title', { hasText: /^External chrome fixture$/ }) })
+    .first();
+  await expect(theirs.locator('.row-actions .inline')).toHaveCount(1);
+  await expect(theirs.locator('.row-actions .trash')).toHaveCount(1);
+  await expect(theirs.locator('.column-clubhouse_club_page')).toHaveText('');
+});

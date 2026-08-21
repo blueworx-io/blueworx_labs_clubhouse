@@ -87,10 +87,14 @@ test('the header offers log in to everyone else @wordpress', async ({ page }) =>
   await expect(page.locator('.ch-nav').getByRole('link', { name: 'Log in' })).toBeVisible();
 });
 
-test('wp-admin no longer offers the Pages screen @wordpress', async ({ page }) => {
+// Club pages are real WordPress pages, so the Pages screen is a real place to
+// look again and is back on the menu. It was taken off while they were only
+// rewrite rules; leaving it off now would hide half a club's own site from it.
+test('wp-admin offers the Pages screen @wordpress', async ({ page }) => {
   await signIn(page);
   await page.goto('/wp-admin/');
-  await expect(page.locator('#adminmenu a[href="edit.php?post_type=page"]')).toHaveCount(0);
+  // Two links, not one: the top-level Pages item and its own All Pages child.
+  await expect(page.locator('#adminmenu a[href="edit.php?post_type=page"]').first()).toBeVisible();
 });
 
 test('a switched-off member area answers 404 @wordpress', async ({ page }) => {
