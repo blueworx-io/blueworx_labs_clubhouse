@@ -119,4 +119,83 @@ final class WordpressPagesTest extends TestCase {
 		$this->assertContains( 'wp_trash_post', array_column( $actions, 0 ) );
 		$this->assertContains( 'before_delete_post', array_column( $actions, 0 ) );
 	}
+
+	/**
+	 * Bulk Edit in the Pages list can set a status on every selected row, and
+	 * it goes nowhere near the trash and delete hooks. A club page's status now
+	 * means "switched on", so letting the list change it would switch a page
+	 * off behind the Setup screen's back and leave the flag and the page
+	 * disagreeing. The status is put back to whatever the flag calls for.
+	 */
+	public function test_a_bulk_status_change_cannot_switch_a_club_page_off(): void {
+		update_option( Blueworx_Clubhouse_Club_Pages::option_name( 'about' ), 42 );
+
+		$guarded = Blueworx_Clubhouse_Wordpress_Pages::guard_status(
+			array(
+				'post_status' => 'draft',
+				'post_title'  => 'About',
+			),
+			42
+		);
+
+		$this->assertSame( 'publish', $guarded['post_status'] );
+		$this->assertSame( 'About', $guarded['post_title'] );
+	}
+
+	/** And a club page an owner has switched off is not published from the list either. */
+	public function test_a_bulk_status_change_cannot_switch_a_club_page_back_on(): void {
+		update_option( Blueworx_Clubhouse_Club_Pages::option_name( 'about' ), 42 );
+		update_option( 'clubhouse_visibility', array( 'pages' => array( 'about' => false ) ) );
+
+		$guarded = Blueworx_Clubhouse_Wordpress_Pages::guard_status(
+			array( 'post_status' => 'publish' ),
+			42
+		);
+
+		$this->assertSame( 'draft', $guarded['post_status'] );
+	}
+
+	/** The same bulk change on an ordinary page takes effect, untouched. */
+	public function test_a_bulk_status_change_on_an_ordinary_page_still_works(): void {
+		$given   = array(
+			'post_status' => 'draft',
+			'post_title'  => 'Sponsors',
+		);
+		$guarded = Blueworx_Clubhouse_Wordpress_Pages::guard_status( $given, 999 );
+
+		$this->assertSame( $given, $guarded );
+	}
+
+	/** Home is a club page too, and its slug is '' — never a truthiness check. */
+	public function test_home_cannot_have_its_status_changed_from_the_list(): void {
+		update_option( Blueworx_Clubhouse_Club_Pages::option_name( '' ), 52 );
+
+		$guarded = Blueworx_Clubhouse_Wordpress_Pages::guard_status( array( 'post_status' => 'draft' ), 52 );
+
+		$this->assertSame( 'publish', $guarded['post_status'] );
+	}
+
+	/**
+	 * Bulk Edit and Quick Edit both go through wp_update_post(), which runs
+	 * every save through wp_insert_post_data. Hooking that is what makes the
+	 * guard catch the Pages list rather than only the row actions.
+	 */
+	public function test_it_hooks_the_filter_every_save_goes_through(): void {
+		Blueworx_Clubhouse_Wordpress_Pages::register();
+
+		$filters = array_map( static fn( array $c ): array => $c['args'], wp_stub_calls( 'add_filter' ) );
+		$this->assertContains( 'wp_insert_post_data', array_column( $filters, 0 ) );
+	}
+
+	/** The submitted array is where a bulk edit's post ID is, not the data. */
+	public function test_the_filter_finds_the_page_from_the_submitted_array(): void {
+		update_option( Blueworx_Clubhouse_Club_Pages::option_name( 'about' ), 42 );
+
+		$guarded = Blueworx_Clubhouse_Wordpress_Pages::on_insert_post_data(
+			array( 'post_status' => 'draft' ),
+			array( 'ID' => 42 )
+		);
+
+		$this->assertSame( 'publish', $guarded['post_status'] );
+	}
 }

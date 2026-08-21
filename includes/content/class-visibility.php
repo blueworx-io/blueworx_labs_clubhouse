@@ -57,10 +57,22 @@ final class Blueworx_Clubhouse_Visibility {
 		return (bool) ( $state['sections'][ $key ] ?? self::SECTION_DEFAULTS[ $key ] ?? true );
 	}
 
+	/**
+	 * Switch a page on or off.
+	 *
+	 * The flag is the record — the Setup screen reads it and resolve_slug()
+	 * checks it — and the real WordPress page behind the club page is moved to
+	 * match, published while it is on and a draft once it is off. Without that
+	 * second half a switched-off page is still in the sitemap and still in
+	 * search, because only this plugin knows it is off.
+	 */
 	public function set_page_visible( string $page, bool $visible ): void {
-		$state                        = $this->state();
-		$state['pages'][ $page ]      = $visible;
+		$state                   = $this->state();
+		$state['pages'][ $page ] = $visible;
 		$this->storage->set( self::KEY, $state );
+		if ( class_exists( 'Blueworx_Clubhouse_Club_Pages' ) ) {
+			Blueworx_Clubhouse_Club_Pages::sync_status( $page, $visible );
+		}
 	}
 
 	public function set_section_visible( string $page, string $section, bool $visible ): void {

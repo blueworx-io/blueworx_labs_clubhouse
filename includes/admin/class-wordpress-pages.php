@@ -48,6 +48,32 @@ final class Blueworx_Clubhouse_Wordpress_Pages {
 		add_action( 'manage_pages_custom_column', array( self::class, 'on_manage_pages_custom_column' ), 10, 2 );
 		add_action( 'wp_trash_post', array( self::class, 'refuse_deletion' ) );
 		add_action( 'before_delete_post', array( self::class, 'refuse_deletion' ) );
+		add_filter( 'wp_insert_post_data', array( self::class, 'on_insert_post_data' ), 10, 2 );
+	}
+
+	/**
+	 * The post data a save is allowed to write. Pure.
+	 *
+	 * A club page's status is not the Pages list's to change. Switched on or
+	 * off is decided on the Setup screen, which writes the visibility flag and
+	 * moves the page to match; a status changed from anywhere else would switch
+	 * a page off behind that screen's back, leaving the flag saying one thing
+	 * and the page another. So the status is put back to whatever the flag
+	 * calls for, and everything else in the save is left alone.
+	 *
+	 * @param array<string,mixed> $data    The post data about to be written.
+	 * @param int                 $post_id The page being saved.
+	 * @return array<string,mixed>
+	 */
+	public static function guard_status( array $data, int $post_id ): array {
+		if ( ! Blueworx_Clubhouse_Club_Pages::is_club_page( $post_id ) ) {
+			return $data;
+		}
+		$slug                = Blueworx_Clubhouse_Club_Pages::slug_for( $post_id );
+		$data['post_status'] = Blueworx_Clubhouse_Club_Pages::status_for(
+			Blueworx_Clubhouse_Club_Pages::is_visible( $slug )
+		);
+		return $data;
 	}
 
 	/**
@@ -108,6 +134,23 @@ final class Blueworx_Clubhouse_Wordpress_Pages {
 		return self::row_actions(
 			is_array( $actions ) ? $actions : array(),
 			Blueworx_Clubhouse_Club_Pages::is_club_page( self::post_id_of( $post ) )
+		);
+	}
+
+	/**
+	 * Bulk Edit and Quick Edit both reach wp_update_post(), which runs every
+	 * save through wp_insert_post_data — the one hook a status change cannot
+	 * get past, whether it came from the Pages list, the REST API or WP-CLI.
+	 *
+	 * @param mixed $data    The post data WordPress is about to write.
+	 * @param mixed $postarr The submitted post array, which is where the ID is.
+	 * @return array<string,mixed>
+	 */
+	public static function on_insert_post_data( $data, $postarr = array() ): array {
+		$id = is_array( $postarr ) ? ( $postarr['ID'] ?? 0 ) : 0;
+		return self::guard_status(
+			is_array( $data ) ? $data : array(),
+			self::post_id_of( $id )
 		);
 	}
 

@@ -28,6 +28,75 @@ final class Blueworx_Clubhouse_Club_Pages {
 	private const PRIVATE_STATUS = 'private';
 
 	/**
+	 * The status of a page an owner has switched off in Setup. A draft is out
+	 * of the sitemap, out of search, and 404s to a visitor — which is what the
+	 * visibility flag always meant, said in a way WordPress itself understands.
+	 */
+	private const HIDDEN_STATUS = 'draft';
+
+	/**
+	 * The post status a club page should be in. Pure.
+	 *
+	 * Switched on is published, switched off is a draft. No club page is ever a
+	 * WordPress private post: the member area's page is published and does its
+	 * own sign-in check, because a private page 404s for every ordinary member.
+	 */
+	public static function status_for( bool $visible ): string {
+		return $visible ? self::PUBLIC_STATUS : self::HIDDEN_STATUS;
+	}
+
+	/**
+	 * The Setup/Visibility key for a slug — Home's slug is '' and its key is
+	 * 'home', the same rename option_name() makes. Pure.
+	 */
+	public static function page_key( string $slug ): string {
+		return '' === $slug ? 'home' : $slug;
+	}
+
+	/**
+	 * The slug a Setup/Visibility key names, or null when it names no club
+	 * page. Pure. Never a truthiness check — Home's answer is the empty string.
+	 */
+	public static function slug_for_page_key( string $page ): ?string {
+		$slug = 'home' === $page ? '' : $page;
+		return Blueworx_Clubhouse_Page_Map::has( $slug ) ? $slug : null;
+	}
+
+	/**
+	 * Whether an owner has this club page switched on. Defaults to on, as
+	 * Visibility itself does, when there is no WordPress runtime to read.
+	 */
+	public static function is_visible( string $slug ): bool {
+		if ( ! function_exists( 'get_option' ) || ! class_exists( 'Blueworx_Clubhouse_Visibility' ) ) {
+			return true;
+		}
+		$visibility = new Blueworx_Clubhouse_Visibility( new Blueworx_Clubhouse_Options_Storage() );
+		return $visibility->is_page_visible( self::page_key( $slug ) );
+	}
+
+	/**
+	 * Put a club page's status back in step with the visibility flag
+	 * Visibility::set_page_visible() has just written.
+	 *
+	 * The flag stays the record an owner edits and resolve_slug() reads; the
+	 * status is the same answer in WordPress's own terms, so a switched-off
+	 * page leaves the sitemap and search rather than only declining to render.
+	 */
+	public static function sync_status( string $page, bool $visible ): void {
+		$slug = self::slug_for_page_key( $page );
+		if ( null === $slug || ! function_exists( 'wp_update_post' ) ) {
+			return;
+		}
+		$post_id = self::post_id( $slug );
+		$status  = self::current_status( $post_id );
+		$wanted  = self::status_for( $visible );
+		if ( '' === $status || $status === $wanted ) {
+			return;
+		}
+		self::set_status( $post_id, $wanted );
+	}
+
+	/**
 	 * The option a page's id is stored under. Scoped per slug, so one missing
 	 * page never hides another. Home's slug is '' — the option still needs a
 	 * key of its own, or it would collide with every other empty lookup.
@@ -80,7 +149,9 @@ final class Blueworx_Clubhouse_Club_Pages {
 	 * page it describes always gets the post_name 'home'. The body is always
 	 * empty — the club's words live in the content store, not here.
 	 *
-	 * Every club page is published, the member area included. The page map's
+	 * A club page is published while it is switched on and a draft once an owner
+	 * switches it off, the member area included — never a WordPress private
+	 * post, whatever the page map says. The page map's
 	 * 'private' flag means "keep this out of the SEO report", not "make this a
 	 * WordPress private post" — and the SEO layer reads that flag itself, via
 	 * Page_Map::is_private(). A private post is filtered out of WordPress's own
@@ -91,12 +162,12 @@ final class Blueworx_Clubhouse_Club_Pages {
 	 *
 	 * @return array<string,string>
 	 */
-	public static function desired( string $slug, string $label ): array {
+	public static function desired( string $slug, string $label, bool $visible = true ): array {
 		return array(
 			'post_type'    => 'page',
 			'post_name'    => '' === $slug ? 'home' : $slug,
 			'post_title'   => $label,
-			'post_status'  => self::PUBLIC_STATUS,
+			'post_status'  => self::status_for( $visible ),
 			'post_content' => '',
 		);
 	}
@@ -170,39 +241,48 @@ final class Blueworx_Clubhouse_Club_Pages {
 		return self::PUBLIC_STATUS !== $chosen_page_status && self::PRIVATE_STATUS !== $chosen_page_status;
 	}
 
-	/** The create-or-repair for a single club page. */
+	/**
+	 * The create-or-repair for a single club page, its status included.
+	 *
+	 * One rule decides the status — status_for() on the owner's visibility flag
+	 * — so creating a page, saving Setup, and this repair can never disagree.
+	 * The repair is also what carries an existing site across: a page whose
+	 * status has drifted from its flag (left 'private' by an earlier version of
+	 * this plugin, trashed by an admin, or still published after being switched
+	 * off) is put back here, with no separate migration to run.
+	 */
 	private static function ensure_one( string $slug, string $label ): void {
 		$post_id = self::post_id( $slug );
 		$status  = self::current_status( $post_id );
+		$visible = self::is_visible( $slug );
+		$wanted  = self::status_for( $visible );
 
-		if ( self::PUBLIC_STATUS === $status ) {
+		if ( $status === $wanted ) {
 			return;
 		}
 
-		// The page is there but is not published — trashed by an admin, or left
-		// 'private' by an earlier version of this plugin, which mistook the page
-		// map's SEO flag for a post status. Repaired in place rather than
-		// duplicated, so the club keeps the page and everything pointing at it.
+		// The page is there but is in the wrong status. Repaired in place rather
+		// than duplicated, so the club keeps the page and everything pointing at it.
 		if ( '' !== $status ) {
-			self::republish( $post_id );
+			self::set_status( $post_id, $wanted );
 			return;
 		}
 
-		$inserted = wp_insert_post( self::desired( $slug, $label ) );
+		$inserted = wp_insert_post( self::desired( $slug, $label, $visible ) );
 		if ( is_numeric( $inserted ) && (int) $inserted > 0 && function_exists( 'update_option' ) ) {
 			update_option( self::option_name( $slug ), (int) $inserted );
 		}
 	}
 
-	/** Bring an existing page back to the published status a club page needs. */
-	private static function republish( int $post_id ): void {
+	/** Move an existing page to the status its visibility flag calls for. */
+	private static function set_status( int $post_id, string $status ): void {
 		if ( ! function_exists( 'wp_update_post' ) ) {
 			return;
 		}
 		wp_update_post(
 			array(
 				'ID'          => $post_id,
-				'post_status' => self::PUBLIC_STATUS,
+				'post_status' => $status,
 			)
 		);
 	}

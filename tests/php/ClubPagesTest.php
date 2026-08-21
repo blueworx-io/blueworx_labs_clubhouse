@@ -176,4 +176,102 @@ final class ClubPagesTest extends TestCase {
 		$this->assertSame( 'page', get_option( 'show_on_front' ) );
 		$this->assertSame( $home_id, get_option( 'page_on_front' ) );
 	}
+
+	/**
+	 * One rule for what status a club page is in, so creating a page, saving
+	 * Setup and repairing a drifted page can never disagree.
+	 */
+	public function test_a_page_that_is_on_is_published(): void {
+		$this->assertSame( 'publish', Blueworx_Clubhouse_Club_Pages::status_for( true ) );
+	}
+
+	public function test_a_page_that_is_off_is_a_draft(): void {
+		// A draft is a 404 to a visitor and is out of the sitemap and search,
+		// which is exactly what the visibility flag was for.
+		$this->assertSame( 'draft', Blueworx_Clubhouse_Club_Pages::status_for( false ) );
+	}
+
+	/** Home's key is 'home', its slug is ''. Both directions, never truthiness. */
+	public function test_the_visibility_key_and_the_slug_map_both_ways(): void {
+		$this->assertSame( 'home', Blueworx_Clubhouse_Club_Pages::page_key( '' ) );
+		$this->assertSame( 'about', Blueworx_Clubhouse_Club_Pages::page_key( 'about' ) );
+		$this->assertSame( '', Blueworx_Clubhouse_Club_Pages::slug_for_page_key( 'home' ) );
+		$this->assertSame( 'about', Blueworx_Clubhouse_Club_Pages::slug_for_page_key( 'about' ) );
+		$this->assertNull( Blueworx_Clubhouse_Club_Pages::slug_for_page_key( 'not-a-club-page' ) );
+	}
+
+	/** A page created while it is switched off is created as a draft. */
+	public function test_a_page_switched_off_is_created_as_a_draft(): void {
+		$this->assertSame( 'draft', Blueworx_Clubhouse_Club_Pages::desired( 'about', 'About', false )['post_status'] );
+	}
+
+	/**
+	 * The reconcile that carries an existing site across: a page still
+	 * published after being switched off is drafted the next time ensure()
+	 * runs, with no separate migration to run.
+	 */
+	public function test_ensure_drafts_a_page_whose_flag_says_it_is_off(): void {
+		update_option( Blueworx_Clubhouse_Club_Pages::option_name( 'about' ), 42 );
+		$GLOBALS['wp_stub_post_status'][42] = 'publish';
+		update_option( 'clubhouse_visibility', array( 'pages' => array( 'about' => false ) ) );
+
+		Blueworx_Clubhouse_Club_Pages::ensure();
+
+		$updates = array_values(
+			array_filter(
+				wp_stub_calls( 'wp_update_post' ),
+				static fn( array $call ): bool => 42 === ( $call['args'][0]['ID'] ?? 0 )
+			)
+		);
+		$this->assertCount( 1, $updates );
+		$this->assertSame( 'draft', $updates[0]['args'][0]['post_status'] );
+	}
+
+	/** And the other way: a draft whose flag says it is on is published again. */
+	public function test_ensure_publishes_a_draft_whose_flag_says_it_is_on(): void {
+		update_option( Blueworx_Clubhouse_Club_Pages::option_name( 'about' ), 42 );
+		$GLOBALS['wp_stub_post_status'][42] = 'draft';
+
+		Blueworx_Clubhouse_Club_Pages::ensure();
+
+		$updates = array_values(
+			array_filter(
+				wp_stub_calls( 'wp_update_post' ),
+				static fn( array $call ): bool => 42 === ( $call['args'][0]['ID'] ?? 0 )
+			)
+		);
+		$this->assertCount( 1, $updates );
+		$this->assertSame( 'publish', $updates[0]['args'][0]['post_status'] );
+	}
+
+	/** A page that is already a draft and switched off is left completely alone. */
+	public function test_ensure_leaves_a_switched_off_draft_alone(): void {
+		update_option( Blueworx_Clubhouse_Club_Pages::option_name( 'about' ), 42 );
+		$GLOBALS['wp_stub_post_status'][42] = 'draft';
+		update_option( 'clubhouse_visibility', array( 'pages' => array( 'about' => false ) ) );
+
+		Blueworx_Clubhouse_Club_Pages::ensure();
+
+		$touched = array_filter(
+			wp_stub_calls( 'wp_update_post' ),
+			static fn( array $call ): bool => 42 === ( $call['args'][0]['ID'] ?? 0 )
+		);
+		$this->assertCount( 0, $touched );
+	}
+
+	/** A page created for a slug that is switched off starts as a draft. */
+	public function test_ensure_creates_a_switched_off_page_as_a_draft(): void {
+		update_option( 'clubhouse_visibility', array( 'pages' => array( 'about' => false ) ) );
+
+		Blueworx_Clubhouse_Club_Pages::ensure();
+
+		$inserts = array_values(
+			array_filter(
+				wp_stub_calls( 'wp_insert_post' ),
+				static fn( array $call ): bool => 'about' === ( $call['args'][0]['post_name'] ?? '' )
+			)
+		);
+		$this->assertCount( 1, $inserts );
+		$this->assertSame( 'draft', $inserts[0]['args'][0]['post_status'] );
+	}
 }
