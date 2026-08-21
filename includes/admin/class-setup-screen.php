@@ -336,8 +336,11 @@ final class Blueworx_Clubhouse_Setup_Screen {
 			$total    = count( $page['sections'] );
 			$cls      = $first ? ' is-active' : '';
 			$selected = $first ? 'true' : 'false';
+			// A page with no sections at all (the member area) has nothing to count —
+			// "0/0" reads as broken, not as "everything is hidden".
+			$count    = $total > 0 ? ' <span class="clubhouse-vistab__count">' . $shown . '/' . $total . '</span>' : '';
 			$out     .= '<button type="button" class="clubhouse-vistab' . $cls . '" data-vistab="' . self::esc( $page['page'] ) . '" role="tab" aria-selected="' . $selected . '">'
-				. self::esc( $page['label'] ) . ' <span class="clubhouse-vistab__count">' . $shown . '/' . $total . '</span></button>';
+				. self::esc( $page['label'] ) . $count . '</button>';
 			$first = false;
 		}
 		$out .= '</div>';
@@ -345,18 +348,25 @@ final class Blueworx_Clubhouse_Setup_Screen {
 		// Sub-panels.
 		$first = true;
 		foreach ( $inventory as $page ) {
-			$page_on = ( $visibility['pages'][ $page['page'] ] ?? true );
-			$cls     = $first ? ' is-active' : '';
+			$page_on   = ( $visibility['pages'][ $page['page'] ] ?? true );
+			$has_sections = array() !== $page['sections'];
+			$cls       = $first ? ' is-active' : '';
 			$out .= '<div class="clubhouse-vispanel' . $cls . '" data-vispanel="' . self::esc( $page['page'] ) . '" role="tabpanel">';
-			$out .= '<div class="clubhouse-vispanel__head"><span class="clubhouse-vispanel__title">' . self::esc( $page['label'] ) . ' sections</span>';
-			$out .= self::toggle( 'clubhouse_page[' . $page['page'] . ']', 'Page shown', $page_on ) . '</div>';
-			$out .= '<div class="clubhouse-toggle-grid">';
-			foreach ( $page['sections'] as $section ) {
-				$skey = $page['page'] . '.' . $section['key'];
-				$on   = ( $visibility['sections'][ $skey ] ?? true );
-				$out .= self::toggle( 'clubhouse_section[' . $skey . ']', $section['label'], $on );
+			// "… sections" only makes sense once there is a grid of them below it —
+			// a page with none (the member area) just needs the page-level toggle.
+			$title = $has_sections ? self::esc( $page['label'] ) . ' sections' : self::esc( $page['label'] );
+			$out  .= '<div class="clubhouse-vispanel__head"><span class="clubhouse-vispanel__title">' . $title . '</span>';
+			$out  .= self::toggle( 'clubhouse_page[' . $page['page'] . ']', 'Page shown', $page_on ) . '</div>';
+			if ( $has_sections ) {
+				$out .= '<div class="clubhouse-toggle-grid">';
+				foreach ( $page['sections'] as $section ) {
+					$skey = $page['page'] . '.' . $section['key'];
+					$on   = ( $visibility['sections'][ $skey ] ?? true );
+					$out .= self::toggle( 'clubhouse_section[' . $skey . ']', $section['label'], $on );
+				}
+				$out .= '</div>';
 			}
-			$out .= '</div></div>';
+			$out .= '</div>';
 			$first = false;
 		}
 		$out .= '</div>';

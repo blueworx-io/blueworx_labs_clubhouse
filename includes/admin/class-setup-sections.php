@@ -98,6 +98,10 @@ final class Blueworx_Clubhouse_Setup_Sections {
 			'locations' => 'Courts and locations',
 			'agents'    => 'Coaches and staff',
 		),
+		// No sections of its own — the panels inside it belong to the shop and
+		// the booking plugin. The page switch is the point: a club that does not
+		// want a member area can take the address off.
+		'member-dashboard' => array(),
 		'privacy' => array(
 			'hero' => 'Hero',
 			'body' => 'Policy',

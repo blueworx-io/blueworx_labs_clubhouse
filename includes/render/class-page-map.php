@@ -24,7 +24,7 @@ final class Blueworx_Clubhouse_Page_Map {
 	 *
 	 * A 'requires' key names the shortcode tag whose presence the page depends on.
 	 *
-	 * @return array<int,array{slug:string,label:string,method:string,requires?:string}>
+	 * @return array<int,array{slug:string,label:string,method:string,requires?:string,private?:bool}>
 	 */
 	public static function pages(): array {
 		return array(
@@ -47,6 +47,15 @@ final class Blueworx_Clubhouse_Page_Map {
 				'method'   => 'booking',
 				'requires' => Blueworx_Clubhouse_Integrations::LATEPOINT_TAG,
 			),
+			// The member's own area. Private: nothing on it is for a signed-out
+			// visitor, so it is kept out of the SEO report rather than scored as
+			// a page a search engine should be finding.
+			array(
+				'slug'    => 'member-dashboard',
+				'label'   => 'Member area',
+				'method'  => 'member_dashboard',
+				'private' => true,
+			),
 			// Last, and linked from the footer rather than the nav: nobody comes to
 			// a club site to read the terms, but a site whose forms collect names,
 			// emails and phone numbers has to have somewhere to point at.
@@ -64,7 +73,7 @@ final class Blueworx_Clubhouse_Page_Map {
 	 * Stored content and visibility for a filtered-out page are untouched, so
 	 * installing the integration later brings the page back exactly as it was.
 	 *
-	 * @return array<int,array{slug:string,label:string,method:string,requires?:string}>
+	 * @return array<int,array{slug:string,label:string,method:string,requires?:string,private?:bool}>
 	 */
 	public static function available(): array {
 		return array_values(
@@ -96,6 +105,16 @@ final class Blueworx_Clubhouse_Page_Map {
 			}
 		}
 		return '';
+	}
+
+	/** True for a members-only page — one no visitor should be sent to and no search engine should be scored on. */
+	public static function is_private( string $slug ): bool {
+		foreach ( self::pages() as $page ) {
+			if ( $page['slug'] === $slug ) {
+				return (bool) ( $page['private'] ?? false );
+			}
+		}
+		return false;
 	}
 
 	public static function has( string $slug ): bool {

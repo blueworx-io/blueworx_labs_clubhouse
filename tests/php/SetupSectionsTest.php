@@ -23,7 +23,7 @@ final class SetupSectionsTest extends TestCase {
 	public function test_covers_the_always_available_pages_in_page_map_order(): void {
 		$pages = array_map( static fn( $p ) => $p['page'], $this->inventory() );
 		$this->assertSame(
-			array( 'home', 'about', 'membership', 'contact', 'login', 'news', 'sports', 'teams', 'events', 'calendar', 'privacy', 'terms' ),
+			array( 'home', 'about', 'membership', 'contact', 'login', 'news', 'sports', 'teams', 'events', 'calendar', 'member-dashboard', 'privacy', 'terms' ),
 			$pages
 		);
 	}

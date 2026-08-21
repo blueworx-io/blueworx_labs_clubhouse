@@ -55,10 +55,26 @@ $id = $existing instanceof WP_Post ? $existing->ID : wp_insert_post( array(
 ) );
 if ( is_int( $id ) && $id > 0 ) {
 	update_post_meta( $id, '_wp_page_template', 'pages/template-surecart-dashboard.php' );
+}
+
+// A second, separate page standing in for the customer dashboard itself. The
+// external-chrome fixture above only proves a foreign page is left alone; the
+// member area replaces the dashboard page's content entirely, so it needs its
+// own fixture rather than sharing one whose whole test asserts nothing changed.
+$member_existing = get_page_by_path( 'member-area-fixture' );
+$member_id        = $member_existing instanceof WP_Post ? $member_existing->ID : wp_insert_post( array(
+	'post_type'    => 'page',
+	'post_status'  => 'publish',
+	'post_name'    => 'member-area-fixture',
+	'post_title'   => 'Member area fixture',
+	'post_content' => '<p id="foreign-content">FOREIGN CONTENT</p>',
+) );
+if ( is_int( $member_id ) && $member_id > 0 ) {
+	update_post_meta( $member_id, '_wp_page_template', 'pages/template-surecart-dashboard.php' );
 	// Register that page as the customer dashboard, which is the option the
 	// welcome pack keys off. CI has no SureCart to write it, and the option IS
 	// the contract — SureCart's own PageService builds the same name.
-	update_option( 'surecart_dashboard_page_id', $id );
+	update_option( 'surecart_dashboard_page_id', $member_id );
 }
 
 // A welcome pack for that dashboard to carry, written through the plugin's own

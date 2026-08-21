@@ -3,7 +3,7 @@
  * Plugin Name:       Blueworx Labs | Clubhouse
  * Plugin URI:        https://github.com/blueworx-io/blueworx_labs_clubhouse
  * Description:        Blueworx Labs Clubhouse WordPress plugin.
- * Version:           0.78.0
+ * Version:           0.84.2
  * Requires at least: 6.0
  * Requires PHP:      8.2
  * Author:            Blueworx
@@ -21,7 +21,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'BLUEWORX_LABS_CLUBHOUSE_VERSION', '0.78.0' );
+define( 'BLUEWORX_LABS_CLUBHOUSE_VERSION', '0.84.2' );
 define( 'BLUEWORX_LABS_CLUBHOUSE_FILE', __FILE__ );
 define( 'BLUEWORX_LABS_CLUBHOUSE_DIR', plugin_dir_path( __FILE__ ) );
 define( 'BLUEWORX_LABS_CLUBHOUSE_URL', plugin_dir_url( __FILE__ ) );
@@ -41,6 +41,7 @@ require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/admin/class-access-controll
 require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/admin/class-seo-controller.php';
 require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/admin/class-guide-controller.php';
 require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/admin/class-shop-pages-controller.php';
+require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/admin/class-wordpress-pages.php';
 require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/import/class-import-applier.php';
 require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/import/class-import-controller.php';
 
@@ -61,6 +62,8 @@ function blueworx_labs_clubhouse_init() {
 	Blueworx_Clubhouse_Frontend::register();
 	Blueworx_Clubhouse_External_Chrome::register();
 	Blueworx_Clubhouse_Welcome_Pack::register();
+	Blueworx_Clubhouse_Member_Dashboard::register();
+	Blueworx_Clubhouse_Commerce_Pages::register();
 	Blueworx_Clubhouse_Auth::register();
 	Blueworx_Clubhouse_Seo_Head::register();
 	Blueworx_Clubhouse_Admin_Menu_Icons::register();
@@ -75,6 +78,7 @@ function blueworx_labs_clubhouse_init() {
 	Blueworx_Clubhouse_Guide_Controller::register();
 	Blueworx_Clubhouse_SureCart_Products::register();
 	Blueworx_Clubhouse_Shop_Pages_Controller::register();
+	Blueworx_Clubhouse_Wordpress_Pages::register();
 	add_action( 'admin_menu', array( Blueworx_Clubhouse_Collection_Types::class, 'register_content_menu' ) );
 }
 add_action( 'plugins_loaded', 'blueworx_labs_clubhouse_init' );

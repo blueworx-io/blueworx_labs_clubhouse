@@ -108,6 +108,30 @@ final class SetupScreenTest extends TestCase {
 		$this->assertStringContainsString( 'name="clubhouse_section[home.ticker]" value="1">', $html );
 	}
 
+	/**
+	 * The member area has no sections, so the tab and panel must not pretend it
+	 * does: no "0/0" count chip, no "… sections" heading, no empty toggle grid.
+	 * The tab and the page-level "Page shown" toggle still render — that switch
+	 * is the point of the panel.
+	 */
+	public function test_a_page_with_no_sections_gets_no_count_chip_or_empty_grid(): void {
+		$html = Blueworx_Clubhouse_Setup_Screen::render( $this->model() );
+		$this->assertStringContainsString( 'data-vistab="member-dashboard"', $html );
+		$this->assertStringContainsString( 'data-vispanel="member-dashboard"', $html );
+		$this->assertStringContainsString( 'name="clubhouse_page[member-dashboard]"', $html );
+
+		$panel_start = strpos( $html, 'data-vispanel="member-dashboard"' );
+		$this->assertIsInt( $panel_start );
+		$panel_end = strpos( $html, 'data-vispanel=', $panel_start + 1 );
+		$panel     = substr( $html, $panel_start, ( false === $panel_end ? strlen( $html ) : $panel_end ) - $panel_start );
+
+		// The count chip is emitted in the tab list, which is written before any
+		// data-vispanel= — outside $panel — so this must check the whole $html.
+		$this->assertStringNotContainsString( '0/0', $html );
+		$this->assertStringNotContainsString( 'Member area sections', $panel );
+		$this->assertStringNotContainsString( 'clubhouse-toggle-grid', $panel );
+	}
+
 	public function test_save_button_is_never_disabled(): void {
 		$html = Blueworx_Clubhouse_Setup_Screen::render( $this->model() );
 		$this->assertStringContainsString( 'clubhouse_setup_submit', $html );

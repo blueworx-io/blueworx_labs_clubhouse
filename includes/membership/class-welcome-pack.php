@@ -144,7 +144,7 @@ final class Blueworx_Clubhouse_Welcome_Pack {
 	/**
 	 * Append the pack to the customer dashboard, and to nothing else.
 	 *
-	 * Four things have to be true, and the cheap checks come first so the vast
+	 * Three things have to be true, and the cheap checks come first so the vast
 	 * majority of requests leave after one comparison.
 	 *
 	 * @param string $content

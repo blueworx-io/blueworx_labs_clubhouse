@@ -241,6 +241,13 @@ final class BookingPageTest extends TestCase {
 		$this->withLatePoint();
 		$inv = array();
 		foreach ( Blueworx_Clubhouse_Setup_Sections::inventory() as $p ) {
+			// A page with no sections has nothing to hold in lockstep — the member
+			// area is one: it carries a visibility switch, but every panel on it
+			// belongs to the shop or the booking plugin, so there is nothing of
+			// the club's to edit and no catalogue tab to match.
+			if ( array() === $p['sections'] ) {
+				continue;
+			}
 			$inv[ $p['page'] ] = array_column( $p['sections'], 'key' );
 			sort( $inv[ $p['page'] ] );
 		}

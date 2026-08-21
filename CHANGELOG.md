@@ -5,6 +5,71 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.84.2
+
+- **A club with no shop no longer sees empty Billing and Account screens** in the member area. They only appear once the shop is set up, so members are not offered menu items that lead nowhere.
+
+## 0.84.1
+
+- **Space between the cards on each member area screen**, which used to sit flush against each other, and a tighter gap between the shortcut tiles.
+
+## 0.84.0
+
+- **The Billing page on a phone now shows your membership plan** above your orders and invoices, so everything you pay for is on one screen.
+- **The extra Orders, Invoices and Plans links are gone from Billing** — the page carries all three itself now.
+
+## 0.83.6
+
+- **Orders, Invoices and Plans now sit under Billing on a phone, and only there.** They used to appear at the foot of every screen, which read as a stray menu following you around.
+
+## 0.83.5
+
+- **"Back home" now looks like the rest of the side menu**, arrow and all, instead of a small grey line under it. It still sits at the foot of the column, and on a phone it stays in the bottom bar.
+
+## 0.83.4
+
+- **No more underlines on the menus, tabs and shortcut cards** in the member area — only real links in your writing are underlined now.
+- **The heading at the top of each member area screen is smaller**, so it sits better against the rest of the page.
+
+## 0.83.3
+
+- **The top bar reads as one block.** The heading and the line under it sit closer together, and the buttons on the right now line up with the middle of them instead of the bottom.
+- **Buttons no longer look like links.** The underline that had crept onto every button drawn as a link has gone.
+
+## 0.83.2
+
+- **Your favicon now shows in the corner of the member area.** If you have set one, it is used as the mark next to your club name — it is square, so it fits the small box far better than a wide logo. Your logo is still used when there is no favicon.
+- **Removed a gap above the panel on every member area screen**, so each section starts where it should.
+- **The booking plugin's own "Logout" link and "Welcome ..." heading are hidden** on the bookings screen — the member area already has both, so members no longer see them twice.
+
+## 0.83.1
+
+- **A member's own name and picture no longer take up room at the top of a phone screen.** The row there now carries the section they are looking at, its description and the way out, and nothing else. On desktop the side menu still shows who is signed in.
+
+## 0.83.0
+
+- **The member area on a phone now uses the top of the screen for what a member is actually looking at.** The section's name and description sit across the top where your site name used to, sign out is in the top right, and the separate heading below it has gone — so a member sees their bookings or their bill sooner, without scrolling past a repeat of the title. "Back to the club site" now reads "Back home", which fits the tab it lives in. On desktop the side menu stays put as the page scrolls, and scrolls within itself if a club ever has more sections than fit.
+
+## 0.82.0
+
+- **The row of tabs on a phone is now a fixed set: your dashboard, bookings, billing, account, and the way back to your club site.** Billing and account are always there, even before you have added a shop — a member who taps one is told plainly that part is not set up yet, rather than finding the tab missing. Bookings appears once you have the booking plugin. The way back to your site has moved into that row, so it is where a thumb can reach it instead of at the top of the screen. Your desktop side menu is unchanged, with orders and invoices still listed separately.
+
+## 0.81.1
+
+- **The row of tabs along the bottom now shows on a phone even before you have added a shop or bookings.** It used to appear only once there was more than one section to move between, so a new club saw a different member area from an established one.
+
+## 0.81.0
+
+- **The member area now looks the way it was designed, and moves like an app.** Your club's name and badge sit at the top of a proper side menu, with the member's own name at the foot of it, and the page title tells them where they are. Moving between bookings, orders, invoices and the rest no longer reloads the page — it switches instantly, and the back button still works. On a phone the side menu becomes a row of tabs along the bottom, thumb height, so a member can get around one-handed.
+
+## 0.80.0
+
+- **Your members get their own page on your site, and you get one place to manage it.** The member area now lives at /member-dashboard/ on your own address, listed with your other pages and switchable off under Setup like any of them. Signed in, the Log in button in your header becomes Member area, so a member is always one click from their bookings, orders and membership. Anyone with the old link is taken to the new page automatically. WordPress's own Pages screen is gone from your menu — everything you edit lives under Club Pages and Setup now. Nothing has been deleted: the pages your shop and booking plugin rely on are all still there, doing their job quietly.
+
+## 0.79.0
+
+- **Your members now have one account page instead of three plugins in a stack.** Signing in takes a member to a proper member area: a menu down the side for their bookings, orders, invoices, membership and account details, with each one still run by the plugin that owns it. Your welcome pack greets them at the top. If you have no shop, or no bookings, those menu items simply are not there — nothing to set up and nothing to switch on. Your checkout and thank-you pages now match it, and every address on your site stays exactly as it was. One thing to know: if you had typed anything onto the account page itself, it is no longer shown there — the new member area takes the whole page over. Nothing has been deleted, and anything you want members to read there belongs in your welcome pack, which greets them at the top of the same page.
+
 ## 0.78.0
 
 - **Members can now be shown monthly or annual prices.** Give a tier an annual price as well as a monthly one, under Club Pages → Membership → Tiers, and your Membership and Home pages get a Monthly / Annual switch above the tiers. If paying annually works out cheaper, the card says how much a member saves. A tier priced only one way simply shows that price and says so, and nothing you have already entered changes — your current prices are the monthly ones.

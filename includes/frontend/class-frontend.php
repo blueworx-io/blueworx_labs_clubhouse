@@ -18,6 +18,9 @@ final class Blueworx_Clubhouse_Frontend {
 
 	public const QUERY_VAR = 'clubhouse_page';
 
+	/** The slug the member area is served at. */
+	public const MEMBER_AREA = 'member-dashboard';
+
 	/**
 	 * Sanitise a raw filter param into a bare slug ([a-z0-9-]). Pure and testable;
 	 * the filtered pages match this against their derived pill slugs. An unknown
@@ -270,6 +273,31 @@ final class Blueworx_Clubhouse_Frontend {
 		return null !== self::current_slug() || self::is_article();
 	}
 
+	/** The clubhouse slug this request resolves to, or null. Public so the member area's routing can ask. */
+	public static function current_page_slug(): ?string {
+		return self::current_slug();
+	}
+
+	/**
+	 * Which design system this request gets: the member area's BlueWorx admin
+	 * stylesheet, the club's own look, or nothing at all.
+	 *
+	 * A single answer rather than two independent checks, because the two must
+	 * never both be true — the member area's design and the club's look define
+	 * the same variables and would fight over the page.
+	 *
+	 * Pure, so the choice is testable without a WordPress runtime.
+	 */
+	public static function style_family( ?string $slug, bool $is_article ): string {
+		if ( self::MEMBER_AREA === $slug ) {
+			return 'member';
+		}
+		if ( null !== $slug || $is_article ) {
+			return 'look';
+		}
+		return 'none';
+	}
+
 	/**
 	 * True when this request is a single WordPress post that the plugin should
 	 * render as a club news article.
@@ -373,7 +401,27 @@ final class Blueworx_Clubhouse_Frontend {
 	}
 
 	public static function enqueue_assets(): void {
-		if ( ! self::is_clubhouse_page() ) {
+		$family = self::style_family( self::current_slug(), self::is_article() );
+		if ( 'none' === $family ) {
+			return;
+		}
+		if ( 'member' === $family ) {
+			// A BlueWorx admin screen, so it gets that design system and none of
+			// the club's. No scroll reveal either: it ships elements hidden until
+			// they scroll into view, which on a page of the shop's own web
+			// components would hide a member's orders behind an animation.
+			Blueworx_Clubhouse_Dashboard_Assets::enqueue();
+			Blueworx_Clubhouse_Member_Dashboard::enqueue_shop_assets();
+			// Switching panels without a reload. Deferred and enhancement-only:
+			// the nav is real links, so the page works while this is still on
+			// its way and if it never arrives at all.
+			wp_enqueue_script(
+				'clubhouse-member-area',
+				BLUEWORX_LABS_CLUBHOUSE_URL . 'assets/js/member-area.js',
+				array(),
+				BLUEWORX_LABS_CLUBHOUSE_VERSION,
+				true
+			);
 			return;
 		}
 		if ( ! self::enqueue_look_styles() ) {

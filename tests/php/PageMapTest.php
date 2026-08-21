@@ -56,4 +56,55 @@ final class PageMapTest extends TestCase {
 		$home = Blueworx_Clubhouse_Page_Map::render( '', $this->branding(), $this->visibility(), $this->collections() );
 		$this->assertStringContainsString( 'ch-cards', $home );
 	}
+
+	public function test_the_member_area_is_a_page_this_plugin_serves(): void {
+		$entry = null;
+		foreach ( Blueworx_Clubhouse_Page_Map::pages() as $page ) {
+			if ( 'member-dashboard' === $page['slug'] ) {
+				$entry = $page;
+			}
+		}
+		$this->assertNotNull( $entry, 'member-dashboard must be in the page map' );
+		$this->assertSame( 'Member area', $entry['label'] );
+		$this->assertSame( 'member_dashboard', $entry['method'] );
+	}
+
+	/** Members-only pages are kept out of the SEO report; club pages are not. */
+	public function test_private_pages_are_marked_as_such(): void {
+		$this->assertTrue( Blueworx_Clubhouse_Page_Map::is_private( 'member-dashboard' ) );
+		$this->assertFalse( Blueworx_Clubhouse_Page_Map::is_private( 'about' ) );
+		$this->assertFalse( Blueworx_Clubhouse_Page_Map::is_private( 'nope' ) );
+	}
+
+	/** The one page that renders no club chrome — it is a BlueWorx admin screen. */
+	public function test_member_area_renders_its_own_frame_and_no_club_chrome(): void {
+		$html = Blueworx_Clubhouse_Page_Map::render(
+			'member-dashboard',
+			$this->branding(),
+			$this->visibility(),
+			$this->collections()
+		);
+		$this->assertStringContainsString( 'bw-admin', $html );
+		$this->assertStringContainsString( 'clubhouse-member', $html );
+		$this->assertStringNotContainsString( 'ch-nav', $html );
+		$this->assertStringNotContainsString( 'ch-footer', $html );
+	}
+
+	/**
+	 * What the SEO report is meant to walk: every servable page minus the
+	 * members-only one. Stands in for exercising Seo_Controller::build_model()
+	 * itself, which needs a WordPress runtime this harness does not provide
+	 * (get_bloginfo() and friends) — the controller's own guard is covered only
+	 * by inspection.
+	 */
+	public function test_available_pages_filtered_by_private_excludes_only_the_member_area(): void {
+		$public = array_values( array_filter(
+			Blueworx_Clubhouse_Page_Map::available(),
+			static fn( array $page ): bool => ! Blueworx_Clubhouse_Page_Map::is_private( $page['slug'] )
+		) );
+
+		$slugs = array_column( $public, 'slug' );
+		$this->assertNotContains( 'member-dashboard', $slugs );
+		$this->assertCount( count( Blueworx_Clubhouse_Page_Map::available() ) - 1, $public );
+	}
 }

@@ -1,17 +1,11 @@
 const { test, expect } = require('@playwright/test');
 
-// @wordpress only: the welcome pack renders on the customer dashboard, which is
-// a real WordPress page the DB-free preview does not have.
-//
-// The fixture is the same page external-chrome.spec.js uses — an ordinary page
-// carrying SureCart's dashboard template slug — with the dashboard page option
-// pointed at it by tests/global-setup.js. That option is what the code keys off
-// and what SureCart itself writes, so the fixture is the real contract rather
-// than a stand-in for it. Installing SureCart to assert our own block would be
-// testing SureCart, the same reasoning external-chrome.spec.js records.
-const DASHBOARD = '/external-chrome-fixture/';
+// @wordpress only: the welcome pack renders on the member area, which is a
+// real WordPress route the DB-free preview does not have.
+const DASHBOARD = '/member-dashboard/';
 
 test('a member sees the club welcome pack on their dashboard @wordpress', async ({ page }) => {
+  await loginAsAdmin(page);
   await page.goto(DASHBOARD);
 
   const pack = page.locator('.clubhouse-welcome');
@@ -27,19 +21,20 @@ test('a member sees the club welcome pack on their dashboard @wordpress', async 
   );
 });
 
-test('the pack greets a member above what the shop renders @wordpress', async ({ page }) => {
+test('the pack greets a member above everything else on the page @wordpress', async ({ page }) => {
   // It used to sit below all of it, which on a real club's dashboard meant
   // under the tabs and an empty appointments list — the last thing a new
-  // member would see, if they scrolled at all.
+  // member would see, if they scrolled at all. The member area now draws the
+  // pack itself, first thing in the overview.
+  await loginAsAdmin(page);
   await page.goto(DASHBOARD);
 
   const order = await page.evaluate(() => {
-    const own = document.querySelector('#foreign-content');
     const pack = document.querySelector('.clubhouse-welcome');
-    if (!own || !pack) return null;
-    // 4 === DOCUMENT_POSITION_FOLLOWING: the page's own content comes after the
-    // pack, which is what prepending at this filter priority is for.
-    return pack.compareDocumentPosition(own) & 4 ? 'before' : 'after';
+    const rest = document.querySelector('.clubhouse-member__quicks, .bw-card');
+    if (!pack) return null;
+    if (!rest) return 'before'; // Nothing else on the page to come after.
+    return pack.compareDocumentPosition(rest) & 4 ? 'before' : 'after';
   });
 
   expect(order).toBe('before');
@@ -49,6 +44,7 @@ test('the pack greets a member above what the shop renders @wordpress', async ({
 // deliberately carries none of the club's look. A pack reaching for design
 // tokens that are not there would arrive unstyled.
 test('the dashboard still stands alone, with no club chrome @wordpress', async ({ page }) => {
+  await loginAsAdmin(page);
   await page.goto(DASHBOARD);
 
   await expect(page.locator('.clubhouse-welcome')).toHaveCount(1);
@@ -133,4 +129,10 @@ test('the welcome pack appears on the dashboard and nowhere else @wordpress', as
     await page.goto(url);
     await expect(page.locator('.clubhouse-welcome'), `pack leaked onto ${url}`).toHaveCount(0);
   }
+});
+
+test('a signed-out visitor is sent to the club login page @wordpress', async ({ page }) => {
+  await page.context().clearCookies();
+  await page.goto('/member-dashboard/');
+  await expect(page).toHaveURL(/\/login\/?$/);
 });

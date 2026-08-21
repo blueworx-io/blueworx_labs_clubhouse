@@ -62,6 +62,16 @@ final class Blueworx_Clubhouse_Seo_Head {
 		return false;
 	}
 
+	/**
+	 * Whether this page should tell a search engine to leave it out of results —
+	 * a filtered view (a convenience URL for the same page) or a private page
+	 * (nothing here for a signed-out visitor, so nothing worth ranking). Pure, so
+	 * the rule is testable without a WordPress runtime under render().
+	 */
+	public static function noindex( bool $filtered_view, bool $private_page ): bool {
+		return $filtered_view || $private_page;
+	}
+
 	/** @return array<int,string> The rival symbols this WordPress install has loaded. */
 	private static function present(): array {
 		$found = array();
@@ -90,7 +100,12 @@ final class Blueworx_Clubhouse_Seo_Head {
 		// and canonical of the unfiltered page. The canonical already pointed the
 		// right way; this stops the filtered address being indexed in its own
 		// right, while still letting a crawler follow the links on it.
-		if ( self::is_filtered_view() ) {
+		//
+		// A private page (the member area) is the same idea for a different
+		// reason: Page_Map marks it members-only, but marking it is not the same
+		// as telling a search engine to leave it alone — without this a page with
+		// nothing for a signed-out visitor still showed up in results.
+		if ( self::noindex( self::is_filtered_view(), Blueworx_Clubhouse_Page_Map::is_private( self::slug() ) ) ) {
 			echo "\n<meta name=\"robots\" content=\"noindex, follow\">\n";
 		}
 
