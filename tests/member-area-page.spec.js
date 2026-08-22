@@ -99,10 +99,8 @@ test('wp-admin offers the Pages screen @wordpress', async ({ page }) => {
 
 test('a switched-off member area answers 404 @wordpress', async ({ page }) => {
   // Two full trips through the Setup screen — switch off, then switch back —
-  // on top of signing in. PHP's built-in server is single-threaded (see
-  // playwright.config.js), so that admin screen and its scripts alone can eat
-  // the default 30s budget. Slow by nature, not by failure.
-  test.slow();
+  // on top of signing in. That is slow by nature, not by failure; the harness
+  // carries the budget for it (see playwright.config.js).
   await signIn(page);
 
   try {

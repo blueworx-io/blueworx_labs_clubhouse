@@ -46,6 +46,29 @@ WordPress reads from an option while the preview takes `?demo=1`. Add to it
 rather than making specs tolerate missing state; a spec that skips when the state
 is absent is a spec that can quietly stop testing anything.
 
+## Why the WordPress specs get 90 seconds each
+
+A wp-admin screen is not a page, it is a couple of hundred requests. The
+Clubhouse Setup screen calls `wp_enqueue_media()`, so opening it pulls in the
+media library's whole script bundle: measured at roughly 200 requests, 177 of
+them JS or CSS, taking about 12 seconds to load once. Serving them is `php -S`,
+which answers one request at a time — around 16 a second here. PHP has a
+`PHP_CLI_SERVER_WORKERS` setting that would give it more, but it needs `fork()`
+and so does nothing on Windows.
+
+That is why a spec which signs in and opens that screen twice spends 20-plus
+seconds without anything being wrong, and why two of them take over 30. The
+budget lives on the `wordpress` project in
+[`playwright.config.js`](../playwright.config.js) rather than on whichever test
+first crossed the line — six tests had picked up their own `test.slow()` that
+way, while the rest sat on a few seconds of headroom and failed whenever the
+machine was busy (Issue #245).
+
+Two things follow. A slow WordPress spec needs no annotation of its own. And a
+spec that hangs still fails — it just takes 90 seconds to say so, rather than
+reporting a healthy screen as broken. The `@preview` project keeps the 30-second
+default, because nothing there loads wp-admin.
+
 ## Running several plugins at once
 
 Both harnesses bind a port, and the foundation's defaults are the same for every
