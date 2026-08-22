@@ -92,12 +92,12 @@ if ( is_int( $checkout_id ) && $checkout_id > 0 ) {
 	update_option( 'surecart_checkout_page_id', $checkout_id );
 }
 
-// Clear the version stamp the plugin flushes its rewrite rules against, so the
-// next request re-runs Club_Pages::ensure() and re-computes the rules — the
+// Clear the version stamp the plugin records its upgrade against, so the next
+// request re-runs Club_Pages::ensure() and the one-off rewrite flush — the
 // same upgrade path a real site takes. The harness database survives between
-// runs, so without this a run would keep whatever pages and rules an older
-// build of the plugin left behind, and the specs would be testing that.
-delete_option( Blueworx_Clubhouse_Frontend::REWRITE_VERSION_OPTION );
+// runs, so without this a run would keep whatever pages an older build of the
+// plugin left behind, and the specs would be testing that.
+delete_option( Blueworx_Clubhouse_Frontend::UPGRADE_VERSION_OPTION );
 
 // A subscriber-level user — an ordinary signed-in member, who holds none of
 // admin's extra capabilities. member-dashboard.spec.js and

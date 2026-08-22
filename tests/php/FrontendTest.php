@@ -57,49 +57,42 @@ final class FrontendTest extends TestCase {
 
 	/**
 	 * Upgrading by uploading a zip over a live plugin does not re-run activation,
-	 * so a release that adds a page slug needs its own flush — otherwise the rule
-	 * is registered while WordPress serves cached rules, and the new permalink
-	 * 404s with nothing to say why. This is how v0.42.0's /booking/ shipped broken.
+	 * so a release that adds a page needs its own way to create it — otherwise
+	 * the new address 404s with nothing to say why. This is how v0.42.0's
+	 * /booking/ shipped broken.
 	 */
-	public function test_rewrites_flush_once_per_version_then_stay_quiet(): void {
+	public function test_the_upgrade_runs_once_per_version_then_stays_quiet(): void {
 		$this->assertTrue(
-			Blueworx_Clubhouse_Frontend::rewrites_need_flush( '0.42.1', null ),
+			Blueworx_Clubhouse_Frontend::needs_upgrade( '0.42.1', null ),
 			'never stamped — a fresh install or an upgrade from before the stamp existed'
 		);
 		$this->assertTrue(
-			Blueworx_Clubhouse_Frontend::rewrites_need_flush( '0.42.1', '0.42.0' ),
+			Blueworx_Clubhouse_Frontend::needs_upgrade( '0.42.1', '0.42.0' ),
 			'stamp predates the running version'
 		);
 		$this->assertFalse(
-			Blueworx_Clubhouse_Frontend::rewrites_need_flush( '0.42.1', '0.42.1' ),
-			'already flushed for this version — must not flush on every request'
+			Blueworx_Clubhouse_Frontend::needs_upgrade( '0.42.1', '0.42.1' ),
+			'already run for this version — must not run on every request'
 		);
 		$this->assertTrue(
-			Blueworx_Clubhouse_Frontend::rewrites_need_flush( '0.42.1', array( 'junk' ) ),
+			Blueworx_Clubhouse_Frontend::needs_upgrade( '0.42.1', array( 'junk' ) ),
 			'a non-string option is not a usable stamp'
 		);
 	}
 
-	public function test_register_hooks_the_flush_after_registering_the_rules(): void {
-		Blueworx_Clubhouse_Frontend::register();
-		$init = array_values( array_filter(
-			wp_stub_calls( 'add_action' ),
-			static fn( array $c ): bool => 'init' === $c['args'][0]
-		) );
-		$rules = null;
-		$flush = null;
-		foreach ( $init as $call ) {
-			$target = $call['args'][1];
-			if ( is_array( $target ) && 'register_rewrites' === $target[1] ) {
-				$rules = $call['args'][2] ?? 10;
-			}
-			if ( is_array( $target ) && 'maybe_flush_rewrites' === $target[1] ) {
-				$flush = $call['args'][2] ?? 10;
-			}
-		}
-		$this->assertNotNull( $rules, 'rules are registered on init' );
-		$this->assertNotNull( $flush, 'the flush check runs on init' );
-		$this->assertGreaterThan( $rules, $flush, 'flushing before registering would cache the old rules' );
+	/**
+	 * Issue #243. An existing site has this plugin's old rules sitting in
+	 * WordPress's cache, and a cached rule outranks WordPress's own page rule —
+	 * so until they are cleared, every club page keeps routing past the real
+	 * page behind it. Nothing else clears them: a zip dropped over a live
+	 * plugin does not re-run activation.
+	 */
+	public function test_the_upgrade_clears_the_rules_older_versions_cached(): void {
+		Blueworx_Clubhouse_Frontend::maybe_upgrade();
+		$this->assertCount( 1, wp_stub_calls( 'flush_rewrite_rules' ), 'the stale rules are cleared once' );
+
+		Blueworx_Clubhouse_Frontend::maybe_upgrade();
+		$this->assertCount( 1, wp_stub_calls( 'flush_rewrite_rules' ), 'and not again on every request after' );
 	}
 
 	public function test_link_url_home_is_site_root(): void {
@@ -111,9 +104,12 @@ final class FrontendTest extends TestCase {
 		$this->assertSame( 'https://club.test/about/', Blueworx_Clubhouse_Frontend::link_url( 'about' ) );
 	}
 
-	public function test_link_url_plain_permalinks_fall_back_to_query_var(): void {
+	public function test_link_url_names_the_page_even_before_it_exists(): void {
+		// A site part-way through the upgrade has no page to ask for a permalink,
+		// and the plugin no longer has a query var to fall back on. The address
+		// the page is about to take is the only honest answer.
 		update_option( 'permalink_structure', '' );
-		$this->assertSame( 'https://club.test/?clubhouse_page=about', Blueworx_Clubhouse_Frontend::link_url( 'about' ) );
+		$this->assertSame( 'https://club.test/about/', Blueworx_Clubhouse_Frontend::link_url( 'about' ) );
 	}
 
 	public function test_link_url_asks_wordpress_for_the_pages_permalink(): void {
@@ -148,12 +144,12 @@ final class FrontendTest extends TestCase {
 	}
 
 	public function test_item_link_url_is_built_on_the_listing_pages_permalink(): void {
-		// /sports/rugby/ follows wherever the Sports page itself lives, rather
+		// A sport hangs off the Sports page wherever that page lives, rather
 		// than assuming it sits at the site root.
 		update_option( Blueworx_Clubhouse_Club_Pages::option_name( 'sports' ), 61 );
 		$GLOBALS['wp_stub_permalinks'][61] = 'https://club.test/club/sports/';
 		$this->assertSame(
-			'https://club.test/club/sports/rugby/',
+			'https://club.test/club/sports/?clubhouse_item=rugby',
 			Blueworx_Clubhouse_Frontend::item_link_url( 'sports', 'rugby' )
 		);
 	}
@@ -162,7 +158,7 @@ final class FrontendTest extends TestCase {
 		update_option( Blueworx_Clubhouse_Club_Pages::option_name( 'sports' ), 61 );
 		$GLOBALS['wp_stub_permalinks'][61] = 'https://club.test/sports/';
 		$this->assertSame(
-			'https://club.test/sports/under%2013s/',
+			'https://club.test/sports/?clubhouse_item=under%2013s',
 			Blueworx_Clubhouse_Frontend::item_link_url( 'sports', 'under 13s' )
 		);
 	}
@@ -170,7 +166,7 @@ final class FrontendTest extends TestCase {
 	public function test_item_link_url_falls_back_without_a_page(): void {
 		update_option( 'permalink_structure', '/%postname%/' );
 		$this->assertSame(
-			'https://club.test/sports/rugby/',
+			'https://club.test/sports/?clubhouse_item=rugby',
 			Blueworx_Clubhouse_Frontend::item_link_url( 'sports', 'rugby' )
 		);
 	}
@@ -229,101 +225,40 @@ final class FrontendTest extends TestCase {
 		);
 	}
 
-	public function test_register_rewrites_adds_one_rule_per_non_home_page(): void {
-		Blueworx_Clubhouse_Frontend::register_rewrites();
+	/**
+	 * Issue #243. Club pages are real WordPress pages, found the way WordPress
+	 * finds any page, so the plugin declares no rules and no query var of its
+	 * own. A rule registered here would sit above WordPress's own page rule and
+	 * take every club page back off its real page.
+	 */
+	public function test_the_plugin_registers_no_rewrite_rules_of_its_own(): void {
+		Blueworx_Clubhouse_Frontend::register();
+		Blueworx_Clubhouse_Frontend::maybe_upgrade();
 
-		$rules    = wp_stub_calls( 'add_rewrite_rule' );
-		$non_home = array_filter( Blueworx_Clubhouse_Page_Map::pages(), static fn( $p ) => '' !== $p['slug'] );
-		// One per page, plus one each for /sports/<sport>/ and /teams/<team>/.
-		$this->assertCount( count( $non_home ) + 2, $rules );
-		$all = implode( '|', array_map( static fn( $r ) => $r['args'][1], $rules ) );
-		$this->assertStringContainsString( 'clubhouse_page=about', $all );
+		$this->assertSame( array(), wp_stub_calls( 'add_rewrite_rule' ) );
+		$this->assertSame( array(), wp_stub_calls( 'add_rewrite_tag' ) );
+		$this->assertFalse(
+			method_exists( Blueworx_Clubhouse_Frontend::class, 'register_rewrites' ),
+			'nothing may bring the rules back by calling this directly'
+		);
 	}
 
 	/**
-	 * /sports/rugby/ must not be swallowed by the bare /sports/ rule. add_rewrite_rule
-	 * with 'top' prepends, so the item rule has to be registered after its listing
-	 * to end up in front of it.
+	 * The pages are created on init, not on a hook that only fires when a plugin
+	 * is activated: uploading a new zip over a live plugin does not re-run
+	 * activation, which is how this plugin is deployed.
 	 */
-	public function test_a_sport_page_rule_is_matched_before_the_sports_listing(): void {
-		Blueworx_Clubhouse_Frontend::register_rewrites();
-
-		$patterns = array_map( static fn( $r ) => $r['args'][0], wp_stub_calls( 'add_rewrite_rule' ) );
-		$listing  = array_search( '^sports/?$', $patterns, true );
-		$item     = array_search( '^sports/([^/]+)/?$', $patterns, true );
-
-		$this->assertIsInt( $listing );
-		$this->assertIsInt( $item );
-		$this->assertGreaterThan( $listing, $item, 'the item rule must be added after the listing to sit above it' );
-	}
-
-	/**
-	 * Once a slug has a real page, WordPress's own page routing answers for it
-	 * and the literal rewrite rule is skipped.
-	 */
-	public function test_register_rewrites_skips_the_literal_rule_for_a_real_page(): void {
-		update_option( Blueworx_Clubhouse_Club_Pages::option_name( 'about' ), 53 );
-
-		Blueworx_Clubhouse_Frontend::register_rewrites();
-
-		$all = implode( '|', array_map( static fn( $r ) => $r['args'][1], wp_stub_calls( 'add_rewrite_rule' ) ) );
-		$this->assertStringNotContainsString( 'clubhouse_page=about', $all );
-	}
-
-	/**
-	 * The member area is no different. Its page is published like every other
-	 * club page (Club_Pages::desired()), so WordPress's own routing can answer
-	 * for it too — a private post would have been filtered out of that query
-	 * for every member without read_private_pages, which is all of them.
-	 */
-	public function test_register_rewrites_skips_the_literal_rule_for_the_member_area_too(): void {
-		update_option( Blueworx_Clubhouse_Club_Pages::option_name( 'member-dashboard' ), 60 );
-
-		Blueworx_Clubhouse_Frontend::register_rewrites();
-
-		$all = implode( '|', array_map( static fn( $r ) => $r['args'][1], wp_stub_calls( 'add_rewrite_rule' ) ) );
-		$this->assertStringNotContainsString( 'clubhouse_page=member-dashboard', $all );
-	}
-
-	/**
-	 * The pages must exist before register_rewrites() runs on the same
-	 * request, or its per-slug decision is made against Club_Pages::post_id()
-	 * still reading 0 for every page — see maybe_ensure_pages_before_rewrites().
-	 */
-	public function test_register_hooks_ensure_pages_before_registering_rewrites(): void {
+	public function test_register_hooks_the_upgrade_on_init(): void {
 		Blueworx_Clubhouse_Frontend::register();
 		$init = array_values( array_filter(
 			wp_stub_calls( 'add_action' ),
 			static fn( array $c ): bool => 'init' === $c['args'][0]
 		) );
-		$ensure = null;
-		$rules  = null;
-		foreach ( $init as $call ) {
-			$target = $call['args'][1];
-			if ( is_array( $target ) && 'maybe_ensure_pages_before_rewrites' === $target[1] ) {
-				$ensure = $call['args'][2] ?? 10;
-			}
-			if ( is_array( $target ) && 'register_rewrites' === $target[1] ) {
-				$rules = $call['args'][2] ?? 10;
-			}
-		}
-		$this->assertNotNull( $ensure, 'the pages are ensured on init' );
-		$this->assertNotNull( $rules, 'rules are registered on init' );
-		$this->assertLessThan( $rules, $ensure, 'the pages must exist before register_rewrites() decides which rules to keep' );
-	}
-
-	public function test_a_sport_page_rule_carries_the_item_through(): void {
-		Blueworx_Clubhouse_Frontend::register_rewrites();
-
-		$targets = array_map( static fn( $r ) => $r['args'][1], wp_stub_calls( 'add_rewrite_rule' ) );
-		$this->assertContains(
-			'index.php?clubhouse_page=sports&clubhouse_item=$matches[1]',
-			$targets
+		$targets = array_map(
+			static fn( array $c ) => is_array( $c['args'][1] ) ? $c['args'][1][1] : $c['args'][1],
+			$init
 		);
-		$this->assertContains(
-			'index.php?clubhouse_page=teams&clubhouse_item=$matches[1]',
-			$targets
-		);
+		$this->assertContains( 'maybe_upgrade', $targets );
 	}
 
 	public function test_resolve_slug_front_page_is_home(): void {
@@ -613,62 +548,64 @@ final class FrontendTest extends TestCase {
 
 	public function test_a_club_page_is_served_from_this_plugins_template(): void {
 		update_option( Blueworx_Clubhouse_Club_Pages::option_name( 'about' ), 42 );
+		$GLOBALS['wp_stub_queried_object_id'] = 42;
+		$GLOBALS['wp_stub_is_404']            = false;
+
 		$this->assertSame(
-			'/plugin/club-page.php',
-			Blueworx_Clubhouse_Frontend::template_for_post( 42, '/theme/page.php', '/plugin/club-page.php' )
+			dirname( __DIR__, 2 ) . '/templates/clubhouse.php',
+			Blueworx_Clubhouse_Frontend::filter_template( '/theme/page.php' )
 		);
 	}
 
 	public function test_any_other_page_keeps_the_themes_template(): void {
 		// This runs on every front-end request. Anything not ours comes back
 		// untouched or the plugin has taken over the whole site.
-		$this->assertSame(
-			'/theme/page.php',
-			Blueworx_Clubhouse_Frontend::template_for_post( 999, '/theme/page.php', '/plugin/club-page.php' )
-		);
+		$GLOBALS['wp_stub_queried_object_id'] = 999;
+		$GLOBALS['wp_stub_is_front_page']     = false;
+
+		$this->assertSame( '/theme/page.php', Blueworx_Clubhouse_Frontend::filter_template( '/theme/page.php' ) );
 	}
 
 	/**
-	 * maybe_404() sets $wp_query->set_404() for a switched-off page but cannot
-	 * clear the queried object it already resolved, and is_club_page() only
-	 * asks whether a real page exists — not whether it is visible right now.
-	 * Without this check a hidden page reached via its own real page would
-	 * still be handed club-page.php, whose render_body() returns '' for the
-	 * same visibility reason: right status, blank body, instead of the
-	 * theme's 404 page.
+	 * A page this site declines to serve gets the theme's own 404 page, not our
+	 * document with an empty body inside it — right status, blank page.
 	 */
-	public function test_serve_club_page_template_bails_out_on_a_404(): void {
+	public function test_a_page_we_decline_to_serve_keeps_the_themes_404(): void {
 		update_option( Blueworx_Clubhouse_Club_Pages::option_name( 'about' ), 42 );
+		( new Blueworx_Clubhouse_Visibility( new Blueworx_Clubhouse_Options_Storage() ) )
+			->set_page_visible( 'about', false );
+		$GLOBALS['wp_stub_queried_object_id'] = 42;
+		$GLOBALS['wp_stub_is_404']            = true;
+
+		$this->assertSame( '/theme/404.php', Blueworx_Clubhouse_Frontend::filter_template( '/theme/404.php' ) );
+	}
+
+	/**
+	 * WordPress answers 404 for reasons of its own that leave the page
+	 * perfectly renderable — a page number that does not exist, for one. Ours
+	 * is still the document to serve, or a mistyped password takes the login
+	 * form off the screen instead of showing the error.
+	 */
+	public function test_a_servable_page_is_still_ours_when_wordpress_says_404(): void {
+		update_option( Blueworx_Clubhouse_Club_Pages::option_name( 'login' ), 42 );
 		$GLOBALS['wp_stub_queried_object_id'] = 42;
 		$GLOBALS['wp_stub_is_404']            = true;
 
 		$this->assertSame(
-			'/theme/404.php',
-			Blueworx_Clubhouse_Frontend::serve_club_page_template( '/theme/404.php' )
-		);
-	}
-
-	public function test_serve_club_page_template_serves_ours_when_not_a_404(): void {
-		update_option( Blueworx_Clubhouse_Club_Pages::option_name( 'about' ), 42 );
-		$GLOBALS['wp_stub_queried_object_id'] = 42;
-		$GLOBALS['wp_stub_is_404']            = false;
-
-		$this->assertSame(
-			dirname( __DIR__, 2 ) . '/templates/club-page.php',
-			Blueworx_Clubhouse_Frontend::serve_club_page_template( '/theme/page.php' )
+			dirname( __DIR__, 2 ) . '/templates/clubhouse.php',
+			Blueworx_Clubhouse_Frontend::filter_template( '/theme/404.php' )
 		);
 	}
 
 	/**
-	 * Once Home is the site's static front page, WordPress only substitutes
-	 * page_on_front for a request it can prove carries nothing else — the
-	 * long-standing ?clubhouse_page=home form fails that check and is_front_page()
-	 * comes back false even though this URL has always meant Home. Home must
-	 * still render rather than falling through to "not a clubhouse page".
+	 * Home is found by its own page like every other club page, so a club that
+	 * has deliberately chosen a different front page still reaches Home at the
+	 * address Home lives at.
 	 */
-	public function test_the_literal_home_query_value_still_renders_home_when_is_front_page_is_false(): void {
-		$GLOBALS['wp_stub_is_front_page'] = false;
-		$GLOBALS['wp_stub_query_vars']    = array( Blueworx_Clubhouse_Frontend::QUERY_VAR => 'home' );
+	public function test_home_renders_from_its_own_page_when_it_is_not_the_front_page(): void {
+		update_option( Blueworx_Clubhouse_Club_Pages::option_name( '' ), 7 );
+		$GLOBALS['wp_stub_is_front_page']     = false;
+		$GLOBALS['wp_stub_queried_object_id'] = 7;
 
 		$this->assertSame( '', Blueworx_Clubhouse_Frontend::current_page_slug() );
 	}

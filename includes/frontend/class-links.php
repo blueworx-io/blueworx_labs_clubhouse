@@ -80,25 +80,7 @@ final class Blueworx_Clubhouse_Links {
 		if ( '' === $slug ) {
 			return $url;
 		}
-		if ( null !== self::$item_resolver ) {
-			return ( self::$item_resolver )( $key, $slug );
-		}
 		$sep = ( false !== strpos( $url, '?' ) ) ? '&' : '?';
 		return $url . $sep . self::ITEM_PARAM . '=' . rawurlencode( $slug );
-	}
-
-	/** @var null|callable(string,string):string */
-	private static $item_resolver = null;
-
-	/**
-	 * Installed by the front end so a sport's page links as /sports/rugby/ rather
-	 * than the query form. Its own seam rather than a branch inside url(), because
-	 * only the front end knows whether permalinks are on; the preview and the
-	 * tests leave it unset and get the query form, which they can serve.
-	 *
-	 * @param null|callable(string,string):string $resolver
-	 */
-	public static function set_item_resolver( ?callable $resolver ): void {
-		self::$item_resolver = $resolver;
 	}
 }

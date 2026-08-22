@@ -62,16 +62,23 @@ test('an unfiltered listing is not marked noindex by us @wordpress', async ({ pa
 
 // A sport page canonicalising to /sports/ would tell search engines it is a
 // duplicate of the list and to drop it — the opposite of what it exists for.
+//
+// Its address is the listing carrying the item since the rewrite rules were
+// retired (Issue #243). Reached here by the old address on purpose: that is
+// what is in bookmarks and in whatever links to the club, and it has to land
+// on the page and claim the address that answers for it now.
 test('a sport page claims its own address and its own title @wordpress', async ({ page }) => {
   await page.goto('/sports/rugby/');
 
-  await expect(page.locator('link[rel=canonical]')).toHaveAttribute('href', /\/sports\/rugby\/$/);
+  await expect(page).toHaveURL(/\/sports\/\?clubhouse_item=rugby$/);
+  await expect(page.locator('link[rel=canonical]')).toHaveAttribute('href', /\/sports\/\?clubhouse_item=rugby$/);
   await expect(page).toHaveTitle(/^Rugby/);
 });
 
 test('a team page claims its own address and its own title @wordpress', async ({ page }) => {
   await page.goto('/teams/1st-xv/');
 
-  await expect(page.locator('link[rel=canonical]')).toHaveAttribute('href', /\/teams\/1st-xv\/$/);
+  await expect(page).toHaveURL(/\/teams\/\?clubhouse_item=1st-xv$/);
+  await expect(page.locator('link[rel=canonical]')).toHaveAttribute('href', /\/teams\/\?clubhouse_item=1st-xv$/);
   await expect(page).toHaveTitle(/^1st XV/);
 });

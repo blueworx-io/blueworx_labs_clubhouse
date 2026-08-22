@@ -7,15 +7,25 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * The plugin's only WordPress-coupled class: rewrite routing, template
- * selection, and asset enqueue. All HTML is delegated to Page_Map / Page_Renderer.
- * Pure decision helpers (resolve_slug, enqueue_specs) are unit-tested without a
- * WP runtime; the hook wiring is verified with the WP-function shim.
+ * The plugin's only WordPress-coupled class: template selection and asset
+ * enqueue. All HTML is delegated to Page_Map / Page_Renderer. Pure decision
+ * helpers (resolve_slug, enqueue_specs) are unit-tested without a WP runtime;
+ * the hook wiring is verified with the WP-function shim.
+ *
+ * Club pages are found the way WordPress finds any page — by the post behind
+ * them. The plugin declares no rewrite rules of its own; Legacy_Urls forwards
+ * the addresses the old ones used to answer.
  *
  * @package BlueworxLabsClubhouse
  */
 final class Blueworx_Clubhouse_Frontend {
 
+	/**
+	 * The query param older versions routed on. Nothing serves from it now —
+	 * Legacy_Urls redirects it to the page's own address — but it is still the
+	 * name a bookmark or an old link can carry, and the DB-free preview's own
+	 * router reads the same name.
+	 */
 	public const QUERY_VAR = 'clubhouse_page';
 
 	/** The slug the member area is served at. */
@@ -45,54 +55,46 @@ final class Blueworx_Clubhouse_Frontend {
 	 * that is not a slug cannot match and is safely reduced to one.
 	 */
 	public static function current_item(): string {
-		// The rewrite fills the query var; the query form fills $_GET. Both reach
-		// here so /sports/rugby/ and ?clubhouse_item=rugby serve the same page.
-		$raw = function_exists( 'get_query_var' ) ? get_query_var( Blueworx_Clubhouse_Links::ITEM_PARAM ) : '';
-		if ( ! is_string( $raw ) || '' === $raw ) {
-			// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only display selector, no state change.
-			$raw = $_GET[ Blueworx_Clubhouse_Links::ITEM_PARAM ] ?? '';
-			$raw = is_string( $raw ) ? wp_unslash( $raw ) : '';
-		}
-		return self::sanitize_filter( $raw );
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only display selector, no state change.
+		$raw = $_GET[ Blueworx_Clubhouse_Links::ITEM_PARAM ] ?? '';
+		return self::sanitize_filter( is_string( $raw ) ? wp_unslash( $raw ) : '' );
 	}
 
 	/**
 	 * One sport or team, hung off its listing page's own address.
 	 *
-	 * Built on the listing page's permalink rather than an assumed '/sports/',
-	 * so moving or renaming that page carries every item link with it.
+	 * Built on the listing page's own URL — whatever form that takes — with the
+	 * item as a query argument. There is no page in the database for a single
+	 * sport or team, so nothing can find '/sports/rugby/' now that the plugin
+	 * declares no rewrite rules; Legacy_Urls redirects that old address here.
 	 */
 	public static function item_link_url( string $key, string $slug ): string {
-		$base = self::page_permalink( $key );
-		if ( '' !== $base ) {
-			// A plain-permalink page's address is already a query ('?page_id=61'),
-			// so the item goes on as another argument. Hanging '/rugby/' off the
-			// end of one would build an address that names nothing.
-			if ( str_contains( $base, '?' ) ) {
-				return $base . '&' . Blueworx_Clubhouse_Links::ITEM_PARAM . '=' . rawurlencode( $slug );
-			}
-			return trailingslashit( $base ) . rawurlencode( $slug ) . '/';
-		}
-		if ( '' !== (string) get_option( 'permalink_structure', '' ) ) {
-			return home_url( '/' . $key . '/' . rawurlencode( $slug ) . '/' );
-		}
-		return home_url( '/?' . self::QUERY_VAR . '=' . $key . '&' . Blueworx_Clubhouse_Links::ITEM_PARAM . '=' . rawurlencode( $slug ) );
+		$base = self::link_url( $key );
+		$sep  = str_contains( $base, '?' ) ? '&' : '?';
+		return $base . $sep . Blueworx_Clubhouse_Links::ITEM_PARAM . '=' . rawurlencode( $slug );
 	}
 
 
-	public static function resolve_slug( bool $is_front_page, mixed $query_var, ?Blueworx_Clubhouse_Visibility $visibility = null ): ?string {
+	/**
+	 * Which club page a request resolves to, or null for one this site does not
+	 * serve. Pure.
+	 *
+	 * @param bool  $is_front_page Whether this is the site root, which is Home.
+	 * @param mixed $named         The Page_Map slug this request named, if any.
+	 */
+	public static function resolve_slug( bool $is_front_page, mixed $named, ?Blueworx_Clubhouse_Visibility $visibility = null ): ?string {
 		$slug = null;
-		if ( is_string( $query_var ) && '' !== $query_var && Blueworx_Clubhouse_Page_Map::has( $query_var ) ) {
-			$slug = $query_var;
+		if ( is_string( $named ) && '' !== $named && Blueworx_Clubhouse_Page_Map::has( $named ) ) {
+			$slug = $named;
 		} elseif ( $is_front_page ) {
 			$slug = '';
 		}
 		if ( null === $slug ) {
 			return null;
 		}
-		// A page whose integration is missing is not served at all — the rewrite
-		// rule still exists (see Page_Map::pages()), so without this the URL would
-		// render a page of shortcodes nothing can expand.
+		// A page whose integration is missing is not served at all. Its real page
+		// stays in the database either way (see Page_Map::pages()), so without
+		// this the URL would render a page of shortcodes nothing can expand.
 		if ( ! Blueworx_Clubhouse_Page_Map::is_available( $slug ) ) {
 			return null;
 		}
@@ -157,17 +159,7 @@ final class Blueworx_Clubhouse_Frontend {
 		// seeder runs on activation, before a store has necessarily connected,
 		// and the filter is a no-op on a site with no shop.
 		Blueworx_Clubhouse_Checkout_Form::register();
-		// Priority 5: before register_rewrites() below decides, for each slug,
-		// whether to keep or skip its literal rewrite rule. That decision reads
-		// Club_Pages::post_id(), so the real pages have to exist BEFORE
-		// register_rewrites() runs on this same request — see
-		// maybe_ensure_pages_before_rewrites()'s own comment for what went wrong
-		// when they didn't.
-		add_action( 'init', array( self::class, 'maybe_ensure_pages_before_rewrites' ), 5 );
-		add_action( 'init', array( self::class, 'register_rewrites' ) );
-		// Priority 11: after register_rewrites() above, so a flush writes the rules
-		// this version actually declares.
-		add_action( 'init', array( self::class, 'maybe_flush_rewrites' ), 11 );
+		add_action( 'init', array( self::class, 'maybe_upgrade' ) );
 		add_action( 'init', array( Blueworx_Clubhouse_Collection_Types::class, 'register' ) );
 		// Priority 20, not the default 10: the look stylesheet has to print after
 		// the active theme's. Our body rule is an element selector, so it ties on
@@ -182,11 +174,6 @@ final class Blueworx_Clubhouse_Frontend {
 		// while WordPress can still pick the theme's 404 template for it.
 		add_action( 'template_redirect', array( self::class, 'maybe_404' ) );
 		add_filter( 'template_include', array( self::class, 'filter_template' ) );
-		// A second pass, keyed off the queried post rather than the route: a club
-		// page reached because WordPress's own page rule now answers for it (see
-		// Club_Pages::ensure()) never sets QUERY_VAR, so filter_template() above
-		// leaves $template untouched and this is what actually serves it.
-		add_filter( 'template_include', array( self::class, 'serve_club_page_template' ) );
 		// The template used to print its own <title> and then call wp_head(), which
 		// prints WordPress's — so every clubhouse page shipped two titles and the
 		// consumer chose. Let WordPress own the tag and supply the text instead, so
@@ -207,85 +194,53 @@ final class Blueworx_Clubhouse_Frontend {
 		return self::is_clubhouse_page() ? self::page_title() : $title;
 	}
 
-	/** Stores the plugin version whose rewrite rules are currently in the cache. */
-	public const REWRITE_VERSION_OPTION = 'blueworx_clubhouse_rewrite_version';
+	/**
+	 * Stores the plugin version this site has already been brought up to. The
+	 * option name still says "rewrite" because that is what it started life
+	 * doing and renaming it would strand the stamp on every existing site.
+	 */
+	public const UPGRADE_VERSION_OPTION = 'blueworx_clubhouse_rewrite_version';
 
 	/**
-	 * Whether the cached rewrite rules predate the running plugin.
+	 * Whether this site was last brought up to date by an older plugin version.
 	 *
 	 * Pure, so the decision is unit-testable without a WordPress runtime.
 	 *
 	 * @param mixed $stored Whatever is in the option — absent, or any old junk.
 	 */
-	public static function rewrites_need_flush( string $running_version, mixed $stored ): bool {
+	public static function needs_upgrade( string $running_version, mixed $stored ): bool {
 		return ! is_string( $stored ) || $stored !== $running_version;
 	}
 
 	/**
-	 * Create or repair the real pages behind every club page BEFORE
-	 * register_rewrites() runs on this same request, so a slug that gains a
-	 * real page here already has one by the time register_rewrites() decides
-	 * whether to keep or skip its literal rule.
+	 * Bring a site up to date once per release.
 	 *
-	 * Splitting this out of maybe_flush_rewrites() below is not cosmetic:
-	 * add_rewrite_rule() appends into WP_Rewrite's in-memory rule list the
-	 * moment it is called, and there is no way to remove an entry once added.
-	 * register_rewrites() runs at the default 'init' priority (10); if
-	 * Club_Pages::ensure() ran any later than that — including inside
-	 * maybe_flush_rewrites() at priority 11, where it used to live — every
-	 * slug's literal rule would already be locked in for this request based
-	 * on Club_Pages::post_id() still reading 0, and the very flush meant to
-	 * fix that would instead persist the stale set. The site would keep
-	 * routing every club page through the rewrite rule until some later,
-	 * unrelated flush — the feature this version shipped would not actually
-	 * be on until then.
+	 * The activation hook does this too, but activation does NOT re-run when a
+	 * plugin is updated by uploading a new zip over a live one — which is how
+	 * this plugin is deployed. So a release that adds a page had no way to
+	 * create it, and the new address 404ed until someone acted by hand. Nothing
+	 * in the plugin said so, which made it look like the page had not shipped.
 	 *
-	 * Gated by the same version stamp maybe_flush_rewrites() checks, so this
-	 * costs one option read on every request and nothing more except on the
-	 * request that matters.
+	 * Stamped with the version rather than a boolean flag, so every future
+	 * release is covered without anyone remembering to do this. Costs one
+	 * option read on a normal request and nothing else.
+	 *
+	 * The flush is the last thing this plugin has to do with rewrite rules: it
+	 * declares none of its own now, and this is what clears the ones earlier
+	 * versions left in WordPress's cache. Without it those stale rules would go
+	 * on answering for every club page — routing them past the real pages —
+	 * until some unrelated permalink save cleared them.
 	 */
-	public static function maybe_ensure_pages_before_rewrites(): void {
-		if ( ! self::rewrites_need_flush_now() ) {
+	public static function maybe_upgrade(): void {
+		$running = defined( 'BLUEWORX_LABS_CLUBHOUSE_VERSION' ) ? (string) BLUEWORX_LABS_CLUBHOUSE_VERSION : '';
+		if ( '' === $running || ! self::needs_upgrade( $running, get_option( self::UPGRADE_VERSION_OPTION, null ) ) ) {
 			return;
 		}
 		Blueworx_Clubhouse_Club_Pages::ensure();
-	}
-
-	/**
-	 * Flush rewrite rules once after an upgrade that added a page.
-	 *
-	 * The activation hook flushes, but activation does NOT re-run when a plugin is
-	 * updated by uploading a new zip over a live one — which is how this plugin is
-	 * deployed. So a release that adds a slug (v0.42.0 added /booking/) registered
-	 * the rule while WordPress went on serving its cached rules, and the pretty
-	 * permalink 404ed until someone re-saved permalinks by hand. Nothing in the
-	 * plugin said so, which made it look like the new page had not shipped.
-	 *
-	 * Stamped with the version rather than a boolean flag, so every future release
-	 * that changes the page map is covered without anyone remembering to do this.
-	 * Runs after register_rewrites() on the same hook, so the rules being flushed
-	 * into the cache are the current ones — computed, thanks to
-	 * maybe_ensure_pages_before_rewrites() running first, with the real pages
-	 * already in place.
-	 */
-	public static function maybe_flush_rewrites(): void {
-		if ( ! self::rewrites_need_flush_now() ) {
-			return;
-		}
-		$running = (string) BLUEWORX_LABS_CLUBHOUSE_VERSION;
 		flush_rewrite_rules();
 		self::drop_block_data();
 		// Autoload off: read once per upgrade, never on a normal request.
-		update_option( self::REWRITE_VERSION_OPTION, $running, false );
-	}
-
-	/** Shared gate for the two hooks above — same check, same version stamp. */
-	private static function rewrites_need_flush_now(): bool {
-		$running = defined( 'BLUEWORX_LABS_CLUBHOUSE_VERSION' ) ? (string) BLUEWORX_LABS_CLUBHOUSE_VERSION : '';
-		if ( '' === $running ) {
-			return false;
-		}
-		return self::rewrites_need_flush( $running, get_option( self::REWRITE_VERSION_OPTION, null ) );
+		update_option( self::UPGRADE_VERSION_OPTION, $running, false );
 	}
 
 	/**
@@ -302,85 +257,45 @@ final class Blueworx_Clubhouse_Frontend {
 		delete_option( 'clubhouse_page_composition' );
 	}
 
-	public static function register_rewrites(): void {
-		add_rewrite_tag( '%' . self::QUERY_VAR . '%', '([^&]+)' );
-		add_rewrite_tag( '%' . Blueworx_Clubhouse_Links::ITEM_PARAM . '%', '([^&/]+)' );
-		foreach ( Blueworx_Clubhouse_Page_Map::pages() as $page ) {
-			if ( '' === $page['slug'] ) {
-				continue;
-			}
-			// Once a slug has a real page behind it (Club_Pages::ensure()), this
-			// literal rule is left out: WordPress's own generic pagename rule sits
-			// further down the same rules list and, unlike this one, is only
-			// accepted once it has confirmed a published page actually exists (see
-			// WP::parse_request()'s verbose-page-rules check) — so leaving both in
-			// would mean this rule, being first, always wins and the real page is
-			// never reached. Every club page is published, the member area
-			// included (Club_Pages::desired()), so WordPress's own routing can
-			// answer for all of them. Nothing is deleted: a page whose real page is
-			// later trashed or removed loses its stored id, and this rule reappears
-			// on the next flush, exactly as reversible as it was before.
-			if ( Blueworx_Clubhouse_Club_Pages::post_id( $page['slug'] ) <= 0 ) {
-				add_rewrite_rule(
-					'^' . $page['slug'] . '/?$',
-					'index.php?' . self::QUERY_VAR . '=' . $page['slug'],
-					'top'
-				);
-			}
-			// The item rule goes in first: 'top' prepends, so the LAST rule added
-			// at the top is matched first, and /sports/rugby/ must not be eaten by
-			// the bare /sports/ rule. Registered regardless of the real page above:
-			// /sports/rugby/ has no real WordPress page of its own to be found by.
-			if ( in_array( $page['slug'], array( 'sports', 'teams' ), true ) ) {
-				add_rewrite_rule(
-					'^' . $page['slug'] . '/([^/]+)/?$',
-					'index.php?' . self::QUERY_VAR . '=' . $page['slug'] . '&' . Blueworx_Clubhouse_Links::ITEM_PARAM . '=$matches[1]',
-					'top'
-				);
-			}
-		}
-	}
-
 	/**
-	 * On a rewrite-rule request the QUERY_VAR carries the slug. On a real page
-	 * request — WordPress's own page rule having taken over that URL now that a
-	 * real page exists behind it (see register_rewrites() and Club_Pages::ensure())
-	 * — the query var is absent, and the slug comes from the queried post
-	 * instead. Shared by current_slug() and maybe_404(), so a page reached
-	 * either way is found and refused the same way.
-	 */
-	private static function queried_slug_candidate(): string {
-		$qv = function_exists( 'get_query_var' ) ? get_query_var( self::QUERY_VAR ) : '';
-		if ( ( ! is_string( $qv ) || '' === $qv ) && function_exists( 'get_queried_object_id' ) ) {
-			$post_id = (int) get_queried_object_id();
-			if ( Blueworx_Clubhouse_Club_Pages::is_club_page( $post_id ) ) {
-				return Blueworx_Clubhouse_Club_Pages::slug_for( $post_id );
-			}
-		}
-		return is_string( $qv ) ? $qv : '';
-	}
-
-	/**
-	 * The visibility check in resolve_slug() applies either way a slug was
-	 * discovered — a page that is switched off must refuse to render whether
-	 * its URL was caught by the rewrite rule or found as a real page.
+	 * The club page this request resolved to, as its Page_Map slug, or '' when
+	 * the request is not one. Home's own answer is '' too — callers reach it
+	 * through the front-page branch in current_slug() instead, so the two are
+	 * never confused.
 	 *
-	 * 'home' is not a Page_Map slug — Home's real slug is '' — but it is a
-	 * long-standing literal query value for reaching Home under plain
-	 * permalinks, and is treated as home directly rather than through
-	 * is_front_page(). Home now being the site's static front page
-	 * (ensure_home_is_front_page()) means is_front_page() only reports true
-	 * for a request WordPress can prove is otherwise empty; an explicit
-	 * ?clubhouse_page=home alongside it no longer qualifies, which would
-	 * silently strand this one URL form outside the front page it names.
+	 * A club page is found the way WordPress finds any page: by the post behind
+	 * it (Club_Pages::ensure()). Shared by current_slug() and maybe_404(), so a
+	 * page is found and refused by the same reading of the request.
+	 */
+	private static function queried_club_slug(): string {
+		if ( ! function_exists( 'get_queried_object_id' ) ) {
+			return '';
+		}
+		$post_id = (int) get_queried_object_id();
+		return Blueworx_Clubhouse_Club_Pages::is_club_page( $post_id )
+			? Blueworx_Clubhouse_Club_Pages::slug_for( $post_id )
+			: '';
+	}
+
+	/**
+	 * Which club page this request renders, or null for one we do not serve.
+	 *
+	 * Home is asked for twice over. Its own page answers first, so a club that
+	 * has chosen a different front page still reaches Home at its own address;
+	 * is_front_page() is the fallback, which covers the site root before
+	 * ensure_home_is_front_page() has run and a site left on posts-on-front.
+	 *
+	 * The visibility check in resolve_slug() applies either way, so a page that
+	 * is switched off refuses to render however it was reached.
 	 */
 	private static function current_slug(): ?string {
-		$qv = self::queried_slug_candidate();
-		if ( 'home' === $qv ) {
-			return self::resolve_slug( true, '', self::context()->visibility );
+		$visibility = self::context()->visibility;
+		$post_id    = function_exists( 'get_queried_object_id' ) ? (int) get_queried_object_id() : 0;
+		if ( Blueworx_Clubhouse_Club_Pages::is_club_page( $post_id ) ) {
+			return self::resolve_slug( true, Blueworx_Clubhouse_Club_Pages::slug_for( $post_id ), $visibility );
 		}
 		$is_front = function_exists( 'is_front_page' ) ? is_front_page() : false;
-		return self::resolve_slug( (bool) $is_front, $qv, self::context()->visibility );
+		return $is_front ? self::resolve_slug( true, '', $visibility ) : null;
 	}
 
 	/**
@@ -440,24 +355,24 @@ final class Blueworx_Clubhouse_Frontend {
 	/**
 	 * Whether this URL is one of ours that we are declining to serve.
 	 *
-	 * The rewrite rules are registered for every page the plugin knows, present
-	 * integration or not, because they are cached until flushed (see
-	 * Page_Map::pages()). So a switched-off page still matches a rule, WordPress
-	 * still builds a perfectly valid query, and declining to render left it
-	 * answering 200 with whatever the theme falls back to — its blog index, on
-	 * the smoke-test install. Declining to render is not the same as saying the
-	 * page is not there.
+	 * A page an owner switches off becomes a draft (Club_Pages::status_for()),
+	 * so WordPress answers 404 for it without being asked. This is what covers
+	 * the cases WordPress cannot see: a page whose integration is not installed
+	 * — real, published, and unrenderable — and a page whose status has drifted
+	 * from the visibility flag that governs it. Declining to render is not the
+	 * same as saying the page is not there, and a search engine reads the
+	 * status (Issue #211).
 	 *
 	 * Only a URL that named one of our pages counts. The bare site root is left
 	 * alone even when Home is switched off: that address belongs to WordPress as
 	 * much as to us, and 404ing it would take the whole site down rather than
 	 * one page off it.
 	 */
-	public static function is_gone( mixed $query_var, ?Blueworx_Clubhouse_Visibility $visibility ): bool {
-		if ( ! is_string( $query_var ) || '' === $query_var || ! Blueworx_Clubhouse_Page_Map::has( $query_var ) ) {
+	public static function is_gone( mixed $named, ?Blueworx_Clubhouse_Visibility $visibility ): bool {
+		if ( ! is_string( $named ) || '' === $named || ! Blueworx_Clubhouse_Page_Map::has( $named ) ) {
 			return false;
 		}
-		return null === self::resolve_slug( false, $query_var, $visibility );
+		return null === self::resolve_slug( false, $named, $visibility );
 	}
 
 	/**
@@ -465,12 +380,7 @@ final class Blueworx_Clubhouse_Frontend {
 	 * does not exist — for a visitor and for a search engine.
 	 */
 	public static function maybe_404(): void {
-		// A page reached because WordPress found its real page carries no
-		// QUERY_VAR either — see queried_slug_candidate() — so without this a
-		// switched-off page served that way would answer 200 with nothing on
-		// it instead of 404, repeating the bug Issue #211 fixed for the
-		// rewrite-rule route.
-		if ( ! self::is_gone( self::queried_slug_candidate(), self::context()->visibility ) ) {
+		if ( ! self::is_gone( self::queried_club_slug(), self::context()->visibility ) ) {
 			return;
 		}
 		global $wp_query;
@@ -481,68 +391,30 @@ final class Blueworx_Clubhouse_Frontend {
 		nocache_headers();
 	}
 
+	/**
+	 * Serve the plugin's own document for a club page or a news article, and
+	 * leave everything else to the theme.
+	 *
+	 * Keyed off current_slug(), which is null for a page we decline to serve —
+	 * so a switched-off page gets the theme's own 404 rather than our document
+	 * with an empty body. Deliberately not keyed off is_404() as well:
+	 * WordPress answers 404 for reasons of its own that leave the page
+	 * perfectly renderable — a page number that does not exist, for one — and
+	 * handing those back to the theme took the login form off the screen for
+	 * anyone who mistyped their password.
+	 *
+	 * @param string $template Whatever WordPress had chosen.
+	 */
 	public static function filter_template( string $template ): string {
 		if ( self::is_article() ) {
-			return dirname( __DIR__, 2 ) . '/templates/clubhouse.php';
+			return self::template_path();
 		}
-		$slug = self::current_slug();
-		if ( null === $slug ) {
-			return $template;
-		}
+		return null === self::current_slug() ? $template : self::template_path();
+	}
+
+	/** Where this plugin's page document lives. */
+	private static function template_path(): string {
 		return dirname( __DIR__, 2 ) . '/templates/clubhouse.php';
-	}
-
-	/** Where this plugin's club-page template lives. */
-	private static function club_page_template_path(): string {
-		return dirname( __DIR__, 2 ) . '/templates/club-page.php';
-	}
-
-	/**
-	 * Which template a post should be served with. Pure.
-	 *
-	 * @param int    $post_id The queried post id, 0 when there is none.
-	 * @param string $default Whatever WordPress had chosen.
-	 * @param string $ours    This plugin's club-page template.
-	 */
-	public static function template_for_post( int $post_id, string $default, string $ours ): string {
-		return Blueworx_Clubhouse_Club_Pages::is_club_page( $post_id ) ? $ours : $default;
-	}
-
-	/**
-	 * Give a club page whose URL WordPress resolved to its own real page (rather
-	 * than our rewrite rule) the same document as the rewrite-served route.
-	 *
-	 * Follows Commerce_Pages::serve_template(), which solves the identical
-	 * problem for the checkout page: template_include is filtered a second
-	 * time, keyed off the queried post id rather than the route.
-	 *
-	 * @param string $template
-	 */
-	public static function serve_club_page_template( $template ): string {
-		$template = (string) $template;
-		if ( ! function_exists( 'get_queried_object_id' ) ) {
-			return $template;
-		}
-		// maybe_404() (template_redirect, earlier than this template_include
-		// filter) calls $wp_query->set_404() for a switched-off page, but does
-		// not — and cannot — clear the queried object it already resolved.
-		// is_club_page() only asks whether a real page exists, not whether it
-		// is currently visible, so without this check a hidden page reached
-		// through its own real page would still be handed club-page.php here,
-		// whose render_body() then returns '' for the same reason — the
-		// visibility check is in resolve_slug(), which current_slug() has
-		// already refused to answer. Right status, blank body, instead of the
-		// theme's own 404 page. filter_template() does not need this same
-		// check: it already returns $template unchanged whenever current_slug()
-		// is null, which a 404'd page always is.
-		if ( function_exists( 'is_404' ) && is_404() ) {
-			return $template;
-		}
-		return self::template_for_post(
-			(int) get_queried_object_id(),
-			$template,
-			self::club_page_template_path()
-		);
 	}
 
 	/** Build a Base Look registry with all packs registered (Court Side first = fallback). */
@@ -696,7 +568,6 @@ final class Blueworx_Clubhouse_Frontend {
 			return '';
 		}
 		Blueworx_Clubhouse_Links::set_resolver( array( self::class, 'link_url' ) );
-		Blueworx_Clubhouse_Links::set_item_resolver( array( self::class, 'item_link_url' ) );
 		Blueworx_Clubhouse_Menu::set_provider(
 			static fn(): Blueworx_Clubhouse_Menu => new Blueworx_Clubhouse_Menu( new Blueworx_Clubhouse_Options_Storage() )
 		);
@@ -717,26 +588,19 @@ final class Blueworx_Clubhouse_Frontend {
 	 * Resolve an internal page key ('home', 'about', …) to a real WordPress URL.
 	 * Installed as the Links resolver during front-end rendering so the shared
 	 * renderer emits permalinks (/about/) instead of the preview's ?page= form.
-	 * Falls back to the clubhouse_page query var when permalinks are plain.
 	 */
 	public static function link_url( string $key ): string {
 		$slug = 'home' === $key ? '' : $key;
 
 		// The page's own address, which is right on any permalink structure and
-		// stays right if the page is moved. Everything below it is the answer
-		// for a site that has not been given its pages yet.
+		// stays right if the page is moved. Below is the answer for a site whose
+		// pages are not there yet — a window that closes the first time
+		// maybe_upgrade() or the activation hook runs.
 		$permalink = self::page_permalink( $slug );
 		if ( '' !== $permalink ) {
 			return $permalink;
 		}
-
-		if ( '' === $slug ) {
-			return home_url( '/' );
-		}
-		if ( '' !== (string) get_option( 'permalink_structure', '' ) ) {
-			return home_url( '/' . $slug . '/' );
-		}
-		return home_url( '/?' . self::QUERY_VAR . '=' . $slug );
+		return '' === $slug ? home_url( '/' ) : home_url( '/' . $slug . '/' );
 	}
 
 	/**

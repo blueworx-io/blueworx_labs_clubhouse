@@ -1,22 +1,23 @@
 # What to work on next
 
-The standing priority order for this repo. **Club pages are becoming real
-WordPress pages** — that milestone is what is being worked on now, and it is
-first below. The block builder stays withdrawn and Club Pages is the builder.
-One older thing is still a person's, not code: the legal wording each club has
-to write for itself.
+The standing priority order for this repo. **Club pages are real WordPress
+pages** — that milestone is done bar its parked SEO half, and it is first
+below. The block builder stays withdrawn and Club Pages is the builder. One
+older thing is still a person's, not code: the legal wording each club has to
+write for itself.
 
 Written 14 August 2026, rewritten 17 August 2026 against main at v0.76.0,
-updated 21 August 2026 against main at v0.86.0. Keep it current: when an issue
-closes, strike it here.
+updated 21 August 2026 against main at v0.86.0 and 22 August 2026 against
+v0.87.0. Keep it current: when an issue closes, strike it here.
 
 ---
 
-## Now: club pages become real WordPress pages
+## Done: club pages became real WordPress pages
 
-The milestone in progress. Club pages used to be rewrite-rule routes with
-nothing in the database behind them, which cost us the SEO we cannot get back
-and a large slice of bespoke code. Each one is a real page now.
+Club pages used to be rewrite-rule routes with nothing in the database behind
+them, which cost us the SEO we cannot get back and a large slice of bespoke
+code. Each one is a real page now, found the way WordPress finds any page, and
+the bespoke routing is gone. Only the parked SEO half is left.
 
 | # | Do | Why here |
 | --- | --- | --- |
@@ -27,7 +28,7 @@ and a large slice of bespoke code. Each one is a real page now.
 | 5 | ~~[#240](../../issues/240) Switching a page off makes it a draft~~ | **Done** — v0.86.0, Bulk Edit guard included. |
 | 6 | ~~[#241](../../issues/241) Nav and internal links from permalinks~~ | **Done** — v0.86.0. |
 | 7 | ~~[#244](../../issues/244) Prove an existing site upgrades cleanly~~ | **Done** — v0.86.1. See [the record](upgrades/2026-08-21-club-pages-become-real-pages.md): nothing is lost, and a second upgrade is a no-op. |
-| 8 | [#243](../../issues/243) Retire the rewrite rules | Last. Where the maintenance saving lands; until it is done the plugin runs both systems. |
+| 8 | ~~[#243](../../issues/243) Retire the rewrite rules~~ | **Done** — v0.87.0. The plugin registers none of its own; old addresses redirect to the page. |
 
 **Parked, not dropped:** [#235](../../issues/235) and
 [#242](../../issues/242), the SEO half of this milestone — what a club page
