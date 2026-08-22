@@ -233,7 +233,6 @@ final class Blueworx_Clubhouse_External_Chrome {
 	 */
 	public static function wrap( string $html ): string {
 		Blueworx_Clubhouse_Links::set_resolver( array( Blueworx_Clubhouse_Frontend::class, 'link_url' ) );
-		Blueworx_Clubhouse_Links::set_item_resolver( array( Blueworx_Clubhouse_Frontend::class, 'item_link_url' ) );
 		Blueworx_Clubhouse_Menu::set_provider(
 			static fn(): Blueworx_Clubhouse_Menu => new Blueworx_Clubhouse_Menu( new Blueworx_Clubhouse_Options_Storage() )
 		);

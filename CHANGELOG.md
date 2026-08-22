@@ -5,6 +5,12 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.87.0
+
+- **Your pages are now found the way every other WordPress page is found.** The plugin's own private routing is gone, which is where the maintenance saving from this milestone lands. Nothing about your site changes.
+- **Old addresses still work.** Anything pointing at the previous form of an address is sent to the page itself, so bookmarks, newsletters and links from elsewhere keep working.
+- **A single sport or team now has a slightly different address** — `/sports/?clubhouse_item=rugby` rather than `/sports/rugby/`. The old address forwards to it. Those were never real pages on your site, and this is the one visible change.
+
 ## 0.86.1
 
 - Checked that a site built on the previous version upgrades cleanly, and wrote down what happens — including what stays behind if you roll back. No change to the plugin itself.

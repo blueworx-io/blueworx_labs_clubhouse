@@ -98,6 +98,7 @@ require_once __DIR__ . '/frontend/class-auth-view.php';
 require_once __DIR__ . '/frontend/class-auth-settings.php';
 require_once __DIR__ . '/frontend/class-seo.php';
 require_once __DIR__ . '/frontend/class-links.php';
+require_once __DIR__ . '/frontend/class-legacy-urls.php';
 require_once __DIR__ . '/frontend/class-news.php';
 require_once __DIR__ . '/frontend/class-cta.php';
 require_once __DIR__ . '/frontend/class-demo-mode.php';

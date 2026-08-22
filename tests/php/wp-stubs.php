@@ -70,20 +70,27 @@ function wp_stub_clear_transients(): void {
 	$GLOBALS['wp_stub_transients'] = array();
 }
 
-/** Put the request on a clubhouse page: the front page, or a mapped page slug. */
+/**
+ * Put the request on a clubhouse page: the front page, or a mapped page slug.
+ *
+ * A club page is found by the real page behind it, so the helper has to put one
+ * there — a stored id for the slug, and that id as the queried object.
+ */
 function wp_stub_on_clubhouse_page( string $slug = '' ): void {
-	$GLOBALS['wp_stub_is_front_page'] = '' === $slug;
-	$GLOBALS['wp_stub_query_vars']    = '' === $slug
-		? array()
-		: array( Blueworx_Clubhouse_Frontend::QUERY_VAR => $slug );
+	$post_id = 9001;
+	update_option( Blueworx_Clubhouse_Club_Pages::option_name( $slug ), $post_id );
+	$GLOBALS['wp_stub_queried_object_id'] = $post_id;
+	$GLOBALS['wp_stub_is_front_page']     = '' === $slug;
+	$GLOBALS['wp_stub_query_vars']        = array();
 }
 
 /** Put the request somewhere the plugin does not render: a blog post, WooCommerce, etc. */
 function wp_stub_off_clubhouse_page(): void {
-	$GLOBALS['wp_stub_is_front_page'] = false;
-	$GLOBALS['wp_stub_is_admin']      = false;
-	$GLOBALS['wp_stub_users']         = array();
-	$GLOBALS['wp_stub_query_vars']    = array();
+	$GLOBALS['wp_stub_is_front_page']     = false;
+	$GLOBALS['wp_stub_is_admin']          = false;
+	$GLOBALS['wp_stub_users']             = array();
+	$GLOBALS['wp_stub_query_vars']        = array();
+	$GLOBALS['wp_stub_queried_object_id'] = 0;
 }
 function wp_stub_calls( string $fn ): array {
 	return array_values( array_filter(
@@ -116,6 +123,9 @@ if ( ! function_exists( 'add_rewrite_rule' ) ) {
 }
 if ( ! function_exists( 'add_rewrite_tag' ) ) {
 	function add_rewrite_tag( ...$a ) { wp_stub_record( 'add_rewrite_tag', $a ); }
+}
+if ( ! function_exists( 'flush_rewrite_rules' ) ) {
+	function flush_rewrite_rules( ...$a ) { wp_stub_record( 'flush_rewrite_rules', $a ); }
 }
 if ( ! function_exists( 'wp_enqueue_style' ) ) {
 	function wp_enqueue_style( ...$a ) { wp_stub_record( 'wp_enqueue_style', $a ); }
