@@ -3,7 +3,7 @@
  * Plugin Name:       Blueworx Labs | Clubhouse
  * Plugin URI:        https://github.com/blueworx-io/blueworx_labs_clubhouse
  * Description:        Blueworx Labs Clubhouse WordPress plugin.
- * Version:           0.86.1
+ * Version:           0.87.0
  * Requires at least: 6.0
  * Requires PHP:      8.2
  * Author:            Blueworx
@@ -21,7 +21,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'BLUEWORX_LABS_CLUBHOUSE_VERSION', '0.86.1' );
+define( 'BLUEWORX_LABS_CLUBHOUSE_VERSION', '0.87.0' );
 define( 'BLUEWORX_LABS_CLUBHOUSE_FILE', __FILE__ );
 define( 'BLUEWORX_LABS_CLUBHOUSE_DIR', plugin_dir_path( __FILE__ ) );
 define( 'BLUEWORX_LABS_CLUBHOUSE_URL', plugin_dir_url( __FILE__ ) );
@@ -60,6 +60,7 @@ require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/collections/class-collectio
  */
 function blueworx_labs_clubhouse_init() {
 	Blueworx_Clubhouse_Frontend::register();
+	Blueworx_Clubhouse_Legacy_Urls::register();
 	Blueworx_Clubhouse_External_Chrome::register();
 	Blueworx_Clubhouse_Welcome_Pack::register();
 	Blueworx_Clubhouse_Member_Dashboard::register();
@@ -87,19 +88,14 @@ add_action( 'plugins_loaded', 'blueworx_labs_clubhouse_init' );
 register_activation_hook(
 	__FILE__,
 	static function () {
-		// Before register_rewrites(): its per-slug decision reads
-		// Club_Pages::post_id(), so the real pages must exist first — otherwise
-		// every slug's literal rewrite rule gets registered and flushed as if
-		// none of them had a real page yet, and activation would ship a site
-		// that only routes through the rewrite rules until some later,
-		// unrelated flush noticed the pages were actually there.
 		Blueworx_Clubhouse_Club_Pages::ensure();
-		Blueworx_Clubhouse_Frontend::register_rewrites();
 		Blueworx_Clubhouse_Collection_Types::register();
 		Blueworx_Clubhouse_Collection_Seeder::seed();
 		Blueworx_Clubhouse_Owner_Role::activate();
+		// The plugin declares no rewrite rules of its own. This clears whatever
+		// an older version left in WordPress's cache — without it those rules
+		// would go on answering for every club page, routing them past the real
+		// pages just created above.
 		flush_rewrite_rules();
 	}
 );
-
-register_deactivation_hook( __FILE__, 'flush_rewrite_rules' );
