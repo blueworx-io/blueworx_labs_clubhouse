@@ -5,6 +5,10 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.87.2
+
+- Internal notes only — nothing changes on your site. The list of what to work on next was rewritten to match what is actually open.
+
 ## 0.87.1
 
 - Test suite only — nothing changes on your site. Tests that open a WordPress admin screen are given the time that actually takes, so a passing test stops being reported as a failure and a real problem is easier to spot.
