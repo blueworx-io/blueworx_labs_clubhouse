@@ -38,10 +38,8 @@ test('a member gets the club frame around their account page @wordpress', async 
 });
 
 test('the member area stylesheet loads, and before the page is drawn @wordpress', async ({ page }) => {
-  // Waits on every asset the page asks for, one at a time: PHP's built-in
-  // server is single-threaded (see playwright.config.js), so this one alone can
-  // eat the default 30s budget. Slow by nature, not by failure.
-  test.slow();
+  // Waits on every asset the page asks for, one at a time — slow by nature, not
+  // by failure. The harness carries the budget (see playwright.config.js).
   // A 404 on the stylesheet leaves a page that renders but looks like nothing.
   // It also has to be asked for in the head: queued any later, the member
   // watches the page render bare and then snap into shape.

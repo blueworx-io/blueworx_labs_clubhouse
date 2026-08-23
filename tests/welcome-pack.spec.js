@@ -101,12 +101,9 @@ async function setPackVisible(page, visible) {
 }
 
 test('switching the welcome pack off takes it off the dashboard @wordpress', async ({ page }) => {
-  // Two saves of the Setup screen and two dashboard loads in one test. Against
-  // the single-threaded PHP dev server that does not fit the default limit
-  // once the rest of the suite has been through it — it timed out mid-run
-  // while passing on its own.
-  test.slow();
-
+  // Two saves of the Setup screen and two dashboard loads in one test — slow by
+  // nature, not by failure. The harness carries the budget for a wp-admin
+  // screen (see playwright.config.js).
   await loginAsAdmin(page);
 
   try {

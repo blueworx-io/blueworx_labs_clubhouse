@@ -69,6 +69,29 @@ module.exports = defineConfig({
       // WordPress — against the preview they would pass while testing nothing, so
       // they are dropped when no WordPress URL is set, and the drop is announced.
       grepInvert: externalBaseURL ? /@preview/ : /@preview|@wordpress/,
+      // Three times the default 30s, for the whole project rather than a handful
+      // of hand-picked tests.
+      //
+      // A WordPress admin screen is not a page, it is a couple of hundred
+      // requests. The Clubhouse Setup screen calls wp_enqueue_media(), which
+      // pulls in the media library's whole script bundle: measured at ~200
+      // requests, 177 of them JS or CSS, taking 12 seconds to load ONCE. The
+      // server serving them is `php -S`, which answers one request at a time —
+      // about 16 a second here — and PHP_CLI_SERVER_WORKERS, which would give it
+      // more, is POSIX-only and so does nothing on Windows.
+      //
+      // So a spec that signs in and opens that screen twice spends 20-plus
+      // seconds doing nothing wrong, against a 30s limit. Four tests had already
+      // been marked test.slow() one at a time as each one crossed the line; the
+      // rest were sitting on a few seconds of headroom and failed whenever the
+      // machine was busy, which is what made a real regression hard to see
+      // (Issue #245). The budget belongs to the harness, not to whichever test
+      // happened to notice first.
+      //
+      // This does NOT slow a passing run down: a test that finishes in 8 seconds
+      // still finishes in 8 seconds. It only changes how long a genuinely stuck
+      // test waits before it is called stuck.
+      timeout: 90_000,
       use: { ...devices['Desktop Chrome'], baseURL: externalBaseURL || previewURL },
     },
   ],

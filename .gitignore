@@ -2,6 +2,7 @@ node_modules/
 package-lock.json
 /test-results/
 /playwright-report/
+/run-*.json
 /blob-report/
 /playwright/.cache/
 /vendor/

@@ -26,12 +26,9 @@ async function loginAsAdmin(page) {
 
 test('every clubhouse screen tells an administrator who can reach it @wordpress', async ({ page }) => {
   // Five wp-admin screens in one test, one of them the guide, which builds
-  // itself from every live registry. Against the single-threaded PHP dev
-  // server that does not fit the default limit under load — it timed out
-  // mid-sweep while passing on its own. Covering every screen is the point of
-  // the test, so the limit gives way rather than the list.
-  test.slow();
-
+  // itself from every live registry. Covering every screen is the point of the
+  // test, so the list does not get shortened to save time — the harness carries
+  // the budget for a wp-admin screen instead (see playwright.config.js).
   await loginAsAdmin(page);
 
   for (const screen of SCREENS) {

@@ -75,11 +75,6 @@ async function bulkSetStatus(page, titles, status) {
 test('a page switched off answers 404, and a page that is on does not @wordpress', async ({
   page,
 }) => {
-  // Two full trips through the Setup screen — switch off, then switch back —
-  // on top of signing in. PHP's built-in server is single-threaded (see
-  // playwright.config.js), so that admin screen and its scripts alone can eat
-  // the default 30s budget. Slow by nature, not by failure.
-  test.slow();
   await loginAsAdmin(page);
 
   const on = await page.goto('/contact/');
@@ -120,7 +115,6 @@ test('a bulk status change in the Pages list cannot switch a club page off @word
   // Now that a page's status is what "switched off" means, a bulk change here
   // would switch a page off behind the Setup screen's back, leaving the stored
   // flag saying one thing and the page another.
-  test.slow();
   await loginAsAdmin(page);
 
   try {
