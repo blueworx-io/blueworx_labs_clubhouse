@@ -1630,6 +1630,10 @@ final class Blueworx_Clubhouse_Page_Renderer {
 								array( 'value' => $t['match_day'], 'label' => 'Match day' ),
 								array( 'value' => $t['league'], 'label' => 'League' ),
 							),
+							// The club's own page for the team is the card title. This is the
+							// team's page somewhere else, and most teams will not have one.
+							'cta_label'   => '' !== trim( (string) ( $t['link'] ?? '' ) ) ? 'Team page' : '',
+							'cta_href'    => trim( (string) ( $t['link'] ?? '' ) ),
 						);
 					},
 					self::filter_rows( $teams, $filter, $pick )
@@ -1914,8 +1918,11 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'eyebrow'   => 'About the section',
 				'heading'   => (string) $row['title'],
 				'lede'      => $description,
-				'cta_label' => '',
-				'cta_href'  => '',
+				// A team can point at its own page elsewhere. A sport has no such
+				// field, so this is empty there and the band stays a plain statement.
+				'cta_label' => '' !== trim( (string) ( $row['link'] ?? '' ) ) ? 'Visit the team page' : '',
+				'cta_href'  => trim( (string) ( $row['link'] ?? '' ) ),
+				'cta_external' => true,
 			) );
 		}
 

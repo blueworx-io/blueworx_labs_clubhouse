@@ -41,10 +41,10 @@ final class Blueworx_Clubhouse_Demo_Content {
 	/** @return array<int,array<string,mixed>> */
 	public static function teams(): array {
 		return array(
-			array( 'title' => '1st XV', 'sport' => 'Rugby', 'description' => 'Saturday league rugby, Division 3 South.', 'match_day' => 'Sat', 'league' => 'Div 3', 'image' => '' ),
-			array( 'title' => '1st XI', 'sport' => 'Cricket', 'description' => 'Premier division Saturday cricket.', 'match_day' => 'Sat', 'league' => 'Prem', 'image' => '' ),
-			array( 'title' => 'Ladies 1s', 'sport' => 'Hockey', 'description' => 'County league hockey with a strong colts feed.', 'match_day' => 'Sat', 'league' => 'County', 'image' => '' ),
-			array( 'title' => 'Netball 2s', 'sport' => 'Netball', 'description' => 'Wednesday-night divisional netball.', 'match_day' => 'Wed', 'league' => 'Div 2', 'image' => '' ),
+			array( 'title' => '1st XV', 'sport' => 'Rugby', 'description' => 'Saturday league rugby, Division 3 South.', 'match_day' => 'Sat', 'league' => 'Div 3', 'image' => '', 'link' => 'https://league.example.com/rugby/1st-xv' ),
+			array( 'title' => '1st XI', 'sport' => 'Cricket', 'description' => 'Premier division Saturday cricket.', 'match_day' => 'Sat', 'league' => 'Prem', 'image' => '', 'link' => 'https://league.example.com/cricket/1st-xi' ),
+			array( 'title' => 'Ladies 1s', 'sport' => 'Hockey', 'description' => 'County league hockey with a strong colts feed.', 'match_day' => 'Sat', 'league' => 'County', 'image' => '', 'link' => '' ),
+			array( 'title' => 'Netball 2s', 'sport' => 'Netball', 'description' => 'Wednesday-night divisional netball.', 'match_day' => 'Wed', 'league' => 'Div 2', 'image' => '', 'link' => '' ),
 		);
 	}
 

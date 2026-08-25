@@ -19,7 +19,7 @@ final class Blueworx_Clubhouse_Collection_Seeder {
 
 	public static function seed(): void {
 		self::seed_type( 'clubhouse_sport', Blueworx_Clubhouse_Demo_Content::sports(), 'title', array( 'label', 'subtitle', 'description', 'stat1_value', 'stat1_label', 'stat2_value', 'stat2_label', 'image', 'training', 'contact_name', 'contact_email' ) );
-		self::seed_type( 'clubhouse_team', Blueworx_Clubhouse_Demo_Content::teams(), 'title', array( 'sport', 'description', 'match_day', 'league', 'image', 'training', 'contact_name', 'contact_email' ) );
+		self::seed_type( 'clubhouse_team', Blueworx_Clubhouse_Demo_Content::teams(), 'title', array( 'sport', 'description', 'match_day', 'league', 'image', 'training', 'contact_name', 'contact_email', 'link' ) );
 		self::seed_fixtures();
 		self::seed_type( 'clubhouse_event', Blueworx_Clubhouse_Demo_Content::events(), 'title', array( 'tag', 'date', 'detail', 'cta_label', 'cta_href', 'status', 'ends_on' ) );
 		self::seed_type( 'clubhouse_sponsor', Blueworx_Clubhouse_Demo_Content::sponsors(), 'name', array( 'url' ) );
