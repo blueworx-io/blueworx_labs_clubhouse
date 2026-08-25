@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Each team can now link to its own page elsewhere** — a league table, a governing-body squad page, wherever the section already keeps things up to date. Add the address to the team and a button appears on its card on the Teams page and on the team's own page. Leave it empty and no button shows at all.
 
+## 0.87.3
+
+- **The news ticker now runs without a jump.** It used to scroll partway along the headlines and snap back to the start; it now loops round continuously.
+
 ## 0.87.2
 
 - Internal notes only — nothing changes on your site. The list of what to work on next was rewritten to match what is actually open.
