@@ -119,6 +119,10 @@ button,input,select,textarea{font-family:inherit}
    "North West Counties" here. Without min-width:0 a flex item refuses to shrink
    below its content, so long values were clipped at the card edge. Wrap, let each
    column shrink, and scale the value down so text-shaped stats still fit. */
+/* The whole card is a click target for the team's own page (a ::after on
+   .ch-scard__link covering the card). A second, off-site button therefore has
+   to be lifted above that overlay or it can never be clicked. */
+.ch-scard__cta{position:relative;z-index:1;align-self:flex-start;margin-top:16px}
 .ch-scard__stats{display:flex;flex-wrap:wrap;gap:12px 20px;margin-top:auto;padding-top:16px;border-top:1px solid var(--color-line)}
 .ch-scard__stat{display:flex;flex-direction:column;min-width:0;flex:1 1 120px}
 .ch-scard__stat-v{font-family:var(--font-display);font-weight:800;font-size:clamp(15px,1.35vw,20px);line-height:1.15;overflow-wrap:break-word}

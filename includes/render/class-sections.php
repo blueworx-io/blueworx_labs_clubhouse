@@ -581,6 +581,7 @@ final class Blueworx_Clubhouse_Sections {
 	/**
 	 * @param array{eyebrow:string,heading:string,link_label:string,link_href:string,
 	 *   cards:array<int,array{image:string,image_alt:string,chip:string,title:string,description:string,
+	 *   cta_label?:string,cta_href?:string,
 	 *   stats:array<int,array{value:string,label:string}>}>} $data
 	 */
 	public static function stat_card_grid( array $data ): string {
@@ -602,13 +603,21 @@ final class Blueworx_Clubhouse_Sections {
 			$title = '' !== $href
 				? '<a class="ch-scard__link" href="' . self::e( $href ) . '">' . self::e( $c['title'] ?? '' ) . '</a>'
 				: self::e( $c['title'] ?? '' );
+			// An optional second link, off this site — the team's page on a league or
+			// governing-body site. Both halves or neither, as everywhere else. It sits
+			// above the title link's full-card overlay, or it could not be clicked.
+			$cta_href  = trim( (string) ( $c['cta_href'] ?? '' ) );
+			$cta_label = trim( (string) ( $c['cta_label'] ?? '' ) );
+			$cta       = ( '' !== $cta_href && '' !== $cta_label )
+				? '<a class="ch-btn ch-btn--ghost ch-scard__cta" href="' . self::e( $cta_href ) . '" target="_blank" rel="noopener">' . self::e( $cta_label ) . '</a>'
+				: '';
 			$cards .= '<article class="ch-scard' . ( '' !== $href ? ' ch-scard--linked' : '' ) . '" role="listitem">'
 				. self::media( $c['image'] ?? '', $c['image_alt'] ?? '', 'ch-scard__media' )
 				. '<span class="ch-scard__chip">' . self::e( $c['chip'] ?? '' ) . '</span>'
 				. '<div class="ch-scard__body">'
 				. '<h3 class="ch-scard__title">' . $title . '</h3>'
 				. '<p class="ch-scard__desc">' . self::e( $c['description'] ?? '' ) . '</p>'
-				. '<div class="ch-scard__stats">' . $stats . '</div></div></article>';
+				. '<div class="ch-scard__stats">' . $stats . '</div>' . $cta . '</div></article>';
 		}
 		$head = '';
 		if ( '' !== $data['link_label'] ) {
@@ -648,7 +657,7 @@ final class Blueworx_Clubhouse_Sections {
 
 	/**
 	 * @param array{variant:string,eyebrow:string,heading:string,lede:string,
-	 *   cta_label:string,cta_href:string} $data variant: 'accent' | 'ink'
+	 *   cta_label:string,cta_href:string,cta_external?:bool} $data variant: 'accent' | 'ink'
 	 */
 	public static function band( array $data ): string {
 		$mod     = 'ink' === $data['variant'] ? 'ch-band--ink' : 'ch-band--accent';
@@ -656,11 +665,14 @@ final class Blueworx_Clubhouse_Sections {
 		$eyebrow = '' !== $data['eyebrow']
 			? '<span class="ch-eyebrow ch-eyebrow--band">' . self::e( $data['eyebrow'] ) . '</span>' : '';
 		$lede    = '' !== $data['lede'] ? '<p class="ch-band__lede">' . self::e( $data['lede'] ) . '</p>' : '';
+		// A band that points off this site says so in the markup, the same way the
+		// contact map link does, so it opens in its own tab and cannot reach back.
+		$away = ! empty( $data['cta_external'] ) ? ' target="_blank" rel="noopener"' : '';
 		// Both halves, or neither — the same rule as the event cards. A band with a
 		// label and no link (or a link and no words) rendered a button that went
 		// nowhere, and a band is also useful as a plain statement with no button.
 		$cta = '' !== trim( (string) $data['cta_label'] ) && '' !== trim( (string) $data['cta_href'] )
-			? '<a class="ch-btn ' . $btn . '" href="' . self::e( $data['cta_href'] ) . '">' . self::e( $data['cta_label'] ) . '</a>'
+			? '<a class="ch-btn ' . $btn . '" href="' . self::e( $data['cta_href'] ) . '"' . $away . '>' . self::e( $data['cta_label'] ) . '</a>'
 			: '';
 		return '<section class="ch-wrap ch-band-wrap"><div class="ch-band ' . $mod . '">'
 			. $eyebrow

@@ -67,6 +67,10 @@ final class Blueworx_Clubhouse_Collection_Meta {
 			array( 'key' => 'training',      'label' => 'Training times', 'type' => 'textarea' ),
 			array( 'key' => 'contact_name',  'label' => 'Contact name',   'type' => 'text' ),
 			array( 'key' => 'contact_email', 'label' => 'Contact email',  'type' => 'email' ),
+			// Where the team already lives online — a league table, a governing-body
+			// squad page, the section's own site. Optional, and a team without one
+			// shows no button anywhere rather than one that goes nowhere.
+			array( 'key' => 'link',          'label' => 'Team page link', 'type' => 'url' ),
 		),
 		'clubhouse_event' => array(
 			array( 'key' => 'tag',       'label' => 'Tag',          'type' => 'text' ),

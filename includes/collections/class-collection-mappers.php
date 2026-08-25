@@ -48,6 +48,7 @@ final class Blueworx_Clubhouse_Collection_Mappers {
 			'training'      => self::m( $post, 'training' ),
 			'contact_name'  => self::m( $post, 'contact_name' ),
 			'contact_email' => self::m( $post, 'contact_email' ),
+			'link'          => self::m( $post, 'link' ),
 		);
 	}
 
