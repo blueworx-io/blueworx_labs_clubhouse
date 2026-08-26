@@ -139,6 +139,37 @@ final class MembershipTierPricingTest extends TestCase {
 		$this->assertSame( '', $tiers[0]['saving'] );
 	}
 
+	public function test_no_saving_when_the_monthly_side_is_charged_yearly(): void {
+		// A club that picks a yearly price for the monthly slot is not saving
+		// eleven more years of it — the badge used to claim exactly that.
+		$tiers = $this->tierDataWithShop( array( array(
+			'name' => 'Social', 'price_id' => 'price_adult_yearly', 'price_id_annual' => 'price_adult_yearly',
+		) ) );
+		$this->assertSame( '', $tiers[0]['saving'] );
+	}
+
+	public function test_no_saving_when_both_sides_are_charged_monthly(): void {
+		$tiers = $this->tierDataWithShop( array( array(
+			'name' => 'Adult', 'price_id' => 'price_adult_monthly', 'price_id_annual' => 'price_adult_monthly',
+		) ) );
+		$this->assertSame( '', $tiers[0]['saving'] );
+	}
+
+	public function test_a_real_monthly_and_yearly_pair_still_shows_its_saving(): void {
+		$tiers = $this->tierDataWithShop( array( array(
+			'name' => 'Adult', 'price_id' => 'price_adult_monthly', 'price_id_annual' => 'price_adult_yearly',
+		) ) );
+		$this->assertSame( 'Save £36 a year', $tiers[0]['saving'] );
+	}
+
+	public function test_a_saving_needs_a_month_and_a_year_to_compare(): void {
+		$this->assertSame( 'Save £56 a year', Blueworx_Clubhouse_Page_Renderer::annual_saving( '£28', '£280', '/mo', '/yr' ) );
+		$this->assertSame( '', Blueworx_Clubhouse_Page_Renderer::annual_saving( '£10', '£10', '/yr', '/yr' ) );
+		$this->assertSame( '', Blueworx_Clubhouse_Page_Renderer::annual_saving( '£28', '£28', '/mo', '/mo' ) );
+		// A price the shop could not put a period on says nothing about a year.
+		$this->assertSame( '', Blueworx_Clubhouse_Page_Renderer::annual_saving( '£28', '£280', '', '/yr' ) );
+	}
+
 	public function test_no_saving_from_a_price_that_is_not_plainly_a_number(): void {
 		// A wrong saving contradicts the prices beside it; a missing one costs nothing.
 		$this->assertSame( '', Blueworx_Clubhouse_Page_Renderer::annual_saving( 'from £28', '£280' ) );
