@@ -44,6 +44,7 @@ require_once __DIR__ . '/membership/class-welcome-pack.php';
 
 // Member area. Pure first, then the page that uses them.
 require_once __DIR__ . '/dashboard/class-dashboard-views.php';
+require_once __DIR__ . '/dashboard/class-dashboard-actions.php';
 require_once __DIR__ . '/dashboard/class-plugin-slot.php';
 require_once __DIR__ . '/dashboard/class-dashboard-assets.php';
 require_once __DIR__ . '/dashboard/class-member-dashboard.php';
