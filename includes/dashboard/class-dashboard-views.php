@@ -125,7 +125,12 @@ final class Blueworx_Clubhouse_Dashboard_Views {
 				// other view whose plugin is absent.
 				'requires'  => self::NEEDS_SURECART,
 				'where'     => 'both',
-				'blocks'    => array( 'surecart/customer-billing-details', 'surecart/customer-payment-methods' ),
+				// Their own name, sign-in email and password come first: it is
+				// the part of "your details" a member is most likely to have
+				// come here to change, and the only part that was missing
+				// entirely. Its Update link goes to the same form SureCart's
+				// own dashboard offers.
+				'blocks'    => array( 'surecart/wordpress-account', 'surecart/customer-billing-details', 'surecart/customer-payment-methods' ),
 				'shortcode' => '',
 			),
 		);

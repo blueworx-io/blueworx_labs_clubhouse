@@ -47,14 +47,26 @@ final class MemberDashboardTest extends TestCase {
 		$this->assertStringContainsString( 'data-block="surecart/customer-orders"', $html );
 	}
 
-	public function test_a_view_with_two_panels_renders_both_in_order(): void {
+	public function test_a_view_with_several_panels_renders_them_all_in_order(): void {
 		$this->everything_installed();
-		$html = Blueworx_Clubhouse_Member_Dashboard::view_body( $this->view( 'account' ), '', 'https://club.test/' );
+		$html    = Blueworx_Clubhouse_Member_Dashboard::view_body( $this->view( 'account' ), '', 'https://club.test/' );
+		$account = strpos( $html, 'surecart/wordpress-account' );
 		$billing = strpos( $html, 'surecart/customer-billing-details' );
 		$cards   = strpos( $html, 'surecart/customer-payment-methods' );
+		$this->assertIsInt( $account );
 		$this->assertIsInt( $billing );
 		$this->assertIsInt( $cards );
+		$this->assertLessThan( $billing, $account );
 		$this->assertLessThan( $cards, $billing );
+	}
+
+	public function test_a_member_can_see_their_own_name_and_sign_in_email(): void {
+		// It used to be missing entirely: the account view showed the details
+		// the shop keeps for billing and nothing about the member themselves,
+		// so there was no way in to changing a name, an email or a password.
+		$this->everything_installed();
+		$html = Blueworx_Clubhouse_Member_Dashboard::view_body( $this->view( 'account' ), '', 'https://club.test/' );
+		$this->assertStringContainsString( 'data-block="surecart/wordpress-account"', $html );
 	}
 
 	public function test_the_bookings_view_hands_the_whole_panel_to_the_booking_plugin(): void {
