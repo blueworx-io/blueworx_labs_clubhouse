@@ -58,6 +58,9 @@ final class Blueworx_Clubhouse_Member_Dashboard {
 	 * @param string $view                The panel named in the address, '' for the overview.
 	 * @param string $member_url          The member area's address, '' when it cannot be built.
 	 * @param string $login_url           The club's login page, '' when it cannot be built.
+	 * @param string $model               The shop record an action address names, '' for none.
+	 * @param string $action              What it asks be done with it, '' for none.
+	 * @param string $id                  Which record, '' when the action needs none.
 	 */
 	public static function redirect_to(
 		int $queried_id,
@@ -67,7 +70,10 @@ final class Blueworx_Clubhouse_Member_Dashboard {
 		bool $signed_in,
 		string $view,
 		string $member_url,
-		string $login_url
+		string $login_url,
+		string $model = '',
+		string $action = '',
+		string $id = ''
 	): string {
 		if ( $on_member_area ) {
 			return $signed_in ? '' : $login_url;
@@ -75,7 +81,20 @@ final class Blueworx_Clubhouse_Member_Dashboard {
 		if ( ! $member_area_serving || $dashboard_id <= 0 || $queried_id !== $dashboard_id || '' === $member_url ) {
 			return '';
 		}
-		return '' === $view ? $member_url : Blueworx_Clubhouse_Dashboard_Shell::view_url( $view, $member_url );
+		$target = '' === $view ? $member_url : Blueworx_Clubhouse_Dashboard_Shell::view_url( $view, $member_url );
+
+		// A bookmark of the shop's own account page can name an action as well
+		// as a panel — "edit this customer". Dropping those two args on the way
+		// across would land the member on a screen that reads their details back
+		// at them instead of the form they saved last time.
+		if ( '' === trim( $model ) || '' === trim( $action ) ) {
+			return $target;
+		}
+		$target .= ( false === strpos( $target, '?' ) ? '?' : '&' )
+			. Blueworx_Clubhouse_Dashboard_Actions::MODEL_ARG . '=' . rawurlencode( trim( $model ) )
+			. '&' . Blueworx_Clubhouse_Dashboard_Actions::ACTION_ARG . '=' . rawurlencode( trim( $action ) );
+		// Most actions name the record they act on; a few (adding a card) do not.
+		return '' === trim( $id ) ? $target : $target . '&id=' . rawurlencode( trim( $id ) );
 	}
 
 	/**
@@ -88,6 +107,7 @@ final class Blueworx_Clubhouse_Member_Dashboard {
 		if ( ! function_exists( 'wp_safe_redirect' ) || ! function_exists( 'get_queried_object_id' ) ) {
 			return;
 		}
+		$asked  = Blueworx_Clubhouse_Dashboard_Actions::requested();
 		$target = self::redirect_to(
 			(int) get_queried_object_id(),
 			Blueworx_Clubhouse_Shop_Pages::page_id( 'dashboard' ),
@@ -101,7 +121,10 @@ final class Blueworx_Clubhouse_Member_Dashboard {
 			// link_url() rather than Links::url(): the link resolver is not
 			// installed until rendering starts, which is after this runs.
 			Blueworx_Clubhouse_Frontend::link_url( Blueworx_Clubhouse_Frontend::MEMBER_AREA ),
-			Blueworx_Clubhouse_Frontend::link_url( 'login' )
+			Blueworx_Clubhouse_Frontend::link_url( 'login' ),
+			$asked['model'],
+			$asked['action'],
+			self::requested_record()
 		);
 		if ( '' === $target ) {
 			return;
@@ -142,6 +165,16 @@ final class Blueworx_Clubhouse_Member_Dashboard {
 			$panels[ $key ] = Blueworx_Clubhouse_Dashboard_Views::DEFAULT_VIEW === $key
 				? self::overview( $welcome, $views, $home, $base )
 				: self::view_body( $view, '', $home );
+		}
+
+		// An address asking for something to be done — update these details, add
+		// this card, cancel this plan — takes over the panel it belongs to. The
+		// screen it replaces is the read-only one the member pressed the link on,
+		// so what they came from is what they go back to.
+		$action = self::action_panel();
+		if ( null !== $action && isset( $panels[ $action['view'] ] ) ) {
+			$panels[ $action['view'] ] = $action['body'];
+			$current                   = $action['view'];
 		}
 
 		$style = '' !== $welcome
@@ -215,6 +248,53 @@ final class Blueworx_Clubhouse_Member_Dashboard {
 			return '';
 		}
 		return (string) Blueworx_Clubhouse_Auth::logout_url();
+	}
+
+	/**
+	 * The screen an action address asks for, and which panel it belongs under.
+	 *
+	 * Rendered by SureCart's own wrapper block, which is the piece that reads
+	 * `model` and `action` and hands the request to the right controller. So the
+	 * form, the save and the permission check are all SureCart's — the member
+	 * area supplies the frame around them and nothing else. That is the same
+	 * division as every read-only panel here.
+	 *
+	 * Null for an ordinary address, and for an action whose model has no panel
+	 * of ours (downloads, licences) or whose block will not render — a member
+	 * following a stale link sees their normal member area, not a blank frame.
+	 *
+	 * @return array{view:string,body:string}|null
+	 */
+	private static function action_panel(): ?array {
+		$asked = Blueworx_Clubhouse_Dashboard_Actions::requested();
+		if ( ! Blueworx_Clubhouse_Dashboard_Actions::is_action(
+			$asked['model'],
+			$asked['action'],
+			Blueworx_Clubhouse_Dashboard_Actions::site_check()
+		) ) {
+			return null;
+		}
+
+		$view = Blueworx_Clubhouse_Dashboard_Actions::view_for( $asked['model'] );
+		if ( '' === $view ) {
+			return null;
+		}
+
+		$body = Blueworx_Clubhouse_Plugin_Slot::block( Blueworx_Clubhouse_Dashboard_Actions::BLOCK );
+		if ( '' === $body ) {
+			return null;
+		}
+		return array(
+			'view' => $view,
+			'body' => Blueworx_Clubhouse_Dashboard_Shell::card( '', $body ),
+		);
+	}
+
+	/** Which record an action address names, '' for none. */
+	private static function requested_record(): string {
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- carried across a redirect untouched; the shop's own controller checks who may act on it.
+		$raw = $_GET['id'] ?? '';
+		return is_string( $raw ) ? $raw : '';
 	}
 
 	/** The view named in the address, unfiltered — resolve() decides what it means. */
