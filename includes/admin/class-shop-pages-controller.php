@@ -39,7 +39,7 @@ final class Blueworx_Clubhouse_Shop_Pages_Controller {
 	 * four times the noise for no extra information.
 	 *
 	 * @param array<string,string>                                            $problems From Shop_Pages::problems().
-	 * @param array<string,array{label:string,consequence:string,seeded:bool}> $pages    From Shop_Pages::pages().
+	 * @param array<string,array{label:string,consequence:string}> $pages    From Shop_Pages::pages().
 	 * @param bool                                                            $can_seed Whether SureCart can create what is missing.
 	 * @return array{lines:array<int,string>,button:string,footnote:string}|null Null when nothing is wrong.
 	 */

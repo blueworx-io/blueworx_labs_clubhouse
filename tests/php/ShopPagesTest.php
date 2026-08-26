@@ -102,28 +102,28 @@ final class ShopPagesTest extends TestCase {
 		$this->assertSame( array( 'dashboard', 'shop' ), array_keys( $problems ) );
 	}
 
-	public function test_a_page_surecart_does_not_seed_is_not_promised_by_the_button(): void {
-		// SureCart's seeder makes the checkout, dashboard and shop pages; its
-		// order-confirmation page comes from onboarding instead. Offering to
-		// create it would be a promise the button cannot keep.
-		$repairable = Blueworx_Clubhouse_Shop_Pages::repairable(
-			array(
-				'checkout'           => Blueworx_Clubhouse_Shop_Pages::STATUS_MISSING,
-				'order-confirmation' => Blueworx_Clubhouse_Shop_Pages::STATUS_MISSING,
-			),
-			Blueworx_Clubhouse_Shop_Pages::pages()
+	public function test_every_broken_page_including_the_confirmation_one_can_be_put_right(): void {
+		// The order-confirmation page used to be reported and then left alone,
+		// because SureCart's seeder does not make it. This plugin makes it now,
+		// so there is no longer a problem the button declines to touch.
+		$problems = array(
+			'checkout'           => Blueworx_Clubhouse_Shop_Pages::STATUS_MISSING,
+			'order-confirmation' => Blueworx_Clubhouse_Shop_Pages::STATUS_MISSING,
+			'shop'               => Blueworx_Clubhouse_Shop_Pages::STATUS_UNPUBLISHED,
 		);
-		$this->assertSame( array( 'checkout' ), array_keys( $repairable ) );
+		$this->assertSame(
+			array_keys( $problems ),
+			array_keys( Blueworx_Clubhouse_Shop_Pages::repairable( $problems, Blueworx_Clubhouse_Shop_Pages::pages() ) )
+		);
 	}
 
-	public function test_a_page_that_only_needs_republishing_is_always_repairable(): void {
-		// Even the one SureCart would not create: it already exists, so this is
-		// just taking it out of the trash.
-		$repairable = Blueworx_Clubhouse_Shop_Pages::repairable(
-			array( 'order-confirmation' => Blueworx_Clubhouse_Shop_Pages::STATUS_UNPUBLISHED ),
-			Blueworx_Clubhouse_Shop_Pages::pages()
-		);
-		$this->assertSame( array( 'order-confirmation' ), array_keys( $repairable ) );
+	public function test_the_confirmation_page_is_made_the_way_surecart_makes_its_own(): void {
+		// Its slug, title and block, read from SureCart's onboarding — so the
+		// page is the one SureCart would have written, not an imitation.
+		$page = Blueworx_Clubhouse_Shop_Pages::confirmation_page();
+		$this->assertSame( 'order-confirmation', $page['slug'] );
+		$this->assertSame( 'Thank you!', $page['title'] );
+		$this->assertStringContainsString( 'wp:surecart/order-confirmation', $page['content'] );
 	}
 
 	public function test_a_trashed_checkout_page_yields_no_url_rather_than_a_dead_link(): void {
