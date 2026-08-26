@@ -5,6 +5,10 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.89.0
+
+- **Emails now come from your club, not from "WordPress"** — a password reset used to arrive from WordPress at a wordpress@ address, identical on every site we run. It now carries your club's name and an address on your own domain. If your club has a real mailbox members should be able to reply to, put it under Setup → Members.
+
 ## 0.88.2
 
 - **The "your shop is not ready to take payments" warning can now be cleared** — the order confirmation page it complained about is created for you, like the other shop pages already were. Nobody has to walk through SureCart's setup to make the warning go away.

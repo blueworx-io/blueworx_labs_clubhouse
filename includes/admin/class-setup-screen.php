@@ -118,7 +118,10 @@ final class Blueworx_Clubhouse_Setup_Screen {
 		$out .= '<section class="clubhouse-panel" data-panel="visibility" role="tabpanel">'
 			. self::visibility_area( $model['inventory'], $model['visibility'] ) . '</section>';
 		$out .= '<section class="clubhouse-panel" data-panel="members" role="tabpanel">'
-			. self::members_area( $model['members'] ?? array() ) . '</section>';
+			. self::members_area( $model['members'] ?? array() )
+			// Beside it rather than in a tab of its own: the email a club sends is
+			// almost entirely password resets, which is a member journey.
+			. self::emails_area( $model['mail'] ?? array() ) . '</section>';
 		if ( $can_demo ) {
 			$out .= '<section class="clubhouse-panel" data-panel="demo" role="tabpanel">'
 				. self::demo_area( (bool) ( $model['demo_active'] ?? false ) ) . '</section>';
@@ -408,6 +411,35 @@ final class Blueworx_Clubhouse_Setup_Screen {
 		$out .= self::text_field( 'clubhouse_post_logout', 'After signing out', (string) ( $m['post_logout'] ?? '' ) );
 		$out .= '</div>';
 		$out .= '<p class="clubhouse-help">For example <code>/membership/</code> for a page on this site.</p>';
+		return $out . '</div>';
+	}
+
+	/**
+	 * Who the site's email comes from.
+	 *
+	 * Both fields empty is the normal case, so the step leads with what the club
+	 * already gets rather than with two blanks. The address is deliberately shown
+	 * rather than described: a club needs to know members will see noreply@ before
+	 * they can decide they would rather have something else.
+	 *
+	 * @param array<string,mixed> $m
+	 */
+	private static function emails_area( array $m ): string {
+		$name    = (string) ( $m['name_default'] ?? '' );
+		$address = (string) ( $m['address_default'] ?? '' );
+
+		$out  = '<div class="clubhouse-step"><p class="clubhouse-step__k">Emails</p>'
+			. '<h2 class="clubhouse-step__h">Who your email comes from</h2>';
+		$out .= '<p class="clubhouse-step__lede">Password resets and everything else this site sends. '
+			. ( '' !== $address
+				? 'Leave both empty and members see ' . self::esc( '' !== $name ? $name . ' <' . $address . '>' : $address ) . '. '
+				: 'Leave both empty and members see your club\'s name. ' )
+			. 'Fill them in only if your club has a real mailbox you would rather members could reply to.</p>';
+		$out .= '<div class="clubhouse-fields">';
+		$out .= self::text_field( 'clubhouse_mail_from_name', 'Sender name', (string) ( $m['from_name'] ?? '' ) );
+		$out .= self::text_field( 'clubhouse_mail_from_address', 'Sender address', (string) ( $m['from_address'] ?? '' ), 'email' );
+		$out .= '</div>';
+		$out .= '<p class="clubhouse-help">Nobody can reply to the ' . self::esc( '' !== $address ? $address : 'noreply' ) . ' address — that is what it is for.</p>';
 		return $out . '</div>';
 	}
 

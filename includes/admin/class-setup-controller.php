@@ -151,6 +151,24 @@ final class Blueworx_Clubhouse_Setup_Controller {
 			$auth->set_post_logout( sanitize_text_field( (string) $post['clubhouse_post_logout'] ) );
 		}
 
+		// 3c. Who the site's email comes from. Both blank is the normal case and
+		// gives the club's own name at noreply@ its domain; these are for the club
+		// that has a real mailbox and would rather members could reply to it. A
+		// typed address that is not an address is refused here rather than put on
+		// every email the site sends.
+		$mail = new Blueworx_Clubhouse_Mail_Settings( $storage );
+		if ( isset( $post['clubhouse_mail_from_name'] ) ) {
+			$mail->set_from_name( sanitize_text_field( (string) $post['clubhouse_mail_from_name'] ) );
+		}
+		if ( isset( $post['clubhouse_mail_from_address'] ) ) {
+			$typed = trim( (string) $post['clubhouse_mail_from_address'] );
+			if ( '' === $typed || is_email( $typed ) ) {
+				$mail->set_from_address( sanitize_email( $typed ) );
+			} else {
+				$notices[] = array( 'type' => 'error', 'text' => 'That reply-to address is not an email address, so it was not saved. Leave it empty to send from your own domain.' );
+			}
+		}
+
 		// 4. Visibility — a checkbox is present only when ticked; absence = hidden.
 		$pages    = isset( $post['clubhouse_page'] ) && is_array( $post['clubhouse_page'] ) ? $post['clubhouse_page'] : array();
 		$sections = isset( $post['clubhouse_section'] ) && is_array( $post['clubhouse_section'] ) ? $post['clubhouse_section'] : array();
@@ -315,6 +333,7 @@ final class Blueworx_Clubhouse_Setup_Controller {
 		}
 
 		$auth = new Blueworx_Clubhouse_Auth_Settings( $storage );
+		$mail_settings = new Blueworx_Clubhouse_Mail_Settings( $storage );
 
 		return array(
 			'nonce_field'   => $nonce_field,
@@ -326,6 +345,14 @@ final class Blueworx_Clubhouse_Setup_Controller {
 				// Empty unless the shop has a reachable dashboard, which is
 				// exactly when a blank "after signing in" starts meaning it.
 				'dashboard_url' => Blueworx_Clubhouse_Shop_Pages::url( 'dashboard' ),
+			),
+			'mail'          => array(
+				'from_name'    => $mail_settings->get_from_name(),
+				'from_address' => $mail_settings->get_from_address(),
+				// What the club gets with both left blank — shown so they can see
+				// what members will read before deciding to change it.
+				'name_default' => Blueworx_Clubhouse_Mail::from_name( $branding->get_club_name(), '' ),
+				'address_default' => Blueworx_Clubhouse_Mail::from_address( function_exists( 'home_url' ) ? (string) home_url( '/' ) : '', '' ),
 			),
 			'progress'      => Blueworx_Clubhouse_Setup_Progress::compute( $branding, $active_look ?? new Blueworx_Clubhouse_Court_Side(), '' !== $active_slug, (bool) $storage->get( self::VIS_SAVED_KEY, false ) ),
 			'looks'         => $looks,
