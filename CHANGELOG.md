@@ -5,6 +5,10 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.91.0
+
+- **Members can now change their own name, email and password** — the member area showed the details the club keeps for billing and nothing about the member themselves, so there was no way in. Their own details sit at the top of Account now, with an Update link to change them.
+
 ## 0.90.0
 
 - **Members can change things in the member area again** — Update on billing details, adding or removing a card, payment history, opening an order or an invoice, and changing or cancelling a plan all led back to the same read-only screen and did nothing. Every one of them now opens the screen it says it will.

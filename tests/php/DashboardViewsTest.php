@@ -144,11 +144,13 @@ final class DashboardViewsTest extends TestCase {
 		$this->assertSame( array(), $bookings['blocks'] );
 	}
 
-	public function test_account_holds_both_of_the_shops_account_panels(): void {
+	public function test_account_holds_the_members_own_details_and_the_shops(): void {
+		// Their own name, email and password first — the part they are most
+		// likely to have come to change, and the part that used to be absent.
 		$views   = Blueworx_Clubhouse_Dashboard_Views::available( true, true );
 		$account = Blueworx_Clubhouse_Dashboard_Views::find( 'account', $views );
 		$this->assertSame(
-			array( 'surecart/customer-billing-details', 'surecart/customer-payment-methods' ),
+			array( 'surecart/wordpress-account', 'surecart/customer-billing-details', 'surecart/customer-payment-methods' ),
 			$account['blocks']
 		);
 	}
