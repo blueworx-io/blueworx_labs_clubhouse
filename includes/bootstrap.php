@@ -97,6 +97,8 @@ require_once __DIR__ . '/collections/class-collection-meta.php';
 // Frontend (pure)
 require_once __DIR__ . '/frontend/class-auth-view.php';
 require_once __DIR__ . '/frontend/class-auth-settings.php';
+require_once __DIR__ . '/admin/class-changelog.php';
+require_once __DIR__ . '/admin/class-changelog-screen.php';
 require_once __DIR__ . '/frontend/class-mail-settings.php';
 require_once __DIR__ . '/frontend/class-mail.php';
 require_once __DIR__ . '/frontend/class-seo.php';

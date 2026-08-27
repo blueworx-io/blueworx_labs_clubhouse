@@ -5,6 +5,10 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.92.0
+
+- **You can now see what every update changed** — a What's new screen under Clubhouse, listing every release in plain English with the version you are running marked. The recent ones are laid out in full and the rest of the history folds away underneath. Releases that only changed how the plugin is built say so rather than pretending otherwise.
+
 ## 0.91.2
 
 - Development tooling only — nothing changes on your site. The local test setup can now run a real shop alongside the plugin, so the parts that only exist next to SureCart can be checked properly before they are released.
