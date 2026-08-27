@@ -506,7 +506,7 @@ a{color:inherit;text-decoration:none}
 /* Member sign-in card — narrow and centred by intent (it's the whole page, and reads
    as a form, not a misaligned content section). Vertical padding keeps it clear of the
    sticky nav and the footer. */
-.ch-auth-wrap{max-width:460px;padding-block:var(--space-16)}
+.ch-auth-wrap{max-width:560px;padding-block:var(--space-16)}
 @media(max-width:640px){.ch-auth-wrap{padding-block:var(--space-10)}}
 .ch-auth{background:var(--color-paper);border:1px solid var(--color-line);border-radius:var(--radius-xl);padding:40px}
 @media(max-width:520px){.ch-auth{padding:28px 22px}}
