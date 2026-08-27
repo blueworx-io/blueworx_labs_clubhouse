@@ -181,3 +181,13 @@ body.toplevel_page_clubhouse-setup #wpfooter { display: none; }
 .clubhouse-guide-entry[open] .clubhouse-guide-entry__head { margin-bottom: 8px; }
 .clubhouse-guide-steps { margin: 10px 0 10px 20px; padding: 0; list-style: decimal; color: var(--color-ink-soft); }
 .clubhouse-guide-steps li { margin: 4px 0; }
+
+/* What's new — one release after another, so a long history stays skimmable.
+   The rule between them does the separating; boxing each one would turn 165
+   releases into 165 cards. */
+.clubhouse-release { padding: 14px 0; border-top: 1px solid var(--color-line); }
+.clubhouse-release:first-child { border-top: 0; padding-top: 0; }
+.clubhouse-release .clubhouse-step__h { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 16px; }
+.clubhouse-release__notes { margin: 0; padding-left: 20px; color: var(--color-ink-soft); }
+.clubhouse-release__notes li { margin: 6px 0; line-height: 1.55; }
+.clubhouse-release__notes strong { color: var(--color-ink); }
