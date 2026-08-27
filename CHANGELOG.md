@@ -5,6 +5,10 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.88.2
+
+- **The "your shop is not ready to take payments" warning can now be cleared** — the order confirmation page it complained about is created for you, like the other shop pages already were. Nobody has to walk through SureCart's setup to make the warning go away.
+
 ## 0.88.1
 
 - **The savings badge no longer invents a saving** — it used to multiply whatever price sat on the Monthly side by twelve, whatever that price was actually charged per. A tier priced yearly on both sides claimed a saving of eleven more years of it. There is now only a badge where the two prices really are one a month and one a year.

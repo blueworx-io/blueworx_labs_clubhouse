@@ -53,21 +53,21 @@ final class ShopPagesNoticeTest extends TestCase {
 		$this->assertStringContainsString( 'Open SureCart', $message['footnote'] );
 	}
 
-	public function test_a_page_the_button_will_not_fix_is_named_up_front(): void {
-		// Pressing the button and finding a warning still there should not be a
-		// surprise.
+	public function test_the_button_now_covers_the_confirmation_page_too(): void {
+		// It used to be named in a footnote as the one thing the button could
+		// not fix, which left every club a warning they could do nothing about.
 		$message = $this->message( array(
 			'checkout'           => Blueworx_Clubhouse_Shop_Pages::STATUS_MISSING,
 			'order-confirmation' => Blueworx_Clubhouse_Shop_Pages::STATUS_MISSING,
 		) );
 		$this->assertSame( 'Put the missing pages back', $message['button'] );
-		$this->assertStringContainsString( 'order confirmation page', $message['footnote'] );
+		$this->assertSame( '', $message['footnote'] );
 	}
 
-	public function test_the_footnote_does_not_mention_a_button_that_is_not_there(): void {
+	public function test_a_missing_confirmation_page_on_its_own_is_offered_the_button(): void {
 		$message = $this->message( array( 'order-confirmation' => Blueworx_Clubhouse_Shop_Pages::STATUS_MISSING ) );
-		$this->assertSame( '', $message['button'] );
-		$this->assertSame( 'Open SureCart and finish setting the shop up.', $message['footnote'] );
+		$this->assertSame( 'Put the missing pages back', $message['button'] );
+		$this->assertSame( '', $message['footnote'] );
 	}
 
 	public function test_a_trashed_page_is_repairable_even_when_seeding_is_not_available(): void {

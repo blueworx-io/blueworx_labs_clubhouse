@@ -47,36 +47,47 @@ final class Blueworx_Clubhouse_Shop_Pages {
 	/**
 	 * The pages the shop needs, and what a visitor loses without each.
 	 *
-	 * 'seeded' records whether SureCart's own seeder creates it. Its
-	 * order-confirmation page is made during onboarding rather than by the
-	 * seeder, so a missing one is worth saying out loud but is not something
-	 * the repair button can fix — better to send the owner to SureCart than to
-	 * invent a page SureCart did not write.
-	 *
-	 * @return array<string,array{label:string,consequence:string,seeded:bool}>
+	 * @return array<string,array{label:string,consequence:string}>
 	 */
 	public static function pages(): array {
 		return array(
 			'checkout'           => array(
 				'label'       => 'checkout page',
 				'consequence' => 'nobody can pay and membership Join buttons fall back to your contact page',
-				'seeded'      => true,
 			),
 			'order-confirmation' => array(
 				'label'       => 'order confirmation page',
 				'consequence' => 'anyone who pays sees nothing afterwards',
-				'seeded'      => false,
 			),
 			'dashboard'          => array(
 				'label'       => 'customer dashboard',
 				'consequence' => 'members have nowhere to manage what they have paid for',
-				'seeded'      => true,
 			),
 			'shop'               => array(
 				'label'       => 'shop page',
 				'consequence' => 'your products have nowhere to be listed',
-				'seeded'      => true,
 			),
+		);
+	}
+
+	/**
+	 * The order confirmation page, exactly as SureCart writes it.
+	 *
+	 * Its activation seeder makes the checkout, dashboard and shop pages but not
+	 * this one — only its onboarding does, and a club that never walks through
+	 * onboarding is left with a permanent warning that anyone who pays will see
+	 * nothing afterwards. So this plugin makes it, using SureCart's own slug,
+	 * title and block from Install\InstallService::createPages(). Pure, so what
+	 * it writes is asserted rather than taken on trust.
+	 *
+	 * @return array{slug:string,option:string,title:string,content:string}
+	 */
+	public static function confirmation_page(): array {
+		return array(
+			'slug'    => 'order-confirmation',
+			'option'  => 'order-confirmation',
+			'title'   => 'Thank you!',
+			'content' => '<!-- wp:surecart/order-confirmation --> <!-- /wp:surecart/order-confirmation -->',
 		);
 	}
 
@@ -120,18 +131,21 @@ final class Blueworx_Clubhouse_Shop_Pages {
 	/**
 	 * Which of those the repair button can actually put right. Pure.
 	 *
-	 * An unpublished page always can be — that is just republishing it. A
-	 * missing one only if SureCart's seeder makes it.
+	 * All of them, now the confirmation page is made here too: an unpublished
+	 * page is republished, a missing one is created. Kept as a named answer
+	 * rather than folded away because the notice is written around the idea
+	 * that some problems might not be fixable, and a page SureCart stops
+	 * creating would put that back.
 	 *
-	 * @param array<string,string>                                        $problems From problems().
-	 * @param array<string,array{label:string,consequence:string,seeded:bool}> $pages    From pages().
+	 * @param array<string,string>                            $problems From problems().
+	 * @param array<string,array{label:string,consequence:string}> $pages    From pages().
 	 * @return array<string,string>
 	 */
 	public static function repairable( array $problems, array $pages ): array {
 		return array_filter(
 			$problems,
 			static fn ( string $status, string $key ): bool =>
-				self::STATUS_UNPUBLISHED === $status || ! empty( $pages[ $key ]['seeded'] ),
+				self::STATUS_UNPUBLISHED === $status || isset( $pages[ $key ] ),
 			ARRAY_FILTER_USE_BOTH
 		);
 	}
@@ -237,6 +251,37 @@ final class Blueworx_Clubhouse_Shop_Pages {
 		} catch ( \Throwable $e ) {
 			// A shop that cannot seed is reported by the next status read; there
 			// is nothing to say here that the notice will not say better.
+			return;
+		}
+		self::create_confirmation();
+	}
+
+	/**
+	 * The one page the seeder leaves behind.
+	 *
+	 * Written through SureCart's own page service rather than wp_insert_post, so
+	 * SureCart records the id under the option it looks the page up by — a page
+	 * created any other way would exist and still not be found. findOrCreate()
+	 * checks that option first, so a club that already has one keeps it, however
+	 * they have since renamed or rewritten it, and pressing the button twice
+	 * makes one page rather than two.
+	 */
+	private static function create_confirmation(): void {
+		if ( ! is_callable( array( 'SureCart', 'pages' ) ) ) {
+			return;
+		}
+		$page = self::confirmation_page();
+		try {
+			\SureCart::pages()->findOrCreate(
+				$page['slug'],
+				$page['option'],
+				$page['title'],
+				$page['content'],
+				'',
+				self::REACHABLE
+			);
+		} catch ( \Throwable $e ) {
+			// Same as the seeder above: the next status read tells the owner.
 			return;
 		}
 	}
