@@ -53,6 +53,7 @@ require_once __DIR__ . '/dashboard/class-commerce-pages.php';
 // Profile. The rules first, then the screens that draw them.
 require_once __DIR__ . '/profile/class-profile-fields.php';
 require_once __DIR__ . '/profile/class-profile-values.php';
+require_once __DIR__ . '/profile/class-profile-store.php';
 
 // Theme
 require_once __DIR__ . '/theme/interface-base-look.php';

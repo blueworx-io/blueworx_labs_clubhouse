@@ -124,7 +124,7 @@ final class Blueworx_Clubhouse_Profile_Fields {
 			'key'      => $key,
 			'label'    => $label,
 			'type'     => $type,
-			'choices'  => self::has_choices( $type ) ? self::choices_from_text( (string) ( $raw['choices'] ?? '' ) ) : array(),
+			'choices'  => self::has_choices( $type ) ? self::choices( $raw['choices'] ?? '' ) : array(),
 			'help'     => sanitize_text_field( (string) ( $raw['help'] ?? '' ) ),
 			'required' => ! empty( $raw['required'] ),
 			'who'      => $who,
@@ -158,14 +158,30 @@ final class Blueworx_Clubhouse_Profile_Fields {
 	}
 
 	/**
-	 * One choice per line, blanks dropped.
+	 * The choices a field offers, blanks and duplicates dropped.
 	 *
+	 * Takes either shape, because both reach here: the builder posts one choice
+	 * per line as text, and a definition already in storage carries the list it
+	 * was last sanitised into. Reading the option re-sanitises it, so a
+	 * text-only version would turn every stored list into the word "Array" the
+	 * first time a club opened the screen.
+	 *
+	 * @param mixed $raw A newline-separated string, or a list.
 	 * @return array<int,string>
 	 */
-	private static function choices_from_text( string $text ): array {
-		$out   = array();
-		$lines = preg_split( '/\R/', $text );
-		foreach ( ( false === $lines ? array() : $lines ) as $line ) {
+	private static function choices( mixed $raw ): array {
+		if ( is_array( $raw ) ) {
+			$lines = $raw;
+		} else {
+			$split = is_scalar( $raw ) ? preg_split( '/\R/', (string) $raw ) : array();
+			$lines = false === $split ? array() : $split;
+		}
+
+		$out = array();
+		foreach ( $lines as $line ) {
+			if ( ! is_scalar( $line ) ) {
+				continue;
+			}
 			$line = sanitize_text_field( (string) $line );
 			if ( '' !== $line ) {
 				$out[] = $line;

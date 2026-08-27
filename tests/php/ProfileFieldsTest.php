@@ -80,6 +80,18 @@ final class ProfileFieldsTest extends TestCase {
 		$this->assertSame( array(), $field['choices'] );
 	}
 
+	public function test_a_definition_survives_being_sanitised_twice(): void {
+		// Reading the stored option sanitises it again, so a definition that
+		// cannot survive a second pass loses its choices the first time a club
+		// opens the screen.
+		$once  = Blueworx_Clubhouse_Profile_Fields::sanitise_one(
+			array( 'label' => 'Shirt size', 'type' => 'select', 'choices' => "Small\nMedium" ),
+			array()
+		);
+		$twice = Blueworx_Clubhouse_Profile_Fields::sanitise_one( $once, array() );
+		$this->assertSame( $once, $twice );
+	}
+
 	public function test_an_existing_key_is_kept_so_a_rename_does_not_lose_the_answers(): void {
 		$field = Blueworx_Clubhouse_Profile_Fields::sanitise_one(
 			array( 'key' => 'shirt_size', 'label' => 'Kit size' ),
