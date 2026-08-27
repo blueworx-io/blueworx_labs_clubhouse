@@ -29,6 +29,11 @@ final class Blueworx_Clubhouse_Shop_Pages_Controller {
 	public static function register(): void {
 		add_action( 'admin_notices', array( self::class, 'render_notice' ) );
 		add_action( 'admin_post_' . self::ACTION, array( self::class, 'handle_repair' ) );
+		// The confirmation page is made here rather than only on activation,
+		// because the usual order is Clubhouse first and the shop afterwards.
+		// admin_init at the default priority: after the shop has loaded, and
+		// before the notice above decides whether it has anything to say.
+		add_action( 'admin_init', array( Blueworx_Clubhouse_Shop_Pages::class, 'ensure_confirmation' ) );
 	}
 
 	/**

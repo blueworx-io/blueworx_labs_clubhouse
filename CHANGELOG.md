@@ -5,6 +5,10 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.91.1
+
+- **The "your shop is not ready to take payments" warning no longer appears at all** — the order confirmation page behind it is now made as soon as Clubhouse and your shop are both installed, whichever order you added them in. Nobody has to spot the warning and press a button. A club that has deliberately removed its own confirmation page still keeps that decision.
+
 ## 0.91.0
 
 - **Members can now change their own name, email and password** — the member area showed the details the club keeps for billing and nothing about the member themselves, so there was no way in. Their own details sit at the top of Account now, with an Update link to change them.

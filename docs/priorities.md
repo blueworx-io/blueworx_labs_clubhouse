@@ -3,35 +3,47 @@
 The standing priority order for this repo. Read this first; anything not on it
 is below everything on it.
 
-Written 14 August 2026, rewritten 17 August 2026 against main at v0.76.0 and
-23 August 2026 against v0.87.1. Keep it current — the surest way is to close
-the issue as the pull request merges, which is what let this list drift the
-last time.
+Written 14 August 2026, rewritten 17 August 2026 against main at v0.76.0,
+23 August 2026 against v0.87.1, and 27 August 2026 against v0.91.1. Keep it
+current — the surest way is to close the issue as the pull request merges,
+which is what let this list drift the last time.
 
 ---
 
 ## Next
 
-Five issues are open. Two are ready to start, one cannot start yet, and two are
-parked on purpose.
+Four issues are open here. One is ready and waiting on a session somebody is
+watching, two are ordinary work, one cannot start yet, and one is parked.
 
 | # | Do | Why here |
 | --- | --- | --- |
-| 1 | [#232](../../issues/232) Own the shop, collection and product pages | The largest thing genuinely open, and the last stretch of a road already half built — the checkout, the order confirmation and the member area carry the club's own look, while the shop pages around them still do not. |
-| 2 | [#220](../../issues/220) Full design update for the admin backend | Every screen an owner uses to run their site. Nothing is broken, so it waits behind work that changes what a visitor sees. |
+| 1 | [#261](../../issues/261) Use SureCart's sign-in instead of our own login page | The decision is made and the scoping is done. It is first because it deletes a whole parallel auth stack — sign-in, forgot password, reset, and the reset email — that we otherwise keep maintaining beside SureCart's. |
+| 2 | [#268](../../issues/268) A What's New screen in plain English | Small, and the only way a club owner ever finds out what a release changed. The changelog it reads is already written for them. |
+| 3 | [#256](../../issues/256) An honours board page | Club champions, chairpersons, captains, with categories the club sets and two tiers of filters. The largest of the three, and the only one that adds a page. |
 
-The order of those two is a judgement, not a decree. Swap them if the admin
-screens are what a club is actually complaining about.
+**#261 needs somebody watching it.** SureCart is not in the local WordPress
+test harness, so the sign-in journey cannot be exercised before merge — and it
+gates every member's access on every site. Two findings from scoping it are on
+the issue: the Setup "after signing in" setting survives the change, and making
+the login page disappear cleanly on a shop-less site is the wide part, not the
+form swap.
 
 **Cannot start yet:** [#229](../../issues/229), pulling the social feed
 straight from Facebook or Instagram. It needs Meta app review before a line of
 it can be written. Posts are pasted in by hand until then, which works.
 
-**Parked, not dropped:** [#235](../../issues/235) and
-[#242](../../issues/242) — what a club page gives Google, and what a shared
-link looks like. Parked 21 August 2026 as not needed yet. Club pages are real
-WordPress pages now, so an SEO plugin can reach them whenever this is picked
-up; that was the hard part and it is done.
+**Parked, not dropped:** [#242](../../issues/242) — what a club page gives
+Google, and what a shared link looks like. Parked 21 August 2026 as not needed
+yet. Club pages are real WordPress pages now, so an SEO plugin can reach them
+whenever this is picked up; that was the hard part and it is done.
+
+**Moved out of this repo, 27 August 2026.** Owning the shop, collection and
+product pages, and the full admin backend redesign, both belong to the
+WordPress enhancement plugin rather than to Clubhouse. They are
+[blueworx_labs_wordpress#183](https://github.com/blueworx-io/blueworx_labs_wordpress/issues/183)
+and [#184](https://github.com/blueworx-io/blueworx_labs_wordpress/issues/184)
+now. They were the top two on this list until they moved, so nothing here is
+waiting on them.
 
 ## Done, and worth knowing
 
@@ -54,6 +66,23 @@ pasted in. Stage two is #229 above.
 
 **The privacy and terms wording** ([#210](../../issues/210)) is written. It was
 the one thing on this list that was a person's job rather than code.
+
+**The member area does what its buttons say** ([#257](../../issues/257),
+[#260](../../issues/260), v0.90.0–v0.91.0). Every write link inside it —
+update billing, add a card, payment history, open an order, change or cancel a
+plan — led back to the same read-only screen and did nothing, because the block
+that reads the address and dispatches was the one this plugin replaced. A
+member can also see and change their own name, email and password now, which
+the member area never offered at all.
+
+**The shop's pages look after themselves** ([#259](../../issues/259),
+[#269](../../issues/269), v0.88.2, v0.91.1). The order confirmation page is
+created as soon as Clubhouse and the shop are both installed, whichever order
+they arrived in. It used to be reported as missing with no way to fix it, then
+briefly needed a button press.
+
+**Email comes from the club** ([#258](../../issues/258), v0.89.0), rather than
+from "WordPress" at a wordpress@ address that was identical on every site.
 
 **The test suite is trustworthy again** ([#245](../../issues/245), v0.87.1). A
 wp-admin screen is a couple of hundred requests against a server that answers
