@@ -1494,25 +1494,16 @@ final class Blueworx_Clubhouse_Page_Renderer {
 		$out  = self::shell_header( $club, Blueworx_Clubhouse_Links::url( 'login' ), $visibility, $collections, $logo_url, $content ) . '<main class="ch-main" id="ch-main" tabindex="-1">';
 
 		if ( $visibility->is_section_visible( 'login', 'form' ) ) {
-			// The card draws whichever step of the account journey this request is
-			// on. Off WordPress — the preview, the unit tests — the state seam is
-			// unset and returns the plain sign-in form a first-time visitor sees.
-			$state = Blueworx_Clubhouse_Auth_View::state();
-			$out  .= self::anchored( 'login', 'form', Blueworx_Clubhouse_Sections::auth( array(
-				'eyebrow'        => 'Members',
-				'heading'        => self::cget( $content, 'login', 'form', 'heading', 'Log in to your account' ),
-				'lede'           => self::cget( $content, 'login', 'form', 'lede', 'Access your membership, bookings and club events.' ),
-				'email_label'    => 'Email or username',
-				'password_label' => 'Password',
-				'remember_label' => 'Remember me',
-				'forgot_label'   => 'Forgot password?',
-				'forgot_href'    => Blueworx_Clubhouse_Links::auth_url( Blueworx_Clubhouse_Auth_View::FORGOT ),
-				'signin_href'    => Blueworx_Clubhouse_Links::url( 'login' ),
-				'submit_label'   => 'Log in',
-				'join_prompt'    => 'Not a member yet?',
-				'join_label'     => Blueworx_Clubhouse_Cta::JOIN,
-				'join_href'      => Blueworx_Clubhouse_Links::url( 'membership' ),
-				'state'          => $state,
+			// The card is ours and the form inside it is the shop's — see
+			// Sections::auth(). The club's own heading and lede still come from
+			// the content editor, and reach the shop's form as its title.
+			$out .= self::anchored( 'login', 'form', Blueworx_Clubhouse_Sections::auth( array(
+				'eyebrow'     => 'Members',
+				'heading'     => self::cget( $content, 'login', 'form', 'heading', 'Log in to your account' ),
+				'lede'        => self::cget( $content, 'login', 'form', 'lede', 'Access your membership, bookings and club events.' ),
+				'join_prompt' => 'Not a member yet?',
+				'join_label'  => Blueworx_Clubhouse_Cta::JOIN,
+				'join_href'   => Blueworx_Clubhouse_Links::url( 'membership' ),
 			) ) );
 		}
 		$out .= '</main>' . self::shell_footer( $club, $visibility, $branding, $content );

@@ -476,6 +476,13 @@ final class Blueworx_Clubhouse_Frontend {
 		if ( ! self::enqueue_look_styles() ) {
 			return;
 		}
+		if ( 'login' === self::current_slug() ) {
+			// The sign-in form on this page is one of the shop's web components,
+			// and the script that brings them to life is declared by the shop's
+			// own dashboard block — which this page is not. Without this the form
+			// renders as inert markup and nobody can sign in.
+			Blueworx_Clubhouse_Member_Dashboard::enqueue_shop_assets();
+		}
 		wp_enqueue_script(
 			'clubhouse-reveal',
 			BLUEWORX_LABS_CLUBHOUSE_URL . 'assets/js/reveal.js',
