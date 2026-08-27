@@ -24,7 +24,7 @@ final class Blueworx_Clubhouse_Page_Map {
 	 *
 	 * A 'requires' key names the shortcode tag whose presence the page depends on.
 	 *
-	 * @return array<int,array{slug:string,label:string,method:string,requires?:string,private?:bool}>
+	 * @return array<int,array{slug:string,label:string,method:string,requires?:string,requires_shop?:bool,private?:bool}>
 	 */
 	public static function pages(): array {
 		return array(
@@ -32,7 +32,10 @@ final class Blueworx_Clubhouse_Page_Map {
 			array( 'slug' => 'about',      'label' => 'About',      'method' => 'about' ),
 			array( 'slug' => 'membership', 'label' => 'Membership', 'method' => 'membership' ),
 			array( 'slug' => 'contact',    'label' => 'Contact',    'method' => 'contact' ),
-			array( 'slug' => 'login',      'label' => 'Log in',     'method' => 'login' ),
+			// Signing in is for members, and a member is somebody the shop knows. With
+			// no shop there is no membership to sign in to and nothing behind the door,
+			// so the door is not there — the same reasoning as 'member-dashboard' below.
+			array( 'slug' => 'login',      'label' => 'Log in',     'method' => 'login', 'requires_shop' => true ),
 			// 'blog' is the internal key; the URL and the label say News, which is
 			// what a club calls it. Renamed here would break stored content and
 			// visibility addresses for no gain.
@@ -51,10 +54,11 @@ final class Blueworx_Clubhouse_Page_Map {
 			// visitor, so it is kept out of the SEO report rather than scored as
 			// a page a search engine should be finding.
 			array(
-				'slug'    => 'member-dashboard',
-				'label'   => 'Member area',
-				'method'  => 'member_dashboard',
-				'private' => true,
+				'slug'          => 'member-dashboard',
+				'label'         => 'Member area',
+				'method'        => 'member_dashboard',
+				'private'       => true,
+				'requires_shop' => true,
 			),
 			// Last, and linked from the footer rather than the nav: nobody comes to
 			// a club site to read the terms, but a site whose forms collect names,
@@ -73,13 +77,19 @@ final class Blueworx_Clubhouse_Page_Map {
 	 * Stored content and visibility for a filtered-out page are untouched, so
 	 * installing the integration later brings the page back exactly as it was.
 	 *
-	 * @return array<int,array{slug:string,label:string,method:string,requires?:string,private?:bool}>
+	 * @return array<int,array{slug:string,label:string,method:string,requires?:string,requires_shop?:bool,private?:bool}>
 	 */
 	public static function available(): array {
 		return array_values(
 			array_filter(
 				self::pages(),
 				static function ( array $page ): bool {
+					// The shop is detected by a constant and a class rather than by
+					// a shortcode tag, so it cannot go through Integrations like
+					// the booking plugin does.
+					if ( ! empty( $page['requires_shop'] ) && ! Blueworx_Clubhouse_SureCart_Products::is_active() ) {
+						return false;
+					}
 					$requires = (string) ( $page['requires'] ?? '' );
 					return '' === $requires || Blueworx_Clubhouse_Integrations::provides( $requires );
 				}

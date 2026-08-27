@@ -22,32 +22,17 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 final class Blueworx_Clubhouse_Auth_View {
 
-	public const SIGN_IN  = 'signin';
-	public const FORGOT   = 'forgot';
-	public const RESET    = 'reset';
-	public const SIGNED   = 'signedout';
-	public const ACTION   = 'clubhouse_auth';
-	public const SENT     = 'sent';
-	public const RESET_OK = 'resetok';
-
-	/** Every view the login slug can render. Anything else falls back to sign-in. */
-	private const VIEWS = array( self::SIGN_IN, self::FORGOT, self::RESET, self::SIGNED, self::SENT, self::RESET_OK );
+	/**
+	 * The query arg the old sign-in journeys used. Nothing writes one any more —
+	 * the shop's form replaced them (issue #261) — but Legacy_Urls still carries
+	 * it across a redirect, so a bookmark of the old forgot-password address
+	 * lands on the login page rather than the front page.
+	 */
+	public const ACTION = 'clubhouse_auth';
 
 	/** @var array<string,mixed>|null */
 	private static ?array $state = null;
 
-	/**
-	 * Resolve a raw ?clubhouse_auth= value to a view name. Unknown, absent or
-	 * non-string values are the sign-in form — a mistyped URL should show the
-	 * login page, not an error.
-	 */
-	public static function view( mixed $raw ): string {
-		if ( ! is_string( $raw ) ) {
-			return self::SIGN_IN;
-		}
-		$raw = strtolower( trim( $raw ) );
-		return in_array( $raw, self::VIEWS, true ) ? $raw : self::SIGN_IN;
-	}
 
 	/**
 	 * Whether a redirect target may be honoured, and what to use instead when it
@@ -143,22 +128,23 @@ final class Blueworx_Clubhouse_Auth_View {
 	}
 
 	/**
-	 * The state the renderer draws. Defaults to a plain sign-in form so the
-	 * preview and the unit tests render the same page a first-time visitor sees.
+	 * Who is signed in, as the header needs to know it.
 	 *
-	 * @return array{view:string,error:string,notice:string,form_action:string,hidden:string,redirect_to:string,logged_in:string,logout_url:string}
+	 * This used to carry a whole form's worth of state — which view, the error,
+	 * the nonce field — because the sign-in form was ours. It is the shop's now,
+	 * so the only thing left to publish is the session, which the header on
+	 * every page reads to decide between "Log in" and the member area.
+	 *
+	 * Unset off WordPress, which is how the preview and the unit tests get the
+	 * signed-out header a first-time visitor sees.
+	 *
+	 * @return array{logged_in:string,logout_url:string}
 	 */
 	public static function state(): array {
 		$state = self::$state ?? array();
 		return array(
-			'view'        => self::view( $state['view'] ?? self::SIGN_IN ),
-			'error'       => (string) ( $state['error'] ?? '' ),
-			'notice'      => (string) ( $state['notice'] ?? '' ),
-			'form_action' => (string) ( $state['form_action'] ?? '' ),
-			'hidden'      => (string) ( $state['hidden'] ?? '' ),
-			'redirect_to' => (string) ( $state['redirect_to'] ?? '' ),
-			'logged_in'   => (string) ( $state['logged_in'] ?? '' ),
-			'logout_url'  => (string) ( $state['logout_url'] ?? '' ),
+			'logged_in'  => (string) ( $state['logged_in'] ?? '' ),
+			'logout_url' => (string) ( $state['logout_url'] ?? '' ),
 		);
 	}
 }

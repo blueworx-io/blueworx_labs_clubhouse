@@ -20,18 +20,7 @@ final class AuthViewTest extends TestCase {
 		Blueworx_Clubhouse_Auth_View::reset();
 	}
 
-	public function test_known_views_are_honoured(): void {
-		$this->assertSame( 'forgot', Blueworx_Clubhouse_Auth_View::view( 'forgot' ) );
-		$this->assertSame( 'reset', Blueworx_Clubhouse_Auth_View::view( 'RESET' ) );
-		$this->assertSame( 'signedout', Blueworx_Clubhouse_Auth_View::view( ' signedout ' ) );
-	}
 
-	public function test_unknown_or_absent_view_is_the_sign_in_form(): void {
-		$this->assertSame( 'signin', Blueworx_Clubhouse_Auth_View::view( 'nonsense' ) );
-		$this->assertSame( 'signin', Blueworx_Clubhouse_Auth_View::view( '' ) );
-		$this->assertSame( 'signin', Blueworx_Clubhouse_Auth_View::view( null ) );
-		$this->assertSame( 'signin', Blueworx_Clubhouse_Auth_View::view( array( 'forgot' ) ) );
-	}
 
 	public function test_a_blank_setting_sends_members_to_the_shop_dashboard(): void {
 		// A club with a shop has somewhere useful to send someone who has just
@@ -132,17 +121,20 @@ final class AuthViewTest extends TestCase {
 		);
 	}
 
-	public function test_state_defaults_to_a_plain_sign_in_form(): void {
+	public function test_nobody_is_signed_in_until_wordpress_says_so(): void {
+		// The preview and the unit tests leave the seam unset, and get the
+		// signed-out header a first-time visitor sees.
 		$state = Blueworx_Clubhouse_Auth_View::state();
-		$this->assertSame( 'signin', $state['view'] );
-		$this->assertSame( '', $state['error'] );
 		$this->assertSame( '', $state['logged_in'] );
+		$this->assertSame( '', $state['logout_url'] );
 	}
 
-	public function test_published_state_is_returned_with_an_unknown_view_normalised(): void {
-		Blueworx_Clubhouse_Auth_View::set_state( array( 'view' => 'rubbish', 'error' => 'Nope.' ) );
+	public function test_the_session_published_by_wordpress_is_what_the_header_reads(): void {
+		Blueworx_Clubhouse_Auth_View::set_state(
+			array( 'logged_in' => 'Luke McFarland', 'logout_url' => 'https://club.example/?clubhouse_logout=1' )
+		);
 		$state = Blueworx_Clubhouse_Auth_View::state();
-		$this->assertSame( 'signin', $state['view'] );
-		$this->assertSame( 'Nope.', $state['error'] );
+		$this->assertSame( 'Luke McFarland', $state['logged_in'] );
+		$this->assertSame( 'https://club.example/?clubhouse_logout=1', $state['logout_url'] );
 	}
 }

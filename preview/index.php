@@ -148,12 +148,10 @@ function blueworx_clubhouse_preview_document(): string {
 				'price_annual' => '£450', 'features' => "Up to 5 members\nAny sections", 'featured' => true, 'cta_label' => 'Join' ),
 		) );
 	}
-	// The login page's account screens are part of the design, so ?clubhouse_auth=
-	// selects one here too. No form action and no nonce: there is nothing to post
-	// to without WordPress, and the card renders its form either way.
-	Blueworx_Clubhouse_Auth_View::set_state(
-		array( 'view' => Blueworx_Clubhouse_Auth_View::view( $_GET[ Blueworx_Clubhouse_Auth_View::ACTION ] ?? '' ) )
-	);
+	// The login page's form is the shop's now (issue #261), and the shop is not
+	// here — so the preview draws the club's card around an element that stays
+	// inert, which is the honest picture of what this plugin contributes to that
+	// page. Nothing to publish: state() carries only the session.
 	// One sport's or one team's own page, same param the front end reads.
 	$raw_item = $_GET[ Blueworx_Clubhouse_Links::ITEM_PARAM ] ?? '';
 	$item     = is_string( $raw_item ) ? trim( (string) preg_replace( '/[^a-z0-9]+/', '-', strtolower( $raw_item ) ), '-' ) : '';

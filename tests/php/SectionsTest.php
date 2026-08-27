@@ -831,28 +831,20 @@ final class SectionsTest extends TestCase {
 		$this->assertStringContainsString( 'ch-footer__form ch-shortcode', $html );
 	}
 
-	public function test_auth_renders_login_card_with_fields_and_join_link(): void {
+	public function test_auth_renders_the_login_card_around_the_shops_form(): void {
 		$html = Blueworx_Clubhouse_Sections::auth( array(
-			'eyebrow'        => 'Members',
-			'heading'        => 'Log in to your account',
-			'lede'           => 'Access your membership.',
-			'email_label'    => 'Email',
-			'password_label' => 'Password',
-			'remember_label' => 'Remember me',
-			'forgot_label'   => 'Forgot password?',
-			'forgot_href'    => '#',
-			'signin_href'    => '?page=login',
-			'submit_label'   => 'Log in',
-			'join_prompt'    => 'Not a member yet?',
-			'join_label'     => 'Join the club',
-			'join_href'      => '?page=membership',
-			'state'          => Blueworx_Clubhouse_Auth_View::state(),
+			'eyebrow'     => 'Members',
+			'heading'     => 'Log in to your account',
+			'lede'        => 'Access your membership.',
+			'join_prompt' => 'Not a member yet?',
+			'join_label'  => 'Join the club',
+			'join_href'   => '?page=membership',
 		) );
 		$this->assertStringContainsString( 'class="ch-auth"', $html );
 		// The card carries the page's main heading (no hero on the login page).
 		$this->assertStringContainsString( '<h1 class="ch-auth__title">Log in to your account</h1>', $html );
-		$this->assertStringContainsString( 'type="password"', $html );
-		$this->assertStringContainsString( 'autocomplete="current-password"', $html );
+		// The form itself is the shop's, brought to life by the shop's script.
+		$this->assertStringContainsString( '<sc-login-form>', $html );
 		$this->assertStringContainsString( 'href="?page=membership"', $html );
 		$this->assertNoHexColour( $html );
 		$this->assertStringNotContainsString( 'style=', $html );

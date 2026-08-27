@@ -35,20 +35,6 @@ final class Blueworx_Clubhouse_Links {
 	public const FILTER_PARAM = 'clubhouse_filter';
 
 	/**
-	 * The login page carrying one of its account views ('forgot', 'reset', …).
-	 * Built here rather than in the auth handler so the renderer stays free of
-	 * WordPress and the preview produces the same hrefs the live site does.
-	 */
-	public static function auth_url( string $view ): string {
-		$url = self::url( 'login' );
-		if ( '' === $view ) {
-			return $url;
-		}
-		$sep = ( false !== strpos( $url, '?' ) ) ? '&' : '?';
-		return $url . $sep . Blueworx_Clubhouse_Auth_View::ACTION . '=' . rawurlencode( $view );
-	}
-
-	/**
 	 * A page URL carrying a filter slug — the href for a filter pill. An empty
 	 * slug returns the bare page URL (the "All" pill). Appends with the correct
 	 * separator so it works on both the preview's '?page=' form and a real

@@ -5,6 +5,12 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.93.0
+
+- **Members now sign in with the same form your shop uses.** Your login page keeps your club's heading and wording; the form inside it is SureCart's, so there is one sign-in on your site rather than two doing the same job. Where a member lands afterwards is still yours to set under Setup → Members.
+
+- **A club with no shop no longer has a login page or a member area.** There was nothing behind either of them, and the header no longer offers a Log in button that led nowhere. Add a shop and both come back exactly as they were.
+
 ## 0.92.0
 
 - **You can now see what every update changed** — a What's new screen under Clubhouse, listing every release in plain English with the version you are running marked. The recent ones are laid out in full and the rest of the history folds away underneath. Releases that only changed how the plugin is built say so rather than pretending otherwise.

@@ -5,6 +5,17 @@ use PHPUnit\Framework\TestCase;
 
 final class ContentScreenTest extends TestCase {
 
+	// These describe a club with everything installed. Signing in and the member
+	// area belong to the shop, so without one this site has neither page and the
+	// lists below would be a different site's.
+	protected function setUp(): void {
+		Blueworx_Clubhouse_SureCart_Products::set_active_for_tests( true );
+	}
+
+	protected function tearDown(): void {
+		Blueworx_Clubhouse_SureCart_Products::set_active_for_tests( null );
+	}
+
 	private function model(): array {
 		$s = new Blueworx_Clubhouse_Fake_Storage();
 		return Blueworx_Clubhouse_Content_Controller::build_model( $s, array(), '<input type="hidden" name="_wpnonce" value="NONCE123">', 'http://x.test/admin.php?page=clubhouse-site-content' );

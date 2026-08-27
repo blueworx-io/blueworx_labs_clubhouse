@@ -7,38 +7,41 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Makes the clubhouse login page a real WordPress login.
+ * Signing out, and where a member goes after signing in.
  *
- * Everything runs through the core auth stack — wp_signon, retrieve_password,
- * check_password_reset_key, reset_password, wp_logout — rather than a bespoke
- * password check, so anything else the site has installed still applies: two
- * factor plugins, login limiters, and any 'authenticate' filter that wants to
- * refuse a sign-in. Their WP_Error messages are shown as-is, because a plugin
- * that blocks a login is usually the only thing that can explain why.
+ * Signing IN is the shop's. Its form sits on the club's own login page — see
+ * Sections::auth() — and posts to its own route, which is wp_authenticate
+ * underneath, so every plugin the site has that guards a login still applies.
  *
- * The account-recovery emails are rewritten to point back here, so a member who
- * clicks "forgot password" never lands on wp-login.php in a stock theme halfway
- * through a clubhouse journey.
+ * This class used to carry a whole second front door beside it: a sign-in form,
+ * a forgot-password screen, a set-a-new-password screen, and a rewrite of the
+ * reset email to point at them. All of it did the same job as the shop's, and
+ * all of it was ours to keep working. Issue #261 took it out.
  *
- * The pure decisions — which view to render, and whether a redirect target is
- * safe to honour — live in Auth_View and are unit-tested without WordPress.
+ * What is left is the two things that were never the shop's to answer. Signing
+ * out, because the link is in the club's header on every page and where it
+ * lands is the club's setting. And where a member goes once the shop has signed
+ * them in, which is also the club's setting — carried by the shop's own
+ * sc_login_redirect_url filter, since its form is a web component and there is
+ * no field of ours to put in it.
+ *
+ * The pure decisions — whether a redirect target is safe to honour — live in
+ * Auth_View and are unit-tested without WordPress.
  *
  * @package BlueworxLabsClubhouse
  */
 final class Blueworx_Clubhouse_Auth {
-
-	public const NONCE = 'clubhouse_auth';
-
-	/** The POST field naming which of the four journeys a submission belongs to. */
-	public const FIELD = 'clubhouse_auth_action';
 
 	public static function register(): void {
 		// template_redirect: late enough that the query is resolved (so we know
 		// this is the login page) and early enough that nothing has been sent, so
 		// a successful sign-in can still redirect.
 		add_action( 'template_redirect', array( self::class, 'handle' ) );
-		add_filter( 'lostpassword_url', array( self::class, 'lostpassword_url' ), 10, 0 );
-		add_filter( 'retrieve_password_message', array( self::class, 'reset_email' ), 10, 4 );
+		// Where a member lands after the shop's form has signed them in. The shop
+		// validates the redirect; the setting and what it means are ours, and
+		// this is the only hook that carries it — its form is a web component
+		// posting to a REST route, so there is no form field of ours to add.
+		add_filter( 'sc_login_redirect_url', array( self::class, 'login_redirect' ), 10, 1 );
 	}
 
 	/** The clubhouse login page URL, optionally carrying a view and extra args. */
@@ -53,43 +56,26 @@ final class Blueworx_Clubhouse_Auth {
 		return add_query_arg( $args, $url );
 	}
 
-	/** Core asks for the "lost password" link in a few places; point them here. */
-	public static function lostpassword_url(): string {
-		return self::url( Blueworx_Clubhouse_Auth_View::FORGOT );
-	}
-
 	/**
-	 * Swap the wp-login.php reset link in the standard email for the clubhouse
-	 * one. The message is otherwise left exactly as WordPress (and any plugin
-	 * filtering it before us) composed it.
+	 * Where the shop should send a member it has just signed in.
 	 *
-	 * @param string $message The email body.
-	 * @param string $key     The reset key.
-	 * @param string $login   The user login the key belongs to.
+	 * The shop offers whatever `redirect_to` was on the address, already
+	 * validated, or null. Where it has nothing, the club's Setup setting
+	 * decides — and where that is empty too, the member area, which is the
+	 * useful default and the same one this plugin has always used.
+	 *
+	 * @param string|null $theirs The shop's own answer.
 	 */
-	public static function reset_email( $message, $key, $login, $user_data = null ): string {
-		$message = (string) $message;
-		$ours    = self::url(
-			Blueworx_Clubhouse_Auth_View::RESET,
-			array(
-				'key'   => (string) $key,
-				'login' => rawurlencode( (string) $login ),
-			)
+	public static function login_redirect( $theirs ): string {
+		$requested = is_string( $theirs ) ? $theirs : '';
+		return Blueworx_Clubhouse_Auth_View::safe_target(
+			$requested,
+			Blueworx_Clubhouse_Auth_View::post_login_target(
+				self::settings()->get_post_login(),
+				self::default_dashboard_url()
+			),
+			home_url( '/' )
 		);
-		// Core builds the link as network_site_url("wp-login.php?action=rp&key=…&login=…", 'login').
-		// Replace the whole URL wherever it appears rather than rebuilding the
-		// message, so translated and plugin-modified wording survives untouched.
-		$pattern = '#https?://\S*wp-login\.php\?action=rp\S*#';
-		$swapped = preg_replace( $pattern, $ours, $message );
-		return is_string( $swapped ) ? $swapped : $message;
-	}
-
-	/** True when this request is the clubhouse login page. */
-	private static function is_login_page(): bool {
-		// Asked of the central resolver rather than the query var: the login page
-		// is a real WordPress page now, reached at /login/ with no query var set,
-		// and reading the var meant no sign-in form was ever handled there.
-		return 'login' === Blueworx_Clubhouse_Frontend::current_page_slug();
 	}
 
 	private static function settings(): Blueworx_Clubhouse_Auth_Settings {
@@ -117,60 +103,22 @@ final class Blueworx_Clubhouse_Auth {
 			: Blueworx_Clubhouse_Shop_Pages::url( 'dashboard' );
 	}
 
-	/** The raw ?redirect_to from the request, unslashed and untrusted. */
-	private static function requested_redirect(): string {
-		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only; the value is validated by Auth_View::safe_target before use.
-		$raw = $_REQUEST['redirect_to'] ?? '';
-		return is_string( $raw ) ? wp_unslash( $raw ) : '';
-	}
-
 	/**
-	 * Handle a submission and publish the view state the renderer draws.
+	 * Sign out, and tell the header who is signed in.
 	 *
-	 * Runs on every front-end request and bails immediately off the login page,
-	 * except for logout, which has to work from the header link on any page.
+	 * Signing IN is the shop's — its form on the club's login page, posting to
+	 * its own route. Nothing is handled here for it. Signing out is still ours,
+	 * because the link is in the header on every page and the destination is the
+	 * club's setting.
 	 */
 	public static function handle(): void {
 		if ( isset( $_GET['clubhouse_logout'] ) ) {
 			self::logout();
 			return;
 		}
-		// Published on every front-end request, not just the login page: the header
-		// on every page has to know whether to offer "Log in" or "Log out".
+		// Published on every front-end request: the header on every page has to
+		// know whether to offer "Log in" or the member area.
 		self::publish( array() );
-		if ( ! self::is_login_page() ) {
-			return;
-		}
-
-		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- view selection only; every state change below verifies its own nonce.
-		$view  = Blueworx_Clubhouse_Auth_View::view( $_GET[ Blueworx_Clubhouse_Auth_View::ACTION ] ?? '' );
-		$error = '';
-		$notice = '';
-
-		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- verified on the next line before anything is read.
-		$submitted = isset( $_POST[ self::FIELD ] ) ? sanitize_key( wp_unslash( (string) $_POST[ self::FIELD ] ) ) : '';
-		if ( '' !== $submitted ) {
-			if ( ! isset( $_POST['_wpnonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( (string) $_POST['_wpnonce'] ) ), self::NONCE ) ) {
-				$error = 'That form expired before it was sent. Please try again.';
-				$view  = 'reset' === $submitted ? Blueworx_Clubhouse_Auth_View::RESET : $view;
-			} else {
-				$result = self::dispatch( $submitted );
-				$view   = $result['view'];
-				$error  = $result['error'];
-				$notice = $result['notice'];
-			}
-		}
-
-		self::publish(
-			array(
-				'view'        => $view,
-				'error'       => $error,
-				'notice'      => $notice,
-				'form_action' => self::url(),
-				'hidden'      => wp_nonce_field( self::NONCE, '_wpnonce', true, false ) . self::reset_fields( $view ),
-				'redirect_to' => self::requested_redirect(),
-			)
-		);
 	}
 
 	/**
@@ -184,135 +132,11 @@ final class Blueworx_Clubhouse_Auth {
 		Blueworx_Clubhouse_Auth_View::set_state( $state );
 	}
 
-	/**
-	 * The key and login a "set a new password" submission has to carry.
-	 *
-	 * They ride in the form rather than in a cookie: this page is served by the
-	 * plugin's own route, not wp-login.php, so core's reset cookie is not in play
-	 * and reproducing it would be more moving parts than the journey needs.
-	 */
-	private static function reset_fields( string $view ): string {
-		if ( Blueworx_Clubhouse_Auth_View::RESET !== $view ) {
-			return '';
-		}
-		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- the key itself is the credential and is validated by check_password_reset_key.
-		$key = isset( $_REQUEST['key'] ) ? sanitize_text_field( wp_unslash( (string) $_REQUEST['key'] ) ) : '';
-		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- see above.
-		$login = isset( $_REQUEST['login'] ) ? sanitize_user( wp_unslash( (string) $_REQUEST['login'] ) ) : '';
-		return '<input type="hidden" name="key" value="' . esc_attr( $key ) . '">'
-			. '<input type="hidden" name="login" value="' . esc_attr( $login ) . '">';
-	}
-
-	/**
-	 * @return array{view:string,error:string,notice:string}
-	 */
-	private static function dispatch( string $action ): array {
-		switch ( $action ) {
-			case 'signin':
-				return self::sign_in();
-			case 'forgot':
-				return self::forgot();
-			case 'reset':
-				return self::reset_password();
-		}
-		return array(
-			'view'   => Blueworx_Clubhouse_Auth_View::SIGN_IN,
-			'error'  => '',
-			'notice' => '',
-		);
-	}
-
-	/** @return array{view:string,error:string,notice:string} */
-	private static function sign_in(): array {
-		$creds = array(
-			// Not sanitize_user: an email address is a valid WordPress login and
-			// sanitize_user would quietly mangle it into a different account name.
-			'user_login'    => isset( $_POST['user_login'] ) ? trim( wp_unslash( (string) $_POST['user_login'] ) ) : '',
-			'user_password' => isset( $_POST['user_password'] ) ? (string) wp_unslash( (string) $_POST['user_password'] ) : '',
-			'remember'      => isset( $_POST['remember'] ),
-		);
-
-		$user = wp_signon( $creds, is_ssl() );
-		if ( is_wp_error( $user ) ) {
-			return array(
-				'view'   => Blueworx_Clubhouse_Auth_View::SIGN_IN,
-				// WordPress's own wording, including whatever a security or 2FA
-				// plugin returned — it knows why it refused and we do not.
-				'error'  => wp_strip_all_tags( (string) $user->get_error_message() ),
-				'notice' => '',
-			);
-		}
-
-		wp_set_current_user( $user->ID );
-		self::go(
-			Blueworx_Clubhouse_Auth_View::post_login_target(
-				self::settings()->get_post_login(),
-				self::default_dashboard_url()
-			)
-		);
-		return array(
-			'view'   => Blueworx_Clubhouse_Auth_View::SIGN_IN,
-			'error'  => '',
-			'notice' => '',
-		);
-	}
-
-	/** @return array{view:string,error:string,notice:string} */
-	private static function forgot(): array {
-		if ( isset( $_POST['user_login'] ) ) {
-			$_POST['user_login'] = trim( wp_unslash( (string) $_POST['user_login'] ) );
-		}
-		$sent = retrieve_password();
-		if ( is_wp_error( $sent ) ) {
-			return array(
-				'view'   => Blueworx_Clubhouse_Auth_View::FORGOT,
-				'error'  => wp_strip_all_tags( (string) $sent->get_error_message() ),
-				'notice' => '',
-			);
-		}
-		return array(
-			'view'   => Blueworx_Clubhouse_Auth_View::SENT,
-			'error'  => '',
-			'notice' => 'Check your inbox — if that account exists we have sent a link to set a new password.',
-		);
-	}
-
-	/** @return array{view:string,error:string,notice:string} */
-	private static function reset_password(): array {
-		$key   = isset( $_POST['key'] ) ? sanitize_text_field( wp_unslash( (string) $_POST['key'] ) ) : '';
-		$login = isset( $_POST['login'] ) ? sanitize_user( wp_unslash( (string) $_POST['login'] ) ) : '';
-		$pass  = isset( $_POST['pass1'] ) ? (string) wp_unslash( (string) $_POST['pass1'] ) : '';
-		$pass2 = isset( $_POST['pass2'] ) ? (string) wp_unslash( (string) $_POST['pass2'] ) : '';
-
-		$user = check_password_reset_key( $key, $login );
-		if ( is_wp_error( $user ) ) {
-			return array(
-				'view'   => Blueworx_Clubhouse_Auth_View::FORGOT,
-				'error'  => 'That reset link has expired or has already been used. Request a new one below.',
-				'notice' => '',
-			);
-		}
-		if ( '' === $pass ) {
-			return array(
-				'view'   => Blueworx_Clubhouse_Auth_View::RESET,
-				'error'  => 'Enter a new password.',
-				'notice' => '',
-			);
-		}
-		if ( $pass !== $pass2 ) {
-			return array(
-				'view'   => Blueworx_Clubhouse_Auth_View::RESET,
-				'error'  => 'Those passwords do not match.',
-				'notice' => '',
-			);
-		}
-
-		reset_password( $user, $pass );
-		return array(
-			'view'   => Blueworx_Clubhouse_Auth_View::RESET_OK,
-			'error'  => '',
-			'notice' => 'Password updated. You can sign in with it now.',
-		);
+	/** The raw ?redirect_to from the request, unslashed and untrusted. */
+	private static function requested_redirect(): string {
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only; validated by Auth_View::safe_target before use.
+		$raw = $_REQUEST['redirect_to'] ?? '';
+		return is_string( $raw ) ? wp_unslash( $raw ) : '';
 	}
 
 	/** Sign out and return to the configured destination. */
