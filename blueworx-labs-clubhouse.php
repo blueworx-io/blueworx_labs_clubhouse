@@ -3,7 +3,7 @@
  * Plugin Name:       Blueworx Labs | Clubhouse
  * Plugin URI:        https://github.com/blueworx-io/blueworx_labs_clubhouse
  * Description:        Blueworx Labs Clubhouse WordPress plugin.
- * Version:           0.91.0
+ * Version:           0.91.1
  * Requires at least: 6.0
  * Requires PHP:      8.2
  * Author:            Blueworx
@@ -21,7 +21,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'BLUEWORX_LABS_CLUBHOUSE_VERSION', '0.91.0' );
+define( 'BLUEWORX_LABS_CLUBHOUSE_VERSION', '0.91.1' );
 define( 'BLUEWORX_LABS_CLUBHOUSE_FILE', __FILE__ );
 define( 'BLUEWORX_LABS_CLUBHOUSE_DIR', plugin_dir_path( __FILE__ ) );
 define( 'BLUEWORX_LABS_CLUBHOUSE_URL', plugin_dir_url( __FILE__ ) );
@@ -93,6 +93,10 @@ register_activation_hook(
 		Blueworx_Clubhouse_Collection_Types::register();
 		Blueworx_Clubhouse_Collection_Seeder::seed();
 		Blueworx_Clubhouse_Owner_Role::activate();
+		// A club activating this beside a shop that is already here gets a
+		// working checkout straight away, rather than a warning about a page
+		// neither plugin makes on its own.
+		Blueworx_Clubhouse_Shop_Pages::ensure_confirmation();
 		// The plugin declares no rewrite rules of its own. This clears whatever
 		// an older version left in WordPress's cache — without it those rules
 		// would go on answering for every club page, routing them past the real

@@ -257,6 +257,48 @@ final class Blueworx_Clubhouse_Shop_Pages {
 	}
 
 	/**
+	 * Whether the confirmation page is ours to make. Pure.
+	 *
+	 * Never created is ours; removed is not. SureCart records a page's id under
+	 * an option and leaves it there, so an id still on record means the page
+	 * existed once and somebody took it away — trashed it, or deleted it
+	 * outright. Putting it back uninvited overrules a club that meant it. No id
+	 * at all means nothing ever made one, which is the case every club starts
+	 * in and the one the warning was really about.
+	 *
+	 * @param bool   $shop_active Whether SureCart is here at all.
+	 * @param int    $page_id     The id SureCart has on record, 0 for none.
+	 * @param string $post_status That page's status, '' when the id points at nothing.
+	 */
+	public static function should_create_confirmation( bool $shop_active, int $page_id, string $post_status ): bool {
+		if ( ! $shop_active ) {
+			return false;
+		}
+		return 0 === $page_id && '' === $post_status;
+	}
+
+	/**
+	 * Make it if it is ours to make.
+	 *
+	 * Runs on activation and again in the admin, because the usual order is
+	 * Clubhouse first and the shop afterwards — a club that adds SureCart next
+	 * month should not have to find a warning and press a button to finish a job
+	 * neither of them ever asked to do.
+	 *
+	 * Cheap on the sites where it does nothing: a club with no shop is answered
+	 * before a single option is read.
+	 */
+	public static function ensure_confirmation(): void {
+		$active  = Blueworx_Clubhouse_SureCart_Products::is_active();
+		$page_id = $active ? self::page_id( 'order-confirmation' ) : 0;
+		if ( ! self::should_create_confirmation( $active, $page_id, self::post_status( $page_id ) ) ) {
+			return;
+		}
+		self::create_confirmation();
+		Blueworx_Clubhouse_Link_Catalogue::forget_shop_targets();
+	}
+
+	/**
 	 * The one page the seeder leaves behind.
 	 *
 	 * Written through SureCart's own page service rather than wp_insert_post, so
