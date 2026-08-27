@@ -42,7 +42,7 @@ final class Blueworx_Clubhouse_Dashboard_Views {
 	 * view belongs to: 'both', 'side' or 'bar'. The bar is a curated list, not
 	 * "whichever views fit" — see side() and bar().
 	 *
-	 * @return array<int,array{key:string,label:string,title:string,lede:string,icon:string,requires:string,where:string,blocks:array<int,string>,shortcode:string}>
+	 * @return array<int,array{key:string,label:string,title:string,lede:string,icon:string,requires:string,where:string,blocks:array<int,string>,panel:string,shortcode:string}>
 	 */
 	public static function all(): array {
 		return array(
@@ -55,6 +55,7 @@ final class Blueworx_Clubhouse_Dashboard_Views {
 				'requires'  => '',
 				'where'     => 'both',
 				'blocks'    => array(),
+				'panel'     => '',
 				'shortcode' => '',
 			),
 			array(
@@ -66,6 +67,7 @@ final class Blueworx_Clubhouse_Dashboard_Views {
 				'requires'  => self::NEEDS_LATEPOINT,
 				'where'     => 'both',
 				'blocks'    => array(),
+				'panel'     => '',
 				'shortcode' => 'latepoint_customer_dashboard',
 			),
 			array(
@@ -77,6 +79,7 @@ final class Blueworx_Clubhouse_Dashboard_Views {
 				'requires'  => self::NEEDS_SURECART,
 				'where'     => 'side',
 				'blocks'    => array( 'surecart/customer-orders' ),
+				'panel'     => '',
 				'shortcode' => '',
 			),
 			array(
@@ -88,6 +91,7 @@ final class Blueworx_Clubhouse_Dashboard_Views {
 				'requires'  => self::NEEDS_SURECART,
 				'where'     => 'side',
 				'blocks'    => array( 'surecart/customer-invoices' ),
+				'panel'     => '',
 				'shortcode' => '',
 			),
 			array(
@@ -101,6 +105,7 @@ final class Blueworx_Clubhouse_Dashboard_Views {
 				// The phone's one money screen, so it carries the same three
 				// panels the sidebar splits into Plans, Orders and Invoices.
 				'blocks'    => array( 'surecart/customer-subscriptions', 'surecart/customer-orders', 'surecart/customer-invoices' ),
+				'panel'     => '',
 				'shortcode' => '',
 			),
 			array(
@@ -112,25 +117,48 @@ final class Blueworx_Clubhouse_Dashboard_Views {
 				'requires'  => self::NEEDS_SURECART,
 				'where'     => 'side',
 				'blocks'    => array( 'surecart/customer-subscriptions' ),
+				'panel'     => '',
+				'shortcode' => '',
+			),
+			array(
+				'key'       => 'profile',
+				'label'     => 'Profile',
+				'title'     => 'Your profile',
+				'lede'      => 'Who you are, and what the club keeps about you.',
+				'icon'      => 'users',
+				// The name, sign-in email and password block is SureCart's, so
+				// the view needs the shop for its first card. The club's own
+				// fields could stand alone on a shop-less site; that is not built
+				// yet, and a Profile page offered only to show custom fields
+				// nobody has defined would be an empty screen on most clubs.
+				'requires'  => self::NEEDS_SURECART,
+				'where'     => 'both',
+				'blocks'    => array( 'surecart/wordpress-account' ),
+				// Our own card, drawn under the block above: whatever the club
+				// has chosen to keep about a member. Empty on a club that has
+				// defined nothing, and the view is then the shop's block alone.
+				'panel'     => 'profile',
 				'shortcode' => '',
 			),
 			array(
 				'key'       => 'account',
 				'label'     => 'Account',
 				'title'     => 'Account details',
-				'lede'      => 'Your details and how you pay.',
-				'icon'      => 'users',
+				'lede'      => 'How you pay the club.',
+				'icon'      => 'credit-card',
 				// Every block below is SureCart's, so without it this view has
 				// nothing to show. Offered only when SureCart is there, like any
 				// other view whose plugin is absent.
 				'requires'  => self::NEEDS_SURECART,
-				'where'     => 'both',
-				// Their own name, sign-in email and password come first: it is
-				// the part of "your details" a member is most likely to have
-				// come here to change, and the only part that was missing
-				// entirely. Its Update link goes to the same form SureCart's
-				// own dashboard offers.
-				'blocks'    => array( 'surecart/wordpress-account', 'surecart/customer-billing-details', 'surecart/customer-payment-methods' ),
+				// Off the phone's bottom bar now that Profile is on it. Billing
+				// is already the phone's one money screen and carries both of
+				// these panels, so a second bar item would lead to the same
+				// thing by another name.
+				'where'     => 'side',
+				// Who the member is now lives on Profile. What is left here is
+				// the money: the address the club bills, and the cards on file.
+				'blocks'    => array( 'surecart/customer-billing-details', 'surecart/customer-payment-methods' ),
+				'panel'     => '',
 				'shortcode' => '',
 			),
 		);

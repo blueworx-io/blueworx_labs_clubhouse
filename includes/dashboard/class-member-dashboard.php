@@ -308,13 +308,18 @@ final class Blueworx_Clubhouse_Member_Dashboard {
 	 * One view's contents.
 	 *
 	 * A shortcode view is handed the whole panel — LatePoint brings its own
-	 * tabs and does not belong inside a card of ours. Blocks each get a card.
+	 * tabs and does not belong inside a card of ours. Blocks each get a card,
+	 * then a view's own panel, if it declares one, gets another beneath them.
 	 * A panel whose plugin says nothing shows the honest empty state rather
 	 * than an empty card.
 	 *
-	 * @param array<string,mixed> $view
+	 * $panel_renderer is injected rather than named here so this class stays
+	 * testable without WordPress, like everything else on it.
+	 *
+	 * @param array<string,mixed>          $view
+	 * @param callable(string):string|null $panel_renderer
 	 */
-	public static function view_body( array $view, string $welcome, string $home_url ): string {
+	public static function view_body( array $view, string $welcome, string $home_url, ?callable $panel_renderer = null ): string {
 		$shortcode = (string) $view['shortcode'];
 		if ( '' !== $shortcode ) {
 			$out = Blueworx_Clubhouse_Plugin_Slot::shortcode( $shortcode );
@@ -328,6 +333,14 @@ final class Blueworx_Clubhouse_Member_Dashboard {
 				$out .= Blueworx_Clubhouse_Dashboard_Shell::card( '', $panel );
 			}
 		}
+		$own = (string) ( $view['panel'] ?? '' );
+		if ( '' !== $own && null !== $panel_renderer ) {
+			$drawn = (string) $panel_renderer( $own );
+			if ( '' !== $drawn ) {
+				$out .= Blueworx_Clubhouse_Dashboard_Shell::card( '', $drawn );
+			}
+		}
+
 		if ( '' === $out ) {
 			return self::not_set_up( $home_url );
 		}
