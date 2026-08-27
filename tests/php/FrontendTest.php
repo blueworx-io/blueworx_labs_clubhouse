@@ -587,6 +587,8 @@ final class FrontendTest extends TestCase {
 	 * form off the screen instead of showing the error.
 	 */
 	public function test_a_servable_page_is_still_ours_when_wordpress_says_404(): void {
+		// The login page is one the shop brings, so this club has to have one.
+		Blueworx_Clubhouse_SureCart_Products::set_active_for_tests( true );
 		update_option( Blueworx_Clubhouse_Club_Pages::option_name( 'login' ), 42 );
 		$GLOBALS['wp_stub_queried_object_id'] = 42;
 		$GLOBALS['wp_stub_is_404']            = true;

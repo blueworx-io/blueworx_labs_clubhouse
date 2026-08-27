@@ -5,10 +5,18 @@ use PHPUnit\Framework\TestCase;
 
 final class PageRendererTest extends TestCase {
 
+	// These describe a club with everything installed. Signing in and the member
+	// area belong to the shop, so without one this site has neither page and the
+	// lists below would be a different site's.
+	protected function setUp(): void {
+		Blueworx_Clubhouse_SureCart_Products::set_active_for_tests( true );
+	}
+
 	// The auth seam is static (Blueworx_Clubhouse_Auth_View::set_state()) — leaving
 	// a signed-in state set would change what every later test in this process
 	// renders, so every test that sets it must be cleaned up here too.
 	protected function tearDown(): void {
+		Blueworx_Clubhouse_SureCart_Products::set_active_for_tests( null );
 		Blueworx_Clubhouse_Auth_View::reset();
 		parent::tearDown();
 	}

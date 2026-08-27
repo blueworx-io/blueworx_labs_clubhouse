@@ -126,6 +126,16 @@ final class Blueworx_Clubhouse_Sections {
 	 */
 	public static function header( array $data ): string {
 		$login_href = $data['login_href'] ?? '#';
+		// A club with no shop has nobody to sign in and nowhere to send them, so
+		// the button is not drawn at all. An empty label is how the caller says
+		// so — see Page_Renderer::header_account().
+		$login = (string) $data['login'];
+		$account = '' === $login
+			? ''
+			: '<a class="ch-btn ch-btn--ghost" href="' . self::e( $login_href ) . '">' . self::e( $login ) . '</a>';
+		$drawer_account = '' === $login
+			? ''
+			: '<a class="ch-nav__link ch-nav__drawer-login" href="' . self::e( $login_href ) . '">' . self::e( $login ) . '</a>';
 		$banner     = '';
 		if ( '' !== $data['banner'] ) {
 			$banner = '<div class="ch-banner"><div class="ch-wrap ch-banner__in">'
@@ -142,7 +152,7 @@ final class Blueworx_Clubhouse_Sections {
 			. self::brand_link( $data )
 			. '<nav class="ch-nav__links" aria-label="Primary">' . $links . '</nav>'
 			. '<div class="ch-nav__cta">'
-			. '<a class="ch-btn ch-btn--ghost" href="' . self::e( $login_href ) . '">' . self::e( $data['login'] ) . '</a>'
+			. $account
 			. '<a class="ch-btn ch-btn--ink" href="' . self::e( $data['join_href'] ) . '">' . self::e( $data['join'] ) . '</a>'
 			// No-JS disclosure menu — the same links, revealed by the hamburger below 900px.
 			. '<details class="ch-nav__disc">'
@@ -150,7 +160,7 @@ final class Blueworx_Clubhouse_Sections {
 			. '<nav class="ch-nav__drawer" aria-label="Menu">'
 			. '<a class="ch-btn ch-btn--accent ch-nav__drawer-join" href="' . self::e( $data['join_href'] ) . '">' . self::e( $data['join'] ) . '</a>'
 			. $links
-			. '<a class="ch-nav__link ch-nav__drawer-login" href="' . self::e( $login_href ) . '">' . self::e( $data['login'] ) . '</a>'
+			. $drawer_account
 			. '</nav></details>'
 			. '</div></div></header>';
 	}

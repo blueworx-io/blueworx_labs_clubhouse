@@ -474,11 +474,20 @@ final class Blueworx_Clubhouse_Page_Renderer {
 	 * A club that has switched the member area off keeps the old way out here,
 	 * so a signed-in member is never left without one.
 	 *
-	 * @return array{0:string,1:string} label, href
+	 * Signing in belongs to the shop. On a club with no shop there is no
+	 * membership to sign in to and no login page to send anybody to, so a
+	 * signed-out visitor is offered nothing rather than a button into a 404.
+	 * Somebody signed in — staff, arriving from wp-admin — still gets their way
+	 * out, because signing out is not signing in.
+	 *
+	 * @param bool $login_on Whether this site serves a login page at all.
+	 * @return array{0:string,1:string} label, href. Both '' for no button.
 	 */
-	public static function header_account( bool $signed_in, bool $member_area_on, string $logout_url ): array {
+	public static function header_account( bool $signed_in, bool $member_area_on, string $logout_url, bool $login_on = true ): array {
 		if ( ! $signed_in ) {
-			return array( 'Log in', Blueworx_Clubhouse_Links::url( 'login' ) );
+			return $login_on
+				? array( 'Log in', Blueworx_Clubhouse_Links::url( 'login' ) )
+				: array( '', '' );
 		}
 		if ( $member_area_on ) {
 			return array( 'Member area', Blueworx_Clubhouse_Links::url( 'member-dashboard' ) );
@@ -510,7 +519,9 @@ final class Blueworx_Clubhouse_Page_Renderer {
 			$signed_in,
 			Blueworx_Clubhouse_Page_Map::is_available( 'member-dashboard' )
 				&& $visibility->is_page_visible( 'member-dashboard' ),
-			$auth['logout_url']
+			$auth['logout_url'],
+			Blueworx_Clubhouse_Page_Map::is_available( 'login' )
+				&& $visibility->is_page_visible( 'login' )
 		);
 		return Blueworx_Clubhouse_Sections::header( array(
 			'club_name'   => $club,

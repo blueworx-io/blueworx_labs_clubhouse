@@ -5,6 +5,17 @@ use PHPUnit\Framework\TestCase;
 
 final class ContentCatalogueTest extends TestCase {
 
+	// These describe a club with everything installed. Signing in and the member
+	// area belong to the shop, so without one this site has neither page and the
+	// lists below would be a different site's.
+	protected function setUp(): void {
+		Blueworx_Clubhouse_SureCart_Products::set_active_for_tests( true );
+	}
+
+	protected function tearDown(): void {
+		Blueworx_Clubhouse_SureCart_Products::set_active_for_tests( null );
+	}
+
 	/**
 	 * Ten tabs over nine pages: the sitewide header and footer get their own
 	 * "Global" tab, so editing the Home hero is not presented as a sitewide change.
