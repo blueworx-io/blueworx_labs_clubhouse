@@ -70,9 +70,6 @@ require_once dirname( __DIR__, 2 ) . '/includes/collections/class-collection-typ
 require_once dirname( __DIR__, 2 ) . '/includes/collections/class-collection-seeder.php';
 require_once dirname( __DIR__, 2 ) . '/includes/collections/class-collection-meta-boxes.php';
 
-// Profile.
-require_once dirname( __DIR__, 2 ) . '/includes/profile/class-profile-fields.php';
-
 // Test doubles.
 foreach ( glob( __DIR__ . '/fakes/*.php' ) as $fake ) {
 	require_once $fake;
