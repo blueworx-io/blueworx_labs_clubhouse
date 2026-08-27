@@ -54,3 +54,26 @@ Every one runs against the built zip, not against the intent:
 The directory and file checks are belt and braces: the allowlist already excludes
 all of them, so a hit means one is **nested inside a shipped directory** — the
 case a human reviewer misses.
+
+## wp-shop.mjs — a shop in the test harness
+
+```bash
+npm run wp:up      # WordPress with this plugin
+npm run wp:shop    # add SureCart to it and switch it on
+```
+
+Half of what this plugin does only exists next to SureCart — the member area's
+panels and its edit journeys, the checkout links, the member sign-in. The
+harness provisions one plugin, so none of that could be exercised locally and
+the SureCart-facing work was written against source read out of a downloaded
+zip. This puts a real one in.
+
+Deliberately not part of `wp:up`: the suite expects a site with no shop, and
+pages this plugin only offers alongside SureCart would appear the moment one
+existed. Opt in when what you are working on needs a shop.
+
+**You do not get a connected store.** SureCart's own API is unreachable from a
+throwaway local install, so prices, checkouts, customers and its passwordless
+sign-in codes stay unavailable. Everything SureCart implements in plain
+WordPress does work, including password sign-in and the customer dashboard's
+block routing.
