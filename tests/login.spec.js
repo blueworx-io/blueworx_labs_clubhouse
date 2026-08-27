@@ -1,64 +1,40 @@
 const { test, expect } = require('@playwright/test');
 
-// The member account journey. The rendering half runs against either harness;
-// the WordPress-only half needs a real auth stack, so it is tagged @wordpress
-// and is dropped when the run targets the DB-free preview — against the preview
-// it would pass while proving nothing.
+// The login page's design. What a member can actually DO on it is the shop's
+// form, so signing in end to end lives in member-sign-in.spec.js, which needs a
+// real shop installed.
+//
+// @preview: the preview has no shop and so no shop pages, but it still draws
+// this page so the design can be looked at. On WordPress without a shop the
+// page is not served at all — that is the point of issue #261, and
+// member-sign-in.spec.js is what proves it.
 
-test('login page offers a real sign-in form', async ({ page }) => {
+test('the login page is the club\'s card around the shop\'s form @preview', async ({ page }) => {
   await page.goto('?clubhouse_page=login');
 
-  const form = page.locator('.ch-auth__form');
-  await expect(form).toHaveAttribute('method', 'post');
-  // WordPress's own credential field names — the form posts to the auth stack,
-  // not to a decorative handler.
-  await expect(form.locator('input[name="user_login"]')).toBeVisible();
-  await expect(form.locator('input[name="user_password"]')).toBeVisible();
-  await expect(form.locator('input[name="remember"]')).toBeAttached();
+  const card = page.locator('.ch-auth');
+  await expect(card).toBeVisible();
+  // Ours: the eyebrow, the heading, the lede, and the way through to joining.
+  await expect(card.locator('.ch-auth__title')).toBeVisible();
+  await expect(card.locator('.ch-auth__lede')).toBeVisible();
+  await expect(card.locator('.ch-auth__alt-link')).toBeVisible();
+  // Theirs: the form.
+  await expect(card.locator('sc-login-form')).toHaveCount(1);
 });
 
-test('forgotten-password screen is reachable and stays in the club look', async ({ page }) => {
-  await page.goto('?clubhouse_page=login&clubhouse_auth=forgot');
-
-  await expect(page.locator('[data-auth-view="forgot"]')).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Forgotten your password?' })).toBeVisible();
-  // Asking for a reset link never asks for the password being reset.
-  await expect(page.locator('input[name="user_password"]')).toHaveCount(0);
-  // Still the clubhouse chrome, not wp-login.php.
-  await expect(page.locator('header.ch-nav')).toBeVisible();
-});
-
-test('set-a-new-password screen asks for the password twice', async ({ page }) => {
-  await page.goto('?clubhouse_page=login&clubhouse_auth=reset');
-
-  await expect(page.locator('input[name="pass1"]')).toBeVisible();
-  await expect(page.locator('input[name="pass2"]')).toBeVisible();
-});
-
-test('the login page has exactly one h1 and it is the card heading', async ({ page }) => {
+test('the shop\'s form is titled by the club @preview', async ({ page }) => {
   await page.goto('?clubhouse_page=login');
-  await expect(page.locator('h1')).toHaveCount(1);
-  await expect(page.locator('h1')).toHaveClass(/ch-auth__title/);
+
+  // Left alone it reads "Sign in to your account" — a different product's
+  // wording halfway down the club's own page.
+  const heading = await page.locator('.ch-auth__title').innerText();
+  await expect(page.locator('sc-login-form [slot="title"]')).toHaveText(heading);
 });
 
-test('@wordpress bad credentials are refused with WordPress\'s own message', async ({ page }) => {
-  await page.goto('/login/');
-  await page.fill('input[name="user_login"]', 'nobody-here');
-  await page.fill('input[name="user_password"]', 'wrong-password');
-  await page.click('.ch-auth__submit');
+test('the login page has exactly one h1 and it is the card heading @preview', async ({ page }) => {
+  await page.goto('?clubhouse_page=login');
 
-  await expect(page.locator('.ch-auth__msg--error')).toBeVisible();
-  // Still signed out, and still on the clubhouse login page.
-  await expect(page.locator('input[name="user_password"]')).toBeVisible();
-});
-
-test('@wordpress an off-site redirect_to is ignored', async ({ page }) => {
-  await page.goto('/login/?redirect_to=https://evil.example/steal');
-  // The value is carried so a legitimate one survives the round trip, but the
-  // handler is what decides whether to honour it — see AuthViewTest.
-  await expect(page.locator('input[name="redirect_to"]')).toHaveValue('https://evil.example/steal');
-  await page.fill('input[name="user_login"]', 'nobody-here');
-  await page.fill('input[name="user_password"]', 'wrong-password');
-  await page.click('.ch-auth__submit');
-  expect(page.url()).not.toContain('evil.example');
+  const h1s = page.locator('#ch-main h1');
+  await expect(h1s).toHaveCount(1);
+  await expect(h1s.first()).toHaveClass(/ch-auth__title/);
 });

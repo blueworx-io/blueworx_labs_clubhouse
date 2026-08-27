@@ -10,8 +10,19 @@ const PAGES = [
   { slug: 'about', marker: '.ch-benefits' },
   { slug: 'membership', marker: '.ch-faq' },
   { slug: 'contact', marker: '.ch-contact' },
-  { slug: 'login', marker: 'input[type="password"]' },
 ];
+
+// Login is not in the list above because it is not a page every site has: it
+// belongs to the shop, and a club without one is not served it at all (#261).
+// The preview has no shop, but it still draws the page so the design can be
+// looked at — so this is the one place the card is smoke-tested.
+test('login page renders and routes @preview', async ({ page }) => {
+  const response = await page.goto('?clubhouse_page=login');
+  expect(response?.status()).toBe(200);
+  await expect(page.locator('#ch-main')).toBeVisible();
+  // The club's own card. The form inside it is the shop's.
+  await expect(page.locator('.ch-auth').first()).toBeVisible();
+});
 
 for (const { slug, marker } of PAGES) {
   test(`${slug} page renders and routes`, async ({ page }) => {

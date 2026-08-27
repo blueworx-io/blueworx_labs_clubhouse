@@ -28,7 +28,9 @@ test.describe('@preview demo switcher clearance', () => {
     // a passing test on a page with no demo bar would prove nothing.
     await expect(page.locator('.clubhouse-demo')).toHaveCount(1);
 
-    for (const label of ['Home', 'Contact', 'Log in']) {
+    // 'Log in' used to be here. A club with no shop (which the preview is)
+    // has no login page, so the header offers no button to one — issue #261.
+    for (const label of ['Home', 'Contact', 'Membership']) {
       const res = await topmostAt(page, label);
       expect(res.found, `${label} should be in the drawer`).toBe(true);
       expect(res.reachable, `${label} must not be covered by the demo switcher`).toBe(true);
