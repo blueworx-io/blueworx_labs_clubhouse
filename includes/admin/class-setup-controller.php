@@ -194,6 +194,45 @@ final class Blueworx_Clubhouse_Setup_Controller {
 		// 6. Mark the Visibility section reviewed (saving with the defaults counts).
 		$storage->set( self::VIS_SAVED_KEY, true );
 
+		// 6b. The club's own questions about a member.
+		//
+		// Order matters. Forget acts on a field key and has to run whether or not
+		// the form carried any rows. Both drops strike a row out of the submitted
+		// list BEFORE it is sanitised, so a row index is never applied to a list
+		// that has already shifted underneath it.
+		$profile = new Blueworx_Clubhouse_Profile_Store( $storage );
+
+		if ( isset( $post['clubhouse_profile_field_forget'] ) ) {
+			$forget = sanitize_key( (string) $post['clubhouse_profile_field_forget'] );
+			if ( '' !== $forget ) {
+				$profile->forget( $forget );
+				$notices[] = array(
+					'type' => 'success',
+					'text' => 'That field is gone, and every member\'s answer to it has been cleared.',
+				);
+			}
+		}
+
+		if ( isset( $post['clubhouse_profile_field'] ) && is_array( $post['clubhouse_profile_field'] ) ) {
+			$rows   = array_values( (array) $post['clubhouse_profile_field'] );
+			$remove = isset( $post['clubhouse_profile_field_remove'] ) ? (string) $post['clubhouse_profile_field_remove'] : null;
+			$forget = isset( $post['clubhouse_profile_field_forget'] ) ? sanitize_key( (string) $post['clubhouse_profile_field_forget'] ) : null;
+
+			$kept = array();
+			foreach ( $rows as $idx => $row ) {
+				if ( null !== $remove && (string) $idx === $remove ) {
+					continue;
+				}
+				if ( null !== $forget && '' !== $forget
+					&& sanitize_key( (string) ( ( (array) $row )['key'] ?? '' ) ) === $forget ) {
+					continue;
+				}
+				$kept[] = $row;
+			}
+
+			$profile->save_fields( $kept );
+		}
+
 		// 7. Bust the composed :root cache so the new look/accent take effect.
 		( new Blueworx_Clubhouse_Theme_Cache( $storage ) )->invalidate();
 
@@ -346,6 +385,8 @@ final class Blueworx_Clubhouse_Setup_Controller {
 				// exactly when a blank "after signing in" starts meaning it.
 				'dashboard_url' => Blueworx_Clubhouse_Shop_Pages::url( 'dashboard' ),
 			),
+			// The club's own questions about a member, drawn on the same tab.
+			'profile_fields' => ( new Blueworx_Clubhouse_Profile_Store( $storage ) )->fields(),
 			'mail'          => array(
 				'from_name'    => $mail_settings->get_from_name(),
 				'from_address' => $mail_settings->get_from_address(),
