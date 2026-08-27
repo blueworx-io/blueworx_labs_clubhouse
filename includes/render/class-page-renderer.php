@@ -300,7 +300,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				$tier['monthly'] = $monthly;
 				$tier['annual']  = $annual;
 				$tier['saving']  = ( $monthly['available'] && $annual['available'] )
-					? self::annual_saving( $monthly['price'], $annual['price'] )
+					? self::annual_saving( $monthly['price'], $annual['price'], $monthly['period'], $annual['period'] )
 					: '';
 
 				// The flat fields stay the monthly ones, so everything that read a
@@ -368,8 +368,23 @@ final class Blueworx_Clubhouse_Page_Renderer {
 	 * number, nothing else, in the same currency. "from £28" and "£28 per adult"
 	 * produce no badge, because a saving that contradicts the price printed
 	 * beside it is worse than no saving at all.
+	 *
+	 * The two periods are the same test applied to what is being compared. A
+	 * club is free to connect any price to either slot, and plenty do — a yearly
+	 * price in the monthly slot, or the same monthly price on both sides. This
+	 * multiplies the left-hand price by twelve, so unless it really is a month
+	 * and the right-hand one really is a year, the answer is a year of savings
+	 * nobody is making.
+	 *
+	 * @param string $monthly_period '/mo' on a genuinely monthly price. Anything
+	 *                               else — '/yr', or '' where the shop could not
+	 *                               name the interval — means no badge.
+	 * @param string $annual_period  '/yr' on a genuinely yearly price.
 	 */
-	public static function annual_saving( string $monthly, string $annual ): string {
+	public static function annual_saving( string $monthly, string $annual, string $monthly_period = '/mo', string $annual_period = '/yr' ): string {
+		if ( '/mo' !== $monthly_period || '/yr' !== $annual_period ) {
+			return '';
+		}
 		$parse = static function ( string $raw ): ?array {
 			$raw = trim( $raw );
 			if ( 1 !== preg_match( '/^([^\d\s.]{0,3})\s*(\d+(?:\.\d{1,2})?)$/u', $raw, $m ) ) {
