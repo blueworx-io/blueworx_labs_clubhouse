@@ -164,7 +164,7 @@ final class Blueworx_Clubhouse_Member_Dashboard {
 			$key            = (string) $view['key'];
 			$panels[ $key ] = Blueworx_Clubhouse_Dashboard_Views::DEFAULT_VIEW === $key
 				? self::overview( $welcome, $views, $home, $base )
-				: self::view_body( $view, '', $home );
+				: self::view_body( $view, '', $home, array( 'Blueworx_Clubhouse_Profile_Form', 'panel' ) );
 		}
 
 		// An address asking for something to be done — update these details, add
