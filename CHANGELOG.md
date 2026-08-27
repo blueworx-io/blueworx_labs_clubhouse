@@ -5,6 +5,10 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.90.0
+
+- **Members can change things in the member area again** — Update on billing details, adding or removing a card, payment history, opening an order or an invoice, and changing or cancelling a plan all led back to the same read-only screen and did nothing. Every one of them now opens the screen it says it will.
+
 ## 0.89.0
 
 - **Emails now come from your club, not from "WordPress"** — a password reset used to arrive from WordPress at a wordpress@ address, identical on every site we run. It now carries your club's name and an address on your own domain. If your club has a real mailbox members should be able to reply to, put it under Setup → Members.
