@@ -407,3 +407,10 @@ button,input,select,textarea{font-family:inherit}
    LatePoint's booking screens is left exactly as LatePoint draws it. Scoped to
    the shortcode wrapper so it can only ever affect a block this plugin placed. */
 .ch-shortcode .os-day-month{display:none}
+
+/* The shop's sign-in form prints its own title inside the card, under the
+   heading the club already wrote — the same words twice. The form keeps the
+   slot (it names the form for a screen reader); this hides the printed copy.
+   Its shadow root exposes the title as a part, which is the vendor's own
+   sanctioned way in. */
+sc-login-form::part(title){display:none}

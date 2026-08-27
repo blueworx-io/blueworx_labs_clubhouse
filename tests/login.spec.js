@@ -38,3 +38,14 @@ test('the login page has exactly one h1 and it is the card heading @preview', as
   await expect(h1s).toHaveCount(1);
   await expect(h1s.first()).toHaveClass(/ch-auth__title/);
 });
+
+// The card is narrow by intent — it is the whole page and reads as a form, not
+// a content section. 460px squeezed the shop's form; 560 gives it room without
+// letting the card sprawl.
+test('the sign-in card stays narrow @preview', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto('?clubhouse_page=login');
+
+  const box = await page.locator('.ch-auth-wrap').boundingBox();
+  expect(box?.width).toBe(560);
+});
