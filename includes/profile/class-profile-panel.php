@@ -46,7 +46,7 @@ final class Blueworx_Clubhouse_Profile_Panel {
 				. self::e( (string) ( $notice['text'] ?? '' ) ) . '</p>';
 		}
 
-		$out .= '<div class="clubhouse-profile__fields">';
+		$out .= '<div class="bw-fields bw-fields--single clubhouse-profile__fields">';
 		foreach ( $visible as $field ) {
 			$key      = (string) $field['key'];
 			$editable = 'member' === (string) $field['who'];
@@ -57,7 +57,7 @@ final class Blueworx_Clubhouse_Profile_Panel {
 
 		// Nothing to save is not a reason to draw a button that saves nothing.
 		if ( $editable_count > 0 ) {
-			$out .= '<button type="submit" class="clubhouse-profile__save">Save my details</button>';
+			$out .= '<button type="submit" class="bw-btn bw-btn--primary clubhouse-profile__save">Save my details</button>';
 		}
 		return $out . '</form>';
 	}
@@ -71,13 +71,13 @@ final class Blueworx_Clubhouse_Profile_Panel {
 		$id   = 'clubhouse-profile-' . $key;
 		$help = (string) ( $field['help'] ?? '' );
 
-		$out  = '<div class="clubhouse-profile__row">';
+		$out  = '<div class="bw-field clubhouse-profile__row">';
 		$out .= $editable
-			? '<label class="clubhouse-profile__label" for="' . self::e( $id ) . '">' . self::e( (string) $field['label'] ) . '</label>'
-			: '<p class="clubhouse-profile__label">' . self::e( (string) $field['label'] ) . '</p>';
+			? '<label class="bw-field__label clubhouse-profile__label" for="' . self::e( $id ) . '">' . self::e( (string) $field['label'] ) . '</label>'
+			: '<p class="bw-field__label clubhouse-profile__label">' . self::e( (string) $field['label'] ) . '</p>';
 		$out .= self::control( $field, $value, self::name( $key, (string) $field['type'] ), $editable );
 		if ( '' !== $help ) {
-			$out .= '<p class="clubhouse-profile__help">' . self::e( $help ) . '</p>';
+			$out .= '<p class="bw-field__help clubhouse-profile__help">' . self::e( $help ) . '</p>';
 		}
 		return $out . '</div>';
 	}
@@ -110,7 +110,7 @@ final class Blueworx_Clubhouse_Profile_Panel {
 
 		switch ( $type ) {
 			case 'textarea':
-				return '<textarea id="' . self::e( $id ) . '" name="' . self::e( $name ) . '" rows="4" class="clubhouse-profile__input"' . $req . '>'
+				return '<textarea id="' . self::e( $id ) . '" name="' . self::e( $name ) . '" rows="4" class="bw-textarea clubhouse-profile__input"' . $req . '>'
 					. self::e( $scalar ) . '</textarea>';
 			case 'checkbox':
 				$checked = '1' === $scalar ? ' checked' : '';
@@ -118,7 +118,7 @@ final class Blueworx_Clubhouse_Profile_Panel {
 			case 'select':
 				// An empty first option is the only way to answer "none of these"
 				// on a field the club did not make required.
-				$out = '<select id="' . self::e( $id ) . '" name="' . self::e( $name ) . '" class="clubhouse-profile__input"' . $req . '>'
+				$out = '<select id="' . self::e( $id ) . '" name="' . self::e( $name ) . '" class="bw-input clubhouse-profile__input"' . $req . '>'
 					. '<option value="">Please choose</option>';
 				foreach ( $choices as $choice ) {
 					$sel  = $choice === $scalar ? ' selected' : '';
@@ -128,7 +128,9 @@ final class Blueworx_Clubhouse_Profile_Panel {
 			case 'multiselect':
 				$chosen = is_array( $value ) ? $value : array();
 				$size   = min( 6, max( 2, count( $choices ) ) );
-				$out    = '<select id="' . self::e( $id ) . '" name="' . self::e( $name ) . '" class="clubhouse-profile__input" multiple size="' . $size . '">';
+				// Its own class rather than bw-input: a multiple select grows with
+				// its rows, and the shared control height would crop them.
+				$out = '<select id="' . self::e( $id ) . '" name="' . self::e( $name ) . '" class="clubhouse-profile__multi" multiple size="' . $size . '">';
 				foreach ( $choices as $choice ) {
 					$sel  = in_array( $choice, $chosen, true ) ? ' selected' : '';
 					$out .= '<option value="' . self::e( $choice ) . '"' . $sel . '>' . self::e( $choice ) . '</option>';
@@ -137,10 +139,10 @@ final class Blueworx_Clubhouse_Profile_Panel {
 			case 'number':
 			case 'date':
 				return '<input type="' . self::e( $type ) . '" id="' . self::e( $id ) . '" name="' . self::e( $name ) . '" value="'
-					. self::e( $scalar ) . '" class="clubhouse-profile__input"' . $req . '>';
+					. self::e( $scalar ) . '" class="bw-input clubhouse-profile__input"' . $req . '>';
 			default:
 				return '<input type="text" id="' . self::e( $id ) . '" name="' . self::e( $name ) . '" value="'
-					. self::e( $scalar ) . '" class="clubhouse-profile__input"' . $req . '>';
+					. self::e( $scalar ) . '" class="bw-input clubhouse-profile__input"' . $req . '>';
 		}
 	}
 

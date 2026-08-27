@@ -667,6 +667,28 @@
 .clubhouse-member .clubhouse-member__quick-title{font-family:var(--bw-font-display);font-size:var(--bw-size-h3);font-weight:var(--bw-weight-semibold);color:var(--bw-text-heading)}
 .clubhouse-member .clubhouse-member__quick-lede{font-size:var(--bw-size-sm);color:var(--bw-text-muted)}
 
+/* The club's own questions about a member, on their Profile page. Almost every
+   control is already a design-system one — .bw-field, .bw-input, .bw-textarea,
+   .bw-btn — so what is left here is the form's own spacing, the two things the
+   system has no equivalent for (a read-only value and a multiple select), and
+   the notice a save comes back with. */
+.clubhouse-profile{display:flex;flex-direction:column;gap:var(--bw-space-7)}
+/* Never wider than its card, whatever the longest choice happens to be. The
+   sideways-scroll test is the one that catches this. */
+.clubhouse-profile__input,.clubhouse-profile__multi{max-width:100%}
+/* A club field the member cannot change. Reads as a stated fact rather than as
+   a disabled box they might keep trying to type in. */
+.clubhouse-profile__value{margin:0;font-size:var(--bw-size-input);color:var(--bw-text-body)}
+.clubhouse-profile__multi{width:100%;padding:6px 8px;font-family:var(--bw-font-body);font-size:var(--bw-size-input);color:var(--bw-control-text);background:var(--bw-control-bg);border:1px solid var(--bw-border-field);border-radius:var(--bw-control-radius)}
+.clubhouse-profile__multi:focus{border-color:var(--bw-focus-color);outline:var(--bw-focus-width) solid var(--bw-focus-color);outline-offset:var(--bw-focus-offset)}
+/* A comfortable target on a phone without disturbing the 16px box the design
+   system draws everywhere else. */
+.clubhouse-profile__tick{width:20px;height:20px;margin:0;accent-color:var(--bw-brand);cursor:pointer}
+.clubhouse-profile__notice{margin:0;padding:var(--bw-space-5) 12px;border:1px solid var(--bw-border);border-radius:var(--bw-radius-md);font-size:var(--bw-size-body)}
+.clubhouse-profile__notice--success{background:var(--bw-success-wash);border-color:#C6E9CE;color:var(--bw-success-deep)}
+.clubhouse-profile__notice--error{background:var(--bw-danger-wash);border-color:#F0CFCF;color:var(--bw-danger-deep)}
+.clubhouse-profile__save{align-self:flex-start}
+
 /* The two-column shell the design draws: the club and the member down the
    left, full height, with the page head to their right. */
 .clubhouse-member .clubhouse-member__shell{display:flex;align-items:stretch;min-height:100vh}
