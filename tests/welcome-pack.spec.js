@@ -1,5 +1,12 @@
 const { test, expect } = require('@playwright/test');
 
+// The member area belongs to the shop (issue #261), so these need one installed.
+// CI has none, which is a real coverage gap — see tests/helpers/shop.js.
+const { hasShop } = require('./helpers/shop');
+test.beforeEach(async ({ page }) => {
+	test.skip(!(await hasShop(page)), 'no shop installed — run npm run wp:shop');
+});
+
 // @wordpress only: the welcome pack renders on the member area, which is a
 // real WordPress route the DB-free preview does not have.
 const DASHBOARD = '/member-dashboard/';

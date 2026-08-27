@@ -1,8 +1,15 @@
 const { test, expect } = require('@playwright/test');
 
+// The member area belongs to the shop (issue #261), so these need one installed.
+// CI has none, which is a real coverage gap — see tests/helpers/shop.js.
+const { hasShop } = require('./helpers/shop');
+test.beforeEach(async ({ page }) => {
+	test.skip(!(await hasShop(page)), 'no shop installed — run npm run wp:shop');
+});
+
 // @wordpress only: these prove the routing, which the DB-free preview has none of.
 //
-// The harness has neither SureCart nor LatePoint installed, so what is covered
+// SureCart is installed for these (see the guard above); LatePoint is not, so what is covered
 // here is the frame and the journeys around it — not the shop's own panels,
 // which would be testing SureCart.
 

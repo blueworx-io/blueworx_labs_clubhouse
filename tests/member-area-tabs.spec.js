@@ -1,5 +1,12 @@
 const { test, expect } = require('@playwright/test');
 
+// The member area belongs to the shop (issue #261), so these need one installed.
+// CI has none, which is a real coverage gap — see tests/helpers/shop.js.
+const { hasShop } = require('./helpers/shop');
+test.beforeEach(async ({ page }) => {
+	test.skip(!(await hasShop(page)), 'no shop installed — run npm run wp:shop');
+});
+
 // @wordpress only: the member area is a real route, and what is being proved
 // here is that a click does NOT reload the page — which needs a real browser.
 
@@ -25,7 +32,7 @@ test('the member area draws the sidebar and the top bar @wordpress', async ({ pa
 test('every panel is on the page, with one shown @wordpress', async ({ page }) => {
   await page.goto('/member-dashboard/');
   const panels = page.locator('.clubhouse-member__panel');
-  // The harness has neither SureCart nor LatePoint, so there is one view.
+  // LatePoint is not installed, so Bookings is not among them.
   await expect(panels).not.toHaveCount(0);
   await expect(page.locator('.clubhouse-member__panel:not([hidden])')).toHaveCount(1);
 });
@@ -37,9 +44,9 @@ test('a nav item is a real link to a real address @wordpress', async ({ page }) 
   expect(href).not.toBe('#');
 });
 
-// The harness has neither SureCart nor LatePoint, so the member area here
-// offers only one view (see the test above) — there is no second real nav
-// item to click to prove the switch honestly. member-area.js reads its
+// A second view is injected rather than clicked for real: the point is the
+// swap itself, and an injected pair keeps this independent of which plugins
+// happen to be installed. member-area.js reads its
 // panels and links off the DOM once, at load, so the injected second panel
 // and link have to be present in the HTML *before* the script runs — a
 // page.evaluate() after goto() is too late, the script has already captured
@@ -95,10 +102,9 @@ test('clicking a nav item swaps panels without navigating @wordpress', async ({ 
   await expect(page.locator('[data-view="test-second-view"]')).toBeFocused();
 });
 
-// The harness has neither SureCart nor LatePoint, so the real page carries
-// Dashboard alone — see Dashboard_Views::all(). Faking a full club therefore
-// means splicing Bookings, Billing and Account into the bar, and
-// Orders/Invoices/Plans into the sidebar only, which the bar never carries.
+// LatePoint is not installed, so faking a full club means splicing Bookings
+// into the bar, and Orders/Invoices/Plans into the sidebar only — the bar
+// never carries those.
 // Same response-splicing approach the click test above uses. Billing carries
 // their panels itself on a phone, so there are no link rows under it.
 test('a phone gets the bottom bar, not the sidebar nav @wordpress', async ({ page }) => {
@@ -114,12 +120,12 @@ test('a phone gets the bottom bar, not the sidebar nav @wordpress', async ({ pag
       .join('');
     body = body.replace('Dashboard</span></a></nav>', 'Dashboard</span></a>' + extraNavItems + '</nav>');
 
-    // The server draws only Dashboard in the bar for this club: Billing and
-    // Account are the shop's, and the harness has no shop. So faking a full
-    // club means splicing those two in alongside Bookings. Orders, Invoices
-    // and Plans are sidebar-only and never appear here.
+    // The server draws Dashboard, Billing and Account itself now that a shop
+    // is installed, so faking a full club only means splicing Bookings in —
+    // LatePoint's, which the harness does not have. Orders, Invoices and Plans
+    // are sidebar-only and never appear here.
     const barOpen = '<nav class="clubhouse-member__tabbar" aria-label="Your account">';
-    const extraTabs = ['bookings', 'billing', 'account']
+    const extraTabs = ['bookings']
       .map((key) => '<a class="clubhouse-member__tab" data-view-link="' + key + '"'
         + ' data-view-title="' + key + '" data-view-lede=""'
         + ' href="/member-dashboard/?view=' + key + '">'
@@ -134,7 +140,7 @@ test('a phone gets the bottom bar, not the sidebar nav @wordpress', async ({ pag
   await page.goto('/member-dashboard/');
 
   await expect(page.locator('.clubhouse-member__tabbar')).toBeVisible();
-  // Dashboard, Bookings, Billing, Account, and the way back: five tabs.
+  // Dashboard, Billing, Account, the spliced-in Bookings, and the way back.
   await expect(page.locator('.clubhouse-member__tab')).toHaveCount(5);
   await expect(page.locator('.clubhouse-member__side .bw-secnav')).toBeHidden();
 
@@ -161,15 +167,20 @@ test('a phone gets the bottom bar, not the sidebar nav @wordpress', async ({ pag
 // is offered — see Dashboard_Views::all() — leaving Dashboard and the way
 // out. The bar is still drawn for one view, rather than appearing the day a
 // plugin is installed.
-test('the bar shows exactly the curated list on a club with no shop and no bookings @wordpress', async ({ page }) => {
+test('the bar shows exactly the curated list, not every view @wordpress', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/member-dashboard/');
 
   await expect(page.locator('.clubhouse-member__tabbar')).toBeVisible();
   const tabs = page.locator('.clubhouse-member__tab');
-  await expect(tabs).toHaveCount(2);
+  // Dashboard, Billing, Account, and the way out. Orders, Invoices and Plans
+  // are sidebar-only: the bar is a curated list, not whichever views fit.
+  await expect(tabs).toHaveCount(4);
   await expect(tabs.nth(0)).toContainText('Dashboard');
-  await expect(tabs.nth(1)).toContainText('Back home');
+  await expect(tabs.nth(3)).toContainText('Back home');
+  for (const key of ['orders', 'invoices', 'plans']) {
+    await expect(page.locator(`.clubhouse-member__tab[data-view-link="${key}"]`)).toHaveCount(0);
+  }
 
   await expect(page.locator('.clubhouse-member__side .bw-secnav')).toBeHidden();
   // The way out lives in the bar now, not beside the club badge.

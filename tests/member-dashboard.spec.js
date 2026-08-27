@@ -1,5 +1,12 @@
 const { test, expect } = require('@playwright/test');
 
+// The member area belongs to the shop (issue #261), so these need one installed.
+// CI has none, which is a real coverage gap — see tests/helpers/shop.js.
+const { hasShop } = require('./helpers/shop');
+test.beforeEach(async ({ page }) => {
+	test.skip(!(await hasShop(page)), 'no shop installed — run npm run wp:shop');
+});
+
 // @wordpress only: the member area renders at the plugin's own route, which is
 // a real WordPress page the DB-free preview does not have.
 //
@@ -9,7 +16,7 @@ const { test, expect } = require('@playwright/test');
 // now the shop's old address, and a visit there redirects here. That redirect
 // has its own test, added in Task 7.
 //
-// The harness has neither SureCart nor LatePoint installed, so what these
+// SureCart is installed for these (see the guard above); LatePoint is not, so what these
 // assertions cover is the empty path: the frame renders, no dead nav items are
 // offered, and nothing fatals. Asserting SureCart's own panels would be testing
 // SureCart, the same reasoning external-chrome.spec.js records.
@@ -53,23 +60,24 @@ test('the member area stylesheet loads, and before the page is drawn @wordpress'
   await expect(page.locator('head link[href*="/assets/bw/bw.css"]')).toHaveCount(1);
 });
 
-test('a club with no shop and no bookings is offered no dead nav items @wordpress', async ({ page }) => {
+test('no dead nav items are offered @wordpress', async ({ page }) => {
+  // Bookings is LatePoint's and is not installed here, so it must not appear.
   await page.goto(DASHBOARD);
-  // Counts the view links only: 'Back home' is drawn as a sidebar item too,
-  // and it is the way out of the member area rather than a view to switch to.
-  await expect(page.locator('.bw-secnav__item[data-view-link]')).toHaveCount(1);
-  // Built on the page's own address, not a bare query that would replace it.
-  await expect(page.locator('.bw-secnav__item[data-view-link]')).toHaveAttribute(
-    'href',
-    /member-dashboard\/\?view=dashboard$/,
-  );
+  await expect(page.locator('.bw-secnav__item[data-view-link="bookings"]')).toHaveCount(0);
+  // Every item that IS offered is built on the page's own address, not a bare
+  // query that would replace it.
+  for (const href of await page.locator('.bw-secnav__item[data-view-link]').evaluateAll(
+    (els) => els.map((el) => el.getAttribute('href')),
+  )) {
+    expect(href).toMatch(/member-dashboard\/\?view=/);
+  }
 });
 
 test('an address for a view this club does not have lands on the dashboard @wordpress', async ({ page }) => {
   // A bookmark kept from before a plugin was removed, or a typed address.
-  await page.goto(`${DASHBOARD}?view=orders`);
+  // Bookings is LatePoint's, which is not installed here.
+  await page.goto(`${DASHBOARD}?view=bookings`);
   await expect(page.locator('.bw-pagehead__h1')).toContainText('Your account');
-  await expect(page.locator('.bw-empty')).toHaveCount(0);
 });
 
 test('junk in the address does not break the page @wordpress', async ({ page }) => {
