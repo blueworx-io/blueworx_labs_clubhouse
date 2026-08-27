@@ -277,6 +277,32 @@ final class Blueworx_Clubhouse_Setup_Controller {
 		wp_enqueue_script( 'clubhouse-admin-setup', BLUEWORX_LABS_CLUBHOUSE_URL . 'assets/js/admin-setup.js', array( 'jquery', 'wp-color-picker' ), BLUEWORX_LABS_CLUBHOUSE_VERSION, true );
 	}
 
+	/**
+	 * Whether this request is a save of the setup form.
+	 *
+	 * The Save button is not the only way to submit it any more. The profile
+	 * field builder's add and remove are submit buttons too — they have to be,
+	 * because a browser posts only the button it was clicked on, and the whole
+	 * builder works without JavaScript. Every one of them is a save: an owner
+	 * who has typed a label and then clicked "Add another field" expects to
+	 * find their typing still there.
+	 *
+	 * @param array<string,mixed> $post
+	 */
+	private static function is_a_save( array $post ): bool {
+		foreach ( array(
+			'clubhouse_setup_submit',
+			'clubhouse_profile_field_add',
+			'clubhouse_profile_field_remove',
+			'clubhouse_profile_field_forget',
+		) as $key ) {
+			if ( isset( $post[ $key ] ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	public static function render_page(): void {
 		$can_setup = current_user_can( self::CAPABILITY );
 		$can_menu  = current_user_can( self::MENU_CAPABILITY );
@@ -286,7 +312,7 @@ final class Blueworx_Clubhouse_Setup_Controller {
 		$storage  = new Blueworx_Clubhouse_Options_Storage();
 		$can_demo = $can_setup && current_user_can( 'manage_options' ); // demo mode is admin-only.
 		$notices  = array();
-		if ( $can_setup && isset( $_POST['clubhouse_setup_submit'] ) ) {
+		if ( $can_setup && self::is_a_save( $_POST ) ) {
 			check_admin_referer( self::NONCE );
 			$notices = self::handle_save( wp_unslash( $_POST ), $storage, $can_demo );
 		}

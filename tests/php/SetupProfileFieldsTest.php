@@ -129,6 +129,25 @@ final class SetupProfileFieldsTest extends TestCase {
 		$this->assertCount( 1, $this->fields() );
 	}
 
+	public function test_add_and_remove_count_as_a_save_of_the_setup_form(): void {
+		// A browser posts only the button that was clicked, so the builder's own
+		// submit buttons never carry the Save button's name. Without this the
+		// screen posted, reloaded, and silently did nothing.
+		$is_a_save = new ReflectionMethod( Blueworx_Clubhouse_Setup_Controller::class, 'is_a_save' );
+		$is_a_save->setAccessible( true );
+
+		foreach ( array(
+			'clubhouse_setup_submit',
+			'clubhouse_profile_field_add',
+			'clubhouse_profile_field_remove',
+			'clubhouse_profile_field_forget',
+		) as $key ) {
+			$this->assertTrue( $is_a_save->invoke( null, array( $key => '1' ) ), $key . ' must save the form' );
+		}
+		$this->assertFalse( $is_a_save->invoke( null, array( 'clubhouse_content_submit' => '1' ) ) );
+		$this->assertFalse( $is_a_save->invoke( null, array() ) );
+	}
+
 	public function test_the_model_carries_the_clubs_fields_to_the_screen(): void {
 		( new Blueworx_Clubhouse_Profile_Store( $this->storage ) )->save_fields( array( array( 'label' => 'Shirt size' ) ) );
 		$model = Blueworx_Clubhouse_Setup_Controller::build_model( $this->storage, array(), '', '' );
