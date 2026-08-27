@@ -294,6 +294,12 @@ if ( ! function_exists( 'trailingslashit' ) ) {
 if ( ! function_exists( 'home_url' ) ) {
 	function home_url( $path = '' ) { return 'https://club.test' . ( '' === (string) $path ? '/' : (string) $path ); }
 }
+if ( ! function_exists( 'is_email' ) ) {
+	function is_email( $email ) { return false !== filter_var( (string) $email, FILTER_VALIDATE_EMAIL ) ? (string) $email : false; }
+}
+if ( ! function_exists( 'sanitize_email' ) ) {
+	function sanitize_email( $email ) { return (string) filter_var( trim( (string) $email ), FILTER_SANITIZE_EMAIL ); }
+}
 if ( ! function_exists( 'wp_get_attachment_image_url' ) ) {
 	function wp_get_attachment_image_url( $id, $size = 'thumbnail' ) { return $id ? 'https://club.test/wp-content/uploads/att-' . (int) $id . '.png' : false; }
 }
