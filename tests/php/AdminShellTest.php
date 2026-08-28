@@ -39,17 +39,22 @@ final class AdminShellTest extends TestCase {
 	}
 
 	/**
-	 * Three, not two: open() leaves the wrapper, the page and the body
-	 * standing. Getting this wrong strands a div and the design system's
-	 * layout quietly collapses one level.
+	 * Four, not two: open() leaves the wrapper, the page, the body and the
+	 * panel column standing. Getting this wrong strands a div and the design
+	 * system's layout quietly collapses one level.
 	 */
-	public function test_close_shuts_all_three_wrappers(): void {
-		$this->assertSame( '</div></div></div>', Blueworx_Clubhouse_Admin_Shell::close() );
+	public function test_close_shuts_all_four_wrappers(): void {
+		$this->assertSame( '</div></div></div></div>', Blueworx_Clubhouse_Admin_Shell::close() );
 	}
 
-	public function test_the_body_opens_a_single_column(): void {
+	/**
+	 * .bw-page__body is a flex row; .bw-panels is the column inside it. Panels
+	 * placed straight into the row lay out side by side in narrow strips, which
+	 * is what happened the first time this was built.
+	 */
+	public function test_panels_go_in_a_column_inside_the_body(): void {
 		$out = Blueworx_Clubhouse_Admin_Shell::open( 'E', 'T' );
-		$this->assertStringContainsString( 'class="bw-page__body bw-page__body--single"', $out );
+		$this->assertStringContainsString( '<div class="bw-page__body"><div class="bw-panels">', $out );
 	}
 
 	public function test_a_card_carries_its_title_note_and_body(): void {

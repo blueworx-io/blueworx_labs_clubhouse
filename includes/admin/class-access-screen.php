@@ -19,9 +19,9 @@ if ( ! defined( 'ABSPATH' ) ) {
  * grant it by accident. The controller supplies the model; this class makes no
  * WordPress calls and touches no storage.
  *
- * Styling follows the existing Clubhouse admin screens (clubhouse-wrap,
- * clubhouse-head) so it reads as part of the same product rather than a bare
- * core table.
+ * Built from the BlueWorx admin design system, through Admin_Shell — the page
+ * header, the panels and the table all come from there, so this screen looks
+ * like every other BlueWorx plugin's rather than like a bare core table.
  *
  * @package BlueworxLabsClubhouse
  */
@@ -37,6 +37,11 @@ final class Blueworx_Clubhouse_Access_Screen {
 	 * Rendered by every ClubHouse admin screen, but only when the viewer is an
 	 * administrator — the screens take that as a model flag rather than deciding
 	 * it, so they stay WordPress-free.
+	 *
+	 * Still on the old classes, on purpose. Its callers include Setup and Club
+	 * Pages, which the page editor library replaces in the next two phases and
+	 * which are still styled by admin-setup.css. Moving these chips to the
+	 * design system now would leave those top bars unstyled for two releases.
 	 *
 	 * @param array<int,string> $labels Role display labels, seniority order.
 	 */
@@ -60,74 +65,70 @@ final class Blueworx_Clubhouse_Access_Screen {
 	 * } $model
 	 */
 	public static function render( array $model ): string {
-		$out  = '<div class="wrap clubhouse-wrap"><div class="clubhouse-setup">';
-		$out .= '<header class="clubhouse-head"><div class="clubhouse-head__titles">'
-			. '<p class="clubhouse-eyebrow">Clubhouse · Administrators only</p>'
-			. '<h1 class="clubhouse-head__h1">ClubHouse users &amp; access</h1></div></header>';
-		$out .= '<p class="clubhouse-step__lede">Who holds a ClubHouse role on this site, and which parts of the '
-			. 'Clubhouse each of them can open. This page reports access — it does not change it. Roles are set on '
-			. 'the Users screen.</p>';
+		$out  = Blueworx_Clubhouse_Admin_Shell::open(
+			'Clubhouse · Administrators only',
+			'ClubHouse users and access',
+			'Who holds a ClubHouse role on this site, and which parts of the Clubhouse each of them can open. '
+				. 'This page reports access — it does not change it. Roles are set on the Users screen.'
+		);
 		$out .= self::users_table( $model['users'] );
 		$out .= self::roles_table( $model['roles'] );
 		$out .= self::pages_table( $model['pages'] );
-		$out .= '</div></div>';
-		return $out;
+		return $out . Blueworx_Clubhouse_Admin_Shell::close();
 	}
 
 	/**
 	 * @param array<int,array{login:string,name:string,email:string,roles:array<int,string>,pages:array<int,string>}> $users
 	 */
 	private static function users_table( array $users ): string {
-		$out = '<div class="clubhouse-step"><p class="clubhouse-step__k">People</p>'
-			. '<h2 class="clubhouse-step__h">ClubHouse users</h2>';
-
 		if ( array() === $users ) {
 			// Not an error state: a site can legitimately be run by its administrators
 			// alone. Say which roles would qualify, so the emptiness is readable.
-			$out .= '<p class="clubhouse-help">Nobody holds a ClubHouse role yet. Assign '
+			$body = '<div class="bw-empty"><i class="bw-icon bw-icon--28 bw-empty__icon" data-lucide="users"></i>'
+				. '<p class="bw-empty__title">Nobody holds a ClubHouse role yet</p>'
+				. '<p class="bw-empty__text">Assign '
 				. self::esc( Blueworx_Clubhouse_Owner_Capabilities::DISPLAY ) . ' or '
 				. self::esc( Blueworx_Clubhouse_Owner_Capabilities::EDITOR_DISPLAY )
 				. ' on the Users screen and they will appear here.</p></div>';
-			return $out;
+			return Blueworx_Clubhouse_Admin_Shell::card( 'People', 'ClubHouse users', '', $body );
 		}
 
-		$out .= '<table class="clubhouse-table"><thead><tr>'
+		$body = '<table class="bw-table"><thead><tr>'
 			. '<th scope="col">User</th><th scope="col">ClubHouse role</th><th scope="col">Can open</th>'
 			. '</tr></thead><tbody>';
 		foreach ( $users as $user ) {
-			$out .= '<tr><th scope="row"><span class="clubhouse-table__name">' . self::esc( $user['name'] ) . '</span>'
-				. '<span class="clubhouse-table__sub">' . self::esc( $user['login'] ) . '</span></th>'
+			$body .= '<tr><th scope="row"><span class="bw-table__primary">' . self::esc( $user['name'] ) . '</span>'
+				. '<span class="bw-table__sub">' . self::esc( $user['login'] ) . '</span></th>'
 				. '<td>' . self::chips( $user['roles'] ) . '</td>'
 				. '<td>' . self::chips( $user['pages'], 'No ClubHouse sections' ) . '</td></tr>';
 		}
-		return $out . '</tbody></table></div>';
+		$body .= '</tbody></table>';
+		return Blueworx_Clubhouse_Admin_Shell::card( 'People', 'ClubHouse users', '', $body );
 	}
 
 	/** @param array<int,array{label:string,pages:array<int,string>}> $roles */
 	private static function roles_table( array $roles ): string {
-		$out = '<div class="clubhouse-step"><p class="clubhouse-step__k">Roles</p>'
-			. '<h2 class="clubhouse-step__h">What each role can open</h2>'
-			. '<table class="clubhouse-table"><thead><tr>'
+		$body = '<table class="bw-table"><thead><tr>'
 			. '<th scope="col">Role</th><th scope="col">Sections</th></tr></thead><tbody>';
 		foreach ( $roles as $role ) {
-			$out .= '<tr><th scope="row">' . self::esc( $role['label'] ) . '</th>'
+			$body .= '<tr><th scope="row">' . self::esc( $role['label'] ) . '</th>'
 				. '<td>' . self::chips( $role['pages'], 'No ClubHouse sections' ) . '</td></tr>';
 		}
-		return $out . '</tbody></table></div>';
+		$body .= '</tbody></table>';
+		return Blueworx_Clubhouse_Admin_Shell::card( 'Roles', 'What each role can open', '', $body );
 	}
 
 	/** @param array<int,array{label:string,description:string,access:array<int,string>}> $pages */
 	private static function pages_table( array $pages ): string {
-		$out = '<div class="clubhouse-step"><p class="clubhouse-step__k">Sections</p>'
-			. '<h2 class="clubhouse-step__h">Who can open each section</h2>'
-			. '<table class="clubhouse-table"><thead><tr>'
+		$body = '<table class="bw-table"><thead><tr>'
 			. '<th scope="col">Section</th><th scope="col">Roles with access</th></tr></thead><tbody>';
 		foreach ( $pages as $page ) {
-			$out .= '<tr><th scope="row"><span class="clubhouse-table__name">' . self::esc( $page['label'] ) . '</span>'
-				. '<span class="clubhouse-table__sub">' . self::esc( $page['description'] ) . '</span></th>'
+			$body .= '<tr><th scope="row"><span class="bw-table__primary">' . self::esc( $page['label'] ) . '</span>'
+				. '<span class="bw-table__sub">' . self::esc( $page['description'] ) . '</span></th>'
 				. '<td>' . self::chips( $page['access'], 'Nobody' ) . '</td></tr>';
 		}
-		return $out . '</tbody></table></div>';
+		$body .= '</tbody></table>';
+		return Blueworx_Clubhouse_Admin_Shell::card( 'Sections', 'Who can open each section', '', $body );
 	}
 
 	/**
@@ -138,11 +139,11 @@ final class Blueworx_Clubhouse_Access_Screen {
 	 */
 	private static function chips( array $items, string $empty = '—' ): string {
 		if ( array() === $items ) {
-			return '<span class="clubhouse-table__none">' . self::esc( $empty ) . '</span>';
+			return '<span class="bw-table__sub">' . self::esc( $empty ) . '</span>';
 		}
-		$out = '<span class="clubhouse-chips">';
+		$out = '<span class="bw-chips">';
 		foreach ( $items as $item ) {
-			$out .= '<span class="clubhouse-roletag">' . self::esc( (string) $item ) . '</span>';
+			$out .= '<span class="bw-chip bw-chip--plain">' . self::esc( (string) $item ) . '</span>';
 		}
 		return $out . '</span>';
 	}

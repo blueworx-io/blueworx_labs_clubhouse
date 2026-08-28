@@ -54,12 +54,16 @@ final class Blueworx_Clubhouse_Admin_Shell {
 			$out .= '<div class="bw-pagehead__actions">' . $actions . '</div>';
 		}
 		$out .= '</div>';
-		return $out . '<div class="bw-page__body bw-page__body--single">';
+		// .bw-page__body is a flex ROW — it exists to sit a section nav beside
+		// the panels. The panels themselves must go in .bw-panels, which is the
+		// column. Without it every card becomes a sibling of the row and they
+		// line up side by side in narrow strips.
+		return $out . '<div class="bw-page__body"><div class="bw-panels">';
 	}
 
-	/** Close the body, the page and the wrapper left open by open(). */
+	/** Close the panels, the body, the page and the wrapper left open by open(). */
 	public static function close(): string {
-		return '</div></div></div>';
+		return '</div></div></div></div>';
 	}
 
 	/**

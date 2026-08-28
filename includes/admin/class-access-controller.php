@@ -45,7 +45,7 @@ final class Blueworx_Clubhouse_Access_Controller {
 		if ( 'settings_page_' . self::PAGE_SLUG !== $hook ) {
 			return;
 		}
-		wp_enqueue_style( 'clubhouse-admin-setup', BLUEWORX_LABS_CLUBHOUSE_URL . 'assets/css/admin-setup.css', array(), BLUEWORX_LABS_CLUBHOUSE_VERSION );
+		Blueworx_Clubhouse_Admin_Assets::enqueue();
 	}
 
 	public static function render_page(): void {
