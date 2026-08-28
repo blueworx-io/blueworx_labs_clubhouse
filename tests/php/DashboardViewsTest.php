@@ -11,7 +11,7 @@ final class DashboardViewsTest extends TestCase {
 
 	public function test_the_views_are_in_the_order_the_design_draws_them(): void {
 		$this->assertSame(
-			array( 'dashboard', 'bookings', 'orders', 'invoices', 'billing', 'plans', 'account' ),
+			array( 'dashboard', 'bookings', 'orders', 'invoices', 'billing', 'plans', 'profile', 'account' ),
 			$this->keys( Blueworx_Clubhouse_Dashboard_Views::all() )
 		);
 	}
@@ -30,7 +30,7 @@ final class DashboardViewsTest extends TestCase {
 	public function test_a_club_with_both_plugins_gets_every_view(): void {
 		$views = Blueworx_Clubhouse_Dashboard_Views::available( true, true );
 		$this->assertSame(
-			array( 'dashboard', 'bookings', 'orders', 'invoices', 'billing', 'plans', 'account' ),
+			array( 'dashboard', 'bookings', 'orders', 'invoices', 'billing', 'plans', 'profile', 'account' ),
 			$this->keys( $views )
 		);
 	}
@@ -66,7 +66,7 @@ final class DashboardViewsTest extends TestCase {
 	public function test_side_offers_the_desktop_sidebars_views(): void {
 		$views = Blueworx_Clubhouse_Dashboard_Views::available( true, true );
 		$this->assertSame(
-			array( 'dashboard', 'bookings', 'orders', 'invoices', 'plans', 'account' ),
+			array( 'dashboard', 'bookings', 'orders', 'invoices', 'plans', 'profile', 'account' ),
 			$this->keys( Blueworx_Clubhouse_Dashboard_Views::side( $views ) )
 		);
 	}
@@ -80,7 +80,7 @@ final class DashboardViewsTest extends TestCase {
 	public function test_bar_offers_the_curated_list_on_a_full_club(): void {
 		$views = Blueworx_Clubhouse_Dashboard_Views::available( true, true );
 		$this->assertSame(
-			array( 'dashboard', 'bookings', 'billing', 'account' ),
+			array( 'dashboard', 'bookings', 'billing', 'profile' ),
 			$this->keys( Blueworx_Clubhouse_Dashboard_Views::bar( $views ) )
 		);
 	}
@@ -144,14 +144,55 @@ final class DashboardViewsTest extends TestCase {
 		$this->assertSame( array(), $bookings['blocks'] );
 	}
 
-	public function test_account_holds_the_members_own_details_and_the_shops(): void {
-		// Their own name, email and password first — the part they are most
-		// likely to have come to change, and the part that used to be absent.
+	public function test_profile_holds_the_members_own_details_and_a_card_of_ours(): void {
+		// Their name, email and password, then whatever the club has chosen to
+		// keep about them.
+		$views   = Blueworx_Clubhouse_Dashboard_Views::available( true, true );
+		$profile = Blueworx_Clubhouse_Dashboard_Views::find( 'profile', $views );
+		$this->assertNotNull( $profile );
+		$this->assertSame( array( 'surecart/wordpress-account' ), $profile['blocks'] );
+		$this->assertSame( 'profile', $profile['panel'] );
+	}
+
+	public function test_account_is_left_with_how_the_member_pays(): void {
 		$views   = Blueworx_Clubhouse_Dashboard_Views::available( true, true );
 		$account = Blueworx_Clubhouse_Dashboard_Views::find( 'account', $views );
 		$this->assertSame(
-			array( 'surecart/wordpress-account', 'surecart/customer-billing-details', 'surecart/customer-payment-methods' ),
+			array( 'surecart/customer-billing-details', 'surecart/customer-payment-methods' ),
 			$account['blocks']
 		);
+	}
+
+	public function test_account_keeps_its_key_so_an_old_bookmark_still_lands(): void {
+		$views = Blueworx_Clubhouse_Dashboard_Views::available( true, true );
+		$this->assertSame( 'account', Blueworx_Clubhouse_Dashboard_Views::resolve( 'account', $views ) );
+	}
+
+	public function test_the_name_and_password_block_lives_in_exactly_one_view(): void {
+		// Two views drawing it would be two places to change the same thing,
+		// and SureCart's own form posting from whichever the member found first.
+		$holders = array();
+		foreach ( Blueworx_Clubhouse_Dashboard_Views::all() as $view ) {
+			if ( in_array( 'surecart/wordpress-account', (array) $view['blocks'], true ) ) {
+				$holders[] = $view['key'];
+			}
+		}
+		$this->assertSame( array( 'profile' ), $holders );
+	}
+
+	public function test_only_profile_declares_a_panel_of_our_own(): void {
+		$declared = array();
+		foreach ( Blueworx_Clubhouse_Dashboard_Views::all() as $view ) {
+			$this->assertIsString( $view['panel'] );
+			if ( '' !== $view['panel'] ) {
+				$declared[] = $view['key'];
+			}
+		}
+		$this->assertSame( array( 'profile' ), $declared );
+	}
+
+	public function test_profile_is_not_offered_with_no_shop_at_all(): void {
+		$views = Blueworx_Clubhouse_Dashboard_Views::available( false, false );
+		$this->assertNull( Blueworx_Clubhouse_Dashboard_Views::find( 'profile', $views ) );
 	}
 }

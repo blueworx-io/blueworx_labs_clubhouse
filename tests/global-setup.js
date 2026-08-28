@@ -92,6 +92,50 @@ if ( is_int( $checkout_id ) && $checkout_id > 0 ) {
 	update_option( 'surecart_checkout_page_id', $checkout_id );
 }
 
+// The club's own questions about a member (issue #276). Seeded rather than
+// clicked in, because the Clubhouse Setup screen calls wp_enqueue_media() and
+// takes ~12 seconds to load once against a single-threaded php -S — walking the
+// builder three times to define three fields costs more than the whole rest of
+// the suite. profile-builder.spec.js still drives the builder for real, once,
+// to prove an owner can add and remove a field; these three exist so the tests
+// ABOUT members and staff have something to be about.
+//
+// Written the way Profile_Fields sanitises them, and reset each run so a spec
+// that edits one does not leak into the next run.
+update_option(
+	'clubhouse_profile_fields',
+	array(
+		array(
+			'key'      => 'shirt_size',
+			'label'    => 'Shirt size',
+			'type'     => 'select',
+			'choices'  => array( 'Small', 'Medium', 'Large' ),
+			'help'     => '',
+			'required' => false,
+			'who'      => 'member',
+		),
+		array(
+			'key'      => 'squad_number',
+			'label'    => 'Squad number',
+			'type'     => 'number',
+			'choices'  => array(),
+			'help'     => '',
+			'required' => false,
+			'who'      => 'club',
+		),
+		array(
+			'key'      => 'notes',
+			'label'    => 'Notes',
+			'type'     => 'textarea',
+			'choices'  => array(),
+			'help'     => '',
+			'required' => false,
+			'who'      => 'private',
+		),
+	),
+	true
+);
+
 // Clear the version stamp the plugin records its upgrade against, so the next
 // request re-runs Club_Pages::ensure() and the one-off rewrite flush — the
 // same upgrade path a real site takes. The harness database survives between
@@ -115,6 +159,11 @@ if ( ! $member_user ) {
 }
 if ( $member_user instanceof WP_User ) {
 	$member_user->set_role( 'subscriber' );
+	// Start every run with a member who has answered nothing, so what the
+	// profile specs assert is what THIS run put there.
+	foreach ( array( 'shirt_size', 'squad_number', 'notes' ) as $profile_key ) {
+		delete_user_meta( $member_user->ID, 'clubhouse_profile_' . $profile_key );
+	}
 }
 
 // A welcome pack for that dashboard to carry, written through the plugin's own

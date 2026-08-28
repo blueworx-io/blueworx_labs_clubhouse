@@ -119,6 +119,10 @@ final class Blueworx_Clubhouse_Setup_Screen {
 			. self::visibility_area( $model['inventory'], $model['visibility'] ) . '</section>';
 		$out .= '<section class="clubhouse-panel" data-panel="members" role="tabpanel">'
 			. self::members_area( $model['members'] ?? array() )
+			// The club's own questions about a member sit with the other member
+			// settings, not in a tab of their own: an owner looking for what the
+			// member area does looks here.
+			. self::profile_fields_area( (array) ( $model['profile_fields'] ?? array() ) )
 			// Beside it rather than in a tab of its own: the email a club sends is
 			// almost entirely password resets, which is a member journey.
 			. self::emails_area( $model['mail'] ?? array() ) . '</section>';
@@ -412,6 +416,106 @@ final class Blueworx_Clubhouse_Setup_Screen {
 		$out .= '</div>';
 		$out .= '<p class="clubhouse-help">For example <code>/membership/</code> for a page on this site.</p>';
 		return $out . '</div>';
+	}
+
+	/**
+	 * The custom member fields a club has invented, and the row for the next one.
+	 *
+	 * Server-rendered add and remove, like the Club Pages content loop: submit
+	 * buttons rather than JavaScript, so the builder works on first load, with
+	 * JS off, and never loses a half-typed row to a script that failed to load.
+	 *
+	 * The key rides along in a hidden input on every existing row. It is what
+	 * lets an owner rewrite a label without detaching every member's answer —
+	 * so it must survive the round trip, and it is never editable.
+	 *
+	 * @param array<int,array<string,mixed>> $fields
+	 */
+	public static function profile_fields_area( array $fields ): string {
+		$out  = '<div class="clubhouse-step"><p class="clubhouse-step__k">Members</p>'
+			. '<h2 class="clubhouse-step__h">What you keep about a member</h2>';
+		$out .= '<p class="clubhouse-step__lede">Add anything your club needs to know — shirt size, emergency contact, squad number. '
+			. 'Members see and fill in their own on their Profile page. You can also keep things only the club sees.</p>';
+
+		$out .= '<div class="clubhouse-loop">';
+		foreach ( $fields as $idx => $field ) {
+			$out .= self::profile_field_row( (array) $field, (int) $idx );
+		}
+
+		if ( count( $fields ) < Blueworx_Clubhouse_Profile_Fields::MAX_FIELDS ) {
+			// Always one blank row past the end, so adding a field is typing
+			// rather than clicking and then typing.
+			$out .= self::profile_field_row( array(), count( $fields ) );
+			$out .= '<button type="submit" name="clubhouse_profile_field_add" value="1" class="clubhouse-btn clubhouse-btn--sm">Add another field</button>';
+		} else {
+			$out .= '<p class="clubhouse-help">That is ' . (int) Blueworx_Clubhouse_Profile_Fields::MAX_FIELDS
+				. ' fields — as many as one page can sensibly ask anybody for. Remove one to add another.</p>';
+		}
+		$out .= '</div>';
+		return $out . '</div>';
+	}
+
+	/**
+	 * One field's row. An empty $field is the blank row at the end, which
+	 * carries no key and offers nothing to remove.
+	 *
+	 * @param array<string,mixed> $field
+	 */
+	private static function profile_field_row( array $field, int $idx ): string {
+		$name  = 'clubhouse_profile_field[' . $idx . ']';
+		$key   = (string) ( $field['key'] ?? '' );
+		$type  = (string) ( $field['type'] ?? Blueworx_Clubhouse_Profile_Fields::DEFAULT_TYPE );
+		$who   = (string) ( $field['who'] ?? Blueworx_Clubhouse_Profile_Fields::DEFAULT_WHO );
+		$blank = '' === $key;
+
+		$out = '<div class="clubhouse-loop__item">';
+		if ( ! $blank ) {
+			$out .= '<input type="hidden" name="' . self::esc( $name ) . '[key]" value="' . self::esc( $key ) . '">';
+		}
+		$out .= '<div class="clubhouse-fields">';
+		$out .= self::text_field( $name . '[label]', $blank ? 'Add a field' : 'What it is called', (string) ( $field['label'] ?? '' ) );
+		$out .= self::select_field( $name . '[type]', 'Kind of answer', Blueworx_Clubhouse_Profile_Fields::TYPES, $type );
+		$out .= self::select_field( $name . '[who]', 'Who fills it in', Blueworx_Clubhouse_Profile_Fields::WHO, $who );
+		$out .= '</div>';
+
+		$choices_name = $name . '[choices]';
+		$out         .= '<div class="clubhouse-field"><label class="clubhouse-label" for="' . self::esc( $choices_name ) . '">Choices, one per line</label>'
+			. '<textarea id="' . self::esc( $choices_name ) . '" name="' . self::esc( $choices_name ) . '" rows="3" class="clubhouse-input">'
+			. self::esc( implode( "\n", array_map( 'strval', (array) ( $field['choices'] ?? array() ) ) ) )
+			. '</textarea>'
+			. '<p class="clubhouse-help">Only used by the two dropdown kinds. Ignored otherwise.</p></div>';
+
+		$out .= '<div class="clubhouse-fields">';
+		$out .= self::text_field( $name . '[help]', 'A note under the box (optional)', (string) ( $field['help'] ?? '' ) );
+		$out .= '</div>';
+		$out .= self::toggle( $name . '[required]', 'A member must fill this in before they can save', ! empty( $field['required'] ) );
+
+		if ( ! $blank ) {
+			// Two ways out, because they are not the same thing. Remove takes the
+			// question off every screen and keeps the answers, so a mistake costs
+			// nothing. Clearing them is separate, confirmed, and final.
+			$out .= '<div class="clubhouse-loop__actions">'
+				. '<button type="submit" name="clubhouse_profile_field_remove" value="' . (int) $idx . '" class="clubhouse-btn-link">Remove this field</button>'
+				. '<button type="submit" name="clubhouse_profile_field_forget" value="' . self::esc( $key ) . '" class="clubhouse-btn-link clubhouse-btn-link--danger" '
+				. 'onclick="return confirm(&#039;This clears every member&#039;s answer to this field, for good. Are you sure?&#039;)">Remove and clear every answer</button>'
+				. '</div>';
+		}
+		return $out . '</div>';
+	}
+
+	/**
+	 * A labelled dropdown.
+	 *
+	 * @param array<string,string> $options value => label
+	 */
+	private static function select_field( string $name, string $label, array $options, string $value ): string {
+		$out = '<div class="clubhouse-field"><label class="clubhouse-label" for="' . self::esc( $name ) . '">' . self::esc( $label ) . '</label>'
+			. '<select id="' . self::esc( $name ) . '" name="' . self::esc( $name ) . '" class="clubhouse-input">';
+		foreach ( $options as $opt_value => $opt_label ) {
+			$selected = ( (string) $opt_value === $value ) ? ' selected' : '';
+			$out     .= '<option value="' . self::esc( (string) $opt_value ) . '"' . $selected . '>' . self::esc( $opt_label ) . '</option>';
+		}
+		return $out . '</select></div>';
 	}
 
 	/**

@@ -65,6 +65,8 @@ function blueworx_labs_clubhouse_init() {
 	Blueworx_Clubhouse_External_Chrome::register();
 	Blueworx_Clubhouse_Welcome_Pack::register();
 	Blueworx_Clubhouse_Member_Dashboard::register();
+	Blueworx_Clubhouse_Profile_Form::register();
+	Blueworx_Clubhouse_Profile_User_Screen::register();
 	Blueworx_Clubhouse_Commerce_Pages::register();
 	Blueworx_Clubhouse_Auth::register();
 	Blueworx_Clubhouse_Mail::register();
