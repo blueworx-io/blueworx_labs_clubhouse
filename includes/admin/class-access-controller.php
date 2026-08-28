@@ -78,6 +78,20 @@ final class Blueworx_Clubhouse_Access_Controller {
 	}
 
 	/**
+	 * The same tags in the design system's chips, for a screen built from it.
+	 * Replaces role_tags_for() screen by screen; the two converge when Setup
+	 * and Club Pages move over.
+	 */
+	public static function role_chips_for( string $page_slug ): string {
+		if ( ! self::may_see_role_tags() ) {
+			return '';
+		}
+		return Blueworx_Clubhouse_Access_Screen::role_chips(
+			Blueworx_Clubhouse_Admin_Pages::access_labels( $page_slug )
+		);
+	}
+
+	/**
 	 * @return array{
 	 *   users:array<int,array{login:string,name:string,email:string,roles:array<int,string>,pages:array<int,string>}>,
 	 *   roles:array<int,array{label:string,pages:array<int,string>}>,

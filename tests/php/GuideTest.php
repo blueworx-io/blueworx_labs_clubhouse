@@ -143,8 +143,8 @@ final class GuideTest extends TestCase {
 	public function test_the_screen_renders_every_chapter_open(): void {
 		$html = Blueworx_Clubhouse_Guide_Screen::render( Blueworx_Clubhouse_Guide::build( $this->site() ) );
 
-		$this->assertSame( 0, substr_count( $html, '<details class="clubhouse-guide-entry">' ) );
-		$this->assertGreaterThan( 0, substr_count( $html, '<details class="clubhouse-guide-entry" open>' ) );
+		$this->assertSame( 0, substr_count( $html, '<details class="bw-accordion">' ) );
+		$this->assertGreaterThan( 0, substr_count( $html, '<details class="bw-accordion" open>' ) );
 	}
 
 	/**
@@ -153,11 +153,11 @@ final class GuideTest extends TestCase {
 	 */
 	public function test_role_tags_render_in_the_top_bar_when_supplied(): void {
 		$model              = Blueworx_Clubhouse_Guide::build( $this->site() );
-		$model['role_tags'] = Blueworx_Clubhouse_Access_Screen::role_tags( array( 'Administrator', 'ClubHouse - Owner' ) );
+		$model['role_tags'] = Blueworx_Clubhouse_Access_Screen::role_chips( array( 'Administrator', 'ClubHouse - Owner' ) );
 		$html               = Blueworx_Clubhouse_Guide_Screen::render( $model );
 
-		$this->assertStringContainsString( 'class="clubhouse-roletags"', $html );
-		$this->assertMatchesRegularExpression( '/clubhouse-head__titles.*clubhouse-roletags.*<\/div>/s', $html );
+		$this->assertStringContainsString( 'aria-label="Roles with access to this page"', $html );
+		$this->assertMatchesRegularExpression( '/bw-pagehead__titles.*bw-pagehead__actions.*Administrator/s', $html );
 	}
 
 	/**

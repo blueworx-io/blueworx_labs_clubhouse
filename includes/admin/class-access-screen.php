@@ -58,6 +58,28 @@ final class Blueworx_Clubhouse_Access_Screen {
 	}
 
 	/**
+	 * The same tags, in the design system's chips, for a screen that has been
+	 * moved onto it.
+	 *
+	 * Two versions rather than one because the six screens showing these tags
+	 * are moving over across three releases, and a single markup cannot be
+	 * right on both sides of that. role_tags() and this method converge into
+	 * one when Setup and Club Pages become page editor screens.
+	 *
+	 * @param array<int,string> $labels Role display labels, seniority order.
+	 */
+	public static function role_chips( array $labels ): string {
+		if ( array() === $labels ) {
+			return '';
+		}
+		$out = '<span class="bw-chips" aria-label="Roles with access to this page">';
+		foreach ( $labels as $label ) {
+			$out .= '<span class="bw-chip bw-chip--plain">' . self::esc( (string) $label ) . '</span>';
+		}
+		return $out . '</span>';
+	}
+
+	/**
 	 * @param array{
 	 *   users:array<int,array{login:string,name:string,email:string,roles:array<int,string>,pages:array<int,string>}>,
 	 *   roles:array<int,array{label:string,pages:array<int,string>}>,

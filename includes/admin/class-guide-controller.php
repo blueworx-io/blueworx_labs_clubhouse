@@ -50,7 +50,7 @@ final class Blueworx_Clubhouse_Guide_Controller {
 		if ( false === strpos( $hook, self::PAGE_SLUG ) ) {
 			return;
 		}
-		wp_enqueue_style( 'clubhouse-admin-setup', BLUEWORX_LABS_CLUBHOUSE_URL . 'assets/css/admin-setup.css', array(), BLUEWORX_LABS_CLUBHOUSE_VERSION );
+		Blueworx_Clubhouse_Admin_Assets::enqueue();
 	}
 
 	public static function render_page(): void {
@@ -60,7 +60,7 @@ final class Blueworx_Clubhouse_Guide_Controller {
 		// The chapters are built from the site; the access chips are about who is
 		// reading, so they are merged in here rather than threaded through Guide.
 		$model              = Blueworx_Clubhouse_Guide::build( self::site() );
-		$model['role_tags'] = Blueworx_Clubhouse_Access_Controller::role_tags_for( self::PAGE_SLUG );
+		$model['role_tags'] = Blueworx_Clubhouse_Access_Controller::role_chips_for( self::PAGE_SLUG );
 		echo Blueworx_Clubhouse_Guide_Screen::render( $model ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped within Guide_Screen.
 	}
 
