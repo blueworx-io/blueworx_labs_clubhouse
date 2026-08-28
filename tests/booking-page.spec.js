@@ -65,9 +65,12 @@ test('@preview a wide shortcode scrolls inside its slot, not the layout', async 
   expect(measured.wrapScrollWidth).toBeLessThanOrEqual(measured.wrapClientWidth);
 });
 
-test('@preview booking is reachable from the header nav and the footer', async ({ page }) => {
+test('@preview booking is reachable from the header nav', async ({ page }) => {
   await page.goto('?clubhouse_page=home');
 
   await expect(page.locator('.ch-nav__links').getByText('Bookings')).toBeVisible();
-  await expect(page.locator('.ch-footer').getByText('Bookings')).toBeVisible();
+  // The footer used to carry it too, in the "Get involved" column. That column
+  // is the policies now — a deliberate change, not a regression — so the header
+  // menu is the route to Bookings.
+  await expect(page.locator('.ch-footer__col', { hasText: 'Policies' })).toHaveCount(1);
 });

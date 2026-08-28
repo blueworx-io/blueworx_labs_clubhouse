@@ -31,7 +31,7 @@ final class SetupSectionsTest extends TestCase {
 	public function test_covers_the_always_available_pages_in_page_map_order(): void {
 		$pages = array_map( static fn( $p ) => $p['page'], $this->inventory() );
 		$this->assertSame(
-			array( 'home', 'about', 'membership', 'contact', 'login', 'news', 'sports', 'teams', 'events', 'calendar', 'member-dashboard', 'privacy', 'terms' ),
+			array( 'home', 'about', 'membership', 'contact', 'login', 'news', 'sports', 'teams', 'events', 'calendar', 'member-dashboard', 'privacy', 'terms', 'rules' ),
 			$pages
 		);
 	}
@@ -76,12 +76,12 @@ final class SetupSectionsTest extends TestCase {
 		}
 	}
 
-	/** 55 since Privacy and Terms added two each, the cookie notice one, the welcome pack one and the social feed one. Booking adds 5 more. */
-	public function test_total_section_count_is_55_without_latepoint_and_60_with_it(): void {
+	/** 57 since Privacy, Terms and Club rules added two each, the cookie notice one, the welcome pack one and the social feed one. Booking adds 5 more. */
+	public function test_total_section_count_is_57_without_latepoint_and_62_with_it(): void {
 		$count = fn(): int => array_sum( array_map( static fn( $p ) => count( $p['sections'] ), $this->inventory() ) );
-		$this->assertSame( 55, $count() );
+		$this->assertSame( 57, $count() );
 
 		$this->withLatePoint();
-		$this->assertSame( 60, $count() );
+		$this->assertSame( 62, $count() );
 	}
 }

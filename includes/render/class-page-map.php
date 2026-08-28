@@ -65,6 +65,10 @@ final class Blueworx_Clubhouse_Page_Map {
 			// emails and phone numbers has to have somewhere to point at.
 			array( 'slug' => 'privacy',    'label' => 'Privacy',    'method' => 'privacy' ),
 			array( 'slug' => 'terms',      'label' => 'Terms',      'method' => 'terms' ),
+			// The house rules, which are not the terms: the terms are the contract
+			// a member signs up to, this is how to behave once they are through the
+			// door. Same shape as the two above, and the same footer column.
+			array( 'slug' => 'rules',      'label' => 'Club rules', 'method' => 'rules' ),
 		);
 	}
 

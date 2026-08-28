@@ -23,9 +23,25 @@ async function openMenuTab(page) {
   // force: true for the same reason as the Save click below — this screen's
   // media scripts keep reflowing the chrome, so Playwright's "stable" wait
   // never converges even though the tab is sitting still.
+  // Clicking once is not enough: only this screen's own JS puts .is-active on a
+  // panel, and on a loaded machine that JS can land well after DOMContentLoaded.
+  // A click that arrives before the handler is bound does nothing at all and the
+  // panel never opens — which is what made this flake in CI while passing
+  // locally. So keep asking until the panel is actually open.
   await page.waitForLoadState('domcontentloaded');
-  await page.click('.clubhouse-tab[data-tab="menu"]', { force: true });
-  await expect(page.locator('.clubhouse-panel[data-panel="menu"]')).toBeVisible();
+  const tab = page.locator('.clubhouse-tab[data-tab="menu"]');
+  const panel = page.locator('.clubhouse-panel[data-panel="menu"]');
+  await tab.waitFor({ state: 'attached' });
+  await expect
+    .poll(
+      async () => {
+        await tab.click({ force: true }).catch(() => {});
+        return panel.evaluate((el) => el.classList.contains('is-active')).catch(() => false);
+      },
+      { timeout: 60_000, intervals: [250, 500, 1000], message: 'the Menu tab never opened' }
+    )
+    .toBe(true);
+  await expect(panel).toBeVisible();
 }
 
 test('an owner can rename, reorder and nest a menu item @wordpress', async ({ page }) => {

@@ -1291,6 +1291,12 @@ final class Blueworx_Clubhouse_Sections {
 			foreach ( $col['links'] as $l ) {
 				$links .= '<a class="ch-footer__link" href="' . self::e( $l['href'] ) . '">' . self::e( $l['label'] ) . '</a>';
 			}
+			// Every link in a column can be filtered out by visibility — a club
+			// that switches off all three policies, say. A heading with nothing
+			// under it is a promise the footer does not keep.
+			if ( '' === $links ) {
+				continue;
+			}
 			// h2, not h4: the footer is its own landmark and nothing above these sits
 			// at h3, so h4 jumped two levels and broke heading navigation on every page.
 			$cols .= '<div class="ch-footer__col"><h2 class="ch-footer__h">' . self::e( $col['title'] ) . '</h2>' . $links . '</div>';

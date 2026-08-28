@@ -110,6 +110,10 @@ final class Blueworx_Clubhouse_Setup_Sections {
 			'hero' => 'Hero',
 			'body' => 'Terms',
 		),
+		'rules' => array(
+			'hero' => 'Hero',
+			'body' => 'Rules',
+		),
 	);
 
 	/**

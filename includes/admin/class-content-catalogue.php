@@ -443,6 +443,12 @@ final class Blueworx_Clubhouse_Content_Catalogue {
 					'note' => 'Ships with starter wording. Anywhere it says ADD, only your club can answer — the payments and refunds sections matter most, and should be written before you sell anything. This is a starting point, not legal advice.',
 					'loop' => self::legal_loop() ),
 			) ),
+			array( 'tab' => 'rules', 'label' => 'Club rules', 'sections' => array(
+				array( 'key' => 'hero', 'label' => 'Hero', 'type' => 'fields', 'store_page' => 'rules', 'fields' => self::legal_hero_fields() ),
+				array( 'key' => 'body', 'label' => 'Rules', 'type' => 'loop', 'store_page' => 'rules',
+					'note' => 'Every section here is an example, because only your club knows its own rules — opening hours, footwear, guests, parking. Rewrite or delete the lot. This is the everyday stuff; the contract lives on the Terms tab.',
+					'loop' => self::legal_loop() ),
+			) ),
 		);
 
 		// Drop whole pages whose integration is absent, then individual sections —
