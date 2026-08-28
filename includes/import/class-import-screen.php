@@ -38,17 +38,20 @@ final class Blueworx_Clubhouse_Import_Screen {
 		$state = (string) ( $model['state'] ?? 'start' );
 		$error = (string) ( $model['error'] ?? '' );
 
-		$out  = '<div class="wrap clubhouse-wrap">';
-		$out .= '<div class="clubhouse-import">';
-		// Prebuilt tag markup from Access_Screen, empty for anyone but an
-		// administrator — the controller decides that, so this class stays WP-free.
-		$out .= '<div class="clubhouse-head"><div class="clubhouse-head__titles">'
-			. '<p class="clubhouse-eyebrow">Clubhouse · Import</p>'
-			. '<h1 class="clubhouse-head__h1">Import your content</h1>'
-			. (string) ( $model['role_tags'] ?? '' ) . '</div></div>';
+		// The role tags are prebuilt markup from Access_Screen, empty for anyone
+		// but an administrator — the controller decides that, so this class
+		// stays WP-free.
+		$out = Blueworx_Clubhouse_Admin_Shell::open(
+			'Clubhouse · Import',
+			'Import your content',
+			'Bring a club\'s existing content in, under Clubhouse.',
+			(string) ( $model['role_tags'] ?? '' )
+		);
 
 		if ( '' !== $error ) {
-			$out .= '<div class="notice notice-error"><p>' . self::esc( $error ) . '</p></div>';
+			$out .= '<div class="bw-notice bw-notice--danger">'
+				. '<i class="bw-icon bw-notice__icon" data-lucide="triangle-alert"></i>'
+				. '<div class="bw-notice__body"><p class="bw-notice__text">' . self::esc( $error ) . '</p></div></div>';
 		}
 
 		switch ( $state ) {
@@ -62,59 +65,55 @@ final class Blueworx_Clubhouse_Import_Screen {
 				$out .= self::start_panel( $model );
 		}
 
-		$out .= '</div></div>';
-		return $out;
+		return $out . Blueworx_Clubhouse_Admin_Shell::close();
 	}
 
 	/** @param array<string,mixed> $model */
 	private static function start_panel( array $model ): string {
-		$out  = '<div class="clubhouse-import__step">';
-		$out .= '<h2>1. Download the prompt</h2>';
-		$out .= '<p>It describes every part of your site. Download it, then paste it into an '
-			. 'AI chat — it will interview you and write your content for you.</p>';
-		$out .= '<p><a class="button button-primary" href="' . self::esc_url( (string) $model['download_url'] ) . '">'
+		$one = '<p>It describes every part of your site. Download it, then paste it into an '
+			. 'AI chat — it will interview you and write your content for you.</p>'
+			. '<p><a class="bw-btn bw-btn--primary" href="' . self::esc_url( (string) $model['download_url'] ) . '">'
 			. 'Download the prompt</a></p>';
-		$out .= '</div>';
 
-		$out .= '<div class="clubhouse-import__step">';
-		$out .= '<h2>2. Upload the file it gives you</h2>';
-		$out .= '<p>The chat will produce a file called <code>clubhouse-import.json</code>. '
+		$two  = '<p>The chat will produce a file called <code>clubhouse-import.json</code>. '
 			. 'You will see exactly what it changes before anything is saved. '
 			. 'You can upload as many times as you like — each upload only changes what that file contains.</p>';
-		$out .= '<form method="post" enctype="multipart/form-data" action="' . self::esc_url( (string) $model['action_url'] ) . '">';
-		$out .= (string) $model['nonce_field'];
-		$out .= '<p><input type="file" name="clubhouse_import_file" accept=".json,application/json"></p>';
-		$out .= '<p class="description">Maximum file size: ' . self::esc( (string) $model['max_upload'] ) . '.</p>';
-		$out .= '<p><button type="submit" class="button button-primary" name="clubhouse_import_upload" value="1">Review this file</button></p>';
-		$out .= '</form></div>';
-		return $out;
+		$two .= '<form method="post" enctype="multipart/form-data" action="' . self::esc_url( (string) $model['action_url'] ) . '">';
+		$two .= (string) $model['nonce_field'];
+		$two .= '<p><input class="bw-input" type="file" name="clubhouse_import_file" accept=".json,application/json"></p>';
+		$two .= '<p class="bw-fieldnote">Maximum file size: ' . self::esc( (string) $model['max_upload'] ) . '.</p>';
+		$two .= '<p><button type="submit" class="bw-btn bw-btn--primary" name="clubhouse_import_upload" value="1">Review this file</button></p>';
+		$two .= '</form>';
+
+		return Blueworx_Clubhouse_Admin_Shell::card( 'Step 1', 'Download the prompt', '', $one )
+			. Blueworx_Clubhouse_Admin_Shell::card( 'Step 2', 'Upload the file it gives you', '', $two );
 	}
 
 	/** @param array<string,mixed> $model */
 	private static function preview_panel( array $model ): string {
 		$rows = is_array( $model['rows'] ?? null ) ? $model['rows'] : array();
 
-		$out  = '<div class="clubhouse-import__step">';
-		$out .= '<h2>Review this import</h2>';
-
 		if ( array() === $rows ) {
-			$out .= '<p>There is nothing to import in that file.</p>';
-			$out .= '<p><a class="button" href="' . self::esc_url( (string) $model['action_url'] ) . '">Start again</a></p>';
-			$out .= '</div>';
-			$out .= self::warnings( $model );
-			return $out;
+			$body = '<p>There is nothing to import in that file.</p>'
+				. '<p><a class="bw-btn bw-btn--secondary" href="' . self::esc_url( (string) $model['action_url'] ) . '">Start again</a></p>';
+			return Blueworx_Clubhouse_Admin_Shell::card( 'Review', 'Review this import', '', $body )
+				. self::warnings( $model );
 		}
 
-		$out .= '<p>Nothing has been saved yet. This is what applying the file would change:</p>';
-		$out .= self::rows_table( $rows );
-		$out .= '<form method="post" action="' . self::esc_url( (string) $model['action_url'] ) . '">';
-		$out .= (string) $model['nonce_field'];
-		$out .= self::sections_choice( $model );
-		$out .= '<p><button type="submit" class="button button-primary" name="clubhouse_import_apply" value="1">Apply this import</button> ';
-		$out .= '<button type="submit" class="button" name="clubhouse_import_cancel" value="1">Cancel</button></p>';
-		$out .= '</form></div>';
-		$out .= self::warnings( $model );
-		return $out;
+		$body  = self::rows_table( $rows );
+		$body .= '<form method="post" action="' . self::esc_url( (string) $model['action_url'] ) . '">';
+		$body .= (string) $model['nonce_field'];
+		$body .= self::sections_choice( $model );
+		$body .= '<p><button type="submit" class="bw-btn bw-btn--primary" name="clubhouse_import_apply" value="1">Apply this import</button> ';
+		$body .= '<button type="submit" class="bw-btn bw-btn--secondary" name="clubhouse_import_cancel" value="1">Cancel</button></p>';
+		$body .= '</form>';
+
+		return Blueworx_Clubhouse_Admin_Shell::card(
+			'Review',
+			'Review this import',
+			'Nothing has been saved yet. This is what applying the file would change.',
+			$body
+		) . self::warnings( $model );
 	}
 
 	/**
@@ -132,17 +131,17 @@ final class Blueworx_Clubhouse_Import_Screen {
 	private static function sections_choice( array $model ): string {
 		$off = is_array( $model['sections_off'] ?? null ) ? $model['sections_off'] : array();
 
-		$out = '<p><label><input type="checkbox" name="clubhouse_import_sections" value="1" checked> '
-			. 'Switch off the sections this file has no content for</label></p>';
+		$out = '<label class="bw-check"><input type="checkbox" name="clubhouse_import_sections" value="1" checked>'
+			. '<span class="bw-check__text">Switch off the sections this file has no content for</span></label>';
 
 		if ( array() === $off ) {
-			$out .= '<p class="description">Nothing would be switched off — this file covers every section '
+			$out .= '<p class="bw-fieldnote">Nothing would be switched off — this file covers every section '
 				. 'showing on the pages it touches.</p>';
 			return $out;
 		}
 
-		$out .= '<p class="description">These sections are showing demo content and would be switched off. '
-			. 'You can switch any of them back on later under Clubhouse Setup.</p><ul class="clubhouse-import__off">';
+		$out .= '<p class="bw-fieldnote">These sections are showing demo content and would be switched off. '
+			. 'You can switch any of them back on later under Clubhouse Setup.</p><ul>';
 		foreach ( $off as $label ) {
 			$out .= '<li>' . self::esc( (string) $label ) . '</li>';
 		}
@@ -154,31 +153,32 @@ final class Blueworx_Clubhouse_Import_Screen {
 		$rows   = is_array( $model['rows'] ?? null ) ? $model['rows'] : array();
 		$needed = is_array( $model['images_needed'] ?? null ) ? $model['images_needed'] : array();
 
-		$out  = '<div class="clubhouse-import__step">';
-		$out .= '<h2>Import complete</h2>';
-		$out .= array() === $rows ? '<p>Nothing was changed.</p>' : self::rows_table( $rows );
-		$out .= '<p><a class="button button-primary" href="' . self::esc_url( (string) $model['action_url'] ) . '">Import another file</a></p>';
-		$out .= '</div>';
+		$body  = array() === $rows ? '<p>Nothing was changed.</p>' : self::rows_table( $rows );
+		$body .= '<p><a class="bw-btn bw-btn--primary" href="' . self::esc_url( (string) $model['action_url'] ) . '">Import another file</a></p>';
+		$out   = Blueworx_Clubhouse_Admin_Shell::card( 'Done', 'Import complete', '', $body );
 
 		if ( array() !== $needed ) {
-			$out .= '<div class="clubhouse-import__step">';
-			$out .= '<h2>Images still needed</h2>';
-			$out .= '<p>These picture slots are still empty. Add them under Club Pages whenever you have the images.</p><ul>';
+			$list = '<ul>';
 			foreach ( $needed as $item ) {
-				$out .= '<li>' . self::esc( (string) ( $item['label'] ?? '' ) ) . '</li>';
+				$list .= '<li>' . self::esc( (string) ( $item['label'] ?? '' ) ) . '</li>';
 			}
-			$out .= '</ul></div>';
+			$list .= '</ul>';
+			$out  .= Blueworx_Clubhouse_Admin_Shell::card(
+				'Still to do',
+				'Images still needed',
+				'These picture slots are still empty. Add them under Club Pages whenever you have the images.',
+				$list
+			);
 		}
 
-		$out .= self::warnings( $model );
-		return $out;
+		return $out . self::warnings( $model );
 	}
 
 	/** @param array<int,array{label:string,detail:string}> $rows */
 	private static function rows_table( array $rows ): string {
-		$out = '<table class="widefat striped clubhouse-import__rows"><tbody>';
+		$out = '<table class="bw-table"><tbody>';
 		foreach ( $rows as $row ) {
-			$out .= '<tr><th scope="row">' . self::esc( (string) ( $row['label'] ?? '' ) ) . '</th>'
+			$out .= '<tr><th scope="row"><span class="bw-table__primary">' . self::esc( (string) ( $row['label'] ?? '' ) ) . '</span></th>'
 				. '<td>' . self::esc( (string) ( $row['detail'] ?? '' ) ) . '</td></tr>';
 		}
 		return $out . '</tbody></table>';
@@ -190,11 +190,17 @@ final class Blueworx_Clubhouse_Import_Screen {
 		if ( array() === $warnings ) {
 			return '';
 		}
-		$out = '<div class="clubhouse-import__step"><h2>Ignored</h2>'
-			. '<p>These parts of the file did not match anything in your site, so they were skipped.</p><ul>';
+		$list = '<ul>';
 		foreach ( $warnings as $warning ) {
-			$out .= '<li>' . self::esc( (string) $warning ) . '</li>';
+			$list .= '<li>' . self::esc( (string) $warning ) . '</li>';
 		}
-		return $out . '</ul></div>';
+		$list .= '</ul>';
+
+		return Blueworx_Clubhouse_Admin_Shell::card(
+			'Skipped',
+			'Ignored',
+			'These parts of the file did not match anything in your site, so they were skipped.',
+			$list
+		);
 	}
 }
