@@ -5,6 +5,10 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.97.1
+
+- Internal only: the shared design system was updated, and this brings Clubhouse's copy back in step with it. Nothing changes on a site.
+
 ## 0.97.0
 
 - **Five Clubhouse screens have a new look.** ClubHouse access, the user guide, search and sharing, what's new, and import now share one design — the same one on every BlueWorx plugin, on every site.
