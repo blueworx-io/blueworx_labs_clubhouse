@@ -1,0 +1,11 @@
+/* The full-bleed chrome overrides the BlueWorx admin design system documents,
+   and nothing else. Anything more in this file is a second design system
+   growing beside the first, and CI refuses it.
+
+   Scoped to the class Admin_Assets adds, rather than to each screen's page
+   hook: a submenu's hook is named after its parent, and these pages have been
+   reparented once already. */
+.wrap.bw-wrap { margin: 0; }
+body.clubhouse-bw #wpcontent { padding-left: 0; }
+body.clubhouse-bw #wpbody-content { padding-bottom: 0; }
+body.clubhouse-bw #wpfooter { display: none; }
