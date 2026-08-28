@@ -4,29 +4,41 @@ The standing priority order for this repo. Read this first; anything not on it
 is below everything on it.
 
 Written 14 August 2026, rewritten 17 August 2026 against main at v0.76.0,
-23 August 2026 against v0.87.1, and 27 August 2026 against v0.91.1. Keep it
-current — the surest way is to close the issue as the pull request merges,
-which is what let this list drift the last time.
+23 August 2026 against v0.87.1, 27 August 2026 against v0.91.1, and
+28 August 2026 against v0.97.0. Keep it current — the surest way is to close the
+issue as the pull request merges, which is what let this list drift the last
+time.
 
 ---
 
-## Next
+## The admin moves onto the page editor standard
 
-Four issues are open here. One is ready and waiting on a session somebody is
-watching, two are ordinary work, one cannot start yet, and one is parked.
+This is the main line of work now, and it is one project in six phases. The
+design is [here](superpowers/specs/2026-08-28-page-editor-adoption-design.md);
+each phase gets its own plan and its own release.
+
+| Phase | What | State |
+| --- | --- | --- |
+| 1 | The three foundation additions — a repeater that takes more than text, a screen that owns its own storage, link suggestions | Not started. `bluegroup_core_foundation`, and phase 3 waits on it |
+| 2 | Vendor the design system; rebuild the five screens the editor library will not replace | **Done, v0.97.0.** [Plan](superpowers/plans/2026-08-28-design-system-adoption.md) |
+| 3 | Club pages become records; the Club Pages screen is deleted | Waits on phase 1 |
+| 4 | Setup rebuilt on the library, absorbing [#283](../../issues/283), [#284](../../issues/284) and [#285](../../issues/285) | Waits on phase 3 |
+| 5 | Collection record editors replace the Details meta box | Waits on phase 4 |
+| 6 | The remaining screens | Waits on phase 5 |
+
+[#282](../../issues/282) spans phases 2 to 4 — the club's look leaves wp-admin
+one screen at a time, and the last of it goes with Setup. [#287](../../issues/287)
+closed with phase 2.
+
+## Also open
 
 | # | Do | Why here |
 | --- | --- | --- |
-| 1 | [#261](../../issues/261) Use SureCart's sign-in instead of our own login page | The decision is made and the scoping is done. It is first because it deletes a whole parallel auth stack — sign-in, forgot password, reset, and the reset email — that we otherwise keep maintaining beside SureCart's. |
-| 2 | [#268](../../issues/268) A What's New screen in plain English | Small, and the only way a club owner ever finds out what a release changed. The changelog it reads is already written for them. |
-| 3 | [#256](../../issues/256) An honours board page | Club champions, chairpersons, captains, with categories the club sets and two tiers of filters. The largest of the three, and the only one that adds a page. |
-
-**#261 needs somebody watching it.** SureCart is not in the local WordPress
-test harness, so the sign-in journey cannot be exercised before merge — and it
-gates every member's access on every site. Two findings from scoping it are on
-the issue: the Setup "after signing in" setting survives the change, and making
-the login page disappear cleanly on a shop-less site is the wide part, not the
-form swap.
+| [#256](../../issues/256) | An honours board page | Club champions, chairpersons, captains, with categories the club sets and two tiers of filters. Worth holding until phase 3 lands, so it is built the new way once rather than the old way twice. |
+| [#278](../../issues/278) | Custom member fields as columns on the members list | Ordinary work, independent of the phases above. |
+| [#274](../../issues/274) | Put a shop in the CI test harness | Genuinely uncertain: SureCart has to install and authenticate in CI, which nobody has proved yet. |
+| [#290](../../issues/290) | A demo page throws "wp is not defined" on real WordPress | One test fails against real WordPress. Found while fixing #288. |
+| [#291](../../issues/291) | "Search & sharing" prints its ampersand as an entity | One label, stored pre-escaped and escaped again. |
 
 **Cannot start yet:** [#229](../../issues/229), pulling the social feed
 straight from Facebook or Instagram. It needs Meta app review before a line of

@@ -5,6 +5,14 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.97.0
+
+- **Five Clubhouse screens have a new look.** ClubHouse access, the user guide, search and sharing, what's new, and import now share one design — the same one on every BlueWorx plugin, on every site.
+
+- **Four of those five were unstyled, and are not any more.** Access, the user guide, search and sharing and what's new had been rendering as plain WordPress rather than as Clubhouse screens. Nothing you had written was affected; they simply looked wrong.
+
+- **Your Base Look no longer reaches those screens.** It shapes your website, exactly as it always has. The screens you edit from are ours now. Clubhouse Setup and Club Pages still follow your look, and change in the next two updates.
+
 ## 0.96.1
 
 - Internal only: eleven browser tests failed whenever the suite ran without a WordPress site behind it, which made a real fault hard to spot. Nothing changes on a site.
