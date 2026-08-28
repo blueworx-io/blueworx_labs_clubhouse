@@ -1,4 +1,5 @@
 const { test, expect } = require('@playwright/test');
+const { targetingWordPress } = require('./harness');
 
 // The hero title is one <h1> holding a lead span and a highlighted <span>.
 //
@@ -60,10 +61,9 @@ for (const vp of VIEWPORTS) {
       // '?clubhouse_page=' form is the preview's, and its empty-value case no
       // longer reaches the club home at all — it falls through to WordPress's
       // own front page, which has no hero on it.
-      const address =
-        test.info().project.name === 'wordpress'
-          ? `/${hero.page}${'' === hero.page ? '' : '/'}`
-          : hero.page === '' ? '?clubhouse_page=' : `?clubhouse_page=${hero.page}`;
+      const address = targetingWordPress()
+        ? `/${hero.page}${'' === hero.page ? '' : '/'}`
+        : hero.page === '' ? '?clubhouse_page=' : `?clubhouse_page=${hero.page}`;
       await page.goto(address);
 
       const h1 = page.locator(`.${hero.block}__title`).first();
