@@ -13,9 +13,20 @@ async function signIn(page) {
 
 test('every club page has a real page behind it @wordpress', async ({ page }) => {
   await signIn(page);
-  await page.goto('/wp-admin/edit.php?post_type=page&post_status=all');
-  for (const title of ['About', 'Membership', 'Contact', 'News', 'Sports', 'Teams', 'Events', 'Calendar', 'Privacy', 'Terms']) {
-    await expect(page.locator('#the-list a.row-title', { hasText: new RegExp(`^${title}$`) })).toHaveCount(1);
+
+  // Read every page of the list, not just the first. WordPress paginates at 20
+  // and the harness is past that, so a single load silently dropped the pages
+  // sorted last — which looked exactly like a page that had never been created.
+  const found = new Set();
+  for (let paged = 1; paged <= 3; paged++) {
+    await page.goto(`/wp-admin/edit.php?post_type=page&post_status=all&paged=${paged}`);
+    const titles = await page.locator('#the-list a.row-title').allInnerTexts();
+    if (titles.length === 0) break;
+    titles.forEach((t) => found.add(t.trim()));
+  }
+
+  for (const title of ['About', 'Membership', 'Contact', 'News', 'Sports', 'Teams', 'Events', 'Calendar', 'Privacy', 'Terms', 'Club rules']) {
+    expect(found, `no page behind "${title}"`).toContain(title);
   }
 });
 

@@ -16,11 +16,27 @@ test('the terms page is a real page', async ({ page }) => {
   await expect(page.locator('.ch-prose')).toContainText('Membership and payments');
 });
 
-test('every page links to both from the footer', async ({ page }) => {
+test('the club rules page is a real page, and says it is an example', async ({ page }) => {
+  await page.goto('?clubhouse_page=rules');
+  await expect(page.locator('h1')).toContainText('the place, and each other');
+  await expect(page.locator('.ch-prose')).toContainText('Kit and footwear');
+  // Only the club knows its own rules, so every section ships labelled.
+  await expect(page.locator('.ch-prose')).toContainText('Example wording');
+});
+
+test('every page links to all three policies from the footer', async ({ page }) => {
+  // They moved out of the strip along the bottom and into a Policies column,
+  // which replaced the old "Get involved" one.
   for (const slug of ['home', 'membership', 'contact']) {
     await page.goto(`?clubhouse_page=${slug}`);
-    await expect(page.locator('.ch-footer__legal-link', { hasText: /^Privacy$/ })).toHaveCount(1);
-    await expect(page.locator('.ch-footer__legal-link', { hasText: /^Terms$/ })).toHaveCount(1);
+    await expect(page.locator('.ch-footer__col', { hasText: 'Policies' })).toHaveCount(1);
+    for (const label of ['Privacy', 'Terms', 'Club rules']) {
+      await expect(
+        page.locator('.ch-footer__col', { hasText: 'Policies' }).locator('.ch-footer__link', { hasText: label })
+      ).toHaveCount(1);
+    }
+    await expect(page.locator('.ch-footer__legal-link')).toHaveCount(0);
+    await expect(page.locator('.ch-footer__col', { hasText: 'Get involved' })).toHaveCount(0);
   }
 });
 

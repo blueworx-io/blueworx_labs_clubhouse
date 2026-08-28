@@ -102,11 +102,14 @@ final class LegalPagesTest extends TestCase {
 	}
 
 	public function test_the_footer_links_to_both_pages_from_every_page(): void {
-		// The slot has been in the footer all along and has always been empty.
+		// They live in the footer's Policies column now, not the strip along the
+		// bottom — the strip was there because nothing else pointed at them, and
+		// repeating all three under the column that does would be noise.
 		foreach ( array( $this->privacy(), $this->terms() ) as $html ) {
-			$this->assertStringContainsString( 'ch-footer__legal', $html );
+			$this->assertStringContainsString( 'Policies', $html );
 			$this->assertStringContainsString( '>Privacy<', $html );
 			$this->assertStringContainsString( '>Terms<', $html );
+			$this->assertStringNotContainsString( 'ch-footer__legal-link', $html );
 		}
 	}
 

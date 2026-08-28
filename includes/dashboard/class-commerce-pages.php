@@ -237,6 +237,7 @@ final class Blueworx_Clubhouse_Commerce_Pages {
 		foreach ( array(
 			'terms'   => 'Terms and conditions',
 			'privacy' => 'Privacy notice',
+			'rules'   => 'Club rules',
 			'contact' => 'Contact the club',
 		) as $slug => $label ) {
 			if ( ! $visible( $slug ) ) {

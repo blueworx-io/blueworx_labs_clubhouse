@@ -5,6 +5,14 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.95.0
+
+- **A Club rules page**, alongside Privacy and Terms. It is for the everyday things — opening hours, footwear, guests, children, parking, putting kit away, looking after each other — where Terms stays the membership contract. Edit it under Club Pages, and switch it off if you do not want it.
+
+- **It ships as an example, not as your rules.** Every section is labelled as wording to replace, because only your club knows what time the gate is locked or whether dogs are welcome. Rewrite or delete all of it.
+
+- **The footer now lists your policies where "Get involved" used to be** — Privacy, Terms and Club rules together. The pages that column used to link to are all still in the header menu. The same three links are on your checkout page too, so somebody about to pay can read them first.
+
 ## 0.93.1
 
 - **The sign-in card is wider, and no longer says the same thing twice.** The shop's form was printing its own "Log in to your account" heading directly beneath your club's, so that duplicate is gone and the form has more room to sit in.

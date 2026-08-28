@@ -558,12 +558,14 @@ final class Blueworx_Clubhouse_Page_Renderer {
 					// it again for a club that has switched news off.
 					array( 'label' => 'News', 'key' => 'news' ),
 				), $visibility ) ),
-				array( 'title' => 'Get involved', 'links' => self::nav_links( array(
-					array( 'label' => 'Membership', 'key' => 'membership' ),
-					array( 'label' => 'Calendar', 'key' => 'calendar' ),
-					array( 'label' => 'Bookings', 'key' => 'booking' ),
-					array( 'label' => 'Volunteer', 'key' => 'contact' ),
-					array( 'label' => 'Contact', 'key' => 'contact' ),
+				// This column used to be "Get involved" — Membership, Calendar,
+				// Bookings, Volunteer, Contact. The club's decision: the policies
+				// are what a visitor comes to the footer looking for, and every
+				// page it dropped is still in the header menu.
+				array( 'title' => 'Policies', 'links' => self::nav_links( array(
+					array( 'label' => 'Privacy', 'key' => 'privacy' ),
+					array( 'label' => 'Terms', 'key' => 'terms' ),
+					array( 'label' => 'Club rules', 'key' => 'rules' ),
 				), $visibility ) ),
 			),
 			'newsletter' => array(
@@ -575,15 +577,12 @@ final class Blueworx_Clubhouse_Page_Renderer {
 			// never touches its settings again still has a footer that is right
 			// next January.
 			'copyright'  => '© ' . gmdate( 'Y' ) . ' ' . $branding->get_club_name() . '. All rights reserved.',
-			// The slot has always been here and has always been empty, which is
-			// how a site collecting names, emails and phone numbers came to have
-			// no route to a privacy policy from anywhere (issue #121). Filtered
-			// like every other footer column, so a club that switches a legal
-			// page off does not get a link to a page that 404s.
-			'legal'      => self::nav_links( array(
-				array( 'label' => 'Privacy', 'key' => 'privacy' ),
-				array( 'label' => 'Terms', 'key' => 'terms' ),
-			), $visibility ),
+			// Empty now that the Policies column above carries these links. The
+			// strip existed because nothing else pointed at the legal pages
+			// (issue #121); repeating all three directly under the column that
+			// now does would be noise. The slot stays so the bottom bar keeps
+			// working, and so a club can be given something else to put in it.
+			'legal'      => array(),
 			// Off is a real choice, not an empty text box: a club running a proper
 			// consent plugin needs this out of the way, and blanking the wording
 			// would only put the default back (cget treats empty as unset).
@@ -1241,6 +1240,16 @@ final class Blueworx_Clubhouse_Page_Renderer {
 		return self::legal_page( 'terms', $branding, $visibility, $collections, $logo_url, $content );
 	}
 
+	public static function rules(
+		Blueworx_Clubhouse_Branding $branding,
+		Blueworx_Clubhouse_Visibility $visibility,
+		Blueworx_Clubhouse_Collections $collections,
+		string $logo_url = '',
+		?Blueworx_Clubhouse_Content_Store $content = null
+	): string {
+		return self::legal_page( 'rules', $branding, $visibility, $collections, $logo_url, $content );
+	}
+
 	private static function legal_page(
 		string $page,
 		Blueworx_Clubhouse_Branding $branding,
@@ -1253,7 +1262,11 @@ final class Blueworx_Clubhouse_Page_Renderer {
 		$out  = self::shell_header( $club, Blueworx_Clubhouse_Links::url( $page ), $visibility, $collections, $logo_url, $content )
 			. '<main class="ch-main" id="ch-main" tabindex="-1">';
 
-		$defaults = 'privacy' === $page ? self::privacy_defaults( $club ) : self::terms_defaults( $club );
+		$defaults = match ( $page ) {
+			'privacy' => self::privacy_defaults( $club ),
+			'rules'   => self::rules_defaults( $club ),
+			default   => self::terms_defaults( $club ),
+		};
 
 		if ( $visibility->is_section_visible( $page, 'hero' ) ) {
 			$out .= self::anchored( $page, 'hero', Blueworx_Clubhouse_Sections::hero( array(
@@ -1400,6 +1413,56 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				array(
 					'heading' => 'Changes to these terms',
 					'body'    => 'We may update this page. The version here is the one that applies.',
+				),
+			),
+		);
+	}
+
+	/**
+	 * The house rules: how to behave once you are through the door.
+	 *
+	 * Every section is example wording, which is not true of the other two legal
+	 * pages. A privacy policy can be written to be true of a stock Clubhouse site
+	 * because this plugin knows what the site collects; nobody but the club knows
+	 * whether dogs are allowed or what time the gate is locked. So the whole page
+	 * is labelled as a starting point rather than half of it.
+	 *
+	 * @return array<string,mixed>
+	 */
+	private static function rules_defaults( string $club ): array {
+		return array(
+			'eyebrow'         => 'Club rules',
+			'title_lead'      => 'How we look after ',
+			'title_highlight' => 'the place, and each other.',
+			'lede'            => 'The everyday rules of being at ' . $club . '. The terms cover your membership; this covers your visit.',
+			'blocks'          => array(
+				array(
+					'heading' => 'When we are open',
+					'body'    => self::eg( 'The clubhouse is open from 9am until 10pm on weekdays and 8am until 8pm at weekends. The last session finishes half an hour before closing so everyone has time to clear up. If you are the last one out, lock the gate behind you.' ),
+				),
+				array(
+					'heading' => 'Kit and footwear',
+					'body'    => self::eg( 'Studs and outdoor boots come off before you come inside — there is a rack by the door. Please wear clean, non-marking soles on the courts. Club kit is expected for matches and welcome any other time.' ),
+				),
+				array(
+					'heading' => 'Guests and visitors',
+					'body'    => self::eg( 'Members may bring a guest twice a season; sign them in at the desk and stay with them while they are here. You are responsible for anyone you bring, including what they break.' ),
+				),
+				array(
+					'heading' => 'Children at the club',
+					'body'    => self::eg( 'Under-14s need a responsible adult on site, and that adult is not the coach. Children are welcome anywhere except the bar after 8pm and the equipment store at any time.' ),
+				),
+				array(
+					'heading' => 'Parking',
+					'body'    => self::eg( 'Park in the marked bays only. The turning circle by the gate has to stay clear for deliveries and, more to the point, for an ambulance. Cars are left at their owner’s risk.' ),
+				),
+				array(
+					'heading' => 'Equipment and the clubhouse',
+					'body'    => self::eg( 'Put nets, balls and cones back where you found them, and tell us if something is broken rather than leaving it for the next person to find. Last one off a court takes the lights out.' ),
+				),
+				array(
+					'heading' => 'Looking after each other',
+					'body'    => self::eg( 'Treat members, staff, volunteers, opponents and officials the way you would want to be treated. Bullying, abuse and discrimination end a membership. If something is wrong, tell any committee member — we would far rather hear it early.' ),
 				),
 			),
 		);

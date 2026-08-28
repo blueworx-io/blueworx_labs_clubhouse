@@ -24,7 +24,7 @@ final class ContentCatalogueTest extends TestCase {
 	public function test_returns_tabs_in_page_map_order_with_global_split_from_home(): void {
 		$tabs = array_column( Blueworx_Clubhouse_Content_Catalogue::pages(), 'tab' );
 		$this->assertSame(
-			array( 'global', 'home', 'about', 'membership', 'contact', 'login', 'news', 'sports', 'teams', 'events', 'calendar', 'privacy', 'terms' ),
+			array( 'global', 'home', 'about', 'membership', 'contact', 'login', 'news', 'sports', 'teams', 'events', 'calendar', 'privacy', 'terms', 'rules' ),
 			$tabs
 		);
 	}
