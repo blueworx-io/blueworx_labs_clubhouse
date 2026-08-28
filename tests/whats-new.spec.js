@@ -18,15 +18,15 @@ test("What's new lists real releases and marks the one being run @wordpress", as
 
   // The version this site is running is named, and the release carrying it is
   // marked — the one thing an owner opens this screen to check.
-  const running = await page.locator('.clubhouse-step__lede').first().innerText();
+  const running = await page.locator('.bw-pagehead__lede').first().innerText();
   const version = running.match(/version (\d+\.\d+\.\d+)/)[1];
-  await expect(page.locator('.clubhouse-release').filter({ hasText: `Version ${version}` })).toContainText(
+  await expect(page.locator('.bw-card').filter({ hasText: `Version ${version}` })).toContainText(
     'You are on this version'
   );
 
   // Read from the shipped changelog, so a release nobody wrote an entry for
   // cannot appear — every release on the page says something.
-  const releases = page.locator('.clubhouse-release');
+  const releases = page.locator('.bw-card');
   expect(await releases.count()).toBeGreaterThan(5);
 
   // The long history is present but folded away, not 165 releases deep.

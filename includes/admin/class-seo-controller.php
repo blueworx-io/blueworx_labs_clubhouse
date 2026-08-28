@@ -42,7 +42,7 @@ final class Blueworx_Clubhouse_Seo_Controller {
 		if ( false === strpos( $hook, self::PAGE_SLUG ) ) {
 			return;
 		}
-		wp_enqueue_style( 'clubhouse-admin-setup', BLUEWORX_LABS_CLUBHOUSE_URL . 'assets/css/admin-setup.css', array(), BLUEWORX_LABS_CLUBHOUSE_VERSION );
+		Blueworx_Clubhouse_Admin_Assets::enqueue();
 	}
 
 	public static function render_page(): void {
@@ -113,7 +113,7 @@ final class Blueworx_Clubhouse_Seo_Controller {
 
 		return array(
 			'deferring_to' => self::rival_name(),
-			'role_tags'    => Blueworx_Clubhouse_Access_Controller::role_tags_for( self::PAGE_SLUG ),
+			'role_tags'    => Blueworx_Clubhouse_Access_Controller::role_chips_for( self::PAGE_SLUG ),
 			'pages'        => $pages,
 		);
 	}

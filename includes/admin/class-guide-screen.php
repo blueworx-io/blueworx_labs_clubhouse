@@ -28,19 +28,19 @@ final class Blueworx_Clubhouse_Guide_Screen {
 	 * @param array{club:string,intro:string,role_tags?:string,chapters:array<int,array<string,mixed>>} $model
 	 */
 	public static function render( array $model ): string {
-		$out  = '<div class="wrap clubhouse-wrap"><div class="clubhouse-setup">';
-		$out .= '<header class="clubhouse-head"><div class="clubhouse-head__titles">'
-			. '<p class="clubhouse-eyebrow">Clubhouse · User guide</p>'
-			. '<h1 class="clubhouse-head__h1">How ClubHouse works</h1>'
-			. (string) ( $model['role_tags'] ?? '' ) . '</div></header>';
-		$out .= '<p class="clubhouse-step__lede">' . self::esc( (string) $model['intro'] ) . '</p>';
+		$out = Blueworx_Clubhouse_Admin_Shell::open(
+			'Clubhouse · User guide',
+			'How ClubHouse works',
+			(string) $model['intro'],
+			(string) ( $model['role_tags'] ?? '' )
+		);
 
 		$out .= self::contents( $model['chapters'] );
 		foreach ( $model['chapters'] as $chapter ) {
 			$out .= self::chapter( $chapter );
 		}
 
-		return $out . '</div></div>';
+		return $out . Blueworx_Clubhouse_Admin_Shell::close();
 	}
 
 	/** @param array<int,array<string,mixed>> $chapters */
@@ -48,9 +48,9 @@ final class Blueworx_Clubhouse_Guide_Screen {
 		if ( count( $chapters ) < 2 ) {
 			return '';
 		}
-		$out = '<nav class="clubhouse-chips" aria-label="Guide contents">';
+		$out = '<nav class="bw-chips" aria-label="Guide contents">';
 		foreach ( $chapters as $chapter ) {
-			$out .= '<a class="clubhouse-roletag" href="#guide-' . self::esc( (string) $chapter['key'] ) . '">'
+			$out .= '<a class="bw-chip" href="#guide-' . self::esc( (string) $chapter['key'] ) . '">'
 				. self::esc( (string) $chapter['title'] ) . '</a>';
 		}
 		return $out . '</nav>';
@@ -58,44 +58,51 @@ final class Blueworx_Clubhouse_Guide_Screen {
 
 	/** @param array<string,mixed> $chapter */
 	private static function chapter( array $chapter ): string {
-		$out  = '<div class="clubhouse-step" id="guide-' . self::esc( (string) $chapter['key'] ) . '">';
-		$out .= '<p class="clubhouse-step__k">Guide</p>';
-		$out .= '<h2 class="clubhouse-step__h">' . self::esc( (string) $chapter['title'] ) . '</h2>';
-		$out .= '<p class="clubhouse-step__lede">' . self::esc( (string) $chapter['lede'] ) . '</p>';
-
+		$body = '';
 		foreach ( (array) $chapter['entries'] as $entry ) {
-			$out .= self::entry( $entry );
+			$body .= self::entry( $entry );
 		}
-		return $out . '</div>';
+
+		// The anchor the contents list jumps to has to be the panel itself, so
+		// the heading lands at the top of the viewport rather than halfway down
+		// a card. Admin_Shell::card() has no id, so the anchor wraps it.
+		return '<div id="guide-' . self::esc( (string) $chapter['key'] ) . '">'
+			. Blueworx_Clubhouse_Admin_Shell::card(
+				'Guide',
+				(string) $chapter['title'],
+				(string) $chapter['lede'],
+				$body
+			)
+			. '</div>';
 	}
 
 	/** @param array<string,mixed> $entry */
 	private static function entry( array $entry ): string {
 		$state = (string) $entry['state'];
-		$out   = '<details class="clubhouse-guide-entry" open><summary class="clubhouse-guide-entry__head">'
-			. '<span class="clubhouse-table__name">' . self::esc( (string) $entry['title'] ) . '</span>'
-			. ( '' !== $state ? '<span class="clubhouse-roletag">' . self::esc( $state ) . '</span>' : '' )
-			. '</summary>';
+		$out   = '<details class="bw-accordion" open><summary class="bw-accordion__head">'
+			. '<span class="bw-accordion__title">' . self::esc( (string) $entry['title'] ) . '</span>'
+			. ( '' !== $state ? '<span class="bw-badge bw-badge--neutral">' . self::esc( $state ) . '</span>' : '' )
+			. '</summary><div class="bw-accordion__body">';
 
 		foreach ( (array) $entry['body'] as $paragraph ) {
-			$out .= '<p class="clubhouse-help">' . self::esc( (string) $paragraph ) . '</p>';
+			$out .= '<p class="bw-fieldnote">' . self::esc( (string) $paragraph ) . '</p>';
 		}
 
 		$steps = (array) $entry['steps'];
 		if ( array() !== $steps ) {
-			$out .= '<ol class="clubhouse-guide-steps">';
+			$out .= '<ol class="bw-steps">';
 			foreach ( $steps as $step ) {
-				$out .= '<li>' . self::esc( (string) $step ) . '</li>';
+				$out .= '<li class="bw-step">' . self::esc( (string) $step ) . '</li>';
 			}
 			$out .= '</ol>';
 		}
 
 		$url = (string) $entry['url'];
 		if ( '' !== $url ) {
-			$out .= '<p class="clubhouse-help"><a class="button" href="' . self::esc( $url ) . '">Open '
+			$out .= '<p><a class="bw-btn bw-btn--secondary" href="' . self::esc( $url ) . '">Open '
 				. self::esc( (string) $entry['title'] ) . '</a></p>';
 		}
 
-		return $out . '</details>';
+		return $out . '</div></details>';
 	}
 }

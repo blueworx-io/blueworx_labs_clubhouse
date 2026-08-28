@@ -36,6 +36,27 @@ final class AccessScreenTest extends TestCase {
 		);
 	}
 
+	public function test_the_screen_is_built_from_the_design_system(): void {
+		$html = Blueworx_Clubhouse_Access_Screen::render( $this->model() );
+		$this->assertStringContainsString( 'class="wrap bw-wrap"', $html );
+		$this->assertStringContainsString( 'bw-pagehead', $html );
+		$this->assertStringContainsString( 'bw-card', $html );
+		$this->assertStringContainsString( 'bw-table', $html );
+		$this->assertStringContainsString( 'bw-chip', $html );
+	}
+
+	/**
+	 * role_tags() is deliberately not covered here: it renders into the top bar
+	 * of the Setup and Club Pages screens, which stay on the old stylesheet
+	 * until the page editor library replaces them.
+	 */
+	public function test_no_legacy_classes_survive_in_the_page_body(): void {
+		$html = Blueworx_Clubhouse_Access_Screen::render( $this->model() );
+		foreach ( array( 'clubhouse-setup', 'clubhouse-step', 'clubhouse-head', 'clubhouse-table', 'clubhouse-chips', 'clubhouse-help', 'button-primary', 'widefat' ) as $gone ) {
+			$this->assertStringNotContainsString( $gone, $html, $gone . ' should be gone' );
+		}
+	}
+
 	public function test_it_lists_every_user_their_role_and_their_sections(): void {
 		$html = Blueworx_Clubhouse_Access_Screen::render( $this->model() );
 		$this->assertStringContainsString( 'Jo Bailey', $html );

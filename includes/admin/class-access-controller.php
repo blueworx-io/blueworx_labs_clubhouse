@@ -45,7 +45,7 @@ final class Blueworx_Clubhouse_Access_Controller {
 		if ( 'settings_page_' . self::PAGE_SLUG !== $hook ) {
 			return;
 		}
-		wp_enqueue_style( 'clubhouse-admin-setup', BLUEWORX_LABS_CLUBHOUSE_URL . 'assets/css/admin-setup.css', array(), BLUEWORX_LABS_CLUBHOUSE_VERSION );
+		Blueworx_Clubhouse_Admin_Assets::enqueue();
 	}
 
 	public static function render_page(): void {
@@ -73,6 +73,20 @@ final class Blueworx_Clubhouse_Access_Controller {
 			return '';
 		}
 		return Blueworx_Clubhouse_Access_Screen::role_tags(
+			Blueworx_Clubhouse_Admin_Pages::access_labels( $page_slug )
+		);
+	}
+
+	/**
+	 * The same tags in the design system's chips, for a screen built from it.
+	 * Replaces role_tags_for() screen by screen; the two converge when Setup
+	 * and Club Pages move over.
+	 */
+	public static function role_chips_for( string $page_slug ): string {
+		if ( ! self::may_see_role_tags() ) {
+			return '';
+		}
+		return Blueworx_Clubhouse_Access_Screen::role_chips(
 			Blueworx_Clubhouse_Admin_Pages::access_labels( $page_slug )
 		);
 	}

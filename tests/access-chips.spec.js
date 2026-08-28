@@ -34,7 +34,14 @@ test('every clubhouse screen tells an administrator who can reach it @wordpress'
   for (const screen of SCREENS) {
     await page.goto(`/wp-admin/admin.php?page=${screen.slug}`, { waitUntil: 'domcontentloaded' });
 
-    const chips = page.locator('.clubhouse-head .clubhouse-roletags');
+    // Two markups, on purpose. Screens already moved onto the BlueWorx admin
+    // design system carry the chips in the page header's actions; Setup and
+    // Club Pages still carry the old ones until the page editor library
+    // replaces them. What must hold on every screen, either way, is that an
+    // administrator is told who can reach it.
+    const chips = page.locator(
+      '.clubhouse-head .clubhouse-roletags, .bw-pagehead__actions [aria-label="Roles with access to this page"]',
+    );
     await expect(chips, `${screen.name} shows no access chips`).toHaveCount(1);
     // Administrator can reach all five, so it is the one label common to every
     // screen — the rest differ by page and are not worth pinning here.
