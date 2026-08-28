@@ -1,4 +1,5 @@
 const { test, expect } = require('@playwright/test');
+const { targetingWordPress } = require('./harness');
 
 // The panel is closed by default now — it used to be a bar across the bottom of
 // the viewport covering the hero's call-to-action tiles. Its controls therefore
@@ -21,7 +22,7 @@ const BERRY_BLOCK = 'rgb(78, 34, 53)';
 // WordPress's own pagination variable — '?page=about' is not an address there,
 // it is an invalid page number, and it answers 404.
 const secondPage = () =>
-  test.info().project.name === 'wordpress' ? '/about/?demo=1' : '?demo=1&page=about';
+  targetingWordPress() ? '/about/?demo=1' : '?demo=1&page=about';
 
 const rootToken = (page, name) =>
   page.evaluate((n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim(), name);
