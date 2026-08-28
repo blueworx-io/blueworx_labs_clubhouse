@@ -35,43 +35,46 @@ final class Blueworx_Clubhouse_Changelog_Screen {
 		$releases = $model['releases'];
 		$running  = (string) $model['running'];
 
-		$out  = '<div class="wrap clubhouse-wrap"><div class="clubhouse-setup">';
-		$out .= '<header class="clubhouse-head"><div class="clubhouse-head__titles">'
-			. '<p class="clubhouse-eyebrow">Clubhouse · What\'s new</p>'
-			. '<h1 class="clubhouse-head__h1">What\'s new</h1>'
-			. (string) ( $model['role_tags'] ?? '' ) . '</div></header>';
+		$tags = (string) ( $model['role_tags'] ?? '' );
 
 		if ( array() === $releases ) {
 			// The changelog ships with the plugin, so this means the file is not
 			// where it should be — worth saying plainly rather than showing an
 			// empty page that looks like nothing has ever changed.
-			$out .= '<p class="clubhouse-step__lede">The list of changes could not be read. '
-				. 'Your site is working normally — only this screen is affected.</p>';
-			return $out . '</div></div>';
+			return Blueworx_Clubhouse_Admin_Shell::open( 'Clubhouse · What\'s new', 'What\'s new', '', $tags )
+				. '<div class="bw-notice bw-notice--warning"><i class="bw-icon bw-notice__icon" data-lucide="triangle-alert"></i>'
+				. '<div class="bw-notice__body"><p class="bw-notice__text">The list of changes could not be read. '
+				. 'Your site is working normally — only this screen is affected.</p></div></div>'
+				. Blueworx_Clubhouse_Admin_Shell::close();
 		}
 
-		$out .= '<p class="clubhouse-step__lede">Every update to Clubhouse, newest first, and what each one changed for your club. '
-			. 'You are running version ' . self::esc( $running ) . '.</p>';
+		$out = Blueworx_Clubhouse_Admin_Shell::open(
+			'Clubhouse · What\'s new',
+			'What\'s new',
+			'Every update to Clubhouse, newest first, and what each one changed for your club. '
+				. 'You are running version ' . $running . '.',
+			$tags
+		);
 
 		$recent = array_slice( $releases, 0, self::RECENT );
 		$rest   = array_slice( $releases, self::RECENT );
 
-		$out .= '<div class="clubhouse-step">';
 		foreach ( $recent as $release ) {
 			$out .= self::release( $release, $running );
 		}
-		$out .= '</div>';
 
 		if ( array() !== $rest ) {
-			$out .= '<details class="clubhouse-step"><summary class="clubhouse-step__h">'
-				. 'Everything before that (' . count( $rest ) . ' more)</summary>';
+			$older = '';
 			foreach ( $rest as $release ) {
-				$out .= self::release( $release, $running );
+				$older .= self::release( $release, $running );
 			}
-			$out .= '</details>';
+			$out .= '<details class="bw-accordion"><summary class="bw-accordion__head">'
+				. '<span class="bw-accordion__title">Everything before that</span>'
+				. '<span class="bw-accordion__sub">' . count( $rest ) . ' more</span></summary>'
+				. '<div class="bw-accordion__body">' . $older . '</div></details>';
 		}
 
-		return $out . '</div></div>';
+		return $out . Blueworx_Clubhouse_Admin_Shell::close();
 	}
 
 	/** @param array<string,mixed> $release */
@@ -79,24 +82,25 @@ final class Blueworx_Clubhouse_Changelog_Screen {
 		$version = (string) $release['version'];
 		$current = Blueworx_Clubhouse_Changelog::is_current( $version, $running );
 
-		$out = '<section class="clubhouse-release">';
-		$out .= '<h2 class="clubhouse-step__h">Version ' . self::esc( $version );
-		if ( $current ) {
-			// The one fact an owner is most often here to check: is what I am
-			// reading the thing I am running?
-			$out .= ' <span class="clubhouse-roletag">You are on this version</span>';
-		}
-		$out .= '</h2>';
-
 		if ( (bool) $release['internal'] ) {
-			$out .= '<p class="clubhouse-help">Nothing you would notice — this release changed how the plugin is built and tested.</p>';
-			return $out . '</section>';
+			$body = '<p class="bw-fieldnote">Nothing you would notice — this release changed how the plugin is built and tested.</p>';
+		} else {
+			$body = '<ul>';
+			foreach ( (array) $release['notes'] as $note ) {
+				$body .= '<li>' . Blueworx_Clubhouse_Changelog::note_html( (string) $note ) . '</li>';
+			}
+			$body .= '</ul>';
 		}
 
-		$out .= '<ul class="clubhouse-release__notes">';
-		foreach ( (array) $release['notes'] as $note ) {
-			$out .= '<li>' . Blueworx_Clubhouse_Changelog::note_html( (string) $note ) . '</li>';
-		}
-		return $out . '</ul></section>';
+		// The one fact an owner is most often here to check — is what I am
+		// reading the thing I am running? — reads as a badge on the panel.
+		$badge = $current
+			? '<div class="bw-card__actions"><span class="bw-badge bw-badge--accent">You are on this version</span></div>'
+			: '';
+
+		return '<div class="bw-card"><div class="bw-card__head"><div class="bw-card__titles">'
+			. '<p class="bw-card__eyebrow">Release</p>'
+			. '<h2 class="bw-card__title">Version ' . self::esc( $version ) . '</h2></div>'
+			. $badge . '</div><div class="bw-card__body">' . $body . '</div></div>';
 	}
 }

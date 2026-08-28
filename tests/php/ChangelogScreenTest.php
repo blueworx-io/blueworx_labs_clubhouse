@@ -29,7 +29,10 @@ final class ChangelogScreenTest extends TestCase {
 		// 165 releases in one column is not a screen anybody reads.
 		$html = $this->render( $this->releases( 30 ) );
 		$this->assertStringContainsString( '<details', $html );
-		$this->assertStringContainsString( 'Everything before that (22 more)', $html );
+		$this->assertStringContainsString( 'Everything before that', $html );
+		// The count sits beside the title as the accordion's sub-label rather
+		// than in brackets inside it.
+		$this->assertStringContainsString( '22 more', $html );
 	}
 
 	public function test_a_short_history_is_not_folded_away(): void {
