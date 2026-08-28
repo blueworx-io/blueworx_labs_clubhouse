@@ -858,11 +858,15 @@ final class Blueworx_Clubhouse_Sections {
 	 * The Monthly / Annual switch. Two buttons rather than tabs: nothing is being
 	 * revealed and hidden except the price beside them, and a tablist would
 	 * promise a panel that does not exist.
+	 *
+	 * Annual is the side that starts pressed. It is the better deal for the club
+	 * and for the member, and it is the one carrying the saving, so it is what a
+	 * visitor should be shown before they choose.
 	 */
 	private static function cadence_switcher(): string {
 		return '<div class="ch-cadence" role="group" aria-label="How often to pay">'
-			. '<button type="button" class="ch-cadence__btn ch-cadence__btn--on" data-ch-cadence="monthly" aria-pressed="true">Monthly</button>'
-			. '<button type="button" class="ch-cadence__btn" data-ch-cadence="annual" aria-pressed="false">Annual</button>'
+			. '<button type="button" class="ch-cadence__btn" data-ch-cadence="monthly" aria-pressed="false">Monthly</button>'
+			. '<button type="button" class="ch-cadence__btn ch-cadence__btn--on" data-ch-cadence="annual" aria-pressed="true">Annual</button>'
 			. '</div>';
 	}
 
@@ -885,12 +889,15 @@ final class Blueworx_Clubhouse_Sections {
 		);
 		$monthly = is_array( $tier['monthly'] ?? null ) ? $tier['monthly'] : $flat;
 
-		$out = self::tier_price( $monthly, 'monthly', '', false );
+		// Annual is the side on show, so monthly is the side that starts
+		// hidden — but only when there is a switch to bring it back. Without
+		// one this block is the only price the card has.
+		$out = self::tier_price( $monthly, 'monthly', '', $switcher );
 		if ( ! $switcher ) {
 			return $out;
 		}
 		$annual = is_array( $tier['annual'] ?? null ) ? $tier['annual'] : $flat;
-		return $out . self::tier_price( $annual, 'annual', (string) ( $tier['saving'] ?? '' ), true );
+		return $out . self::tier_price( $annual, 'annual', (string) ( $tier['saving'] ?? '' ), false );
 	}
 
 	/**
@@ -925,12 +932,12 @@ final class Blueworx_Clubhouse_Sections {
 		);
 		$monthly = is_array( $tier['monthly'] ?? null ) ? $tier['monthly'] : $flat;
 
-		$out = self::tier_cta( $monthly, $btn, 'monthly', false );
+		$out = self::tier_cta( $monthly, $btn, 'monthly', $switcher );
 		if ( ! $switcher ) {
 			return $out;
 		}
 		$annual = is_array( $tier['annual'] ?? null ) ? $tier['annual'] : $flat;
-		return $out . self::tier_cta( $annual, $btn, 'annual', true );
+		return $out . self::tier_cta( $annual, $btn, 'annual', false );
 	}
 
 	/** @param array<string,mixed> $cadence */
