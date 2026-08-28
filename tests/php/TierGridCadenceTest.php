@@ -31,16 +31,24 @@ final class TierGridCadenceTest extends TestCase {
 		$this->assertStringContainsString( '/join-annual', $html );
 	}
 
-	public function test_monthly_is_what_a_visitor_sees_first(): void {
+	public function test_annual_is_what_a_visitor_sees_first(): void {
 		$html = Blueworx_Clubhouse_Sections::tier_grid( $this->tiers() );
-		$this->assertMatchesRegularExpression( '/aria-pressed="true"[^>]*>Monthly</', $html );
-		$this->assertMatchesRegularExpression( '/aria-pressed="false"[^>]*>Annual</', $html );
+		$this->assertMatchesRegularExpression( '/aria-pressed="true"[^>]*>Annual</', $html );
+		$this->assertMatchesRegularExpression( '/aria-pressed="false"[^>]*>Monthly</', $html );
 	}
 
-	public function test_the_annual_side_starts_hidden_and_the_monthly_side_does_not(): void {
+	public function test_the_monthly_side_starts_hidden_and_the_annual_side_does_not(): void {
 		$html = Blueworx_Clubhouse_Sections::tier_grid( $this->tiers() );
-		$this->assertStringContainsString( 'ch-tier__price--annual ch-is-off', $html );
-		$this->assertStringNotContainsString( 'ch-tier__price--monthly ch-is-off', $html );
+		$this->assertStringContainsString( 'ch-tier__price--monthly ch-is-off', $html );
+		$this->assertStringNotContainsString( 'ch-tier__price--annual ch-is-off', $html );
+	}
+
+	public function test_without_a_switcher_the_one_price_there_is_stays_visible(): void {
+		// A grid with no switcher renders the monthly shape and nothing else,
+		// so defaulting to annual must not hide the only price on the card.
+		$html = Blueworx_Clubhouse_Sections::tier_grid( $this->tiers(), 3, false );
+		$this->assertStringNotContainsString( 'ch-is-off', $html );
+		$this->assertStringContainsString( '£28', $html );
 	}
 
 	public function test_a_tier_without_an_annual_price_is_labelled_not_hidden(): void {

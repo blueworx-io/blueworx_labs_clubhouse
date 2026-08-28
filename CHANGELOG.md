@@ -5,6 +5,10 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.96.0
+
+- **The membership prices now open on Annual.** Somebody arriving at your membership page sees the yearly price, and the saving beside it, before they see the monthly one. Monthly is still one click away and nothing about the prices themselves has changed.
+
 ## 0.95.0
 
 - **A Club rules page**, alongside Privacy and Terms. It is for the everyday things — opening hours, footwear, guests, children, parking, putting kit away, looking after each other — where Terms stays the membership contract. Edit it under Club Pages, and switch it off if you do not want it.
