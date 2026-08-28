@@ -26,6 +26,12 @@ define( 'BLUEWORX_LABS_CLUBHOUSE_FILE', __FILE__ );
 define( 'BLUEWORX_LABS_CLUBHOUSE_DIR', plugin_dir_path( __FILE__ ) );
 define( 'BLUEWORX_LABS_CLUBHOUSE_URL', plugin_dir_url( __FILE__ ) );
 
+// The BlueWorx page editor library. Vendored from bluegroup_core_foundation and
+// hash-compared against it on every pull request — never edited here. Loaded
+// before the plugin's own classes because it registers itself on plugins_loaded
+// at priority 0, ahead of anything that declares a screen to it.
+require_once __DIR__ . '/blueworx-page-editor/blueworx-page-editor.php';
+
 require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/bootstrap.php';
 require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/frontend/class-clubhouse-context.php';
 require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/frontend/class-frontend.php';
