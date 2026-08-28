@@ -50,6 +50,14 @@ require_once __DIR__ . '/dashboard/class-dashboard-assets.php';
 require_once __DIR__ . '/dashboard/class-member-dashboard.php';
 require_once __DIR__ . '/dashboard/class-commerce-pages.php';
 
+// Profile. The rules first, then the screens that draw them.
+require_once __DIR__ . '/profile/class-profile-fields.php';
+require_once __DIR__ . '/profile/class-profile-values.php';
+require_once __DIR__ . '/profile/class-profile-store.php';
+require_once __DIR__ . '/profile/class-profile-panel.php';
+require_once __DIR__ . '/profile/class-profile-form.php';
+require_once __DIR__ . '/profile/class-profile-user-screen.php';
+
 // Theme
 require_once __DIR__ . '/theme/interface-base-look.php';
 require_once __DIR__ . '/theme/class-base-look-registry.php';

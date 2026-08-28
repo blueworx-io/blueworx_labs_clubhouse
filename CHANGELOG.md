@@ -5,6 +5,18 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.94.0
+
+- **Your club can now keep whatever it needs to know about a member** — shirt size, emergency contact, squad number, dietary needs, anything. You write the questions yourself under Clubhouse → Setup → Members, choosing for each one what kind of answer it takes and who fills it in.
+
+- **Members answer their own on a new Profile page.** It is also where their name, sign-in email and password now live, so everything about who a member is sits on one screen.
+
+- **Some things only your club fills in, and some a member never sees.** A squad number you set is shown to the member but cannot be changed by them; a private note is not shown to them at all. You set every answer, including the private ones, on that member's ordinary WordPress user page.
+
+- **Account is now just how a member pays you** — the billing address and the cards on file. Any link or bookmark to it still works.
+
+- Answers are stored on the member's own WordPress record, so they stay yours and any export tool you already use can read them.
+
 ## 0.93.1
 
 - **The sign-in card is wider, and no longer says the same thing twice.** The shop's form was printing its own "Log in to your account" heading directly beneath your club's, so that duplicate is gone and the form has more room to sit in.

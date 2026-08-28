@@ -50,23 +50,60 @@ final class MemberDashboardTest extends TestCase {
 	public function test_a_view_with_several_panels_renders_them_all_in_order(): void {
 		$this->everything_installed();
 		$html    = Blueworx_Clubhouse_Member_Dashboard::view_body( $this->view( 'account' ), '', 'https://club.test/' );
-		$account = strpos( $html, 'surecart/wordpress-account' );
 		$billing = strpos( $html, 'surecart/customer-billing-details' );
 		$cards   = strpos( $html, 'surecart/customer-payment-methods' );
-		$this->assertIsInt( $account );
 		$this->assertIsInt( $billing );
 		$this->assertIsInt( $cards );
-		$this->assertLessThan( $billing, $account );
 		$this->assertLessThan( $cards, $billing );
 	}
 
 	public function test_a_member_can_see_their_own_name_and_sign_in_email(): void {
-		// It used to be missing entirely: the account view showed the details
-		// the shop keeps for billing and nothing about the member themselves,
-		// so there was no way in to changing a name, an email or a password.
+		// It used to be missing entirely: the member area showed the details the
+		// shop keeps for billing and nothing about the member themselves, so
+		// there was no way in to changing a name, an email or a password. It
+		// lives on Profile now, with Account left to how they pay.
 		$this->everything_installed();
-		$html = Blueworx_Clubhouse_Member_Dashboard::view_body( $this->view( 'account' ), '', 'https://club.test/' );
+		$html = Blueworx_Clubhouse_Member_Dashboard::view_body( $this->view( 'profile' ), '', 'https://club.test/' );
 		$this->assertStringContainsString( 'data-block="surecart/wordpress-account"', $html );
+	}
+
+	public function test_a_views_own_panel_is_drawn_in_its_own_card_under_the_blocks(): void {
+		$this->everything_installed();
+		$html = Blueworx_Clubhouse_Member_Dashboard::view_body(
+			$this->view( 'profile' ),
+			'',
+			'https://club.test/',
+			static fn( string $panel ): string => 'profile' === $panel ? '<p id="ours">Our panel</p>' : ''
+		);
+		$block = strpos( $html, 'surecart/wordpress-account' );
+		$ours  = strpos( $html, 'Our panel' );
+		$this->assertIsInt( $block );
+		$this->assertIsInt( $ours );
+		$this->assertLessThan( $ours, $block );
+	}
+
+	public function test_a_panel_that_draws_nothing_leaves_no_empty_card_behind(): void {
+		// A club that has defined no fields of its own must not get a blank card
+		// under their name and password.
+		$this->everything_installed();
+		$html = Blueworx_Clubhouse_Member_Dashboard::view_body(
+			$this->view( 'profile' ),
+			'',
+			'https://club.test/',
+			static fn( string $panel ): string => ''
+		);
+		$this->assertStringContainsString( 'surecart/wordpress-account', $html );
+		$this->assertSame( 1, substr_count( $html, 'bw-card' ) - substr_count( $html, 'bw-card__' ) );
+	}
+
+	public function test_a_view_with_no_blocks_and_a_silent_panel_shows_the_empty_state(): void {
+		$html = Blueworx_Clubhouse_Member_Dashboard::view_body(
+			$this->view( 'profile' ),
+			'',
+			'https://club.test/',
+			static fn( string $panel ): string => ''
+		);
+		$this->assertStringContainsString( 'bw-empty', $html );
 	}
 
 	public function test_the_bookings_view_hands_the_whole_panel_to_the_booking_plugin(): void {

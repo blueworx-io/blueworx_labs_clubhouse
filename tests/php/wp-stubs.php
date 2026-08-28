@@ -31,12 +31,14 @@ $GLOBALS['wp_stub_is_singular']       = false;
 $GLOBALS['wp_stub_post_type']         = 'page';
 $GLOBALS['wp_stub_the_id']            = 0;
 $GLOBALS['wp_stub_is_404']            = false;
+$GLOBALS['wp_stub_user_meta']          = array();
 
 function wp_stub_reset(): void {
 	$GLOBALS['wp_stub_calls']       = array();
 	$GLOBALS['wp_stub_options']     = array();
 	$GLOBALS['wp_stub_posts']       = array();
 	$GLOBALS['wp_stub_postmeta']    = array();
+	$GLOBALS['wp_stub_user_meta']   = array();
 	$GLOBALS['wp_stub_roles']       = array( 'administrator' => array( 'display' => 'Administrator', 'caps' => array() ) );
 	$GLOBALS['wp_stub_current_user'] = (object) array( 'roles' => array() );
 	$GLOBALS['wp_stub_logged_in']    = false;
@@ -315,6 +317,57 @@ if ( ! function_exists( 'wp_create_nonce' ) ) {
 if ( ! function_exists( 'add_query_arg' ) ) {
 	// Unlike wp_nonce_url(), the real add_query_arg() does not escape — it returns a raw '&'.
 	function add_query_arg( $key, $value, $url ) { return (string) $url . ( str_contains( (string) $url, '?' ) ? '&' : '?' ) . rawurlencode( (string) $key ) . '=' . rawurlencode( (string) $value ); }
+}
+if ( ! function_exists( 'remove_query_arg' ) ) {
+	function remove_query_arg( $key, $url = '' ) {
+		$parts = explode( '?', (string) $url, 2 );
+		if ( ! isset( $parts[1] ) ) {
+			return (string) $url;
+		}
+		$kept = array();
+		foreach ( explode( '&', $parts[1] ) as $pair ) {
+			if ( '' === $pair || str_starts_with( $pair, rawurlencode( (string) $key ) . '=' ) ) {
+				continue;
+			}
+			$kept[] = $pair;
+		}
+		return $parts[0] . ( array() === $kept ? '' : '?' . implode( '&', $kept ) );
+	}
+}
+
+// User meta. One store per user, keyed exactly as WordPress keys it, so the
+// profile classes can be exercised without a database.
+if ( ! function_exists( 'get_user_meta' ) ) {
+	function get_user_meta( $user_id, $key = '', $single = false ) {
+		$value = $GLOBALS['wp_stub_user_meta'][ (int) $user_id ][ (string) $key ] ?? '';
+		return $single ? $value : array( $value );
+	}
+}
+if ( ! function_exists( 'update_user_meta' ) ) {
+	function update_user_meta( $user_id, $key, $value ) {
+		wp_stub_record( 'update_user_meta', array( $user_id, $key, $value ) );
+		$GLOBALS['wp_stub_user_meta'][ (int) $user_id ][ (string) $key ] = $value;
+		return true;
+	}
+}
+if ( ! function_exists( 'delete_user_meta' ) ) {
+	function delete_user_meta( $user_id, $key ) {
+		unset( $GLOBALS['wp_stub_user_meta'][ (int) $user_id ][ (string) $key ] );
+		return true;
+	}
+}
+if ( ! function_exists( 'delete_metadata' ) ) {
+	// $all = true is the "for every user" form, which is how a field's answers
+	// are cleared for good.
+	function delete_metadata( $type, $object_id, $key, $value = '', $all = false ) {
+		wp_stub_record( 'delete_metadata', array( $type, $object_id, $key, $value, $all ) );
+		if ( $all ) {
+			foreach ( array_keys( (array) ( $GLOBALS['wp_stub_user_meta'] ?? array() ) ) as $uid ) {
+				unset( $GLOBALS['wp_stub_user_meta'][ $uid ][ (string) $key ] );
+			}
+		}
+		return true;
+	}
 }
 if ( ! function_exists( 'wp_nonce_field' ) ) {
 	function wp_nonce_field( ...$a ) { wp_stub_record( 'wp_nonce_field', $a ); $name = $a[1] ?? '_wpnonce'; return '<input type="hidden" name="' . $name . '" value="stub-nonce">'; }
