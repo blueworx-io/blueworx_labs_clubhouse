@@ -211,13 +211,13 @@ final class SeoTest extends TestCase {
 		$html = Blueworx_Clubhouse_Seo_Screen::render(
 			array(
 				'deferring_to' => '',
-				'role_tags'    => Blueworx_Clubhouse_Access_Screen::role_tags( array( 'Administrator', 'ClubHouse - Owner' ) ),
+				'role_tags'    => Blueworx_Clubhouse_Access_Screen::role_chips( array( 'Administrator', 'ClubHouse - Owner' ) ),
 				'pages'        => array(),
 			)
 		);
 
-		$this->assertStringContainsString( 'class="clubhouse-roletags"', $html );
-		$this->assertMatchesRegularExpression( '/clubhouse-head__titles.*clubhouse-roletags.*<\/div>/s', $html );
+		$this->assertStringContainsString( 'aria-label="Roles with access to this page"', $html );
+		$this->assertMatchesRegularExpression( '/bw-pagehead__titles.*bw-pagehead__actions.*Administrator/s', $html );
 	}
 
 	public function test_no_role_tags_for_anyone_but_an_administrator(): void {
