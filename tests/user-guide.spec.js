@@ -73,6 +73,6 @@ test('the guide opens every chapter so find-in-page can reach it @wordpress', as
   await loginAsAdmin(page);
   await page.goto('/wp-admin/admin.php?page=clubhouse-guide', { waitUntil: 'domcontentloaded' });
 
-  const closed = await page.locator('details.clubhouse-guide-entry:not([open])').count();
+  const closed = await page.locator('details.bw-accordion:not([open])').count();
   expect(closed).toBe(0);
 });
