@@ -146,28 +146,12 @@ mkdir -p .claude/skills
 rm -rf .claude/skills/blueworx-admin-design
 cp -R "$SKILL" .claude/skills/blueworx-admin-design
 
-# The editor library is phase 3, not this one.
-rm -rf .claude/skills/blueworx-admin-design/editor
-
 cp .claude/skills/blueworx-admin-design/styles.css assets/blueworx-admin-design.css
 cp .claude/skills/blueworx-admin-design/assets/icons/lucide-icons.js assets/blueworx-admin-icons.js
 cp .claude/skills/blueworx-admin-design/fonts/sora-*.woff2 assets/fonts/
 ```
 
-**Stop and check before continuing.** Removing `editor/` from the copied skill folder makes the tree differ from the foundation's, which is exactly what `check-design-system-sync.mjs` fails on. Run the check locally:
-
-```bash
-FOUNDATION_DIR=../bluegroup_core_foundation FOUNDATION_REF=v1.9.0 \
-  node ../bluegroup_core_foundation/scripts/check-design-system-sync.mjs
-```
-
-If it reports `editor/… — missing from this plugin`, do **not** delete `editor/`. Restore it and re-run:
-
-```bash
-cp -R "$SKILL/editor" .claude/skills/blueworx-admin-design/editor
-```
-
-The skill folder is compared whole, so it must be copied whole; what phase 3 adds is the *plugin-root* `blueworx-page-editor/` and `assets/blueworx-page-editor.js`, which are separate paths and stay absent here. Update `DesignSystemVendoredTest` only if this check proves otherwise; the two assertions in Step 1 about the page editor already name the plugin-root paths, so they stand either way.
+**Copy the skill folder whole, `editor/` included.** It is compared as a tree, so removing anything from it fails the sync check. What phase 3 adds is the *plugin-root* `blueworx-page-editor/` and `assets/blueworx-page-editor.js` — different paths, and they stay absent here. Verified: the sync check passes with `editor/` present and the plugin-root paths missing.
 
 - [ ] **Step 4: Run the test and the sync check**
 
