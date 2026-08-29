@@ -5,6 +5,14 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.98.0
+
+- Your club pages are now edited on the pages themselves. Find a page under Pages, press Edit, and its words are there — with every change kept, so you can go back to what you had before.
+- You can change a page's address, and set who can see it, from the page itself.
+- Switching a section off now happens on that section, on the page it belongs to, instead of on a separate list.
+- Header, footer, welcome pack and cookie notice have moved to Clubhouse → Global content.
+- The old Club Pages screen is gone. Everything it held is on the pages, and your words came across with it.
+
 ## 0.97.1
 
 - Internal only: the shared design system was updated, and this brings Clubhouse's copy back in step with it. Nothing changes on a site.
