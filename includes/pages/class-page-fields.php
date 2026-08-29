@@ -451,7 +451,7 @@ final class Blueworx_Clubhouse_Page_Fields {
 						self::cell( 'caption', 'text', 'Caption' ),
 					) ),
 				),
-					'Switched off until you turn it on under Setup → Visibility. Paste the link to each post you want shown — the section stays off the page until at least one is pasted, because a heading over an empty space reads as a broken site. Connecting Facebook or Instagram directly, so posts arrive on their own, comes later.'
+					'The section stays off the page until at least one post is pasted, because a heading over an empty space reads as a broken site. Paste the link to each post you want shown. Connecting Facebook or Instagram directly, so posts arrive on their own, comes later.'
 				),
 				self::panel( $hideable, 'home', 'info', 'Find us details', array(
 					self::repeater( 'info', 'Columns', array(

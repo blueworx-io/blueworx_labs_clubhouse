@@ -324,6 +324,19 @@ final class ContentScreenTest extends TestCase {
 	 *
 	 * Asserts the full document, so it covers every field type on the tab at once
 	 * rather than one hand-picked field.
+	 *
+	 * VACUOUS since task 6: `handle_save()` still writes through
+	 * Content_Controller into Content_Store's keys, while `Page_Map::render()`
+	 * now reads through Page_Content, which reads a real page's post meta — a
+	 * different store the render side never sets a page id for. Every read here
+	 * short-circuits to its hardcoded default both before and after the save, so
+	 * $before === $after regardless of what handle_save() does with the posted
+	 * fields. Setting a page id would not rescue it: the two sides are reading
+	 * and writing different stores by design now, not a fixture gap. All this
+	 * still proves is that a real Save posts a substantial payload
+	 * (assertGreaterThan(20, ...) below) and handle_save() does not fatal on it
+	 * — not that the render is unchanged. Content_Controller and this screen are
+	 * deleted in task 10; this test goes with them rather than being rescued.
 	 */
 	public function test_a_no_edit_save_leaves_the_rendered_site_byte_identical(): void {
 		$storage  = new Blueworx_Clubhouse_Fake_Storage();

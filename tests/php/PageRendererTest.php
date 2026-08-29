@@ -302,7 +302,18 @@ final class PageRendererTest extends TestCase {
 		return array( array( 'href' => 'https://facebook.com/club/posts/1', 'caption' => 'Saturday win' ) );
 	}
 
-	public function test_the_social_feed_is_absent_until_a_club_switches_it_on(): void {
+	/**
+	 * The guarantee this proves is narrower than it used to be: the panel’s own
+	 * Shown switch has no per-section default (unlike the old Visibility flag,
+	 * which shipped this one section off) — see homeWithSocialFeed(). So this is
+	 * no longer "absent until switched on"; it is "absent when explicitly
+	 * switched off", which is the one guarantee an explicit hide still gives.
+	 * The guarantee that survives from the old default — nothing shown with the
+	 * switch left untouched and nothing pasted — is
+	 * test_the_social_feed_stays_off_with_the_switch_untouched_and_nothing_pasted()
+	 * below.
+	 */
+	public function test_an_explicitly_hidden_social_feed_does_not_render_even_with_posts_pasted(): void {
 		$this->assertStringNotContainsString( 'ch-feed', $this->homeWithSocialFeed( false, $this->onePastedPost() ) );
 	}
 
@@ -313,8 +324,13 @@ final class PageRendererTest extends TestCase {
 		$this->assertStringContainsString( 'https://facebook.com/club/posts/1', $html );
 	}
 
-	public function test_a_switched_on_but_unconnected_social_feed_renders_nothing(): void {
-		// Nothing pasted yet: a heading over an empty space reads as a broken site.
+	/**
+	 * The panel’s Shown switch left untouched (its own default, true) plus
+	 * nothing pasted: Sections::social_feed() itself returns '' for an empty
+	 * post list, which is what still keeps a club that has never touched this
+	 * panel from shipping an empty band — not a hidden-by-default panel any more.
+	 */
+	public function test_the_social_feed_stays_off_with_the_switch_untouched_and_nothing_pasted(): void {
 		$this->assertStringNotContainsString( 'ch-feed', $this->homeWithSocialFeed( true, array() ) );
 	}
 
