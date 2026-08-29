@@ -145,12 +145,12 @@ final class Blueworx_Clubhouse_Guide {
 			'entries' => array(
 				array(
 					'title' => 'Editing a page',
-					'body'  => array( 'Club Pages holds the words and pictures for every page, grouped the same way the pages are.' ),
+					'body'  => array( 'Each page holds its own words and pictures, and you edit them on the page itself — the same place you would find any page on your site.' ),
 					'steps' => array(
-						'Open Club Pages.',
-						'Pick the page across the top, then the section down the side.',
+						'Open Pages and press Edit on the one you want.',
+						'Pick the part of the page down the side.',
 						'Change the wording, or choose a picture from your media library.',
-						'Save. The change is live immediately — there is nothing to publish.',
+						'Save. Every change is kept, so you can go back to what you had before.',
 					),
 					'state' => '',
 					'url'   => $content_url,

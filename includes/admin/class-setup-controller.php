@@ -324,8 +324,8 @@ final class Blueworx_Clubhouse_Setup_Controller {
 		// The menu builder saves through the content plumbing it has always used,
 		// nonce and all — it moved screen, not owner.
 		if ( $can_menu && isset( $_POST['clubhouse_content_submit'] ) ) {
-			check_admin_referer( Blueworx_Clubhouse_Content_Controller::NONCE );
-			$notices = Blueworx_Clubhouse_Content_Controller::handle_save( wp_unslash( $_POST ), $storage );
+			check_admin_referer( Blueworx_Clubhouse_Menu_Controller::NONCE );
+			$notices = Blueworx_Clubhouse_Menu_Controller::handle_save( wp_unslash( $_POST ), $storage );
 		}
 		echo self::screen_html( $storage, $notices, $can_demo, $can_menu, $can_setup ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped within Setup_Screen.
 	}
@@ -342,7 +342,7 @@ final class Blueworx_Clubhouse_Setup_Controller {
 			'tree'        => ( new Blueworx_Clubhouse_Menu( $storage ) )->tree(),
 			'targets'     => Blueworx_Clubhouse_Link_Catalogue::targets( new Blueworx_Clubhouse_WP_Collections() ),
 			'action_url'  => $action_url,
-			'nonce_field' => wp_nonce_field( Blueworx_Clubhouse_Content_Controller::NONCE, '_wpnonce', true, false ),
+			'nonce_field' => wp_nonce_field( Blueworx_Clubhouse_Menu_Controller::NONCE, '_wpnonce', true, false ),
 		);
 	}
 

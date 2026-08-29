@@ -18,7 +18,6 @@ require_once __DIR__ . '/core/class-null-storage.php';
 require_once __DIR__ . '/core/class-registry.php';
 
 // Content
-require_once __DIR__ . '/content/class-content-store.php';
 require_once __DIR__ . '/content/class-content-sanitiser.php';
 require_once __DIR__ . '/content/class-visibility.php';
 require_once __DIR__ . '/content/class-club-pages.php';
@@ -86,8 +85,8 @@ require_once __DIR__ . '/admin/class-setup-sections.php';
 require_once __DIR__ . '/admin/class-setup-screen.php';
 require_once __DIR__ . '/admin/class-owner-capabilities.php';
 require_once __DIR__ . '/admin/class-content-catalogue.php';
-require_once __DIR__ . '/admin/class-content-screen.php';
 require_once __DIR__ . '/admin/class-menu-panel.php';
+require_once __DIR__ . '/admin/class-menu-controller.php';
 require_once __DIR__ . '/admin/class-admin-pages.php';
 require_once __DIR__ . '/admin/class-access-screen.php';
 require_once __DIR__ . '/admin/class-seo-screen.php';
@@ -99,6 +98,7 @@ require_once __DIR__ . '/admin/class-club-page-editing.php';
 require_once __DIR__ . '/pages/class-page-fields.php';
 require_once __DIR__ . '/pages/class-page-content.php';
 require_once __DIR__ . '/pages/class-page-editors.php';
+require_once __DIR__ . '/pages/class-images-needed.php';
 require_once __DIR__ . '/pages/class-content-migration.php';
 
 // Collections (pure)

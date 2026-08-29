@@ -16,7 +16,54 @@ if ( ! defined( 'ABSPATH' ) ) {
 	define( 'ABSPATH', dirname( __DIR__ ) . '/' );
 }
 
+/**
+ * A club page's words live on the page now — in post meta, behind a post id
+ * held in an option — so a preview with no WordPress at all can no longer seed
+ * the two states below (see $preview_content). These four functions are the
+ * whole of what Page_Content and Club_Pages ask WordPress for, answered from
+ * memory for the life of one request.
+ *
+ * Everything else in the plugin that guards on function_exists( 'get_option' )
+ * asks for a value nothing here ever writes, and gets the default it would
+ * have taken anyway — so this changes what the preview can seed, not how it
+ * renders.
+ */
+$GLOBALS['blueworx_clubhouse_preview_options'] = array();
+$GLOBALS['blueworx_clubhouse_preview_meta']    = array();
+
+// Guarded, because the PHP test suite loads this file to prove the preview
+// still boots, and its own WordPress stubs have already defined these.
+if ( ! function_exists( 'get_option' ) ) {
+	function get_option( string $option, mixed $default = false ): mixed {
+		return $GLOBALS['blueworx_clubhouse_preview_options'][ $option ] ?? $default;
+	}
+}
+if ( ! function_exists( 'update_post_meta' ) ) {
+	function update_post_meta( int $post_id, string $key, mixed $value ): bool {
+		$GLOBALS['blueworx_clubhouse_preview_meta'][ $post_id ][ $key ] = $value;
+		return true;
+	}
+}
+if ( ! function_exists( 'get_post_meta' ) ) {
+	function get_post_meta( int $post_id, string $key = '', bool $single = false ): mixed {
+		$value = $GLOBALS['blueworx_clubhouse_preview_meta'][ $post_id ][ $key ] ?? '';
+		return $single ? $value : array( $value );
+	}
+}
+if ( ! function_exists( 'metadata_exists' ) ) {
+	function metadata_exists( string $type, int $object_id, string $key ): bool {
+		return isset( $GLOBALS['blueworx_clubhouse_preview_meta'][ $object_id ][ $key ] );
+	}
+}
+
 require_once dirname( __DIR__ ) . '/includes/bootstrap.php';
+
+// One synthetic post id per club page, so Page_Content has somewhere to write.
+$blueworx_clubhouse_preview_next_id = 1;
+foreach ( Blueworx_Clubhouse_Page_Map::pages() as $blueworx_clubhouse_preview_page ) {
+	$blueworx_clubhouse_preview_slug = (string) $blueworx_clubhouse_preview_page['slug'];
+	$GLOBALS['blueworx_clubhouse_preview_options'][ 'clubhouse_page_id_' . ( '' === $blueworx_clubhouse_preview_slug ? 'home' : $blueworx_clubhouse_preview_slug ) ] = $blueworx_clubhouse_preview_next_id++;
+}
 
 /** Minimal in-memory storage so the preview needs no WordPress/DB. */
 final class Blueworx_Clubhouse_Preview_Storage implements Blueworx_Clubhouse_Storage {
@@ -110,9 +157,9 @@ function blueworx_clubhouse_preview_document(): string {
 	// switch only appears when a tier is priced both ways. They share one
 	// content store so both can be asked for at once.
 	$preview_content = null;
-	$preview_store   = static function () use ( $storage, &$preview_content ): Blueworx_Clubhouse_Content_Store {
+	$preview_store   = static function () use ( $storage, &$preview_content ): Blueworx_Clubhouse_Page_Content {
 		if ( null === $preview_content ) {
-			$preview_content = new Blueworx_Clubhouse_Content_Store( $storage );
+			$preview_content = new Blueworx_Clubhouse_Page_Content( $storage );
 		}
 		return $preview_content;
 	};
@@ -122,8 +169,8 @@ function blueworx_clubhouse_preview_document(): string {
 	$raw_social = $_GET['clubhouse_social'] ?? '';
 	$social     = is_string( $raw_social ) ? (string) preg_replace( '/[^a-z]/', '', $raw_social ) : '';
 	if ( 'demo' === $social || 'empty' === $social ) {
-		$visibility->set_section_visible( 'home', 'social_feed', true );
 		$content_store = $preview_store();
+		$content_store->set( 'home', 'social_feed', '_shown', true );
 		$content_store->set( 'home', 'social_feed', 'platform', 'instagram' );
 		$content_store->set( 'home', 'social_feed', 'heading', 'Latest from the club' );
 		$content_store->set( 'home', 'social_feed', 'lede', 'Match-day photos and the week as it happened.' );

@@ -114,13 +114,6 @@ final class MenuTabLocationTest extends TestCase {
 		$this->assertStringContainsString( 'data-tab="look"', $html );
 	}
 
-	/** Club Pages no longer offers it. */
-	public function test_club_pages_has_no_menu_tab_left(): void {
-		$php = (string) file_get_contents( dirname( __DIR__, 2 ) . '/includes/admin/class-content-screen.php' );
-		$this->assertStringNotContainsString( 'Blueworx_Clubhouse_Menu_Panel::render', $php );
-		$this->assertStringNotContainsString( 'data-tab="menu"', $php );
-	}
-
 	/** The guide sends people to the new place. */
 	public function test_the_guide_points_at_the_clubhouse_screen(): void {
 		$php = (string) file_get_contents( dirname( __DIR__, 2 ) . '/includes/admin/class-guide.php' );

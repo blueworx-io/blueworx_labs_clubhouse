@@ -169,7 +169,7 @@ if ( $member_user instanceof WP_User ) {
 // A welcome pack for that dashboard to carry, written through the plugin's own
 // store rather than a hand-built option, so the fixture cannot drift from how
 // the admin screen saves.
-$store = new Blueworx_Clubhouse_Content_Store( new Blueworx_Clubhouse_Options_Storage() );
+$store = new Blueworx_Clubhouse_Page_Content( new Blueworx_Clubhouse_Options_Storage() );
 $store->set( 'global', 'welcome', 'heading', 'Welcome to the club' );
 $store->set( 'global', 'welcome', 'body', "The gate code is on your membership card.\n\nParking is behind the pitch." );
 $store->set( 'global', 'welcome', 'link_label', 'Read the handbook' );

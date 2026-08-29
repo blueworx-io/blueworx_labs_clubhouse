@@ -32,16 +32,12 @@ final class ClubhouseSubmenusTest extends TestCase {
 		$this->assertSame( Blueworx_Clubhouse_Guide_Controller::PAGE_SLUG, $args[4] );
 	}
 
-	public function test_neither_hangs_off_club_pages_any_more(): void {
-		foreach ( array( 'includes/import/class-import-controller.php', 'includes/admin/class-guide-controller.php' ) as $file ) {
-			$php = (string) file_get_contents( dirname( __DIR__, 2 ) . '/' . $file );
-			$this->assertStringNotContainsString(
-				'add_submenu_page(' . "\n\t\t\t" . 'Blueworx_Clubhouse_Content_Controller::PAGE_SLUG',
-				$php,
-				$file
-			);
-		}
-	}
+	/*
+	 * A case stood here asserting that neither screen still hung off Club
+	 * Pages. It searched both files for a reference to a class that no longer
+	 * exists, so it could only ever pass — the two cases above, which assert
+	 * what each screen actually registers under, are what hold this now.
+	 */
 
 	/** Who can open them is unchanged: Import owner-and-above, the guide both roles. */
 	public function test_access_is_unchanged(): void {

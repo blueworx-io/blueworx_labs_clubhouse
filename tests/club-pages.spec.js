@@ -42,7 +42,7 @@ test('the front page is the club home page @wordpress', async ({ page }) => {
   await expect(page.locator('.ch-nav')).toHaveCount(1);
 });
 
-test('editing a club page lands in Club Pages, not the block editor @wordpress', async ({ page }) => {
+test('editing a club page lands in that page\'s own editor, not the block editor @wordpress', async ({ page }) => {
   await signIn(page);
   await page.goto('/wp-admin/edit.php?post_type=page&post_status=all');
   const row = page.locator('#the-list tr', { has: page.locator('a.row-title', { hasText: /^About$/ }) }).first();
@@ -50,14 +50,14 @@ test('editing a club page lands in Club Pages, not the block editor @wordpress',
   const id = (rowId || '').replace('post-', '');
   expect(id).toMatch(/^\d+$/);
 
-  // The Edit link itself points at Club Pages, not the block editor...
+  // The Edit link itself points at the About page's editor, not the block editor...
   const href = await row.locator('a.row-title').getAttribute('href');
-  expect(href).toContain('page=clubhouse-site-content');
+  expect(href).toContain('page=clubhouse-page-about');
+  expect(href).toContain(`id=${id}`);
 
   // ...and so does typing the editor's address directly.
   await page.goto(`/wp-admin/post.php?post=${id}&action=edit`);
-  expect(page.url()).toContain('page=clubhouse-site-content');
-  expect(page.url()).toContain('tab=about');
+  expect(page.url()).toContain('page=clubhouse-page-about');
   await expect(page.locator('#editor')).toHaveCount(0);
 });
 

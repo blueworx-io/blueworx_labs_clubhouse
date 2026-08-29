@@ -6,10 +6,10 @@ use PHPUnit\Framework\TestCase;
 final class MenuPanelTest extends TestCase {
 
 	protected function tearDown(): void {
-		// test_the_shared_datalist_carries_real_addresses_not_preview_tokens()
-		// installs a real resolver via Page_Editors::register() — leaving it
-		// in place would leak into any other test file that calls
-		// Blueworx_Clubhouse_Links::url() expecting the untouched default.
+		// Nothing here installs a resolver any more, but a test file that runs
+		// before this one may have — and Link_Catalogue::targets() resolves
+		// every address through it, so a leaked one would change what the rows
+		// below assert against.
 		Blueworx_Clubhouse_Links::set_resolver( null );
 	}
 
@@ -17,7 +17,7 @@ final class MenuPanelTest extends TestCase {
 		return array(
 			'tree'        => $tree,
 			'targets'     => Blueworx_Clubhouse_Link_Catalogue::targets( new Blueworx_Clubhouse_Demo_Collections() ),
-			'action_url'  => 'http://x.test/wp-admin/admin.php?page=clubhouse-site-content',
+			'action_url'  => 'http://x.test/wp-admin/admin.php?page=clubhouse-setup',
 			'nonce_field' => '<input type="hidden" name="_wpnonce" value="abc">',
 		);
 	}
@@ -100,41 +100,16 @@ final class MenuPanelTest extends TestCase {
 	}
 
 	/**
-	 * screen_html() builds its model with the real Blueworx_Clubhouse_WP_Collections,
-	 * which reads get_posts() — empty under a fresh Fake_Storage/stub set unless a
-	 * post is seeded into $GLOBALS['wp_stub_posts']. Asserting through it here would
-	 * only prove sport/team targets are missing, not present, so this asserts
-	 * against Content_Screen::render() with a hand-built model instead, using
-	 * Demo_Collections the way the rest of this file's tests already do — it is a
-	 * DB-free stand-in for the same Link_Catalogue::targets() the controller calls.
+	 * The menu picker's targets, which the panel renders into its own select.
+	 * Asserted through Link_Catalogue directly rather than through a rendered
+	 * screen: Demo_Collections is the DB-free stand-in the rest of this file
+	 * already uses, and the real Blueworx_Clubhouse_WP_Collections reads
+	 * get_posts(), which is empty under the stubs — so asserting through a
+	 * screen would only ever prove sport and team targets are missing.
 	 */
-	public function test_the_shared_datalist_offers_anchors_and_filters(): void {
-		$s     = new Blueworx_Clubhouse_Fake_Storage();
-		$model = Blueworx_Clubhouse_Content_Controller::build_model( $s, array(), '', '' );
-		$model['menu_targets'] = Blueworx_Clubhouse_Link_Catalogue::targets( new Blueworx_Clubhouse_Demo_Collections() );
-		$html = Blueworx_Clubhouse_Content_Screen::render( $model );
-		$this->assertStringContainsString( 'About → History', $html );
-		$this->assertStringContainsString( 'Sports → Rugby', $html );
-	}
-
-	/**
-	 * Content_Screen's own datalist (still live, still user-visible until
-	 * task 10 removes this screen) reads the same Link_Catalogue::targets()
-	 * the record editors' link-field suggestions do, resolved through the
-	 * same global Blueworx_Clubhouse_Links resolver — one this class never
-	 * installed itself. Page_Editors::register() now installs it once,
-	 * deliberately, at plugin boot (see its own comment); this proves that
-	 * still-live consumer actually gets real addresses out of it too, not
-	 * just Page_Editors' own new screens.
-	 */
-	public function test_the_shared_datalist_carries_real_addresses_not_preview_tokens(): void {
-		Blueworx_Clubhouse_Page_Editors::register();
-
-		$s     = new Blueworx_Clubhouse_Fake_Storage();
-		$model = Blueworx_Clubhouse_Content_Controller::build_model( $s, array(), '', '' );
-		$html  = Blueworx_Clubhouse_Content_Screen::render( $model );
-
-		$this->assertStringNotContainsString( 'value="?page=', $html );
-		$this->assertMatchesRegularExpression( '#<option value="(/|https?://)#', $html );
+	public function test_the_targets_offer_anchors_and_filters(): void {
+		$labels = array_column( Blueworx_Clubhouse_Link_Catalogue::targets( new Blueworx_Clubhouse_Demo_Collections() ), 'label' );
+		$this->assertContains( 'About → History', $labels );
+		$this->assertContains( 'Sports → Rugby', $labels );
 	}
 }

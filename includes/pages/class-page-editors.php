@@ -137,8 +137,7 @@ final class Blueworx_Clubhouse_Page_Editors {
 	 * A suggestion has to hold a real address a browser can follow, never a
 	 * target tag. Resolving one requires a real resolver already installed on
 	 * Blueworx_Clubhouse_Links — register() below installs it once, at boot,
-	 * deliberately; this method only ever reads through it, the same way
-	 * Content_Screen's own datalist does.
+	 * deliberately; this method only ever reads through it.
 	 */
 	private static function link_suggestions(): array {
 		if ( ! class_exists( 'Blueworx_Clubhouse_Link_Catalogue' ) ) {
@@ -170,7 +169,7 @@ final class Blueworx_Clubhouse_Page_Editors {
 	 * reason). plugins_loaded runs before init, so declaring here would always
 	 * see LatePoint as absent, on every site, dropping Bookings' menu item and
 	 * its Pages → Edit route regardless of whether LatePoint is actually
-	 * installed — a real regression against the old Content_Controller, which
+	 * installed — a real regression against the old Club Pages screen, which
 	 * built its catalogue on admin_menu, safely after init.
 	 *
 	 * Worse than a wrong answer once: Page_Fields::areas() memoises per
@@ -196,12 +195,10 @@ final class Blueworx_Clubhouse_Page_Editors {
 			return;
 		}
 		// Installed once, here, at boot — a decision, not a side effect of
-		// building a screen. Two consumers read a link's URL through
-		// Blueworx_Clubhouse_Links: this class's own link-field suggestions
-		// (declare_screens(), below) and the still-live Content_Controller /
-		// Content_Screen "Club Pages" datalist, which is user-visible until
-		// task 10 removes it. Neither installed a resolver of its own before
-		// this, so both silently got the preview server's '?page=<key>' query
+		// building a screen. This class's own link-field suggestions
+		// (declare_screens(), below) read a link's URL through
+		// Blueworx_Clubhouse_Links, and nothing installed a resolver before
+		// this, so they silently got the preview server's '?page=<key>' query
 		// form. Only the *callable* is stored — plugins_loaded runs before
 		// $wp_rewrite exists, and resolving now would fatal (see
 		// Frontend::register()'s own comment on Checkout::set_resolver() for

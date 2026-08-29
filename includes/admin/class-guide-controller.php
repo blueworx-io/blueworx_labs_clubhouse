@@ -127,7 +127,9 @@ final class Blueworx_Clubhouse_Guide_Controller {
 			'screens'     => self::screens(),
 			'collections' => self::collections(),
 			'setup_url'   => admin_url( 'admin.php?page=' . Blueworx_Clubhouse_Setup_Controller::PAGE_SLUG ),
-			'content_url' => admin_url( 'admin.php?page=' . Blueworx_Clubhouse_Content_Controller::PAGE_SLUG ),
+			// The Pages list, not a screen of this plugin's own: a club page is a
+			// real WordPress page now, and its Edit button opens its own editor.
+			'content_url' => admin_url( 'edit.php?post_type=page' ),
 		);
 	}
 

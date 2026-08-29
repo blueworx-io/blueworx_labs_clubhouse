@@ -56,12 +56,15 @@ final class Blueworx_Clubhouse_Admin_Pages {
 				'menu'        => Blueworx_Clubhouse_Setup_Controller::PAGE_SLUG,
 				'description' => 'Base look, branding, page visibility and the header menu.',
 			),
+			// The one content editor with a menu item of its own. The other
+			// fourteen are the club's pages, reached from the Pages list, so
+			// there is no ClubHouse-specific screen for this registry to name.
 			array(
-				'slug'        => Blueworx_Clubhouse_Content_Controller::PAGE_SLUG,
-				'label'       => 'Club Pages',
-				'cap'         => Blueworx_Clubhouse_Content_Controller::CAPABILITY,
-				'menu'        => Blueworx_Clubhouse_Content_Controller::PAGE_SLUG,
-				'description' => 'The words and images on every page.',
+				'slug'        => Blueworx_Clubhouse_Page_Editors::GLOBAL_SLUG,
+				'label'       => 'Global content',
+				'cap'         => Blueworx_Clubhouse_Owner_Capabilities::CONTENT_CAP,
+				'menu'        => Blueworx_Clubhouse_Setup_Controller::PAGE_SLUG,
+				'description' => 'The header, footer, welcome pack and cookie notice.',
 			),
 			array(
 				'slug'        => Blueworx_Clubhouse_Import_Controller::PAGE_SLUG,

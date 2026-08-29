@@ -238,7 +238,18 @@ final class ContentMigrationTest extends TestCase {
 			$post_id += 10;
 		}
 
-		$old       = new Blueworx_Clubhouse_Content_Store( $this->storage );
+		// Seeds the old option shape directly, the way every other case in this
+		// file does. Content_Store, which used to write it, is deleted — and the
+		// migration reads the option directly for the same reason, so a seeder
+		// here is closer to what the migration actually meets than a store
+		// wrapper would have been.
+		$old = function ( string $area, string $section, string $key, mixed $value ): void {
+			$all = $this->storage->get( 'content_' . $area, array() );
+			$all = is_array( $all ) ? $all : array();
+			$all[ $section ][ $key ] = $value;
+			$this->storage->set( 'content_' . $area, $all );
+		};
+
 		$expected  = array();
 		$n         = 0;
 		$toggle_n  = 0;
@@ -287,9 +298,9 @@ final class ContentMigrationTest extends TestCase {
 						$expected[] = array( 'area' => $area, 'section' => $section, 'key' => $key, 'kind' => $kind, 'value' => $value );
 
 						if ( 'repeater' === $kind ) {
-							$old->set_items( $area, $section, $value );
+							$old( $area, $section, Blueworx_Clubhouse_Page_Fields::REPEATER_FIELD, $value );
 						} else {
-							$old->set( $area, $section, $key, $value );
+							$old( $area, $section, $key, $value );
 						}
 					}
 				}

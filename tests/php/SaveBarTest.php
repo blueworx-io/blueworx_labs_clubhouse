@@ -20,7 +20,7 @@ final class SaveBarTest extends TestCase {
 
 	/** @return array<int,string> */
 	public static function stylesheets(): array {
-		return array( array( 'admin-setup.css' ), array( 'admin-content.css' ) );
+		return array( array( 'admin-setup.css' ) );
 	}
 
 	#[DataProvider( 'stylesheets' )]
