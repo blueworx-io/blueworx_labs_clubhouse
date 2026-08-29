@@ -28,8 +28,8 @@ final class PageEditorsTest extends TestCase {
 		Blueworx_Clubhouse_Integrations::set_detector( null );
 		Blueworx_Clubhouse_Page_Fields::forget();
 		\Blueworx\PageEditor\v1\Editor::reset();
-		// link_suggestions() installs a real resolver as a side effect of
-		// screens() — every test in this class runs it. Left in place it
+		// register() installs a real link resolver, deliberately, at boot —
+		// several tests here call it via declared_screens(). Left in place it
 		// would leak into any other test file that calls Links::url()
 		// expecting the untouched default.
 		Blueworx_Clubhouse_Links::set_resolver( null );
@@ -42,6 +42,52 @@ final class PageEditorsTest extends TestCase {
 			$out[ $screen['slug'] ] = $screen;
 		}
 		return $out;
+	}
+
+	/**
+	 * The registered result, suggestions and all — the same path a real
+	 * request takes: register() (installs the link resolver, at boot) then
+	 * declare_screens() (applies suggestions, then hands each screen to the
+	 * library). Deliberately not screens() — that stays pure, with nothing to
+	 * read suggestions off.
+	 *
+	 * @return array<string,array<string,mixed>> slug => the library's own
+	 *   validated screen, from Editor::all().
+	 */
+	private function declared_screens(): array {
+		Blueworx_Clubhouse_Page_Editors::register();
+		Blueworx_Clubhouse_Page_Editors::declare_screens();
+		return \Blueworx\PageEditor\v1\Editor::all();
+	}
+
+	/**
+	 * Every url field and repeater url cell across every registered screen,
+	 * flattened.
+	 *
+	 * @param array<string,array<string,mixed>> $screens
+	 * @return array<int,array<string,mixed>>
+	 */
+	private function url_fields( array $screens ): array {
+		$fields = array();
+		foreach ( $screens as $screen ) {
+			foreach ( $screen['tabs'] as $tab ) {
+				foreach ( $tab['panels'] as $panel ) {
+					foreach ( $panel['fields'] as $field ) {
+						if ( 'url' === ( $field['format'] ?? '' ) ) {
+							$fields[] = $field;
+						}
+						if ( 'repeater' === ( $field['kind'] ?? '' ) ) {
+							foreach ( $field['fields'] ?? array() as $cell ) {
+								if ( 'url' === ( $cell['format'] ?? '' ) ) {
+									$fields[] = $cell;
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		return $fields;
 	}
 
 	public function test_every_screen_the_library_would_refuse_is_named(): void {
@@ -104,23 +150,24 @@ final class PageEditorsTest extends TestCase {
 	}
 
 	/**
-	 * The one piece of unplanned, load-bearing behaviour in this class: a slug
-	 * rename or a selector typo here would un-hide all fourteen with nothing
-	 * failing, if nothing asserted it.
+	 * The claim in screens()'s own docblock, made true again: calling it alone
+	 * touches neither the link resolver nor a url field's suggestions — both
+	 * are declare_screens()' job now, not baked into the definitions.
 	 */
-	public function test_a_url_field_offers_the_sites_own_pages(): void {
-		$fields = array();
-		foreach ( Blueworx_Clubhouse_Page_Editors::screens() as $screen ) {
-			foreach ( $screen['tabs'] as $tab ) {
-				foreach ( $tab['panels'] as $panel ) {
-					foreach ( $panel['fields'] as $field ) {
-						if ( 'url' === ( $field['format'] ?? '' ) ) {
-							$fields[] = $field;
-						}
-					}
-				}
-			}
+	public function test_screens_alone_installs_no_resolver_and_carries_no_suggestions(): void {
+		Blueworx_Clubhouse_Links::set_resolver( null );
+
+		$fields = $this->url_fields( $this->screens() );
+
+		$this->assertNotSame( array(), $fields, 'No url fields at all — the translation lost them.' );
+		foreach ( $fields as $field ) {
+			$this->assertSame( array(), $field['suggestions'] ?? array(), $field['id'] );
 		}
+		$this->assertSame( '?page=home', Blueworx_Clubhouse_Links::url( 'home' ), 'screens() must not have installed a resolver.' );
+	}
+
+	public function test_a_url_field_offers_the_sites_own_pages(): void {
+		$fields = $this->url_fields( $this->declared_screens() );
 		$this->assertNotSame( array(), $fields, 'No url fields at all — the translation lost them.' );
 		foreach ( $fields as $field ) {
 			$this->assertNotEmpty( $field['suggestions'] ?? array(), $field['id'] );
@@ -134,25 +181,20 @@ final class PageEditorsTest extends TestCase {
 	/**
 	 * A menu target like "shop:dashboard" is a token this plugin resolves and a
 	 * browser does not. These go into a free-text box that has to hold a link,
-	 * so every suggestion is either a path or an absolute address.
+	 * so every suggestion — top-level field or repeater cell — is either a
+	 * path or an absolute address, never a token.
 	 */
 	public function test_a_suggestion_is_an_address_and_not_a_target_token(): void {
-		foreach ( Blueworx_Clubhouse_Page_Editors::screens() as $screen ) {
-			foreach ( $screen['tabs'] as $tab ) {
-				foreach ( $tab['panels'] as $panel ) {
-					foreach ( $panel['fields'] as $field ) {
-						foreach ( $field['suggestions'] ?? array() as $suggestion ) {
-							$this->assertMatchesRegularExpression( '#^(/|https?://)#', $suggestion['value'], $field['id'] );
-						}
-					}
-				}
+		foreach ( $this->url_fields( $this->declared_screens() ) as $field ) {
+			foreach ( $field['suggestions'] ?? array() as $suggestion ) {
+				$this->assertMatchesRegularExpression( '#^(/|https?://)#', $suggestion['value'], $field['id'] );
 			}
 		}
 	}
 
 	/** Repeater cells carry the same suggestions as a top-level field — a quick tile's link is as much a link as the hero's. */
 	public function test_a_repeater_cells_url_field_offers_suggestions_too(): void {
-		$home = $this->screens()['clubhouse-page-home'];
+		$home = $this->declared_screens()['clubhouse-page-home'];
 		$cell = null;
 		foreach ( $home['tabs'] as $tab ) {
 			foreach ( $tab['panels'] as $panel ) {
@@ -195,6 +237,11 @@ final class PageEditorsTest extends TestCase {
 		$this->assertSame( 20, $call['args'][2] ?? 10, 'declare_screens() must run at priority 20, after other plugins have had a chance to register on init.' );
 	}
 
+	/**
+	 * The one piece of unplanned, load-bearing behaviour in this class: a slug
+	 * rename or a selector typo here would un-hide all fourteen with nothing
+	 * failing, if nothing asserted it.
+	 */
 	public function test_hide_record_editors_removes_every_record_editor_but_keeps_global_content(): void {
 		Blueworx_Clubhouse_Page_Editors::declare_screens();
 

@@ -5,6 +5,14 @@ use PHPUnit\Framework\TestCase;
 
 final class MenuPanelTest extends TestCase {
 
+	protected function tearDown(): void {
+		// test_the_shared_datalist_carries_real_addresses_not_preview_tokens()
+		// installs a real resolver via Page_Editors::register() — leaving it
+		// in place would leak into any other test file that calls
+		// Blueworx_Clubhouse_Links::url() expecting the untouched default.
+		Blueworx_Clubhouse_Links::set_resolver( null );
+	}
+
 	private function model( array $tree ): array {
 		return array(
 			'tree'        => $tree,
@@ -107,5 +115,26 @@ final class MenuPanelTest extends TestCase {
 		$html = Blueworx_Clubhouse_Content_Screen::render( $model );
 		$this->assertStringContainsString( 'About → History', $html );
 		$this->assertStringContainsString( 'Sports → Rugby', $html );
+	}
+
+	/**
+	 * Content_Screen's own datalist (still live, still user-visible until
+	 * task 10 removes this screen) reads the same Link_Catalogue::targets()
+	 * the record editors' link-field suggestions do, resolved through the
+	 * same global Blueworx_Clubhouse_Links resolver — one this class never
+	 * installed itself. Page_Editors::register() now installs it once,
+	 * deliberately, at plugin boot (see its own comment); this proves that
+	 * still-live consumer actually gets real addresses out of it too, not
+	 * just Page_Editors' own new screens.
+	 */
+	public function test_the_shared_datalist_carries_real_addresses_not_preview_tokens(): void {
+		Blueworx_Clubhouse_Page_Editors::register();
+
+		$s     = new Blueworx_Clubhouse_Fake_Storage();
+		$model = Blueworx_Clubhouse_Content_Controller::build_model( $s, array(), '', '' );
+		$html  = Blueworx_Clubhouse_Content_Screen::render( $model );
+
+		$this->assertStringNotContainsString( 'value="?page=', $html );
+		$this->assertMatchesRegularExpression( '#<option value="(/|https?://)#', $html );
 	}
 }

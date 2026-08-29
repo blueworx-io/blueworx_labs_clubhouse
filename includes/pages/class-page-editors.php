@@ -63,7 +63,7 @@ final class Blueworx_Clubhouse_Page_Editors {
 					: sprintf( 'The words on your %s page. Nothing changes on the site until you save.', strtolower( $spec['label'] ) ),
 				'capability' => Blueworx_Clubhouse_Owner_Capabilities::CONTENT_CAP,
 				'parent'     => Blueworx_Clubhouse_Setup_Controller::PAGE_SLUG,
-				'tabs'       => self::with_suggestions( $spec['tabs'] ),
+				'tabs'       => $spec['tabs'],
 			);
 			if ( $global ) {
 				$screen['store']       = 'option';
@@ -85,6 +85,13 @@ final class Blueworx_Clubhouse_Page_Editors {
 	 * a browser does not, and these go into a free-text box that has to hold a
 	 * link. The field stays free text: plenty of links point somewhere the
 	 * plugin does not own.
+	 *
+	 * Called from declare_screens(), not screens(): screens() is documented
+	 * and relied on (PageEditorsTest, task 4) as pure — no hooks, no
+	 * WordPress. link_suggestions() below issues real queries through
+	 * Blueworx_Clubhouse_WP_Collections, so it belongs at the one place that
+	 * already runs at a known time on init, not baked into the definitions
+	 * themselves.
 	 */
 	private static function with_suggestions( array $tabs ): array {
 		$suggestions = self::link_suggestions();
@@ -128,23 +135,14 @@ final class Blueworx_Clubhouse_Page_Editors {
 	 * @return array<int,array{value:string,label:string}>
 	 *
 	 * A suggestion has to hold a real address a browser can follow, never a
-	 * target tag — but Blueworx_Clubhouse_Links, with nothing else installed,
-	 * emits the preview server's '?page=<key>' query form (see its own
-	 * docblock). Nothing installs a real resolver by the time this runs:
-	 * declare_screens() fires on init, before Frontend::render_body() or
-	 * External_Chrome::wrap() get anywhere near a front-end request, and an
-	 * admin screen never triggers either. So this installs the same resolver
-	 * Seo_Controller::build_model() does, the one WordPress request type both
-	 * share — a real permalink, or link_url()'s own home_url() fallback for a
-	 * page not created yet. Neither is a preview link, and both match this
-	 * suggestion's own contract: an address, not a token.
+	 * target tag. Resolving one requires a real resolver already installed on
+	 * Blueworx_Clubhouse_Links — register() below installs it once, at boot,
+	 * deliberately; this method only ever reads through it, the same way
+	 * Content_Screen's own datalist does.
 	 */
 	private static function link_suggestions(): array {
 		if ( ! class_exists( 'Blueworx_Clubhouse_Link_Catalogue' ) ) {
 			return array();
-		}
-		if ( class_exists( 'Blueworx_Clubhouse_Frontend' ) ) {
-			Blueworx_Clubhouse_Links::set_resolver( array( Blueworx_Clubhouse_Frontend::class, 'link_url' ) );
 		}
 		$out = array();
 		foreach ( Blueworx_Clubhouse_Link_Catalogue::targets( new Blueworx_Clubhouse_WP_Collections() ) as $target ) {
@@ -197,12 +195,28 @@ final class Blueworx_Clubhouse_Page_Editors {
 		if ( ! function_exists( 'add_action' ) ) {
 			return;
 		}
+		// Installed once, here, at boot — a decision, not a side effect of
+		// building a screen. Two consumers read a link's URL through
+		// Blueworx_Clubhouse_Links: this class's own link-field suggestions
+		// (declare_screens(), below) and the still-live Content_Controller /
+		// Content_Screen "Club Pages" datalist, which is user-visible until
+		// task 10 removes it. Neither installed a resolver of its own before
+		// this, so both silently got the preview server's '?page=<key>' query
+		// form. Only the *callable* is stored — plugins_loaded runs before
+		// $wp_rewrite exists, and resolving now would fatal (see
+		// Frontend::register()'s own comment on Checkout::set_resolver() for
+		// the identical reason).
+		if ( class_exists( 'Blueworx_Clubhouse_Frontend' ) ) {
+			Blueworx_Clubhouse_Links::set_resolver( array( Blueworx_Clubhouse_Frontend::class, 'link_url' ) );
+		}
 		add_action( 'init', array( self::class, 'declare_screens' ), 20 );
 		add_action( 'admin_head', array( self::class, 'hide_record_editors' ) );
 	}
 
+	/** Suggestions are applied here, not in screens(): see with_suggestions()'s own docblock. */
 	public static function declare_screens(): void {
 		foreach ( self::screens( Blueworx_Clubhouse_Products_Source::get() ) as $screen ) {
+			$screen['tabs'] = self::with_suggestions( $screen['tabs'] );
 			\Blueworx\PageEditor\v1\Editor::register( $screen );
 		}
 	}
