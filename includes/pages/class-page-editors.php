@@ -43,9 +43,9 @@ final class Blueworx_Clubhouse_Page_Editors {
 	}
 
 	/**
-	 * The screen definitions. Pure — no hooks, no WordPress — so the test
-	 * above can hold every one of them against Schema::validate() and a
-	 * mistake is a red test rather than a live screen saying it is not ready.
+	 * The screen definitions. Pure — no hooks, no WordPress — so PageEditorsTest
+	 * can hold every one of them against Schema::validate() and a mistake is a
+	 * red test rather than a live screen saying it is not ready.
 	 *
 	 * @return array<int,array<string,mixed>>
 	 */
@@ -83,22 +83,33 @@ final class Blueworx_Clubhouse_Page_Editors {
 	}
 
 	/**
-	 * declare_screens() runs synchronously here rather than through another
-	 * plugins_loaded hook. register() is itself only ever called from the
-	 * plugin's own plugins_loaded callback, by which point the vendored
-	 * library's loader — hooked at plugins_loaded priority 0 — has already
-	 * required Editor and its dependents: there is nothing left to wait for.
-	 * A lower plugins_loaded priority would look like the right way to run
-	 * "as early as possible", but WordPress does not rewind a hook it has
-	 * already started dispatching to reach a priority added mid-dispatch —
-	 * declare_screens() would never run, and the fourteen record editors and
-	 * Global content would 404 with no error anywhere to say why.
+	 * declare_screens() is deferred to init, not called synchronously here and
+	 * not hooked any earlier. Page_Fields::areas() decides whether Bookings
+	 * exists by asking Integrations::provides(), whose real detector is
+	 * shortcode_exists( 'latepoint_calendar' ) — and LatePoint, like every
+	 * plugin, registers its shortcodes on init (see Frontend::register()'s own
+	 * comment on why do_shortcode() is wrapped in a closure for the same
+	 * reason). plugins_loaded runs before init, so declaring here would always
+	 * see LatePoint as absent, on every site, dropping Bookings' menu item and
+	 * its Pages → Edit route regardless of whether LatePoint is actually
+	 * installed — a real regression against the old Content_Controller, which
+	 * built its catalogue on admin_menu, safely after init.
+	 *
+	 * Worse than a wrong answer once: Page_Fields::areas() memoises per
+	 * products instance, so a pre-init answer would be cached and handed to
+	 * every later reader in the same request — including the front end once
+	 * Page_Content is wired to it.
+	 *
+	 * init fires once, on every request type (admin and REST included), so
+	 * this still runs well before Screen::menu() (admin_menu) or a REST call
+	 * to Editor::load()/save() could ask Editor::all() a question it can't
+	 * yet answer.
 	 */
 	public static function register(): void {
 		if ( ! function_exists( 'add_action' ) ) {
 			return;
 		}
-		self::declare_screens();
+		add_action( 'init', array( self::class, 'declare_screens' ) );
 		add_action( 'admin_head', array( self::class, 'hide_record_editors' ) );
 	}
 
@@ -113,26 +124,28 @@ final class Blueworx_Clubhouse_Page_Editors {
 	 * item: it is the one area with no page in the Pages list standing for it,
 	 * so without an item there would be no way to reach it.
 	 *
-	 * A CSS rule, not remove_submenu_page(). That looked like the obvious
-	 * tool, but it does more than hide a row: it erases the $submenu entry
-	 * get_admin_page_parent() relies on to find a page's parent on a direct
-	 * visit. Once gone, WordPress recomputes a different hook name than the
-	 * one Screen::menu() actually registered the page under a moment earlier
-	 * — and admin.php refuses the visit, "Cannot load …", for every one of
-	 * these fourteen the instant its item disappeared. Leaving the
-	 * registration alone and only hiding the row sidesteps that entirely.
+	 * remove_submenu_page(), on admin_head. An earlier version of this method
+	 * avoided remove_submenu_page() entirely, having found it broke a direct
+	 * visit to a hidden screen when called on admin_menu (priority 11): that
+	 * call erased the $submenu entry get_admin_page_parent() relies on to find
+	 * a page's parent, and WordPress recomputed a different — unregistered —
+	 * hook name for it than the one Screen::menu() had just registered.
+	 * admin_head runs later than that, from inside admin-header.php — by which
+	 * point wp-admin/admin.php has already resolved $page_hook and already
+	 * called user_can_access_admin_page() (both happen while building
+	 * wp-admin/menu.php, well before admin-header.php requires
+	 * wp-admin/menu-header.php to actually draw the sidebar). Removing the
+	 * entry here is too late to affect either of those for the current
+	 * request, and exactly in time to keep it out of the row menu-header.php
+	 * is about to draw. Verified in the harness: a direct visit to a hidden
+	 * screen still 200s, and its row is gone from the rendered menu.
 	 */
 	public static function hide_record_editors(): void {
-		$selectors = array();
-		foreach ( self::screens() as $screen ) {
-			if ( self::GLOBAL_SLUG === $screen['slug'] ) {
+		foreach ( array_keys( \Blueworx\PageEditor\v1\Editor::all() ) as $slug ) {
+			if ( self::GLOBAL_SLUG === $slug ) {
 				continue;
 			}
-			$selectors[] = '#adminmenu li:has(> a[href$="page=' . esc_attr( $screen['slug'] ) . '"])';
+			remove_submenu_page( Blueworx_Clubhouse_Setup_Controller::PAGE_SLUG, $slug );
 		}
-		if ( array() === $selectors ) {
-			return;
-		}
-		printf( '<style>%s{display:none}</style>', implode( ',', $selectors ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- built only from esc_attr()'d slugs above, never from a request.
 	}
 }

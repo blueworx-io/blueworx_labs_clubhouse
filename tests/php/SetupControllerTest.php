@@ -98,6 +98,28 @@ final class SetupControllerTest extends TestCase {
 		$this->assertContains( 'admin_enqueue_scripts', $actions );
 	}
 
+	/**
+	 * Priority 1, not the default — see the comment on register(). The
+	 * vendored page editor library boots its own admin_menu hook (default
+	 * priority, but registered while that library loads on plugins_loaded,
+	 * ahead of this plugin's own registration) and only resolves Global
+	 * content's internal hook name correctly once this top-level page already
+	 * exists. Tidy this back to the default and nothing else here fails —
+	 * Global content just 403s for every user again.
+	 */
+	public function test_admin_menu_registers_ahead_of_the_page_editor_library(): void {
+		wp_stub_reset();
+		Blueworx_Clubhouse_Setup_Controller::register();
+		$menu_call = null;
+		foreach ( wp_stub_calls( 'add_action' ) as $call ) {
+			if ( 'admin_menu' === $call['args'][0] ) {
+				$menu_call = $call;
+			}
+		}
+		$this->assertNotNull( $menu_call );
+		$this->assertSame( 1, $menu_call['args'][2] ?? null );
+	}
+
 	public function test_owner_save_leaves_demo_state_untouched(): void {
 		// An owner (can_demo=false) never sees the demo field, so their save must
 		// not change demo state — even though the checkbox is absent from $post.

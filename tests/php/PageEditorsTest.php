@@ -17,12 +17,17 @@ final class PageEditorsTest extends TestCase {
 			static fn( string $tag ): bool => Blueworx_Clubhouse_Integrations::LATEPOINT_TAG === $tag
 		);
 		Blueworx_Clubhouse_Page_Fields::forget();
+		// hide_record_editors() reads Editor::all(), the library's own static
+		// registry — a test that calls declare_screens() leaves it populated
+		// for whichever test runs next in the same process otherwise.
+		\Blueworx\PageEditor\v1\Editor::reset();
 	}
 
 	protected function tearDown(): void {
 		Blueworx_Clubhouse_SureCart_Products::set_active_for_tests( null );
 		Blueworx_Clubhouse_Integrations::set_detector( null );
 		Blueworx_Clubhouse_Page_Fields::forget();
+		\Blueworx\PageEditor\v1\Editor::reset();
 	}
 
 	/** @return array<string,array<string,mixed>> slug => screen */
@@ -77,5 +82,41 @@ final class PageEditorsTest extends TestCase {
 		update_option( 'clubhouse_page_id_about', 91 );
 		$this->assertStringContainsString( 'page=clubhouse-page-about', Blueworx_Clubhouse_Page_Editors::editor_url( 'about' ) );
 		$this->assertStringContainsString( 'id=91', Blueworx_Clubhouse_Page_Editors::editor_url( 'about' ) );
+	}
+
+	/** The setUp() comment's own claim: with everything installed, all fifteen. */
+	public function test_there_are_fifteen_screens_with_everything_installed(): void {
+		$this->assertCount( 15, Blueworx_Clubhouse_Page_Editors::screens() );
+	}
+
+	public function test_exactly_one_screen_stores_to_an_option(): void {
+		$option_screens = array_filter(
+			Blueworx_Clubhouse_Page_Editors::screens(),
+			static fn( array $screen ): bool => 'option' === $screen['store']
+		);
+		$this->assertCount( 1, $option_screens );
+		$this->assertSame( Blueworx_Clubhouse_Page_Editors::GLOBAL_SLUG, array_values( $option_screens )[0]['slug'] );
+	}
+
+	/**
+	 * The one piece of unplanned, load-bearing behaviour in this class: a slug
+	 * rename or a selector typo here would un-hide all fourteen with nothing
+	 * failing, if nothing asserted it.
+	 */
+	public function test_hide_record_editors_removes_every_record_editor_but_keeps_global_content(): void {
+		Blueworx_Clubhouse_Page_Editors::declare_screens();
+
+		Blueworx_Clubhouse_Page_Editors::hide_record_editors();
+
+		$removed = array_map(
+			static fn( array $call ): string => $call['args'][1],
+			wp_stub_calls( 'remove_submenu_page' )
+		);
+		$this->assertCount( 14, $removed );
+		$this->assertContains( 'clubhouse-page-home', $removed );
+		$this->assertNotContains( Blueworx_Clubhouse_Page_Editors::GLOBAL_SLUG, $removed );
+		foreach ( wp_stub_calls( 'remove_submenu_page' ) as $call ) {
+			$this->assertSame( Blueworx_Clubhouse_Setup_Controller::PAGE_SLUG, $call['args'][0] );
+		}
 	}
 }
