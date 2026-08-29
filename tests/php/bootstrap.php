@@ -38,6 +38,12 @@ if ( ! defined( 'BLUEWORX_CLUBHOUSE_RUNNING_TESTS' ) ) {
 
 require_once __DIR__ . '/wp-stubs.php';
 
+// The vendored page editor library is not yet wired into the plugin runtime —
+// that lands as its screens do, in a later phase — but PageFieldsTest checks
+// every declared kind against its closed list, so the one file that defines
+// it has to be loadable here.
+require_once dirname( __DIR__, 2 ) . '/blueworx-page-editor/v1/Schema.php';
+
 require dirname( __DIR__, 2 ) . '/includes/bootstrap.php';
 
 require_once dirname( __DIR__, 2 ) . '/includes/frontend/class-clubhouse-context.php';
