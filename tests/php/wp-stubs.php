@@ -201,6 +201,19 @@ if ( ! function_exists( 'delete_post_meta' ) ) {
 if ( ! function_exists( 'register_post_type' ) ) {
 	function register_post_type( ...$a ) { wp_stub_record( 'register_post_type', $a ); return (object) array( 'name' => $a[0] ?? '' ); }
 }
+// 'post' and 'page' are WordPress's own built-in types, always registered on
+// a real site — this stub never saw them go through register_post_type(), so
+// it has to know them by name rather than only by what was recorded above.
+if ( ! function_exists( 'post_type_exists' ) ) {
+	function post_type_exists( string $post_type ): bool {
+		return in_array( $post_type, array( 'post', 'page' ), true );
+	}
+}
+if ( ! function_exists( 'get_post_type_object' ) ) {
+	function get_post_type_object( string $post_type ) {
+		return post_type_exists( $post_type ) ? (object) array( 'name' => $post_type, 'cap' => (object) array() ) : null;
+	}
+}
 if ( ! function_exists( 'register_post_meta' ) ) {
 	function register_post_meta( ...$a ) { wp_stub_record( 'register_post_meta', $a ); return true; }
 }

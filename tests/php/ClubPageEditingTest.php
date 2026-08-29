@@ -8,8 +8,8 @@ use PHPUnit\Framework\TestCase;
  * Club pages are real WordPress pages now, so WordPress offers an Edit link
  * into the block editor for each one — a second, contradictory place to write
  * a club's words, over a body that is deliberately empty. Editing has to keep
- * feeling exactly as it did: Edit lands on the Club Pages screen, on the tab
- * for that page, and the block editor is never reached.
+ * feeling exactly as it did: Edit lands on that page's own record editor, and
+ * the block editor is never reached.
  */
 final class ClubPageEditingTest extends TestCase {
 
@@ -17,18 +17,19 @@ final class ClubPageEditingTest extends TestCase {
 		wp_stub_reset();
 	}
 
-	public function test_the_editor_url_points_at_the_right_page_in_club_pages(): void {
-		$this->assertStringContainsString( 'page=clubhouse-site-content', Blueworx_Clubhouse_Club_Page_Editing::editor_url( 'about' ) );
-		$this->assertStringContainsString( 'tab=about', Blueworx_Clubhouse_Club_Page_Editing::editor_url( 'about' ) );
+	public function test_the_editor_url_points_at_the_right_page_s_own_editor(): void {
+		update_option( 'clubhouse_page_id_about', 42 );
+		$this->assertStringContainsString( 'page=clubhouse-page-about', Blueworx_Clubhouse_Club_Page_Editing::editor_url( 'about' ) );
+		$this->assertStringContainsString( 'id=42', Blueworx_Clubhouse_Club_Page_Editing::editor_url( 'about' ) );
 	}
 
 	/**
-	 * Home's Page_Map slug is '', but the Club Pages screen names its tab
-	 * 'home' — Content_Catalogue's Home page entry. An empty tab would land on
-	 * whichever tab happened to be first (Global), which is not Home's words.
+	 * Home's Page_Map slug is '', but Page_Editors names its area 'home' —
+	 * Page_Fields' own key for it. An empty area would ask Page_Editors for a
+	 * screen keyed by '', which does not exist.
 	 */
-	public function test_home_lands_on_the_tab_the_screen_actually_emits(): void {
-		$this->assertStringContainsString( 'tab=home', Blueworx_Clubhouse_Club_Page_Editing::editor_url( '' ) );
+	public function test_home_lands_on_the_area_the_screen_actually_emits(): void {
+		$this->assertStringContainsString( 'page=clubhouse-page-home', Blueworx_Clubhouse_Club_Page_Editing::editor_url( '' ) );
 	}
 
 	public function test_a_club_page_never_uses_the_block_editor(): void {

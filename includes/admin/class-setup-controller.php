@@ -243,7 +243,15 @@ final class Blueworx_Clubhouse_Setup_Controller {
 	}
 
 	public static function register(): void {
-		add_action( 'admin_menu', array( self::class, 'add_menu' ) );
+		// Priority 1, ahead of the vendored page editor library's own admin_menu
+		// hook (default priority, added while that library boots on
+		// plugins_loaded — see Page_Editors::register()). That hook adds Global
+		// content as a submenu of PAGE_SLUG; WordPress only resolves a submenu
+		// item's own hook name correctly once its parent's add_menu_page() call
+		// has already run, so the parent has to exist first. Registered any
+		// later, Global content opens to "Sorry, you are not allowed to access
+		// this page." even for an owner who holds the capability.
+		add_action( 'admin_menu', array( self::class, 'add_menu' ), 1 );
 		add_action( 'admin_enqueue_scripts', array( self::class, 'enqueue' ) );
 	}
 

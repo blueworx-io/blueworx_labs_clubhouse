@@ -38,11 +38,15 @@ if ( ! defined( 'BLUEWORX_CLUBHOUSE_RUNNING_TESTS' ) ) {
 
 require_once __DIR__ . '/wp-stubs.php';
 
-// The vendored page editor library is not yet wired into the plugin runtime —
-// that lands as its screens do, in a later phase — but PageFieldsTest checks
-// every declared kind against its closed list, so the one file that defines
-// it has to be loadable here.
-require_once dirname( __DIR__, 2 ) . '/blueworx-page-editor/v1/Schema.php';
+// The vendored page editor library. Page_Editors declares its screens straight
+// to Schema::validate() and Editor::register(), so the tests need the whole
+// library loaded — not just Schema.php, which was enough while PageFieldsTest
+// was the only thing checking a declared kind against its closed list. Same
+// order Registry::load() uses, minus the final Editor::boot(): that call wires
+// WordPress hooks the test bootstrap has no need to run.
+foreach ( array( 'Schema', 'Capabilities', 'Sanitise', 'Validate', 'Store', 'Settings', 'Rest', 'Screen', 'Editor' ) as $bwpe_class ) {
+	require_once dirname( __DIR__, 2 ) . '/blueworx-page-editor/v1/' . $bwpe_class . '.php';
+}
 
 require dirname( __DIR__, 2 ) . '/includes/bootstrap.php';
 
