@@ -116,7 +116,7 @@ final class Blueworx_Clubhouse_Setup_Screen {
 			. self::look_area( $model['looks'], $model['look_tokens'] )
 			. self::branding_area( $model['branding'] ) . '</section>';
 		$out .= '<section class="clubhouse-panel" data-panel="visibility" role="tabpanel">'
-			. self::visibility_area( $model['inventory'], $model['visibility'] ) . '</section>';
+			. self::visibility_area( $model['pages'], $model['visibility'] ) . '</section>';
 		$out .= '<section class="clubhouse-panel" data-panel="members" role="tabpanel">'
 			. self::members_area( $model['members'] ?? array() )
 			// The club's own questions about a member sit with the other member
@@ -323,57 +323,38 @@ final class Blueworx_Clubhouse_Setup_Screen {
 	}
 
 	/**
-	 * @param array<int,array{page:string,label:string,sections:array<int,array{key:string,label:string}>}> $inventory
-	 * @param array{pages:array<string,bool>,sections:array<string,bool>} $visibility
+	 * Pages only. A section is switched off on its own panel, in the editor for
+	 * the page it belongs to — so there is no section grid here, and no section
+	 * count on a tab.
+	 *
+	 * @param array<int,array{page:string,label:string}> $pages
+	 * @param array{pages:array<string,bool>} $visibility
 	 */
-	private static function visibility_area( array $inventory, array $visibility ): string {
+	private static function visibility_area( array $pages, array $visibility ): string {
 		$out  = '<div class="clubhouse-step"><p class="clubhouse-step__k">Visibility</p><h2 class="clubhouse-step__h">What visitors see</h2>';
-		$out .= '<p class="clubhouse-step__lede">Everything is shown by default. Switch off any page or the sections within it.</p>';
+		$out .= '<p class="clubhouse-step__lede">Every page is shown by default. Switch off any page you do not want on your site — to take a single section off a page, open that page and use the section\'s own Shown switch.</p>';
 
-		// Sub-tab nav — one per page, counts from live state.
+		// Sub-tab nav — one per page.
 		$out .= '<div class="clubhouse-vistabs" role="tablist">';
 		$first = true;
-		foreach ( $inventory as $page ) {
-			$shown = 0;
-			foreach ( $page['sections'] as $section ) {
-				if ( $visibility['sections'][ $page['page'] . '.' . $section['key'] ] ?? true ) {
-					$shown++;
-				}
-			}
-			$total    = count( $page['sections'] );
+		foreach ( $pages as $page ) {
 			$cls      = $first ? ' is-active' : '';
 			$selected = $first ? 'true' : 'false';
-			// A page with no sections at all (the member area) has nothing to count —
-			// "0/0" reads as broken, not as "everything is hidden".
-			$count    = $total > 0 ? ' <span class="clubhouse-vistab__count">' . $shown . '/' . $total . '</span>' : '';
 			$out     .= '<button type="button" class="clubhouse-vistab' . $cls . '" data-vistab="' . self::esc( $page['page'] ) . '" role="tab" aria-selected="' . $selected . '">'
-				. self::esc( $page['label'] ) . $count . '</button>';
+				. self::esc( $page['label'] ) . '</button>';
 			$first = false;
 		}
 		$out .= '</div>';
 
 		// Sub-panels.
 		$first = true;
-		foreach ( $inventory as $page ) {
-			$page_on   = ( $visibility['pages'][ $page['page'] ] ?? true );
-			$has_sections = array() !== $page['sections'];
-			$cls       = $first ? ' is-active' : '';
-			$out .= '<div class="clubhouse-vispanel' . $cls . '" data-vispanel="' . self::esc( $page['page'] ) . '" role="tabpanel">';
-			// "… sections" only makes sense once there is a grid of them below it —
-			// a page with none (the member area) just needs the page-level toggle.
-			$title = $has_sections ? self::esc( $page['label'] ) . ' sections' : self::esc( $page['label'] );
-			$out  .= '<div class="clubhouse-vispanel__head"><span class="clubhouse-vispanel__title">' . $title . '</span>';
-			$out  .= self::toggle( 'clubhouse_page[' . $page['page'] . ']', 'Page shown', $page_on ) . '</div>';
-			if ( $has_sections ) {
-				$out .= '<div class="clubhouse-toggle-grid">';
-				foreach ( $page['sections'] as $section ) {
-					$skey = $page['page'] . '.' . $section['key'];
-					$on   = ( $visibility['sections'][ $skey ] ?? true );
-					$out .= self::toggle( 'clubhouse_section[' . $skey . ']', $section['label'], $on );
-				}
-				$out .= '</div>';
-			}
-			$out .= '</div>';
+		foreach ( $pages as $page ) {
+			$page_on = ( $visibility['pages'][ $page['page'] ] ?? true );
+			$cls     = $first ? ' is-active' : '';
+			$out    .= '<div class="clubhouse-vispanel' . $cls . '" data-vispanel="' . self::esc( $page['page'] ) . '" role="tabpanel">';
+			$out    .= '<div class="clubhouse-vispanel__head"><span class="clubhouse-vispanel__title">' . self::esc( $page['label'] ) . '</span>';
+			$out    .= self::toggle( 'clubhouse_page[' . $page['page'] . ']', 'Page shown', $page_on ) . '</div>';
+			$out    .= '</div>';
 			$first = false;
 		}
 		$out .= '</div>';

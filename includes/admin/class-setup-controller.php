@@ -170,14 +170,11 @@ final class Blueworx_Clubhouse_Setup_Controller {
 		}
 
 		// 4. Visibility — a checkbox is present only when ticked; absence = hidden.
-		$pages    = isset( $post['clubhouse_page'] ) && is_array( $post['clubhouse_page'] ) ? $post['clubhouse_page'] : array();
-		$sections = isset( $post['clubhouse_section'] ) && is_array( $post['clubhouse_section'] ) ? $post['clubhouse_section'] : array();
-		foreach ( Blueworx_Clubhouse_Setup_Sections::inventory() as $page ) {
+		// Pages only. A section is switched off on its own panel, on the page it
+		// belongs to, which is the one place that switch now lives.
+		$pages = isset( $post['clubhouse_page'] ) && is_array( $post['clubhouse_page'] ) ? $post['clubhouse_page'] : array();
+		foreach ( self::visibility_pages() as $page ) {
 			$vis->set_page_visible( $page['page'], isset( $pages[ $page['page'] ] ) );
-			foreach ( $page['sections'] as $section ) {
-				$skey = $page['page'] . '.' . $section['key'];
-				$vis->set_section_visible( $page['page'], $section['key'], isset( $sections[ $skey ] ) );
-			}
 		}
 
 		// 5. Warn if the stored accent is now illegible for the active look.
@@ -362,6 +359,28 @@ final class Blueworx_Clubhouse_Setup_Controller {
 	}
 
 	/**
+	 * The pages the Visibility tab offers a switch for: every page this site can
+	 * actually serve, in Page_Map's own order. A page whose integration is absent
+	 * is not offered at all — an owner should not be given a switch for a page
+	 * that cannot render — and its stored state is left alone, so installing the
+	 * integration later brings the page back exactly as it was.
+	 *
+	 * Home's slug is '' everywhere in Page_Map and 'home' everywhere visibility is
+	 * stored; that one remap is why this is a method rather than a call to
+	 * Page_Map::available() at each site.
+	 *
+	 * @return array<int,array{page:string,label:string}>
+	 */
+	public static function visibility_pages(): array {
+		$out = array();
+		foreach ( Blueworx_Clubhouse_Page_Map::available() as $page ) {
+			$slug  = '' === $page['slug'] ? 'home' : (string) $page['slug'];
+			$out[] = array( 'page' => $slug, 'label' => (string) $page['label'] );
+		}
+		return $out;
+	}
+
+	/**
 	 * @param array<int,array{type:string,text:string}> $notices
 	 * @return array<string,mixed>
 	 */
@@ -396,13 +415,9 @@ final class Blueworx_Clubhouse_Setup_Controller {
 		$plugin_url = defined( 'BLUEWORX_LABS_CLUBHOUSE_URL' ) ? BLUEWORX_LABS_CLUBHOUSE_URL : '';
 		$theming    = self::look_theming( $registry, $branding, $plugin_url );
 
-		$pages_state    = array();
-		$sections_state = array();
-		foreach ( Blueworx_Clubhouse_Setup_Sections::inventory() as $page ) {
+		$pages_state = array();
+		foreach ( self::visibility_pages() as $page ) {
 			$pages_state[ $page['page'] ] = $vis->is_page_visible( $page['page'] );
-			foreach ( $page['sections'] as $section ) {
-				$sections_state[ $page['page'] . '.' . $section['key'] ] = $vis->is_section_visible( $page['page'], $section['key'] );
-			}
 		}
 
 		$auth = new Blueworx_Clubhouse_Auth_Settings( $storage );
@@ -451,8 +466,8 @@ final class Blueworx_Clubhouse_Setup_Controller {
 				'linkedin'            => $branding->get_linkedin_url(),
 				'x'                   => $branding->get_x_url(),
 			),
-			'inventory'     => Blueworx_Clubhouse_Setup_Sections::inventory(),
-			'visibility'    => array( 'pages' => $pages_state, 'sections' => $sections_state ),
+			'pages'         => self::visibility_pages(),
+			'visibility'    => array( 'pages' => $pages_state ),
 			'active_slug'   => null !== $active_look ? $active_look->slug() : '',
 			'look_tokens'   => $theming['tokens'],
 			'font_face_css' => $theming['faces'],

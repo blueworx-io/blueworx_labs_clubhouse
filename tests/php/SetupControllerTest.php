@@ -23,7 +23,6 @@ final class SetupControllerTest extends TestCase {
 			'clubhouse_facebook'  => 'https://facebook.com/riverside',
 			'clubhouse_instagram' => 'https://instagram.com/riverside',
 			'clubhouse_page'      => array( 'events' => '1' ),
-			'clubhouse_section'   => array( 'home.hero' => '1' ),
 		);
 		$notices = Blueworx_Clubhouse_Setup_Controller::handle_save( $post, $storage );
 
@@ -36,8 +35,7 @@ final class SetupControllerTest extends TestCase {
 		$this->assertSame( 'Riverside RFC', $branding->get_club_name() );
 		$this->assertSame( '42', $branding->get_logo() );
 		$this->assertTrue( $vis->is_page_visible( 'events' ) );
-		$this->assertFalse( $vis->is_section_visible( 'home', 'ticker' ) ); // unticked => hidden
-		$this->assertTrue( $vis->is_section_visible( 'home', 'hero' ) );
+		$this->assertFalse( $vis->is_page_visible( 'about' ) ); // unticked => hidden
 		$this->assertSame( array(), array_values( array_filter( $notices, static fn( $n ) => 'error' === $n['type'] ) ) );
 	}
 

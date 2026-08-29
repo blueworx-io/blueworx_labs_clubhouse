@@ -403,10 +403,12 @@ final class Blueworx_Clubhouse_Member_Dashboard {
 	/** The club's welcome pack, or '' when nobody has written one. */
 	private static function welcome_pack(): string {
 		$storage = new Blueworx_Clubhouse_Options_Storage();
-		if ( ! ( new Blueworx_Clubhouse_Visibility( $storage ) )->is_section_visible( 'home', Blueworx_Clubhouse_Welcome_Pack::SECTION ) ) {
+		$store   = new Blueworx_Clubhouse_Page_Content( $storage );
+		// The same Shown switch the Global content editor writes, read the same
+		// way Welcome_Pack::add_to_dashboard() reads it — one switch, one answer.
+		if ( ! $store->is_section_shown( Blueworx_Clubhouse_Welcome_Pack::STORE_PAGE, Blueworx_Clubhouse_Welcome_Pack::SECTION ) ) {
 			return '';
 		}
-		$store = new Blueworx_Clubhouse_Page_Content( $storage );
 		return Blueworx_Clubhouse_Welcome_Pack::render(
 			array(
 				'heading'    => (string) $store->get( Blueworx_Clubhouse_Welcome_Pack::STORE_PAGE, Blueworx_Clubhouse_Welcome_Pack::SECTION, 'heading', '' ),
