@@ -475,8 +475,8 @@ final class Blueworx_Clubhouse_Page_Fields {
 	}
 
 	/**
-	 * Memoised by build_areas() below. Keyed by the $products instance (or ''
-	 * for none), so a call with a shop and a call without never share an
+	 * Memoised by areas() below, via declare_areas(). Keyed by the $products
+	 * instance (or '' for none), so a call with a shop and a call without never share an
 	 * entry. This class builds all fifteen screens from scratch — walking
 	 * Setup_Sections::inventory(), Page_Map::is_available() and
 	 * Integrations::section_available() per section — so a caller reading
@@ -506,15 +506,34 @@ final class Blueworx_Clubhouse_Page_Fields {
 	public static function areas( ?Blueworx_Clubhouse_Products $products = null ): array {
 		$key = null === $products ? '' : (string) spl_object_id( $products );
 		if ( ! array_key_exists( $key, self::$areas_cache ) ) {
-			self::$areas_cache[ $key ] = self::build_areas( $products );
+			self::$areas_cache[ $key ] = self::drop_unavailable( self::declare_areas( $products ) );
 		}
 		return self::$areas_cache[ $key ];
 	}
 
 	/**
+	 * Every area and panel this plugin ever declares, before Page_Map's and
+	 * Integrations' availability drops anything — the set areas() itself
+	 * filters down via drop_unavailable(). Content_Store may still hold real
+	 * values under a booking or login address with no LatePoint or shop
+	 * installed; the migration reads this to know those addresses exist at
+	 * all, so it can name them in its report rather than silently never
+	 * mentioning content areas() itself would never speak of.
+	 *
+	 * Deliberately not memoised — areas() is the one called on every render
+	 * and needs the cache; this is called at most once per migration run and
+	 * by its own tests.
+	 *
 	 * @return array<string,array{label:string,tabs:array<int,array{id:string,label:string,panels:array}>}>
 	 */
-	private static function build_areas( ?Blueworx_Clubhouse_Products $products = null ): array {
+	public static function all_areas( ?Blueworx_Clubhouse_Products $products = null ): array {
+		return self::declare_areas( $products );
+	}
+
+	/**
+	 * @return array<string,array{label:string,tabs:array<int,array{id:string,label:string,panels:array}>}>
+	 */
+	private static function declare_areas( ?Blueworx_Clubhouse_Products $products = null ): array {
 		$h = self::hideable_panels();
 
 		$areas = array(
@@ -788,7 +807,7 @@ final class Blueworx_Clubhouse_Page_Fields {
 			) ) ),
 		);
 
-		return self::drop_unavailable( $areas );
+		return $areas;
 	}
 
 	/**

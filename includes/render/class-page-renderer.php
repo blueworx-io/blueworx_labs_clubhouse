@@ -672,7 +672,13 @@ final class Blueworx_Clubhouse_Page_Renderer {
 		$club = $branding->get_club_name();
 		$out  = '';
 
-		if ( self::cshown( $content, 'home', 'header' ) ) {
+		// 'global', not 'home': header and footer are sitewide chrome, edited on
+		// the Global content screen, which is an option-store screen — the
+		// library writes this panel's Shown switch to global_content, not to
+		// Home's own post meta. Gating on 'home' here would read an address
+		// nothing ever writes, so a club that switched its header off would see
+		// it reappear.
+		if ( self::cshown( $content, 'global', 'header' ) ) {
 			$out .= self::shell_header( $club, Blueworx_Clubhouse_Links::url( 'home' ), $visibility, $collections, $logo_url, $content );
 		}
 		$out .= '<main class="ch-main" id="ch-main" tabindex="-1">';
@@ -931,7 +937,8 @@ final class Blueworx_Clubhouse_Page_Renderer {
 			) ) );
 		}
 		$out .= '</main>';
-		if ( self::cshown( $content, 'home', 'footer' ) ) {
+		// See the matching header gate above — same reason, 'global' not 'home'.
+		if ( self::cshown( $content, 'global', 'footer' ) ) {
 			$out .= self::shell_footer( $club, $visibility, $branding, $content );
 		}
 		return $out;

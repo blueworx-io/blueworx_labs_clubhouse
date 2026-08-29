@@ -159,11 +159,15 @@ final class Blueworx_Clubhouse_Welcome_Pack {
 			return $content;
 		}
 		$storage = new Blueworx_Clubhouse_Options_Storage();
-		if ( ! ( new Blueworx_Clubhouse_Visibility( $storage ) )->is_section_visible( 'home', self::SECTION ) ) {
+		$store   = new Blueworx_Clubhouse_Page_Content( $storage );
+		// Reads the same Shown switch the Global content editor writes —
+		// global_content['welcome__shown'] — not Visibility::is_section_visible(),
+		// which answers from 'home.welcome' in a different option and would
+		// disagree with what an owner actually switched off there.
+		if ( ! $store->is_section_shown( self::STORE_PAGE, self::SECTION ) ) {
 			return $content;
 		}
 
-		$store = new Blueworx_Clubhouse_Page_Content( $storage );
 		$block = self::render(
 			array(
 				'heading'    => (string) $store->get( self::STORE_PAGE, self::SECTION, 'heading', '' ),
