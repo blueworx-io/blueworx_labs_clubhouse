@@ -6,9 +6,16 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Declarative catalogue of the visibility-toggleable sections per page, for the
- * Clubhouse Setup screen. Pure: page labels come from Page_Map; the section
- * keys are the exact keys the renderers gate on via Visibility::is_section_visible.
+ * Declarative catalogue of the sections a club can switch off, per page.
+ *
+ * Named for the Setup screen, which no longer reads it: per-section on/off
+ * moved onto each panel's own Shown switch, on the page that section belongs
+ * to. What reads it now is Page_Fields, which asks it which panels may carry
+ * that switch at all — so this stays one list rather than a `hideable` flag
+ * repeated at a hundred call sites, where it could drift.
+ *
+ * Pure: page labels come from Page_Map, and the section keys are the exact
+ * panel ids the page editors declare.
  *
  * @package BlueworxLabsClubhouse
  */
