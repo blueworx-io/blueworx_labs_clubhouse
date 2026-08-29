@@ -187,6 +187,17 @@ if ( ! function_exists( 'get_post_meta' ) ) {
 		return $single ? ( $meta[ $key ] ?? '' ) : array( $meta[ $key ] ?? '' );
 	}
 }
+if ( ! function_exists( 'metadata_exists' ) ) {
+	function metadata_exists( string $type, int $id, string $key ): bool {
+		return array_key_exists( $key, $GLOBALS['wp_stub_postmeta'][ $id ] ?? array() );
+	}
+}
+if ( ! function_exists( 'delete_post_meta' ) ) {
+	function delete_post_meta( int $id, string $key ): bool {
+		unset( $GLOBALS['wp_stub_postmeta'][ $id ][ $key ] );
+		return true;
+	}
+}
 if ( ! function_exists( 'register_post_type' ) ) {
 	function register_post_type( ...$a ) { wp_stub_record( 'register_post_type', $a ); return (object) array( 'name' => $a[0] ?? '' ); }
 }

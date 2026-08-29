@@ -63,6 +63,10 @@ final class Blueworx_Clubhouse_Page_Fields {
 		if ( ! isset( $areas[ $area ] ) ) {
 			return '';
 		}
+		if ( '_shown' === $field ) {
+			$panel = self::panel_for( $areas[ $area ], $section );
+			return ( null !== $panel && true === ( $panel['hideable'] ?? false ) ) ? 'toggle' : '';
+		}
 		$id = self::field_id( $section, $field );
 		foreach ( $areas[ $area ]['tabs'] as $tab ) {
 			foreach ( $tab['panels'] as $panel ) {
@@ -77,6 +81,24 @@ final class Blueworx_Clubhouse_Page_Fields {
 			}
 		}
 		return '';
+	}
+
+	/**
+	 * The declared panel for a section within an area, or null when no panel
+	 * has that id. Shared by kind_of()'s '_shown' case.
+	 *
+	 * @param array{tabs:array<int,array{panels:array<int,array<string,mixed>>}>} $area
+	 * @return array<string,mixed>|null
+	 */
+	private static function panel_for( array $area, string $section ): ?array {
+		foreach ( $area['tabs'] as $tab ) {
+			foreach ( $tab['panels'] as $panel ) {
+				if ( $panel['id'] === $section ) {
+					return $panel;
+				}
+			}
+		}
+		return null;
 	}
 
 	/**
