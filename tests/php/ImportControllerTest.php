@@ -10,6 +10,11 @@ final class ImportControllerTest extends TestCase {
 	protected function setUp(): void {
 		wp_stub_reset();
 		$this->storage = new Blueworx_Clubhouse_Fake_Storage();
+		// Import_Applier now writes through Page_Content, which resolves a page
+		// key to a post id and silently no-ops when there is none. Every test
+		// here that applies content writes to 'home', so it needs a post id
+		// fixture or the write goes nowhere and the assertion is vacuous.
+		update_option( Blueworx_Clubhouse_Club_Pages::option_name( '' ), 101 );
 	}
 
 	/** Write a temp file holding $json and return the $_FILES-shaped array. */
@@ -81,7 +86,7 @@ final class ImportControllerTest extends TestCase {
 		$this->assertSame( 'preview', $model['state'] );
 		$this->assertSame( 'Home · Hero', $model['rows'][0]['label'] );
 
-		$store = new Blueworx_Clubhouse_Content_Store( $this->storage );
+		$store = new Blueworx_Clubhouse_Page_Content( $this->storage );
 		$this->assertNull( $store->get( 'home', 'hero', 'eyebrow' ) );
 	}
 
@@ -137,7 +142,7 @@ final class ImportControllerTest extends TestCase {
 		);
 
 		$this->assertSame( 'result', $model['state'] );
-		$store = new Blueworx_Clubhouse_Content_Store( $this->storage );
+		$store = new Blueworx_Clubhouse_Page_Content( $this->storage );
 		$this->assertSame( 'Est. 1974', $store->get( 'home', 'hero', 'eyebrow' ) );
 		$this->assertFalse( get_transient( 'clubhouse_import_plan_7' ) );
 	}

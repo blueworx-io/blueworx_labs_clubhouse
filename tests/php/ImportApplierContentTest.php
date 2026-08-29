@@ -10,10 +10,17 @@ final class ImportApplierContentTest extends TestCase {
 	protected function setUp(): void {
 		wp_stub_reset();
 		$this->storage = new Blueworx_Clubhouse_Fake_Storage();
+		// Import_Applier now writes through Page_Content, which resolves a page
+		// key to a post id and silently no-ops when there is none. Every page
+		// this suite writes to needs a post id fixture, or its assertions would
+		// pass vacuously against a write that never landed anywhere.
+		update_option( Blueworx_Clubhouse_Club_Pages::option_name( '' ), 101 );
+		update_option( Blueworx_Clubhouse_Club_Pages::option_name( 'about' ), 102 );
+		update_option( Blueworx_Clubhouse_Club_Pages::option_name( 'membership' ), 103 );
 	}
 
-	private function store(): Blueworx_Clubhouse_Content_Store {
-		return new Blueworx_Clubhouse_Content_Store( $this->storage );
+	private function store(): Blueworx_Clubhouse_Page_Content {
+		return new Blueworx_Clubhouse_Page_Content( $this->storage );
 	}
 
 	public function test_fields_are_written_to_the_content_store(): void {

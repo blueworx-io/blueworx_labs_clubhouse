@@ -26,7 +26,7 @@ final class Blueworx_Clubhouse_Import_Applier {
 	 * @return array{rows:array<int,array{label:string,detail:string}>,images_needed:array<int,array{label:string,page:string,section:string,field:string,index:int}>,warnings:array<int,string>}
 	 */
 	public static function apply( Blueworx_Clubhouse_Import_Plan $plan, Blueworx_Clubhouse_Storage $storage, bool $sync_sections = false ): array {
-		$store    = new Blueworx_Clubhouse_Content_Store( $storage );
+		$store    = new Blueworx_Clubhouse_Page_Content( $storage );
 		$needed   = array();
 		$warnings = array();
 
@@ -260,7 +260,7 @@ final class Blueworx_Clubhouse_Import_Applier {
 	 *
 	 * @param array{page:string,section:string,field:string,url:string,alt:string,label:string,index:int} $image
 	 */
-	private static function place_image( Blueworx_Clubhouse_Content_Store $store, array $image, int $id ): bool {
+	private static function place_image( Blueworx_Clubhouse_Page_Content $store, array $image, int $id ): bool {
 		// A plan stored before 'index' existed (a transient can outlive an
 		// upgrade by up to an hour) has no such key; default it to -1 so it
 		// keeps behaving as a section-level image rather than warning three
