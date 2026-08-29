@@ -28,6 +28,11 @@ final class PageEditorsTest extends TestCase {
 		Blueworx_Clubhouse_Integrations::set_detector( null );
 		Blueworx_Clubhouse_Page_Fields::forget();
 		\Blueworx\PageEditor\v1\Editor::reset();
+		// link_suggestions() installs a real resolver as a side effect of
+		// screens() — every test in this class runs it. Left in place it
+		// would leak into any other test file that calls Links::url()
+		// expecting the untouched default.
+		Blueworx_Clubhouse_Links::set_resolver( null );
 	}
 
 	/** @return array<string,array<string,mixed>> slug => screen */
@@ -103,6 +108,93 @@ final class PageEditorsTest extends TestCase {
 	 * rename or a selector typo here would un-hide all fourteen with nothing
 	 * failing, if nothing asserted it.
 	 */
+	public function test_a_url_field_offers_the_sites_own_pages(): void {
+		$fields = array();
+		foreach ( Blueworx_Clubhouse_Page_Editors::screens() as $screen ) {
+			foreach ( $screen['tabs'] as $tab ) {
+				foreach ( $tab['panels'] as $panel ) {
+					foreach ( $panel['fields'] as $field ) {
+						if ( 'url' === ( $field['format'] ?? '' ) ) {
+							$fields[] = $field;
+						}
+					}
+				}
+			}
+		}
+		$this->assertNotSame( array(), $fields, 'No url fields at all — the translation lost them.' );
+		foreach ( $fields as $field ) {
+			$this->assertNotEmpty( $field['suggestions'] ?? array(), $field['id'] );
+			foreach ( $field['suggestions'] as $suggestion ) {
+				$this->assertArrayHasKey( 'value', $suggestion );
+				$this->assertArrayHasKey( 'label', $suggestion );
+			}
+		}
+	}
+
+	/**
+	 * A menu target like "shop:dashboard" is a token this plugin resolves and a
+	 * browser does not. These go into a free-text box that has to hold a link,
+	 * so every suggestion is either a path or an absolute address.
+	 */
+	public function test_a_suggestion_is_an_address_and_not_a_target_token(): void {
+		foreach ( Blueworx_Clubhouse_Page_Editors::screens() as $screen ) {
+			foreach ( $screen['tabs'] as $tab ) {
+				foreach ( $tab['panels'] as $panel ) {
+					foreach ( $panel['fields'] as $field ) {
+						foreach ( $field['suggestions'] ?? array() as $suggestion ) {
+							$this->assertMatchesRegularExpression( '#^(/|https?://)#', $suggestion['value'], $field['id'] );
+						}
+					}
+				}
+			}
+		}
+	}
+
+	/** Repeater cells carry the same suggestions as a top-level field — a quick tile's link is as much a link as the hero's. */
+	public function test_a_repeater_cells_url_field_offers_suggestions_too(): void {
+		$home = $this->screens()['clubhouse-page-home'];
+		$cell = null;
+		foreach ( $home['tabs'] as $tab ) {
+			foreach ( $tab['panels'] as $panel ) {
+				foreach ( $panel['fields'] as $field ) {
+					if ( 'quick_tiles_items' === ( $field['id'] ?? '' ) ) {
+						foreach ( $field['fields'] as $candidate ) {
+							if ( 'href' === $candidate['id'] ) {
+								$cell = $candidate;
+							}
+						}
+					}
+				}
+			}
+		}
+		$this->assertNotNull( $cell, 'Quick tiles href cell not found.' );
+		$this->assertNotEmpty( $cell['suggestions'] ?? array() );
+	}
+
+	/**
+	 * Whether shortcode_exists( 'latepoint_calendar' ) sees LatePoint's own
+	 * shortcode depends on two plugins' relative init registration order,
+	 * which WordPress does not guarantee. Declaring screens at a later
+	 * priority can only see more integrations register, never fewer.
+	 */
+	public function test_screens_are_declared_late_on_init(): void {
+		wp_stub_reset();
+		Blueworx_Clubhouse_Page_Editors::register();
+
+		$call = null;
+		foreach ( wp_stub_calls( 'add_action' ) as $candidate ) {
+			$hook     = $candidate['args'][0] ?? null;
+			$callback = $candidate['args'][1] ?? null;
+			if ( 'init' === $hook && is_array( $callback )
+				&& Blueworx_Clubhouse_Page_Editors::class === $callback[0]
+				&& 'declare_screens' === $callback[1] ) {
+				$call = $candidate;
+			}
+		}
+		$this->assertNotNull( $call, 'declare_screens() is not hooked to init.' );
+		$this->assertSame( 20, $call['args'][2] ?? 10, 'declare_screens() must run at priority 20, after other plugins have had a chance to register on init.' );
+	}
+
 	public function test_hide_record_editors_removes_every_record_editor_but_keeps_global_content(): void {
 		Blueworx_Clubhouse_Page_Editors::declare_screens();
 

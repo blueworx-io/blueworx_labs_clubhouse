@@ -77,9 +77,89 @@ final class Blueworx_Clubhouse_Page_Editors {
 		return $out;
 	}
 
-	/** Task 5 fills this in. Until then it is the identity. */
+	/**
+	 * Offer every link this site can already make, on every url field.
+	 *
+	 * The same list the menu editor offers, resolved to real addresses — a
+	 * menu target like "shop:dashboard" is a token this plugin understands and
+	 * a browser does not, and these go into a free-text box that has to hold a
+	 * link. The field stays free text: plenty of links point somewhere the
+	 * plugin does not own.
+	 */
 	private static function with_suggestions( array $tabs ): array {
+		$suggestions = self::link_suggestions();
+		if ( array() === $suggestions ) {
+			return $tabs;
+		}
+		foreach ( $tabs as &$tab ) {
+			foreach ( $tab['panels'] as &$panel ) {
+				foreach ( $panel['fields'] as &$field ) {
+					self::apply_suggestions( $field, $suggestions );
+				}
+				unset( $field );
+			}
+			unset( $panel );
+		}
+		unset( $tab );
 		return $tabs;
+	}
+
+	/**
+	 * Stamps suggestions onto a url field, and walks into a repeater's own
+	 * cells — a quick tile's href is as much a link as the hero's, and the
+	 * library honours `format`/`suggestions` on a cell the same way.
+	 *
+	 * @param array<string,mixed> $field
+	 * @param array<int,array{value:string,label:string}> $suggestions
+	 */
+	private static function apply_suggestions( array &$field, array $suggestions ): void {
+		if ( 'url' === ( $field['format'] ?? '' ) ) {
+			$field['suggestions'] = $suggestions;
+		}
+		if ( 'repeater' === ( $field['kind'] ?? '' ) && isset( $field['fields'] ) ) {
+			foreach ( $field['fields'] as &$cell ) {
+				self::apply_suggestions( $cell, $suggestions );
+			}
+			unset( $cell );
+		}
+	}
+
+	/**
+	 * @return array<int,array{value:string,label:string}>
+	 *
+	 * A suggestion has to hold a real address a browser can follow, never a
+	 * target tag — but Blueworx_Clubhouse_Links, with nothing else installed,
+	 * emits the preview server's '?page=<key>' query form (see its own
+	 * docblock). Nothing installs a real resolver by the time this runs:
+	 * declare_screens() fires on init, before Frontend::render_body() or
+	 * External_Chrome::wrap() get anywhere near a front-end request, and an
+	 * admin screen never triggers either. So this installs the same resolver
+	 * Seo_Controller::build_model() does, the one WordPress request type both
+	 * share — a real permalink, or link_url()'s own home_url() fallback for a
+	 * page not created yet. Neither is a preview link, and both match this
+	 * suggestion's own contract: an address, not a token.
+	 */
+	private static function link_suggestions(): array {
+		if ( ! class_exists( 'Blueworx_Clubhouse_Link_Catalogue' ) ) {
+			return array();
+		}
+		if ( class_exists( 'Blueworx_Clubhouse_Frontend' ) ) {
+			Blueworx_Clubhouse_Links::set_resolver( array( Blueworx_Clubhouse_Frontend::class, 'link_url' ) );
+		}
+		$out = array();
+		foreach ( Blueworx_Clubhouse_Link_Catalogue::targets( new Blueworx_Clubhouse_WP_Collections() ) as $target ) {
+			$url = (string) ( $target['url'] ?? '' );
+			if ( '' === $url ) {
+				continue;
+			}
+			$out[] = array(
+				'value' => $url,
+				'label' => ( '' !== (string) ( $target['group'] ?? '' ) )
+					? $target['group'] . ' · ' . $target['label']
+					: (string) $target['label'],
+			);
+		}
+		return $out;
 	}
 
 	/**
@@ -104,12 +184,20 @@ final class Blueworx_Clubhouse_Page_Editors {
 	 * this still runs well before Screen::menu() (admin_menu) or a REST call
 	 * to Editor::load()/save() could ask Editor::all() a question it can't
 	 * yet answer.
+	 *
+	 * Priority 20, not the default: whether shortcode_exists( 'latepoint_calendar' )
+	 * sees LatePoint's shortcode by the time this runs depends on two separate
+	 * plugins' relative init registration order, which WordPress does not
+	 * guarantee — LatePoint could register after this plugin's default-priority
+	 * callback and Bookings would drop out again, the very bug the move to init
+	 * was meant to fix. A later priority can only see more integrations that
+	 * have registered on init, never fewer.
 	 */
 	public static function register(): void {
 		if ( ! function_exists( 'add_action' ) ) {
 			return;
 		}
-		add_action( 'init', array( self::class, 'declare_screens' ) );
+		add_action( 'init', array( self::class, 'declare_screens' ), 20 );
 		add_action( 'admin_head', array( self::class, 'hide_record_editors' ) );
 	}
 
