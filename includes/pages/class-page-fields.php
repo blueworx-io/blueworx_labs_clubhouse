@@ -63,10 +63,6 @@ final class Blueworx_Clubhouse_Page_Fields {
 		if ( ! isset( $areas[ $area ] ) ) {
 			return '';
 		}
-		if ( '_shown' === $field ) {
-			$panel = self::panel_for( $areas[ $area ], $section );
-			return ( null !== $panel && true === ( $panel['hideable'] ?? false ) ) ? 'toggle' : '';
-		}
 		$id = self::field_id( $section, $field );
 		foreach ( $areas[ $area ]['tabs'] as $tab ) {
 			foreach ( $tab['panels'] as $panel ) {
@@ -79,6 +75,14 @@ final class Blueworx_Clubhouse_Page_Fields {
 					}
 				}
 			}
+		}
+		// No declared field answered. Checked last, not first: Schema.php only
+		// guards a hideable panel's own auto-declared switch, so a non-hideable
+		// panel is free to declare a genuine field literally named "_shown" —
+		// and a real field must always win over the synthetic one.
+		if ( '_shown' === $field ) {
+			$panel = self::panel_for( $areas[ $area ], $section );
+			return ( null !== $panel && true === ( $panel['hideable'] ?? false ) ) ? 'toggle' : '';
 		}
 		return '';
 	}
@@ -471,9 +475,46 @@ final class Blueworx_Clubhouse_Page_Fields {
 	}
 
 	/**
+	 * Memoised by build_areas() below. Keyed by the $products instance (or ''
+	 * for none), so a call with a shop and a call without never share an
+	 * entry. This class builds all fifteen screens from scratch — walking
+	 * Setup_Sections::inventory(), Page_Map::is_available() and
+	 * Integrations::section_available() per section — so a caller reading
+	 * every field on a page render, the way Page_Content will from task 6 on,
+	 * would otherwise pay that cost well over a hundred times per request.
+	 *
+	 * @var array<string,array<string,array{label:string,tabs:array<int,array{id:string,label:string,panels:array}>}>>
+	 */
+	private static array $areas_cache = array();
+
+	/**
+	 * Forgets the memoised catalogue. Exists for two callers: a test that
+	 * changes what is installed between cases — PageFieldsTest fakes the shop
+	 * and LatePoint in setUp() and must call this in setUp()/tearDown() too, or
+	 * a later case reads the previous case's cached availability — and the
+	 * repair that changes what is actually installed, the same way
+	 * Blueworx_Clubhouse_Link_Catalogue::forget_shop_targets() resets its own
+	 * cache.
+	 */
+	public static function forget(): void {
+		self::$areas_cache = array();
+	}
+
+	/**
 	 * @return array<string,array{label:string,tabs:array<int,array{id:string,label:string,panels:array}>}>
 	 */
 	public static function areas( ?Blueworx_Clubhouse_Products $products = null ): array {
+		$key = null === $products ? '' : (string) spl_object_id( $products );
+		if ( ! array_key_exists( $key, self::$areas_cache ) ) {
+			self::$areas_cache[ $key ] = self::build_areas( $products );
+		}
+		return self::$areas_cache[ $key ];
+	}
+
+	/**
+	 * @return array<string,array{label:string,tabs:array<int,array{id:string,label:string,panels:array}>}>
+	 */
+	private static function build_areas( ?Blueworx_Clubhouse_Products $products = null ): array {
 		$h = self::hideable_panels();
 
 		$areas = array(

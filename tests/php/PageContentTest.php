@@ -28,11 +28,21 @@ final class PageContentTest extends TestCase {
 
 	/**
 	 * The reason this class casts at all. WordPress stores boolean false as an
-	 * empty string, so a switch an owner turned off would read back as '' —
-	 * which the renderer treats as "never set" and replaces with the declared
-	 * default, switching it straight back on.
+	 * empty string, so a switch an owner turned off would read back from post
+	 * meta as '' — which Page_Renderer::cget() treats as "never set" and would
+	 * silently switch it back on. The meta is seeded directly, the way
+	 * WordPress itself would leave it, and read through get() rather than
+	 * is_section_shown() — that method applies its own (bool) cast and would
+	 * pass this assertion even if cast() had no 'toggle' case at all, so it
+	 * cannot be what proves this.
 	 */
 	public function test_a_toggle_switched_off_reads_back_as_false_and_not_as_unset(): void {
+		$GLOBALS['wp_stub_postmeta'][42]['page_hero__shown'] = '';
+		$this->assertFalse( $this->content()->get( 'home', 'hero', '_shown' ) );
+	}
+
+	/** Same cast, the option-backed global path. */
+	public function test_a_global_toggle_switched_off_reads_back_as_false(): void {
 		$c = $this->content();
 		$c->set( 'global', 'cookies', 'show', false );
 		$this->assertFalse( $c->get( 'global', 'cookies', 'show' ) );

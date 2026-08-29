@@ -16,11 +16,18 @@ final class PageFieldsTest extends TestCase {
 		Blueworx_Clubhouse_Integrations::set_detector(
 			static fn( string $tag ): bool => Blueworx_Clubhouse_Integrations::LATEPOINT_TAG === $tag
 		);
+		// areas() is memoised — this suite is the one thing in the codebase
+		// that changes what is installed between cases, so it is also the one
+		// thing that has to forget the cache each time, or a later case (or a
+		// later suite, in the same PHPUnit process) reads this one's cached
+		// availability instead of its own.
+		Blueworx_Clubhouse_Page_Fields::forget();
 	}
 
 	protected function tearDown(): void {
 		Blueworx_Clubhouse_SureCart_Products::set_active_for_tests( null );
 		Blueworx_Clubhouse_Integrations::set_detector( null );
+		Blueworx_Clubhouse_Page_Fields::forget();
 	}
 
 	public function test_every_club_page_and_global_has_an_area(): void {
@@ -159,6 +166,58 @@ final class PageFieldsTest extends TestCase {
 			}
 		}
 		return array();
+	}
+
+	/**
+	 * Every kind declared anywhere in Page_Fields — top-level fields and
+	 * repeater cells alike — must be one Page_Content knows how to cast, or
+	 * deliberately passes through as a string. See
+	 * Blueworx_Clubhouse_Page_Content::KNOWN_KINDS: this is the guard that
+	 * fires the day a kind is added to one catalogue and not the other, so
+	 * the editor and the front end stop silently disagreeing about the same
+	 * stored value instead of only disagreeing.
+	 */
+	public function test_every_kind_is_one_page_content_knows_how_to_cast(): void {
+		$kinds = array();
+		foreach ( Blueworx_Clubhouse_Page_Fields::areas() as $area ) {
+			foreach ( $area['tabs'] as $tab ) {
+				foreach ( $tab['panels'] as $panel ) {
+					foreach ( $panel['fields'] as $field ) {
+						$kinds[ $field['kind'] ] = true;
+						foreach ( $field['fields'] ?? array() as $cell ) {
+							$kinds[ $cell['kind'] ] = true;
+						}
+					}
+				}
+			}
+		}
+		foreach ( array_keys( $kinds ) as $kind ) {
+			$this->assertContains(
+				$kind,
+				Blueworx_Clubhouse_Page_Content::KNOWN_KINDS,
+				sprintf(
+					'"%s" is declared in Page_Fields but is not in Page_Content::KNOWN_KINDS — add it to Page_Content::cast().',
+					$kind
+				)
+			);
+		}
+	}
+
+	/**
+	 * kind_of()'s only behaviour for the panel's own auto-declared switch:
+	 * 'toggle' when the panel is hideable, '' when it is not. Nothing else in
+	 * this suite would fail if the '_shown' case were deleted.
+	 *
+	 * No panel in today's catalogue is declared non-hideable — every section
+	 * here can be switched off (see hideable_panels()) — so the second
+	 * assertion reaches the same branch the way it is actually reachable
+	 * today: panel_for() finding no panel at all behaves identically to
+	 * finding one whose 'hideable' flag is false, since both fail the
+	 * `null !== $panel && true === $panel['hideable']` check kind_of() makes.
+	 */
+	public function test_kind_of_shown_is_toggle_only_on_a_hideable_panel(): void {
+		$this->assertSame( 'toggle', Blueworx_Clubhouse_Page_Fields::kind_of( 'home', 'hero', '_shown' ) );
+		$this->assertSame( '', Blueworx_Clubhouse_Page_Fields::kind_of( 'home', 'not_a_real_section', '_shown' ) );
 	}
 
 	/** The kind a repeater cell should carry for a given catalogue field type, per the same mapping table as the top level. */
