@@ -60,6 +60,7 @@ function wp_stub_reset(): void {
 	$GLOBALS['wp_stub_post_type']         = 'page';
 	$GLOBALS['wp_stub_the_id']            = 0;
 	$GLOBALS['wp_stub_is_404']            = false;
+	$GLOBALS['wp_stub_attachment_urls']   = array();
 	unset( $GLOBALS['menu'], $GLOBALS['wp_meta_boxes'] );
 }
 
@@ -583,6 +584,19 @@ if ( ! function_exists( 'media_sideload_image' ) ) {
 		}
 		return $GLOBALS['wp_stub_sideload_next']++;
 	}
+}
+// Resolves an attachment's own URL back to its post id, the way the real
+// function does — everything else answers 0, a miss. Register a URL first
+// with wp_stub_register_attachment() to make a test's URL a hit.
+$GLOBALS['wp_stub_attachment_urls'] = array();
+if ( ! function_exists( 'attachment_url_to_postid' ) ) {
+	function attachment_url_to_postid( string $url ): int {
+		wp_stub_record( 'attachment_url_to_postid', array( $url ) );
+		return $GLOBALS['wp_stub_attachment_urls'][ $url ] ?? 0;
+	}
+}
+function wp_stub_register_attachment( string $url, int $post_id ): void {
+	$GLOBALS['wp_stub_attachment_urls'][ $url ] = $post_id;
 }
 if ( ! function_exists( 'wp_update_post' ) ) {
 	function wp_update_post( array $post = array() ) {

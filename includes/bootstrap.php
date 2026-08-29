@@ -99,6 +99,7 @@ require_once __DIR__ . '/admin/class-club-page-editing.php';
 require_once __DIR__ . '/pages/class-page-fields.php';
 require_once __DIR__ . '/pages/class-page-content.php';
 require_once __DIR__ . '/pages/class-page-editors.php';
+require_once __DIR__ . '/pages/class-content-migration.php';
 
 // Collections (pure)
 require_once __DIR__ . '/collections/interface-collections.php';
