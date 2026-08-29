@@ -66,8 +66,10 @@ final class PartialItemTest extends TestCase {
 	 * exact shape that brought About and Membership down.
 	 */
 	public function test_a_partial_row_leaves_the_rest_of_the_page_standing(): void {
+		wp_stub_reset();
+		update_option( 'clubhouse_page_id_about', 42 );
 		$storage = new Blueworx_Clubhouse_Fake_Storage();
-		$content = new Blueworx_Clubhouse_Content_Store( $storage );
+		$content = new Blueworx_Clubhouse_Page_Content( $storage );
 		$content->set_items( 'about', 'values', array(
 			array( 'title' => 'Half a card' ),
 			array( 'title' => 'A whole one', 'description' => 'With both keys.' ),

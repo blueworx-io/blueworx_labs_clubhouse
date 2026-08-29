@@ -17,6 +17,7 @@ use PHPUnit\Framework\TestCase;
 final class BookingJourneyTest extends TestCase {
 
 	protected function setUp(): void {
+		wp_stub_reset();
 		// Both the Bookings page and the Calendar's booking section only exist
 		// when LatePoint does.
 		Blueworx_Clubhouse_Integrations::set_detector(
@@ -97,7 +98,8 @@ final class BookingJourneyTest extends TestCase {
 	}
 
 	public function test_a_club_can_replace_the_cross_link(): void {
-		$content = new Blueworx_Clubhouse_Content_Store( new Blueworx_Clubhouse_Fake_Storage() );
+		update_option( 'clubhouse_page_id_calendar', 42 );
+		$content = new Blueworx_Clubhouse_Page_Content( new Blueworx_Clubhouse_Fake_Storage() );
 		$content->set( 'calendar', 'booking', 'link_label', 'Our own words' );
 		$content->set( 'calendar', 'booking', 'link_href', 'https://club.test/elsewhere' );
 		$html = $this->body( Blueworx_Clubhouse_Page_Renderer::calendar( $this->branding(), $this->visibility(), $this->collections(), '', $content ) );

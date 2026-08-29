@@ -13,7 +13,7 @@ final class ClubhouseContextTest extends TestCase {
 		$visibility = new Blueworx_Clubhouse_Visibility( $storage );
 		$cache      = new Blueworx_Clubhouse_Theme_Cache( $storage );
 		$collections = new Blueworx_Clubhouse_Demo_Collections();
-		$content     = new Blueworx_Clubhouse_Content_Store( $storage );
+		$content     = new Blueworx_Clubhouse_Page_Content( $storage );
 
 		$ctx = new Blueworx_Clubhouse_Clubhouse_Context(
 			$look, $branding, $visibility, $cache, $collections, $registry, $content
@@ -28,7 +28,7 @@ final class ClubhouseContextTest extends TestCase {
 		$this->assertSame( $content, $ctx->content );
 	}
 
-	public function test_context_dto_carries_content_store(): void {
+	public function test_context_dto_carries_page_content(): void {
 		$s   = new Blueworx_Clubhouse_Fake_Storage();
 		$ctx = new Blueworx_Clubhouse_Clubhouse_Context(
 			null,
@@ -37,8 +37,8 @@ final class ClubhouseContextTest extends TestCase {
 			new Blueworx_Clubhouse_Theme_Cache( $s ),
 			new Blueworx_Clubhouse_Demo_Collections(),
 			Blueworx_Clubhouse_Frontend::registry( $s ),
-			new Blueworx_Clubhouse_Content_Store( $s )
+			new Blueworx_Clubhouse_Page_Content( $s )
 		);
-		$this->assertInstanceOf( Blueworx_Clubhouse_Content_Store::class, $ctx->content );
+		$this->assertInstanceOf( Blueworx_Clubhouse_Page_Content::class, $ctx->content );
 	}
 }

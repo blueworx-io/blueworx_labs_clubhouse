@@ -11,6 +11,10 @@ use PHPUnit\Framework\TestCase;
  */
 final class ClubRulesTest extends TestCase {
 
+	protected function setUp(): void {
+		wp_stub_reset();
+	}
+
 	private function branding(): Blueworx_Clubhouse_Branding {
 		return new Blueworx_Clubhouse_Branding( new Blueworx_Clubhouse_Fake_Storage() );
 	}
@@ -23,7 +27,7 @@ final class ClubRulesTest extends TestCase {
 		return new Blueworx_Clubhouse_Demo_Collections();
 	}
 
-	private function rules( ?Blueworx_Clubhouse_Visibility $vis = null, ?Blueworx_Clubhouse_Content_Store $content = null ): string {
+	private function rules( ?Blueworx_Clubhouse_Visibility $vis = null, ?Blueworx_Clubhouse_Page_Content $content = null ): string {
 		return Blueworx_Clubhouse_Page_Renderer::rules( $this->branding(), $vis ?? $this->visibility(), $this->collections(), '', $content );
 	}
 
@@ -46,7 +50,8 @@ final class ClubRulesTest extends TestCase {
 	}
 
 	public function test_a_club_can_replace_the_wording(): void {
-		$content = new Blueworx_Clubhouse_Content_Store( new Blueworx_Clubhouse_Fake_Storage() );
+		update_option( 'clubhouse_page_id_rules', 42 );
+		$content = new Blueworx_Clubhouse_Page_Content( new Blueworx_Clubhouse_Fake_Storage() );
 		$content->set_items( 'rules', 'body', array(
 			array( 'heading' => 'Boots off', 'body' => 'Studs stay outside the clubhouse.' ),
 		) );
@@ -56,7 +61,8 @@ final class ClubRulesTest extends TestCase {
 	}
 
 	public function test_it_does_not_honour_markup_pasted_into_it(): void {
-		$content = new Blueworx_Clubhouse_Content_Store( new Blueworx_Clubhouse_Fake_Storage() );
+		update_option( 'clubhouse_page_id_rules', 42 );
+		$content = new Blueworx_Clubhouse_Page_Content( new Blueworx_Clubhouse_Fake_Storage() );
 		$content->set_items( 'rules', 'body', array(
 			array( 'heading' => 'X', 'body' => '<script>alert(1)</script>' ),
 		) );

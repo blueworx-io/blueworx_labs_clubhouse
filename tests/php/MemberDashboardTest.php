@@ -188,7 +188,7 @@ final class MemberDashboardTest extends TestCase {
 		// No pack written: nothing to style, so nothing is printed.
 		$this->assertStringNotContainsString( '<style>', Blueworx_Clubhouse_Member_Dashboard::screen( '/member-dashboard/', '/' ) );
 
-		$store = new Blueworx_Clubhouse_Content_Store( new Blueworx_Clubhouse_Options_Storage() );
+		$store = new Blueworx_Clubhouse_Page_Content( new Blueworx_Clubhouse_Options_Storage() );
 		$store->set( Blueworx_Clubhouse_Welcome_Pack::STORE_PAGE, Blueworx_Clubhouse_Welcome_Pack::SECTION, 'body', 'Park behind the clubhouse.' );
 		$this->assertStringContainsString( '<style>', Blueworx_Clubhouse_Member_Dashboard::screen( '/member-dashboard/', '/' ) );
 

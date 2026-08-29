@@ -163,7 +163,7 @@ final class Blueworx_Clubhouse_Welcome_Pack {
 			return $content;
 		}
 
-		$store = new Blueworx_Clubhouse_Content_Store( $storage );
+		$store = new Blueworx_Clubhouse_Page_Content( $storage );
 		$block = self::render(
 			array(
 				'heading'    => (string) $store->get( self::STORE_PAGE, self::SECTION, 'heading', '' ),

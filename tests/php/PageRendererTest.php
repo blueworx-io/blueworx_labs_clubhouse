@@ -139,10 +139,12 @@ final class PageRendererTest extends TestCase {
 	}
 
 	public function test_home_respects_visibility(): void {
-		$storage = new Blueworx_Clubhouse_Fake_Storage();
-		$vis     = new Blueworx_Clubhouse_Visibility( $storage );
-		$vis->set_section_visible( 'home', 'sponsors', false );
-		$body = Blueworx_Clubhouse_Page_Renderer::home( $this->branding(), $vis, $this->collections() );
+		wp_stub_reset();
+		update_option( 'clubhouse_page_id_home', 42 );
+		$GLOBALS['wp_stub_postmeta'][42]['page_sponsors__shown'] = '';
+		$content = new Blueworx_Clubhouse_Page_Content( new Blueworx_Clubhouse_Fake_Storage() );
+		$vis     = new Blueworx_Clubhouse_Visibility( new Blueworx_Clubhouse_Fake_Storage() );
+		$body    = Blueworx_Clubhouse_Page_Renderer::home( $this->branding(), $vis, $this->collections(), '', $content );
 		$this->assertStringNotContainsString( 'class="ch-sponsors"', $body );
 		$this->assertStringContainsString( 'class="ch-home-hero"', $body ); // others still present
 	}
@@ -200,10 +202,12 @@ final class PageRendererTest extends TestCase {
 	}
 
 	public function test_sports_respects_visibility(): void {
-		$storage = new Blueworx_Clubhouse_Fake_Storage();
-		$vis     = new Blueworx_Clubhouse_Visibility( $storage );
-		$vis->set_section_visible( 'sports', 'directory', false );
-		$body = Blueworx_Clubhouse_Page_Renderer::sports( $this->branding(), $vis, $this->collections() );
+		wp_stub_reset();
+		update_option( 'clubhouse_page_id_sports', 42 );
+		$GLOBALS['wp_stub_postmeta'][42]['page_directory__shown'] = '';
+		$content = new Blueworx_Clubhouse_Page_Content( new Blueworx_Clubhouse_Fake_Storage() );
+		$vis     = new Blueworx_Clubhouse_Visibility( new Blueworx_Clubhouse_Fake_Storage() );
+		$body    = Blueworx_Clubhouse_Page_Renderer::sports( $this->branding(), $vis, $this->collections(), '', $content );
 		$this->assertStringNotContainsString( 'class="ch-scards"', $body );
 		$this->assertStringContainsString( 'class="ch-hero-filter"', $body ); // hero still present
 	}
@@ -228,10 +232,12 @@ final class PageRendererTest extends TestCase {
 	}
 
 	public function test_calendar_respects_visibility(): void {
-		$storage = new Blueworx_Clubhouse_Fake_Storage();
-		$vis     = new Blueworx_Clubhouse_Visibility( $storage );
-		$vis->set_section_visible( 'calendar', 'schedule', false );
-		$body = Blueworx_Clubhouse_Page_Renderer::calendar( $this->branding(), $vis, $this->collections() );
+		wp_stub_reset();
+		update_option( 'clubhouse_page_id_calendar', 42 );
+		$GLOBALS['wp_stub_postmeta'][42]['page_schedule__shown'] = '';
+		$content = new Blueworx_Clubhouse_Page_Content( new Blueworx_Clubhouse_Fake_Storage() );
+		$vis     = new Blueworx_Clubhouse_Visibility( new Blueworx_Clubhouse_Fake_Storage() );
+		$body    = Blueworx_Clubhouse_Page_Renderer::calendar( $this->branding(), $vis, $this->collections(), '', $content );
 		$this->assertStringNotContainsString( 'ch-cal__month', $body );
 		$this->assertStringContainsString( 'class="ch-hero-filter"', $body );
 	}
@@ -270,12 +276,17 @@ final class PageRendererTest extends TestCase {
 	/** @param array<int,array<string,string>> $items */
 	private function homeWithSocialFeed( bool $on, array $items ): string {
 		wp_stub_reset();
+		update_option( 'clubhouse_page_id_home', 42 );
+		if ( ! $on ) {
+			// The panel's own Shown switch (Page_Content::is_section_shown()) has
+			// no per-section default, unlike the old Visibility flag this section
+			// used to carry (SECTION_DEFAULTS['home.social_feed'] = false) — so
+			// "not yet switched on" has to be represented explicitly here now.
+			$GLOBALS['wp_stub_postmeta'][42]['page_social_feed__shown'] = '';
+		}
 		$storage    = new Blueworx_Clubhouse_Fake_Storage();
 		$visibility = new Blueworx_Clubhouse_Visibility( $storage );
-		if ( $on ) {
-			$visibility->set_section_visible( 'home', 'social_feed', true );
-		}
-		$content = new Blueworx_Clubhouse_Content_Store( $storage );
+		$content    = new Blueworx_Clubhouse_Page_Content( $storage );
 		$content->set_items( 'home', 'social_feed', $items );
 		return Blueworx_Clubhouse_Page_Renderer::home(
 			new Blueworx_Clubhouse_Branding( $storage ),

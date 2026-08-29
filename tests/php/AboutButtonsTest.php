@@ -17,8 +17,8 @@ final class AboutButtonsTest extends TestCase {
 		return new Blueworx_Clubhouse_Demo_Collections();
 	}
 
-	private function about( Blueworx_Clubhouse_Visibility $visibility ): string {
-		$html  = Blueworx_Clubhouse_Page_Renderer::about( $this->branding(), $visibility, $this->collections(), '', null );
+	private function about( Blueworx_Clubhouse_Visibility $visibility, ?Blueworx_Clubhouse_Page_Content $content = null ): string {
+		$html  = Blueworx_Clubhouse_Page_Renderer::about( $this->branding(), $visibility, $this->collections(), '', $content );
 		$open  = strpos( $html, '<main' );
 		$close = strpos( $html, '</main>' );
 		return substr( $html, (int) $open, (int) $close - (int) $open );
@@ -44,9 +44,11 @@ final class AboutButtonsTest extends TestCase {
 
 	public function test_a_club_with_no_committee_section_gets_the_contact_page_back(): void {
 		// An anchor to a section that is not rendered points at nothing.
-		$vis = $this->visible();
-		$vis->set_section_visible( 'about', 'committee', false );
-		$html = $this->about( $vis );
+		wp_stub_reset();
+		update_option( 'clubhouse_page_id_about', 42 );
+		$GLOBALS['wp_stub_postmeta'][42]['page_committee__shown'] = '';
+		$content = new Blueworx_Clubhouse_Page_Content( new Blueworx_Clubhouse_Fake_Storage() );
+		$html    = $this->about( $this->visible(), $content );
 		$this->assertStringNotContainsString( '#' . Blueworx_Clubhouse_Link_Catalogue::anchor_id( 'about', 'committee' ), $html );
 		$this->assertStringContainsString( Blueworx_Clubhouse_Links::url( 'contact' ) . '">Meet the committee', $html );
 	}

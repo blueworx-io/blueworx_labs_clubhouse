@@ -4,9 +4,14 @@ use PHPUnit\Framework\TestCase;
 
 final class ManualFeedSourceTest extends TestCase {
 
+	protected function setUp(): void {
+		wp_stub_reset();
+		update_option( 'clubhouse_page_id_home', 42 );
+	}
+
 	/** @param array<int,mixed> $items */
-	private function store( array $items ): Blueworx_Clubhouse_Content_Store {
-		$content = new Blueworx_Clubhouse_Content_Store( new Blueworx_Clubhouse_Fake_Storage() );
+	private function store( array $items ): Blueworx_Clubhouse_Page_Content {
+		$content = new Blueworx_Clubhouse_Page_Content( new Blueworx_Clubhouse_Fake_Storage() );
 		$content->set_items( 'home', 'social_feed', $items );
 		return $content;
 	}

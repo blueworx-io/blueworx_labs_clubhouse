@@ -331,7 +331,7 @@ final class ContentScreenTest extends TestCase {
 		$vis      = new Blueworx_Clubhouse_Visibility( $storage );
 		$coll     = new Blueworx_Clubhouse_Demo_Collections();
 
-		$before = Blueworx_Clubhouse_Page_Map::render( '', $branding, $vis, $coll, '', new Blueworx_Clubhouse_Content_Store( $storage ) );
+		$before = Blueworx_Clubhouse_Page_Map::render( '', $branding, $vis, $coll, '', new Blueworx_Clubhouse_Page_Content( $storage ) );
 
 		// The $_POST a real "Save" click produces on the Global tab, with nothing edited:
 		// every rendered input posts its current (empty) value.
@@ -363,7 +363,7 @@ final class ContentScreenTest extends TestCase {
 		$this->assertGreaterThan( 20, $posted, 'the Global tab must actually post its fields for this to prove anything' );
 		Blueworx_Clubhouse_Content_Controller::handle_save( $post, $storage );
 
-		$after = Blueworx_Clubhouse_Page_Map::render( '', $branding, $vis, $coll, '', new Blueworx_Clubhouse_Content_Store( $storage ) );
+		$after = Blueworx_Clubhouse_Page_Map::render( '', $branding, $vis, $coll, '', new Blueworx_Clubhouse_Page_Content( $storage ) );
 		$this->assertSame( $before, $after, 'a Save with no edits must not change the rendered page' );
 	}
 

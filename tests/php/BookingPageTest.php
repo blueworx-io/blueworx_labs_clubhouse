@@ -108,11 +108,11 @@ final class BookingPageTest extends TestCase {
 	/** Each slot is individually switchable, like every other section. */
 	public function test_a_switched_off_slot_drops_out(): void {
 		$this->withLatePoint();
-		$storage = new Blueworx_Clubhouse_Fake_Storage();
-		$vis     = new Blueworx_Clubhouse_Visibility( $storage );
-		$vis->set_section_visible( 'booking', 'agents', false );
+		update_option( 'clubhouse_page_id_booking', 42 );
+		$GLOBALS['wp_stub_postmeta'][42]['page_agents__shown'] = '';
+		$content = new Blueworx_Clubhouse_Page_Content( new Blueworx_Clubhouse_Fake_Storage() );
 
-		$html = Blueworx_Clubhouse_Page_Renderer::booking( $this->branding(), $vis, $this->collections() );
+		$html = Blueworx_Clubhouse_Page_Renderer::booking( $this->branding(), $this->visibility(), $this->collections(), '', $content );
 		$this->assertStringNotContainsString( 'items=&quot;agents&quot;', $html );
 		$this->assertSame( 2, substr_count( $html, 'class="ch-shortcode"' ) );
 	}
@@ -148,10 +148,11 @@ final class BookingPageTest extends TestCase {
 
 	public function test_the_booking_calendar_can_be_switched_off_on_its_own(): void {
 		$this->withLatePoint();
-		$vis = new Blueworx_Clubhouse_Visibility( new Blueworx_Clubhouse_Fake_Storage() );
-		$vis->set_section_visible( 'calendar', 'booking', false );
+		update_option( 'clubhouse_page_id_calendar', 42 );
+		$GLOBALS['wp_stub_postmeta'][42]['page_booking__shown'] = '';
+		$content = new Blueworx_Clubhouse_Page_Content( new Blueworx_Clubhouse_Fake_Storage() );
 
-		$html = Blueworx_Clubhouse_Page_Renderer::calendar( $this->branding(), $vis, $this->collections() );
+		$html = Blueworx_Clubhouse_Page_Renderer::calendar( $this->branding(), $this->visibility(), $this->collections(), '', $content );
 		$this->assertStringNotContainsString( 'latepoint_calendar', $html );
 		$this->assertStringContainsString( 'ch-cal', $html );
 	}
@@ -192,8 +193,9 @@ final class BookingPageTest extends TestCase {
 	 */
 	public function test_clearing_a_shortcode_restores_its_default_rather_than_dropping_it(): void {
 		$this->withLatePoint();
+		update_option( 'clubhouse_page_id_booking', 42 );
 		$storage = new Blueworx_Clubhouse_Fake_Storage();
-		$content = new Blueworx_Clubhouse_Content_Store( $storage );
+		$content = new Blueworx_Clubhouse_Page_Content( $storage );
 		$content->set( 'booking', 'agents', 'shortcode', '' );
 
 		$html = Blueworx_Clubhouse_Page_Renderer::booking( $this->branding(), $this->visibility(), $this->collections(), '', $content );
@@ -204,8 +206,9 @@ final class BookingPageTest extends TestCase {
 	/** A slot whose shortcode is replaced with whitespace still renders no band. */
 	public function test_a_whitespace_shortcode_renders_no_band(): void {
 		$this->withLatePoint();
+		update_option( 'clubhouse_page_id_booking', 42 );
 		$storage = new Blueworx_Clubhouse_Fake_Storage();
-		$content = new Blueworx_Clubhouse_Content_Store( $storage );
+		$content = new Blueworx_Clubhouse_Page_Content( $storage );
 		$content->set( 'booking', 'agents', 'shortcode', '   ' );
 
 		$html = Blueworx_Clubhouse_Page_Renderer::booking( $this->branding(), $this->visibility(), $this->collections(), '', $content );
@@ -214,8 +217,9 @@ final class BookingPageTest extends TestCase {
 
 	public function test_a_club_can_retune_a_shortcode_without_a_release(): void {
 		$this->withLatePoint();
+		update_option( 'clubhouse_page_id_booking', 42 );
 		$storage = new Blueworx_Clubhouse_Fake_Storage();
-		$content = new Blueworx_Clubhouse_Content_Store( $storage );
+		$content = new Blueworx_Clubhouse_Page_Content( $storage );
 		$content->set( 'booking', 'services', 'shortcode', '[latepoint_resources items="services" columns="2"]' );
 
 		$html = Blueworx_Clubhouse_Page_Renderer::booking( $this->branding(), $this->visibility(), $this->collections(), '', $content );

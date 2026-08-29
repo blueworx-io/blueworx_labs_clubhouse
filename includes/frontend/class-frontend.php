@@ -439,7 +439,7 @@ final class Blueworx_Clubhouse_Frontend {
 			new Blueworx_Clubhouse_Theme_Cache( $storage ),
 			new Blueworx_Clubhouse_WP_Collections(),
 			$registry,
-			new Blueworx_Clubhouse_Content_Store( $storage )
+			new Blueworx_Clubhouse_Page_Content( $storage )
 		);
 	}
 

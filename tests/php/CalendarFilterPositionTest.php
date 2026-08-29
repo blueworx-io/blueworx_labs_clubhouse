@@ -24,13 +24,13 @@ final class CalendarFilterPositionTest extends TestCase {
 		return new Blueworx_Clubhouse_Visibility( new Blueworx_Clubhouse_Fake_Storage() );
 	}
 
-	private function calendar( ?Blueworx_Clubhouse_Visibility $vis = null, string $filter = '' ): string {
+	private function calendar( ?Blueworx_Clubhouse_Visibility $vis = null, string $filter = '', ?Blueworx_Clubhouse_Page_Content $content = null ): string {
 		return Blueworx_Clubhouse_Page_Renderer::calendar(
 			$this->branding(),
 			$vis ?? $this->visibility(),
 			$this->collections(),
 			'',
-			null,
+			$content,
 			$filter
 		);
 	}
@@ -131,9 +131,11 @@ final class CalendarFilterPositionTest extends TestCase {
 	 * under them would filter a list that is not on the page.
 	 */
 	public function test_hiding_the_fixtures_hides_the_pills(): void {
-		$vis = $this->visibility();
-		$vis->set_section_visible( 'calendar', 'schedule', false );
-		$body = $this->calendar( $vis );
+		wp_stub_reset();
+		update_option( 'clubhouse_page_id_calendar', 42 );
+		$GLOBALS['wp_stub_postmeta'][42]['page_schedule__shown'] = '';
+		$content = new Blueworx_Clubhouse_Page_Content( new Blueworx_Clubhouse_Fake_Storage() );
+		$body    = $this->calendar( null, '', $content );
 		$this->assertStringNotContainsString( '<nav class="ch-filters"', $body );
 	}
 
