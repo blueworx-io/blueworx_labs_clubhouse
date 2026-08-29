@@ -16,10 +16,11 @@ if ( ! defined( 'ABSPATH' ) ) {
  * replaces until that catalogue is deleted.
  *
  * A straight translation of Content_Catalogue::pages(), not a redesign: every
- * catalogue field keeps its label, its placeholder, its rows, its default and
- * its options. Nothing here reads the catalogue at runtime — the two classes
- * describe the same content independently, and PageFieldsTest is what proves
- * they still agree.
+ * catalogue field keeps its label, its default and its options. `rows` is
+ * carried across too, recording the author's intent, but the library does not
+ * honour it yet — see area_field(). Nothing here reads the catalogue at
+ * runtime — the two classes describe the same content independently, and
+ * PageFieldsTest is what proves they still agree.
  *
  * @package BlueworxLabsClubhouse
  */
@@ -27,13 +28,6 @@ final class Blueworx_Clubhouse_Page_Fields {
 
 	/** The field key a repeating panel's rows live under — Content_Store's own. */
 	public const REPEATER_FIELD = 'items';
-
-	/**
-	 * The bare key a copytext placeholder is filed under. Never a real
-	 * catalogue field — see copytext() — which is how field_key() recognises
-	 * one and refuses to hand the migration an address to nothing.
-	 */
-	private const COPYTEXT_KEY = 'about';
 
 	/** A field's id: its section and its key, joined. Unique within an area. */
 	public static function field_id( string $section, string $field ): string {
@@ -43,9 +37,9 @@ final class Blueworx_Clubhouse_Page_Fields {
 	/**
 	 * The inverse of field_id(): the bare key a field id was built from, or ''
 	 * when the id was never built by field_id() at all — the panel's own
-	 * auto-declared show/hide switch (task 3), or this class's copytext
-	 * placeholder. Task 8's migration uses this to address the old catalogue
-	 * option; a field that was never stored there has nothing to migrate.
+	 * auto-declared show/hide switch (task 3). Task 8's migration uses this to
+	 * address the old catalogue option; a field that was never stored there has
+	 * nothing to migrate.
 	 */
 	public static function field_key( string $section, string $field_id ): string {
 		$prefix = $section . '_';
@@ -53,7 +47,7 @@ final class Blueworx_Clubhouse_Page_Fields {
 			return '';
 		}
 		$key = substr( $field_id, strlen( $prefix ) );
-		if ( '_shown' === $key || self::COPYTEXT_KEY === $key ) {
+		if ( '_shown' === $key ) {
 			return '';
 		}
 		return $key;
@@ -118,22 +112,42 @@ final class Blueworx_Clubhouse_Page_Fields {
 	// within its area and reversible by field_key().
 	// ---------------------------------------------------------------------
 
-	private static function text( string $section, string $key, string $label, string $ph = '' ): array {
-		$out = array( 'id' => self::field_id( $section, $key ), 'kind' => 'text', 'label' => $label );
-		if ( '' !== $ph ) {
-			$out['placeholder'] = $ph;
-		}
-		return $out;
+	private static function text( string $section, string $key, string $label ): array {
+		return array( 'id' => self::field_id( $section, $key ), 'kind' => 'text', 'label' => $label );
 	}
 
+	/**
+	 * `rows` is carried across from the catalogue's own default (or its own
+	 * explicit value) because it records the author's intent, but the library
+	 * has no use for it today: Schema never validates it, and the editor
+	 * hardcodes a textarea's height (blueworx-page-editor.js). It is only
+	 * meaningful to the 'facts' and 'table' kinds, neither of which this class
+	 * declares.
+	 */
 	private static function area_field( string $section, string $key, string $label, int $rows = 3 ): array {
 		return array( 'id' => self::field_id( $section, $key ), 'kind' => 'textarea', 'label' => $label, 'rows' => $rows );
 	}
 
 	private static function url( string $section, string $key, string $label ): array {
 		// Suggestions are attached in Page_Editors, not here: they depend on
-		// the site's own pages and shop, and this class stays pure.
+		// the site's own pages and shop, and this class stays pure. The
+		// catalogue's bare 'https://…' placeholder is dropped rather than
+		// carried across as help — it is decoration on a field already
+		// labelled as a link and already formatted 'url'.
 		return array( 'id' => self::field_id( $section, $key ), 'kind' => 'text', 'format' => 'url', 'label' => $label );
+	}
+
+	/**
+	 * Attaches help text to a field built by another helper. Kept separate
+	 * from text()/area_field() rather than threaded through every builder as a
+	 * parameter, since only a handful of fields carry it — the catalogue
+	 * placeholders that were guidance rather than decoration (an "e.g. …"
+	 * hint, or the one textarea placeholder that explained blank-line
+	 * paragraphs). Unlike a placeholder, help IS rendered by the library.
+	 */
+	private static function with_help( array $field, string $help ): array {
+		$field['help'] = $help;
+		return $field;
 	}
 
 	private static function media( string $section, string $key, string $label ): array {
@@ -171,17 +185,6 @@ final class Blueworx_Clubhouse_Page_Fields {
 	/** A row cell. Its id is bare — repeater scopes are separate, so no prefix. */
 	private static function cell( string $id, string $kind, string $label, array $extra = array() ): array {
 		return array_merge( array( 'id' => $id, 'kind' => $kind, 'label' => $label ), $extra );
-	}
-
-	/**
-	 * Display-only prose, where a section points at a collection or at
-	 * auto-generated content instead of editing it directly. Carries the
-	 * section's own label, since Schema::validate() requires one of every
-	 * field, copytext included — the catalogue's 'link'/'auto' sentinels
-	 * never needed one because they were never registered against it.
-	 */
-	private static function copytext( string $section, string $label, string $text ): array {
-		return array( 'id' => self::field_id( $section, self::COPYTEXT_KEY ), 'kind' => 'copytext', 'label' => $label, 'text' => $text );
 	}
 
 	/**
@@ -251,7 +254,7 @@ final class Blueworx_Clubhouse_Page_Fields {
 
 	private static function hero_fields( string $section ): array {
 		return array(
-			self::text( $section, 'eyebrow', 'Eyebrow', 'e.g. Est. 1974 · Marlow, UK' ),
+			self::with_help( self::text( $section, 'eyebrow', 'Eyebrow' ), 'e.g. Est. 1974 · Marlow, UK' ),
 			self::text( $section, 'title_lead', 'Heading' ),
 			self::text( $section, 'title_highlight', 'Highlighted phrase' ),
 			self::area_field( $section, 'lede', 'Subheading' ),
@@ -266,14 +269,14 @@ final class Blueworx_Clubhouse_Page_Fields {
 	/** hero_fields() minus the CTAs and the image — hero_filter() has no inputs for them. */
 	private static function hero_filter_fields( string $section ): array {
 		return array(
-			self::text( $section, 'eyebrow', 'Eyebrow', 'e.g. Est. 1974 · Marlow, UK' ),
+			self::with_help( self::text( $section, 'eyebrow', 'Eyebrow' ), 'e.g. Est. 1974 · Marlow, UK' ),
 			self::text( $section, 'title_lead', 'Heading' ),
 			self::text( $section, 'title_highlight', 'Highlighted phrase' ),
 			self::area_field( $section, 'lede', 'Subheading' ),
 		);
 	}
 
-	/** hero_filter_fields() again, minus the eyebrow's placeholder — a legal page has no founding year to suggest. */
+	/** hero_filter_fields() again, minus the eyebrow's help text — a legal page has no founding year to suggest. */
 	private static function legal_hero_fields( string $section ): array {
 		return array(
 			self::text( $section, 'eyebrow', 'Eyebrow' ),
@@ -352,7 +355,7 @@ final class Blueworx_Clubhouse_Page_Fields {
 	/**
 	 * @param array<string,bool> $hideable
 	 */
-	private static function home_tabs( array $hideable, ?Blueworx_Clubhouse_Products $products ): array {
+	private static function home_tabs( array $hideable ): array {
 		return array(
 			array( 'id' => 'hero', 'label' => 'Top of the page', 'panels' => array(
 				self::panel( $hideable, 'home', 'hero', 'Hero', self::hero_fields( 'hero' ) ),
@@ -378,8 +381,9 @@ final class Blueworx_Clubhouse_Page_Fields {
 				self::panel( $hideable, 'home', 'sports', 'Sports grid', array(
 					self::text( 'sports', 'heading', 'Heading' ),
 					self::area_field( 'sports', 'eyebrow', 'Intro' ),
-					self::copytext( 'sports', 'Sports grid', 'The sports shown here are managed in one place — the Sports collection.' ),
-				) ),
+				),
+					'The sports shown here are managed in one place — the Sports collection.'
+				),
 				self::panel( $hideable, 'home', 'clubhouse', 'Clubhouse band', array(
 					self::text( 'clubhouse', 'eyebrow', 'Eyebrow' ),
 					self::text( 'clubhouse', 'heading', 'Heading' ),
@@ -393,11 +397,12 @@ final class Blueworx_Clubhouse_Page_Fields {
 					self::area_field( 'membership', 'lede', 'Intro' ),
 					self::text( 'membership', 'cta_label', 'Button label' ),
 					self::url( 'membership', 'cta_href', 'Button link' ),
-					self::copytext( 'membership', 'Membership tiers', 'Tiers are managed in one place — the Membership page.' ),
-				) ),
-				self::panel( $hideable, 'home', 'activity', 'Activity tabs', array(
-					self::copytext( 'activity', 'Activity tabs', 'Built from each sport’s latest fixtures, results and standings.' ),
-				) ),
+				),
+					'Tiers are managed in one place — the Membership page.'
+				),
+				self::panel( $hideable, 'home', 'activity', 'Activity tabs', array(),
+					'Built from each sport’s latest fixtures, results and standings.'
+				),
 			) ),
 			array( 'id' => 'community', 'label' => 'News and community', 'panels' => array(
 				self::panel( $hideable, 'home', 'news', 'News', array(
@@ -412,7 +417,7 @@ final class Blueworx_Clubhouse_Page_Fields {
 				) ),
 				self::panel( $hideable, 'home', 'social_feed', 'Social feed', array(
 					self::select( 'social_feed', 'platform', 'Platform', array( 'facebook' => 'Facebook', 'instagram' => 'Instagram' ) ),
-					self::text( 'social_feed', 'heading', 'Heading', 'e.g. Latest from the club' ),
+					self::with_help( self::text( 'social_feed', 'heading', 'Heading' ), 'e.g. Latest from the club' ),
 					self::area_field( 'social_feed', 'lede', 'Blurb', 2 ),
 					self::select( 'social_feed', 'count', 'How many posts to show', array( '3' => '3', '6' => '6', '9' => '9' ) ),
 					self::repeater( 'social_feed', 'Posts', array(
@@ -430,9 +435,9 @@ final class Blueworx_Clubhouse_Page_Fields {
 						self::cell( 'link_href', 'text', 'Link href', array( 'format' => 'url' ) ),
 					) ),
 				) ),
-				self::panel( $hideable, 'home', 'sponsors', 'Sponsors', array(
-					self::copytext( 'sponsors', 'Sponsors', 'Sponsors are managed as a collection.' ),
-				) ),
+				self::panel( $hideable, 'home', 'sponsors', 'Sponsors', array(),
+					'Sponsors are managed as a collection.'
+				),
 				self::panel( $hideable, 'home', 'social', 'Social', array(
 					self::text( 'social', 'heading', 'Heading' ),
 					self::area_field( 'social', 'lede', 'Lede' ),
@@ -456,7 +461,7 @@ final class Blueworx_Clubhouse_Page_Fields {
 					array( 'id' => 'content', 'label' => 'Content', 'panels' => array(
 						self::panel( $h, 'global', 'header', 'Header',
 							array(
-								self::text( 'header', 'join', 'Menu CTA label', 'e.g. Join the Club' ),
+								self::with_help( self::text( 'header', 'join', 'Menu CTA label' ), 'e.g. Join the Club' ),
 								self::url( 'header', 'join_href', 'Menu CTA link' ),
 								self::toggle( 'header', 'banner_show', 'Show announcement bar', true ),
 								self::text( 'header', 'banner', 'Announcement text' ),
@@ -477,12 +482,12 @@ final class Blueworx_Clubhouse_Page_Fields {
 						),
 						self::panel( $h, 'global', 'welcome', 'Welcome pack',
 							array(
-								self::text( 'welcome', 'heading', 'Heading', 'e.g. Welcome to the club' ),
-								self::area_field( 'welcome', 'body', 'Welcome pack', 8 ),
-								self::text( 'welcome', 'link_label', 'Link label', 'e.g. Read the full handbook' ),
+								self::with_help( self::text( 'welcome', 'heading', 'Heading' ), 'e.g. Welcome to the club' ),
+								self::with_help( self::area_field( 'welcome', 'body', 'Welcome pack', 8 ), 'A blank line starts a new paragraph.' ),
+								self::with_help( self::text( 'welcome', 'link_label', 'Link label' ), 'e.g. Read the full handbook' ),
 								self::url( 'welcome', 'link_href', 'Link' ),
 							),
-							'Shown to a member on their account dashboard once they have joined — the practical things a new member needs: how to get in, where to park, who to ask. Leave the body empty and nothing is shown at all.',
+							'Shown to a member on their account dashboard once they have joined — the practical things a new member needs: how to get in, where to park, who to ask. Leave the body empty and nothing is shown at all. It renders in the dashboard\'s own plain styling rather than the club look, because that page belongs to the shop.',
 							'Member dashboard'
 						),
 						self::panel( $h, 'global', 'cookies', 'Cookie notice',
@@ -493,14 +498,14 @@ final class Blueworx_Clubhouse_Page_Fields {
 								self::url( 'cookies', 'link_href', 'Link' ),
 								self::text( 'cookies', 'dismiss', 'Dismiss button label' ),
 							),
-							'Shown once per visitor, at the foot of every page, until they dismiss it. If you run a dedicated consent plugin, switch this off and let that one do the job.',
+							'Shown once per visitor, at the foot of every page, until they dismiss it. It says what this site uses cookies for — it does not withhold anything, because the shop and its payment provider set theirs as soon as those pages load. If you run a dedicated consent plugin, switch this off and let that one do the job.',
 							'Every page · Foot'
 						),
 					) ),
 				),
 			),
 
-			'home' => array( 'label' => 'Home', 'tabs' => self::home_tabs( $h, $products ) ),
+			'home' => array( 'label' => 'Home', 'tabs' => self::home_tabs( $h ) ),
 
 			'about' => array( 'label' => 'About', 'tabs' => self::content_tab( array(
 				self::panel( $h, 'about', 'hero', 'Hero', self::hero_fields( 'hero' ) ),
@@ -527,9 +532,9 @@ final class Blueworx_Clubhouse_Page_Fields {
 				),
 					'This renders as a single image band, not a list of facilities.'
 				),
-				self::panel( $h, 'about', 'committee', 'Committee', array(
-					self::copytext( 'committee', 'Committee', 'The committee is managed in one place — the People collection.' ),
-				) ),
+				self::panel( $h, 'about', 'committee', 'Committee', array(),
+					'The committee is managed in one place — the People collection.'
+				),
 				self::panel( $h, 'about', 'get_involved', 'Get involved', array(
 					self::repeater( 'get_involved', 'Ways to help', array(
 						self::cell( 'title', 'text', 'Title' ),
@@ -600,9 +605,9 @@ final class Blueworx_Clubhouse_Page_Fields {
 				),
 					'Paste a SureForms shortcode to take real enquiries. Until you do, the form here is a demo that does not send anywhere — so visitors are shown the club email and phone instead. The details beside it are the real club address, email and phone.'
 				),
-				self::panel( $h, 'contact', 'directory', 'Directory', array(
-					self::copytext( 'directory', 'Directory', 'The directory is managed in one place — the People collection.' ),
-				) ),
+				self::panel( $h, 'contact', 'directory', 'Directory', array(),
+					'The directory is managed in one place — the People collection.'
+				),
 				self::panel( $h, 'contact', 'social', 'Social', array(
 					self::text( 'social', 'heading', 'Heading' ),
 				),
@@ -626,38 +631,38 @@ final class Blueworx_Clubhouse_Page_Fields {
 				),
 					'The stories themselves are ordinary WordPress posts — write them under Posts.'
 				),
-				self::panel( $h, 'news', 'featured', 'Featured story', array(
-					self::copytext( 'featured', 'Featured story', 'The featured story is whichever post is newest. Publish a post and it takes the top spot.' ),
-				) ),
-				self::panel( $h, 'news', 'posts', 'Stories', array(
-					self::copytext( 'posts', 'Stories', 'Club news is written as ordinary WordPress posts, under Posts.' ),
-				) ),
+				self::panel( $h, 'news', 'featured', 'Featured story', array(),
+					'The featured story is whichever post is newest. Publish a post and it takes the top spot.'
+				),
+				self::panel( $h, 'news', 'posts', 'Stories', array(),
+					'Club news is written as ordinary WordPress posts, under Posts.'
+				),
 			) ) ),
 
 			'sports' => array( 'label' => 'Sports', 'tabs' => self::content_tab( array(
 				self::panel( $h, 'sports', 'hero', 'Hero', self::hero_filter_fields( 'hero' ) ),
-				self::panel( $h, 'sports', 'directory', 'Sports directory', array(
-					self::copytext( 'directory', 'Sports directory', 'Sports are managed in one place — the Sports collection.' ),
-				) ),
+				self::panel( $h, 'sports', 'directory', 'Sports directory', array(),
+					'Sports are managed in one place — the Sports collection.'
+				),
 				self::panel( $h, 'sports', 'cta', 'Call to action', self::cta_fields( 'cta' ) ),
 			) ) ),
 
 			'teams' => array( 'label' => 'Teams', 'tabs' => self::content_tab( array(
 				self::panel( $h, 'teams', 'hero', 'Hero', self::hero_filter_fields( 'hero' ) ),
-				self::panel( $h, 'teams', 'directory', 'Teams directory', array(
-					self::copytext( 'directory', 'Teams directory', 'Teams are managed in one place — the Teams collection.' ),
-				) ),
+				self::panel( $h, 'teams', 'directory', 'Teams directory', array(),
+					'Teams are managed in one place — the Teams collection.'
+				),
 				self::panel( $h, 'teams', 'cta', 'Call to action', self::cta_fields( 'cta' ) ),
 			) ) ),
 
 			'events' => array( 'label' => 'Events', 'tabs' => self::content_tab( array(
 				self::panel( $h, 'events', 'hero', 'Hero', self::hero_filter_fields( 'hero' ) ),
-				self::panel( $h, 'events', 'upcoming', 'Upcoming events', array(
-					self::copytext( 'upcoming', 'Upcoming events', 'Upcoming events are managed in one place — the Events collection.' ),
-				) ),
-				self::panel( $h, 'events', 'past', 'Past events', array(
-					self::copytext( 'past', 'Past events', 'Derived from events marked past.' ),
-				) ),
+				self::panel( $h, 'events', 'upcoming', 'Upcoming events', array(),
+					'Upcoming events are managed in one place — the Events collection.'
+				),
+				self::panel( $h, 'events', 'past', 'Past events', array(),
+					'Derived from events marked past.'
+				),
 				self::panel( $h, 'events', 'cta', 'Call to action', self::cta_fields( 'cta' ) ),
 			) ) ),
 
@@ -669,8 +674,9 @@ final class Blueworx_Clubhouse_Page_Fields {
 				self::panel( $h, 'calendar', 'schedule', 'Schedule', array(
 					self::text( 'schedule', 'heading', 'Heading' ),
 					self::area_field( 'schedule', 'eyebrow', 'Intro' ),
-					self::copytext( 'schedule', 'Schedule', 'Built from each sport’s fixtures and results.' ),
-				) ),
+				),
+					'Built from each sport’s fixtures and results.'
+				),
 				self::panel( $h, 'calendar', 'cta', 'Call to action', self::cta_fields( 'cta' ) ),
 			) ) ),
 

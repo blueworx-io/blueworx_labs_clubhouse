@@ -73,6 +73,11 @@ final class PageFieldsTest extends TestCase {
 	 * Content_Catalogue (Link_Catalogue, Import_Sections, Import_Prompt,
 	 * Import_Parser), so it is not being deleted this phase. It is only
 	 * retired alongside the catalogue itself, whenever that finally happens.
+	 *
+	 * Descends into a loop's own fields too — a repeater cell keyed wrongly
+	 * (e.g. 'desc' where the catalogue says 'description') would otherwise
+	 * pass every check here and only surface once the migration tried to read
+	 * it back, silently, from a key nothing ever wrote to.
 	 */
 	public function test_every_catalogue_field_has_a_counterpart(): void {
 		foreach ( Blueworx_Clubhouse_Content_Catalogue::pages() as $page ) {
@@ -91,8 +96,81 @@ final class PageFieldsTest extends TestCase {
 						'repeater',
 						Blueworx_Clubhouse_Page_Fields::kind_of( $area, $sec, Blueworx_Clubhouse_Page_Fields::REPEATER_FIELD )
 					);
+
+					$cells = array();
+					foreach ( $this->repeaterCells( $area, $sec ) as $cell ) {
+						$cells[ $cell['id'] ] = $cell['kind'];
+					}
+					foreach ( $section['loop']['fields'] as $loopField ) {
+						$key = (string) $loopField['key'];
+						$this->assertArrayHasKey(
+							$key,
+							$cells,
+							sprintf( '%s/%s loop field "%s" is in the catalogue and not in the Page_Fields repeater.', $area, $sec, $key )
+						);
+						$this->assertSame(
+							$this->expectedCellKind( (string) $loopField['type'] ),
+							$cells[ $key ],
+							sprintf( '%s/%s loop field "%s" has the wrong kind.', $area, $sec, $key )
+						);
+					}
 				}
 			}
+		}
+	}
+
+	/**
+	 * Every area, built into the smallest valid settings screen and run
+	 * through the library's own validator. This is what would have caught a
+	 * kind the browser cannot draw as a repeater row, or a field missing a
+	 * label — the checks above only compare Page_Fields against the
+	 * catalogue, never against the library's own rules.
+	 */
+	public function test_every_area_validates_as_a_library_screen(): void {
+		foreach ( Blueworx_Clubhouse_Page_Fields::areas() as $key => $area ) {
+			\Blueworx\PageEditor\v1\Schema::validate( array(
+				'slug'        => 'test-' . $key,
+				'title'       => $area['label'],
+				'store'       => 'option',
+				'option_name' => 'test_' . $key,
+				'tabs'        => $area['tabs'],
+			) );
+			$this->addToAssertionCount( 1 );
+		}
+	}
+
+	/** The repeater cells Page_Fields declares for one area/section's loop, or [] if it has none. */
+	private function repeaterCells( string $area, string $section ): array {
+		foreach ( Blueworx_Clubhouse_Page_Fields::areas() as $key => $data ) {
+			if ( $key !== $area ) {
+				continue;
+			}
+			foreach ( $data['tabs'] as $tab ) {
+				foreach ( $tab['panels'] as $panel ) {
+					if ( $panel['id'] !== $section ) {
+						continue;
+					}
+					foreach ( $panel['fields'] as $field ) {
+						if ( 'repeater' === $field['kind'] ) {
+							return $field['fields'] ?? array();
+						}
+					}
+				}
+			}
+		}
+		return array();
+	}
+
+	/** The kind a repeater cell should carry for a given catalogue field type, per the same mapping table as the top level. */
+	private function expectedCellKind( string $catalogueType ): string {
+		switch ( $catalogueType ) {
+			case 'url':
+			case 'shortcode':
+				return 'text';
+			case 'image':
+				return 'media';
+			default:
+				return $catalogueType;
 		}
 	}
 }
