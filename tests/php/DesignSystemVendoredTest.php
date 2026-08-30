@@ -40,14 +40,4 @@ final class DesignSystemVendoredTest extends TestCase {
 			$this->assertSame( sha1_file( $face ), sha1_file( $shipped ), basename( $face ) . ' differs from the design system' );
 		}
 	}
-
-	/**
-	 * The page editor library is phase 3. Carrying one of its two artefacts
-	 * without the other fails the foundation's sync check, so neither may
-	 * appear yet.
-	 */
-	public function test_the_page_editor_library_is_not_vendored_yet(): void {
-		$this->assertDirectoryDoesNotExist( $this->root() . '/blueworx-page-editor' );
-		$this->assertFileDoesNotExist( $this->root() . '/assets/blueworx-page-editor.js' );
-	}
 }

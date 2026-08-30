@@ -7,7 +7,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Sends Edit on a club page to Club Pages, and keeps the block editor shut.
+ * Sends Edit on a club page to the page's own editor screen, and keeps the
+ * block editor shut.
  *
  * Club pages are real WordPress pages now, which is what gives the site its
  * sitemap, canonicals and search. It also hands a club a second, contradictory
@@ -16,33 +17,30 @@ if ( ! defined( 'ABSPATH' ) ) {
  * end, because the club's words come from the content store and are rendered
  * by the plugin's own template.
  *
- * So editing keeps feeling exactly as it did. Edit goes to the Club Pages
- * screen, on that page's tab; the block editor is switched off for these
- * posts; and typing the editor's address directly redirects there too, so
- * there is no way in rather than merely no link in.
+ * So editing keeps feeling exactly as it did. Edit goes to the record editor
+ * behind that page; the block editor is switched off for these posts; and
+ * typing the editor's address directly redirects there too, so there is no
+ * way in rather than merely no link in.
  *
  * @package BlueworxLabsClubhouse
  */
 final class Blueworx_Clubhouse_Club_Page_Editing {
 
 	/**
-	 * The Club Pages tab a Page_Map slug is edited on.
+	 * The area a Page_Map slug is edited under — Page_Fields' own key, and
+	 * what Page_Editors::editor_url() takes.
 	 *
-	 * Every tab on that screen is named after its Page_Map slug — except Home,
-	 * whose slug is '' and whose tab Content_Catalogue names 'home'. An empty
-	 * tab value would select nothing and leave the screen on whichever tab is
-	 * first (Global), which is not where Home's words are.
+	 * Every area is named after its Page_Map slug — except Home, whose slug is
+	 * '' and whose area Page_Fields names 'home'. An empty value would ask
+	 * Page_Editors for a screen keyed by '', which does not exist.
 	 */
 	public static function tab_for( string $slug ): string {
 		return '' === $slug ? 'home' : $slug;
 	}
 
-	/** The Club Pages screen, on the tab that edits this club page. */
+	/** The page's own editor screen, on the record behind it. */
 	public static function editor_url( string $slug ): string {
-		return admin_url(
-			'admin.php?page=' . Blueworx_Clubhouse_Content_Controller::PAGE_SLUG
-			. '&tab=' . rawurlencode( self::tab_for( $slug ) )
-		);
+		return Blueworx_Clubhouse_Page_Editors::editor_url( self::tab_for( $slug ) );
 	}
 
 	/**
@@ -55,7 +53,7 @@ final class Blueworx_Clubhouse_Club_Page_Editing {
 		return Blueworx_Clubhouse_Club_Pages::is_club_page( $post_id ) ? false : $default;
 	}
 
-	/** A club page's edit link points at Club Pages; every other link stands. */
+	/** A club page's edit link points at its own editor screen; every other link stands. */
 	public static function filter_edit_link( string $link, int $post_id ): string {
 		return Blueworx_Clubhouse_Club_Pages::is_club_page( $post_id )
 			? self::editor_url( Blueworx_Clubhouse_Club_Pages::slug_for( $post_id ) )
@@ -92,10 +90,10 @@ final class Blueworx_Clubhouse_Club_Page_Editing {
 	}
 
 	/**
-	 * Typing post.php?post=<id>&action=edit for a club page lands on Club
-	 * Pages too — otherwise switching the block editor off would only hide the
-	 * door rather than close it, and the classic editor would open on an empty
-	 * body instead.
+	 * Typing post.php?post=<id>&action=edit for a club page lands on its own
+	 * editor screen too — otherwise switching the block editor off would only
+	 * hide the door rather than close it, and the classic editor would open on
+	 * an empty body instead.
 	 */
 	public static function redirect_to_club_pages(): void {
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Reading which post is being opened, not acting on a request.

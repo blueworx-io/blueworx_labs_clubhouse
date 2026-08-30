@@ -1,15 +1,17 @@
 const { test, expect } = require('@playwright/test');
 
-// @wordpress only: this is a wp-admin form and what one save does to the site.
+// @wordpress only: this is a wp-admin screen and what one save does to the site.
 //
 // The bug this pins: the cookie notice and the announcement bar are on until a
 // club switches them off, but the editing screen did not know that and drew
-// both switches as off on a site that had never touched them. Saving the tab
-// writes every field at the value shown, so a single visit to Club Pages —
-// changing nothing relevant — turned both off on the live site.
+// both switches as off on a site that had never touched them. Saving writes
+// every field at the value shown, so a single visit to the editor — changing
+// nothing relevant — turned both off on the live site.
 //
-// It has to be driven through the real form. The bug was never in the rendering
-// or the storage on their own; it was the round trip between them.
+// It has to be driven through the real screen. The bug was never in the
+// rendering or the storage on their own; it was the round trip between them.
+// The screen has moved from Club Pages to Clubhouse → Global content, which is
+// exactly the move that could have reintroduced it.
 
 async function loginAsAdmin(page) {
   await page.goto('/wp-login.php');
@@ -19,23 +21,26 @@ async function loginAsAdmin(page) {
   await expect(page.locator('#wpadminbar')).toBeVisible();
 }
 
-const SWITCHES = [
-  'input[name="field[global][cookies][show]"]',
-  'input[name="field[global][header][banner_show]"]',
-];
+async function openGlobalContent(page) {
+  await page.goto('/wp-admin/admin.php?page=clubhouse-global-content', {
+    waitUntil: 'domcontentloaded',
+  });
+  // The editor is a JS app; nothing below exists until it has mounted.
+  await expect(page.locator('.bw-savebar')).toBeVisible();
+}
+
+const SWITCHES = ['Show the cookie notice', 'Show announcement bar'];
 
 test('the sitewide switches show the state the site is actually in @wordpress', async ({ page }) => {
   await loginAsAdmin(page);
-  await page.goto('/wp-admin/admin.php?page=clubhouse-site-content&tab=global', {
-    waitUntil: 'domcontentloaded',
-  });
+  await openGlobalContent(page);
 
-  for (const selector of SWITCHES) {
-    await expect(page.locator(selector), `${selector} drew as off`).toBeChecked();
+  for (const label of SWITCHES) {
+    await expect(page.getByLabel(label), `"${label}" drew as off`).toBeChecked();
   }
 });
 
-test('saving Club Pages leaves the cookie notice and banner alone @wordpress', async ({ page }) => {
+test('saving Global content leaves the cookie notice and banner alone @wordpress', async ({ page }) => {
   await loginAsAdmin(page);
 
   // What the site does before anyone opens the editor.
@@ -43,14 +48,13 @@ test('saving Club Pages leaves the cookie notice and banner alone @wordpress', a
   await expect(page.locator('#ch-cookie')).toBeVisible();
   const bannerBefore = await page.locator('.ch-banner').count();
 
-  await page.goto('/wp-admin/admin.php?page=clubhouse-site-content&tab=global', {
-    waitUntil: 'domcontentloaded',
-  });
-  // Save without changing anything — the whole point is that this is a no-op.
-  await page
-    .locator('form:has(input[name="field[global][cookies][show]"]) button[name="clubhouse_content_submit"]')
-    .click({ force: true });
-  await expect(page.locator('.notice, .clubhouse-notice').first()).toBeVisible();
+  await openGlobalContent(page);
+  // Change something unrelated, so there is a real save to make — the switches
+  // themselves are left exactly as the screen drew them, which is the point.
+  const heading = page.getByLabel('Heading').first();
+  await heading.fill('Welcome to the club');
+  await page.getByRole('button', { name: /save/i }).click();
+  await expect(page.locator('.bw-savebar')).toContainText('Everything is saved');
 
   await page.goto('/?clubhouse_page=privacy');
   await expect(page.locator('#ch-cookie'), 'a save switched the cookie notice off').toBeVisible();

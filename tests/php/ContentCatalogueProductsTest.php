@@ -91,20 +91,17 @@ final class ContentCatalogueProductsTest extends TestCase {
 		$this->assertSame( 1, $found );
 	}
 
-	public function test_a_vanished_product_is_shown_as_such_rather_than_as_not_connected(): void {
-		$field = $this->price_field( new Blueworx_Clubhouse_Demo_Products() );
-		$html  = Blueworx_Clubhouse_Content_Screen::field_html( $field, 'price_vanished', 'tier-0-price_id' );
-
-		// The stale value is still the selected one...
-		$this->assertStringContainsString( 'value="price_vanished"', $html );
-		$this->assertMatchesRegularExpression( '/value="price_vanished"[^>]*selected/', $html );
-		// ...and it says what happened, rather than reading as "Not connected".
-		$this->assertStringContainsString( 'longer available', $html );
-	}
-
-	public function test_a_normal_value_gains_no_extra_option(): void {
-		$field = $this->price_field( new Blueworx_Clubhouse_Demo_Products() );
-		$html  = Blueworx_Clubhouse_Content_Screen::field_html( $field, 'price_adult_monthly', 'tier-0-price_id' );
-		$this->assertSame( 4, substr_count( $html, '<option ' ) );
-	}
+	/*
+	 * Two cases stood here: a tier connected to a product the shop no longer
+	 * offers used to keep the stale value selected and say "no longer
+	 * available", rather than reading as "Not connected". Both asserted against
+	 * Content_Screen::field_html(), and that screen is deleted.
+	 *
+	 * The page editor library builds a select from its declared options alone
+	 * and never sees the stored value, so it cannot offer the same thing
+	 * without a change to the library itself. The stored value is untouched —
+	 * the tier still charges what it always did — but the editor now shows it
+	 * as unconnected. Tracked as its own issue rather than left as a test
+	 * asserting a screen nobody can open.
+	 */
 }

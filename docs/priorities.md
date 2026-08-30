@@ -4,10 +4,10 @@ The standing priority order for this repo. Read this first; anything not on it
 is below everything on it.
 
 Written 14 August 2026, rewritten 17 August 2026 against main at v0.76.0,
-23 August 2026 against v0.87.1, 27 August 2026 against v0.91.1, and
-28 August 2026 against v0.97.0. Keep it current — the surest way is to close the
-issue as the pull request merges, which is what let this list drift the last
-time.
+23 August 2026 against v0.87.1, 27 August 2026 against v0.91.1,
+28 August 2026 against v0.97.0, and 30 August 2026 against v0.98.0. Keep it
+current — the surest way is to close the issue as the pull request merges,
+which is what let this list drift the last time.
 
 ---
 
@@ -19,10 +19,10 @@ each phase gets its own plan and its own release.
 
 | Phase | What | State |
 | --- | --- | --- |
-| 1 | The three foundation additions — a repeater that takes more than text, a screen that owns its own storage, link suggestions | Not started. `bluegroup_core_foundation`, and phase 3 waits on it |
+| 1 | The three foundation additions — a repeater that takes more than text, a screen that owns its own storage, link suggestions | Not started. `bluegroup_core_foundation`. No longer blocking: phase 3 worked around all three locally |
 | 2 | Vendor the design system; rebuild the five screens the editor library will not replace | **Done, v0.97.0.** [Plan](superpowers/plans/2026-08-28-design-system-adoption.md) |
-| 3 | Club pages become records; the Club Pages screen is deleted | Waits on phase 1 |
-| 4 | Setup rebuilt on the library, absorbing [#283](../../issues/283), [#284](../../issues/284) and [#285](../../issues/285) | Waits on phase 3 |
+| 3 | Club pages become records; the Club Pages screen is deleted | **Done, v0.98.0.** [Plan](superpowers/plans/2026-08-28-club-pages-become-records.md). It did not wait on phase 1 in the end — the three foundation additions were worked around locally |
+| 4 | Setup rebuilt on the library, absorbing [#283](../../issues/283), [#284](../../issues/284) and [#285](../../issues/285) | Next. Phase 3 has landed, so nothing is holding it |
 | 5 | Collection record editors replace the Details meta box | Waits on phase 4 |
 | 6 | The remaining screens | Waits on phase 5 |
 
@@ -34,7 +34,7 @@ closed with phase 2.
 
 | # | Do | Why here |
 | --- | --- | --- |
-| [#256](../../issues/256) | An honours board page | Club champions, chairpersons, captains, with categories the club sets and two tiers of filters. Worth holding until phase 3 lands, so it is built the new way once rather than the old way twice. |
+| [#256](../../issues/256) | An honours board page | Club champions, chairpersons, captains, with categories the club sets and two tiers of filters. Phase 3 has landed, so it can be built the new way now — once, rather than the old way twice. |
 | [#278](../../issues/278) | Custom member fields as columns on the members list | Ordinary work, independent of the phases above. |
 | [#274](../../issues/274) | Put a shop in the CI test harness | Genuinely uncertain: SureCart has to install and authenticate in CI, which nobody has proved yet. |
 | [#290](../../issues/290) | A demo page throws "wp is not defined" on real WordPress | One test fails against real WordPress. Found while fixing #288. |
@@ -108,8 +108,8 @@ checkout is untested by choice.
 ## The block builder, and why it is gone
 
 Built over v0.64.0–v0.75.0 and withdrawn in v0.76.0 ([#221](../../issues/221)).
-Pages are composed from the club's own content again, edited on Club Pages,
-with the Setup Visibility tab back for taking a section off a page.
+Pages are composed from the club's own content again, edited on the pages
+themselves, with each section switched off on its own panel.
 
 The shelved work is on the `block-builder` branch, tagged `v0.75.0-blocks` — the
 spec (`docs/superpowers/specs/2026-08-13-page-composition-and-block-library-design.md`)

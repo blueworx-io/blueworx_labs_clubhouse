@@ -85,28 +85,38 @@ final class Blueworx_Clubhouse_Guide_Controller {
 			);
 		}
 
-		// Keyed by page so the section inventory can be matched to the page map
-		// without either of them having to know the other's order.
+		// Keyed by page so the panels can be matched to the page map without
+		// either of them having to know the other's order. The switchable
+		// sections of a page are its hideable panels, read from the same
+		// declaration the page's own editor is built from.
+		$content          = new Blueworx_Clubhouse_Page_Content( $storage );
 		$sections_by_page = array();
-		foreach ( Blueworx_Clubhouse_Setup_Sections::inventory() as $entry ) {
-			$sections_by_page[ (string) $entry['page'] ] = (array) $entry['sections'];
+		foreach ( Blueworx_Clubhouse_Page_Fields::areas() as $area => $spec ) {
+			// Header, footer, welcome pack and cookie notice are edited under
+			// Global content, but they show on Home like everything else here,
+			// and an owner reading this guide is looking for them under Home.
+			$key = Blueworx_Clubhouse_Page_Content::GLOBAL_AREA === $area ? 'home' : (string) $area;
+			foreach ( $spec['tabs'] as $tab ) {
+				foreach ( $tab['panels'] as $panel ) {
+					if ( empty( $panel['hideable'] ) ) {
+						continue;
+					}
+					$sections_by_page[ $key ][] = array(
+						'label'   => (string) $panel['title'],
+						'visible' => $content->is_section_shown( (string) $area, (string) $panel['id'] ),
+					);
+				}
+			}
 		}
 
 		$pages = array();
 		foreach ( Blueworx_Clubhouse_Page_Map::available() as $page ) {
-			$key      = '' === (string) $page['slug'] ? 'home' : (string) $page['slug'];
-			$sections = array();
-			foreach ( $sections_by_page[ $key ] ?? array() as $section ) {
-				$sections[] = array(
-					'label'   => (string) $section['label'],
-					'visible' => $visibility->is_section_visible( $key, (string) $section['key'] ),
-				);
-			}
+			$key     = '' === (string) $page['slug'] ? 'home' : (string) $page['slug'];
 			$pages[] = array(
 				'key'      => $key,
 				'label'    => (string) $page['label'],
 				'visible'  => $visibility->is_page_visible( $key ),
-				'sections' => $sections,
+				'sections' => $sections_by_page[ $key ] ?? array(),
 			);
 		}
 
@@ -117,7 +127,9 @@ final class Blueworx_Clubhouse_Guide_Controller {
 			'screens'     => self::screens(),
 			'collections' => self::collections(),
 			'setup_url'   => admin_url( 'admin.php?page=' . Blueworx_Clubhouse_Setup_Controller::PAGE_SLUG ),
-			'content_url' => admin_url( 'admin.php?page=' . Blueworx_Clubhouse_Content_Controller::PAGE_SLUG ),
+			// The Pages list, not a screen of this plugin's own: a club page is a
+			// real WordPress page now, and its Edit button opens its own editor.
+			'content_url' => admin_url( 'edit.php?post_type=page' ),
 		);
 	}
 

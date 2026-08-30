@@ -89,7 +89,7 @@ final class FilterPillsTest extends TestCase {
 
 	public function test_page_map_threads_the_filter(): void {
 		[ $b, $v, $c ] = $this->ctx();
-		$content = new Blueworx_Clubhouse_Content_Store( new Blueworx_Clubhouse_Fake_Storage() );
+		$content = new Blueworx_Clubhouse_Page_Content( new Blueworx_Clubhouse_Fake_Storage() );
 		$html    = Blueworx_Clubhouse_Page_Map::render( 'teams', $b, $v, $c, '', $content, 'rugby' );
 		$this->assertStringContainsString( '1st XV', $html );
 		$this->assertStringNotContainsString( '1st XI', $html );

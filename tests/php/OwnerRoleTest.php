@@ -71,28 +71,28 @@ final class OwnerRoleTest extends TestCase {
 	}
 
 	/**
-	 * WordPress's own Pages menu is no longer hidden from everyone — administrators
-	 * need it to reach pages other plugins own (SureCart's customer dashboard, and
-	 * the like), which the Clubhouse routing never served and never will.
+	 * WordPress's own Pages menu is kept for everyone now. Administrators always
+	 * needed it, to reach pages other plugins own (SureCart's customer dashboard,
+	 * and the like). An owner needs it because it is the way into a club page:
+	 * the fourteen page editors have no menu item of their own, and pressing Edit
+	 * on a page in this list is what opens one.
 	 *
-	 * Owners are a different matter: they stay inside the Clubhouse screens, and
-	 * the allowlist is the single thing keeping them there. This pins both halves,
-	 * because the two are now enforced by one mechanism instead of two.
+	 * It is not raw page editing. A club page's row has no Quick Edit and no
+	 * Trash, and its Edit link — and a typed post.php address — land in that
+	 * page's own editor rather than the block editor.
 	 */
-	public function test_pages_menu_is_hidden_from_owners_but_left_for_administrators(): void {
+	public function test_the_pages_menu_is_left_for_owners_and_administrators_alike(): void {
 		$GLOBALS['menu'] = array(
 			array( '', 'read', 'index.php' ),
 			array( '', 'edit_pages', 'edit.php?post_type=page' ),
 		);
 
-		$GLOBALS['wp_stub_current_user'] = (object) array( 'roles' => array( 'administrator' ) );
-		Blueworx_Clubhouse_Owner_Role::lock_menu();
-		$this->assertSame( array(), wp_stub_calls( 'remove_menu_page' ), 'administrators keep the Pages menu' );
-
-		$GLOBALS['wp_stub_current_user'] = (object) array( 'roles' => array( 'clubhouse_owner' ) );
-		Blueworx_Clubhouse_Owner_Role::lock_menu();
-		$removed = array_map( static fn( $c ) => $c['args'][0], wp_stub_calls( 'remove_menu_page' ) );
-		$this->assertContains( 'edit.php?post_type=page', $removed, 'owners still do not get raw page editing' );
+		foreach ( array( 'administrator', 'clubhouse_owner', 'clubhouse_content_editor' ) as $role ) {
+			$GLOBALS['wp_stub_current_user'] = (object) array( 'roles' => array( $role ) );
+			Blueworx_Clubhouse_Owner_Role::lock_menu();
+			$removed = array_map( static fn( $c ) => $c['args'][0], wp_stub_calls( 'remove_menu_page' ) );
+			$this->assertNotContains( 'edit.php?post_type=page', $removed, $role . ' lost the way into a club page' );
+		}
 	}
 
 	public function test_takeover_dashboard_replaces_widgets_only_for_owners(): void {
@@ -281,7 +281,7 @@ final class OwnerRoleTest extends TestCase {
 		$GLOBALS['menu'] = array(
 			array( '', 'read', 'index.php' ),
 			array( '', 'manage_clubhouse', 'clubhouse-setup' ),
-			array( '', 'manage_clubhouse', 'clubhouse-site-content' ),
+			array( '', 'edit_pages', 'edit.php?post_type=page' ),
 			array( '', 'edit_posts', 'clubhouse-content' ),
 			array( '', 'manage_options', 'sc-dashboard' ),
 			array( '', 'manage_options', 'latepoint' ),
@@ -293,7 +293,7 @@ final class OwnerRoleTest extends TestCase {
 		$this->assertContains( 'sc-dashboard', $removed );
 		$this->assertContains( 'latepoint', $removed );
 		$this->assertNotContains( 'clubhouse-setup', $removed );
-		$this->assertNotContains( 'clubhouse-site-content', $removed );
+		$this->assertNotContains( 'edit.php?post_type=page', $removed );
 		$this->assertNotContains( 'clubhouse-content', $removed );
 		$this->assertNotContains( 'edit.php', $removed );
 	}

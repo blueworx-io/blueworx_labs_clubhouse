@@ -5,14 +5,28 @@ use PHPUnit\Framework\TestCase;
 
 final class PageRendererContentOverrideTest extends TestCase {
 
-	/** @return array{0:Blueworx_Clubhouse_Branding,1:Blueworx_Clubhouse_Visibility,2:Blueworx_Clubhouse_Demo_Collections,3:Blueworx_Clubhouse_Content_Store} */
+	protected function setUp(): void {
+		wp_stub_reset();
+		// Every page this file overrides content on needs a real post behind
+		// it, or Page_Content::set()/get() silently no-op — see class-page-content.php.
+		// Each page gets its own id: the meta key a field is stored under
+		// carries its section and field only, not its page, so two pages
+		// sharing an id would collide on same-named sections (e.g. both
+		// Home and About have a 'hero').
+		$pages = array( 'home', 'about', 'membership', 'contact', 'sports', 'teams', 'events', 'calendar', 'login' );
+		foreach ( $pages as $i => $page ) {
+			update_option( 'clubhouse_page_id_' . $page, 42 + $i );
+		}
+	}
+
+	/** @return array{0:Blueworx_Clubhouse_Branding,1:Blueworx_Clubhouse_Visibility,2:Blueworx_Clubhouse_Demo_Collections,3:Blueworx_Clubhouse_Page_Content} */
 	private function ctx(): array {
 		$s = new Blueworx_Clubhouse_Fake_Storage();
 		return array(
 			new Blueworx_Clubhouse_Branding( $s ),
 			new Blueworx_Clubhouse_Visibility( $s ),
 			new Blueworx_Clubhouse_Demo_Collections(),
-			new Blueworx_Clubhouse_Content_Store( $s ),
+			new Blueworx_Clubhouse_Page_Content( $s ),
 		);
 	}
 

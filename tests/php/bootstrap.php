@@ -38,6 +38,16 @@ if ( ! defined( 'BLUEWORX_CLUBHOUSE_RUNNING_TESTS' ) ) {
 
 require_once __DIR__ . '/wp-stubs.php';
 
+// The vendored page editor library. Page_Editors declares its screens straight
+// to Schema::validate() and Editor::register(), so the tests need the whole
+// library loaded — not just Schema.php, which was enough while PageFieldsTest
+// was the only thing checking a declared kind against its closed list. Same
+// order Registry::load() uses, minus the final Editor::boot(): that call wires
+// WordPress hooks the test bootstrap has no need to run.
+foreach ( array( 'Schema', 'Capabilities', 'Sanitise', 'Validate', 'Store', 'Settings', 'Rest', 'Screen', 'Editor' ) as $bwpe_class ) {
+	require_once dirname( __DIR__, 2 ) . '/blueworx-page-editor/v1/' . $bwpe_class . '.php';
+}
+
 require dirname( __DIR__, 2 ) . '/includes/bootstrap.php';
 
 require_once dirname( __DIR__, 2 ) . '/includes/frontend/class-clubhouse-context.php';
@@ -52,7 +62,6 @@ require_once dirname( __DIR__, 2 ) . '/includes/frontend/class-seo-head.php';
 require_once dirname( __DIR__, 2 ) . '/includes/admin/class-admin-assets.php';
 require_once dirname( __DIR__, 2 ) . '/includes/admin/class-admin-menu-icons.php';
 require_once dirname( __DIR__, 2 ) . '/includes/admin/class-setup-controller.php';
-require_once dirname( __DIR__, 2 ) . '/includes/admin/class-content-controller.php';
 require_once dirname( __DIR__, 2 ) . '/includes/admin/class-demo-controller.php';
 require_once dirname( __DIR__, 2 ) . '/includes/admin/class-owner-role.php';
 require_once dirname( __DIR__, 2 ) . '/includes/admin/class-access-controller.php';

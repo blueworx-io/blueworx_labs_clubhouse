@@ -146,7 +146,7 @@ final class Blueworx_Clubhouse_Page_Map {
 		Blueworx_Clubhouse_Visibility $visibility,
 		Blueworx_Clubhouse_Collections $collections,
 		string $logo_url = '',
-		?Blueworx_Clubhouse_Content_Store $content = null,
+		?Blueworx_Clubhouse_Page_Content $content = null,
 		string $filter = '',
 		string $item = ''
 	): string {

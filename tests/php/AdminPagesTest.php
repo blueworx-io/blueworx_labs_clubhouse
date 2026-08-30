@@ -29,8 +29,8 @@ final class AdminPagesTest extends TestCase {
 			$by_slug[ Blueworx_Clubhouse_Setup_Controller::PAGE_SLUG ]['cap']
 		);
 		$this->assertSame(
-			Blueworx_Clubhouse_Content_Controller::CAPABILITY,
-			$by_slug[ Blueworx_Clubhouse_Content_Controller::PAGE_SLUG ]['cap']
+			Blueworx_Clubhouse_Owner_Capabilities::CONTENT_CAP,
+			$by_slug[ Blueworx_Clubhouse_Page_Editors::GLOBAL_SLUG ]['cap']
 		);
 		$this->assertSame(
 			Blueworx_Clubhouse_Import_Controller::CAPABILITY,
@@ -103,7 +103,7 @@ final class AdminPagesTest extends TestCase {
 	public function test_the_content_editor_can_edit_content_but_not_configure_the_site(): void {
 		$editor = Blueworx_Clubhouse_Owner_Capabilities::EDITOR_ROLE;
 
-		$this->assertTrue( Blueworx_Clubhouse_Admin_Pages::role_can( $editor, Blueworx_Clubhouse_Content_Controller::PAGE_SLUG ), 'Club Pages' );
+		$this->assertTrue( Blueworx_Clubhouse_Admin_Pages::role_can( $editor, Blueworx_Clubhouse_Page_Editors::GLOBAL_SLUG ), 'Global content' );
 		$this->assertTrue( Blueworx_Clubhouse_Admin_Pages::role_can( $editor, Blueworx_Clubhouse_Collection_Types::CONTENT_SLUG ), 'Collections' );
 		$this->assertTrue( Blueworx_Clubhouse_Admin_Pages::role_can( $editor, Blueworx_Clubhouse_Setup_Controller::PAGE_SLUG ), 'Clubhouse — for the Menu tab' );
 
@@ -170,13 +170,13 @@ final class AdminPagesTest extends TestCase {
 		// menu still cannot reach it. Club Pages is on no allowlist here.
 		$caps = array(
 			Blueworx_Clubhouse_Owner_Capabilities::EDITOR_ROLE => array(
-				Blueworx_Clubhouse_Content_Controller::CAPABILITY => true,
+				Blueworx_Clubhouse_Owner_Capabilities::CONTENT_CAP => true,
 			),
 		);
 		$this->assertTrue(
 			Blueworx_Clubhouse_Admin_Pages::role_can(
 				Blueworx_Clubhouse_Owner_Capabilities::EDITOR_ROLE,
-				Blueworx_Clubhouse_Content_Controller::PAGE_SLUG,
+				Blueworx_Clubhouse_Page_Editors::GLOBAL_SLUG,
 				$caps
 			),
 			'on the menu and holding the cap — reachable'

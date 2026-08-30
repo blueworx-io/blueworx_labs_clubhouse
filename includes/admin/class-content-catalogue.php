@@ -4,11 +4,20 @@ declare(strict_types=1);
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
 /**
- * Pure declarative catalogue of editable page content, shaped 1:1 to the
- * visibility inventory (`Setup_Sections::inventory()` — enforced by a
- * lockstep test). Single source of truth for the Content editor: it drives
- * the editor UI and defines the `Content_Store` storage-key contract the
- * front-end renderers read (Page_Renderer's override layer).
+ * Pure declarative catalogue of editable page content.
+ *
+ * This was the Club Pages screen's own field declaration, and that screen is
+ * gone — Page_Fields declares the same content to the page editor library now,
+ * and the front end reads it from there. What keeps this class alive is the AI
+ * import, which uses it as its allow-list: nothing may be written to an address
+ * this catalogue does not name, and its `link`/`auto` metadata is how the
+ * importer decides whether a file covered a section at all. Page_Fields carries
+ * none of that yet.
+ *
+ * Two declarations of the same fields is a drift waiting to happen, and a drift
+ * means the importer writing to an address no editor shows. PageFieldsTest
+ * holds the two together field by field until the importer moves across —
+ * issue #294. Do not add a field here without adding it there.
  *
  * @package BlueworxLabsClubhouse
  */

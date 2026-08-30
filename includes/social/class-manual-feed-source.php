@@ -15,9 +15,9 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 final class Blueworx_Clubhouse_Manual_Feed_Source implements Blueworx_Clubhouse_Feed_Source {
 
-	private Blueworx_Clubhouse_Content_Store $content;
+	private Blueworx_Clubhouse_Page_Content $content;
 
-	public function __construct( Blueworx_Clubhouse_Content_Store $content ) {
+	public function __construct( Blueworx_Clubhouse_Page_Content $content ) {
 		$this->content = $content;
 	}
 

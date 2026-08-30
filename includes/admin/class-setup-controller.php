@@ -170,14 +170,11 @@ final class Blueworx_Clubhouse_Setup_Controller {
 		}
 
 		// 4. Visibility — a checkbox is present only when ticked; absence = hidden.
-		$pages    = isset( $post['clubhouse_page'] ) && is_array( $post['clubhouse_page'] ) ? $post['clubhouse_page'] : array();
-		$sections = isset( $post['clubhouse_section'] ) && is_array( $post['clubhouse_section'] ) ? $post['clubhouse_section'] : array();
-		foreach ( Blueworx_Clubhouse_Setup_Sections::inventory() as $page ) {
+		// Pages only. A section is switched off on its own panel, on the page it
+		// belongs to, which is the one place that switch now lives.
+		$pages = isset( $post['clubhouse_page'] ) && is_array( $post['clubhouse_page'] ) ? $post['clubhouse_page'] : array();
+		foreach ( self::visibility_pages() as $page ) {
 			$vis->set_page_visible( $page['page'], isset( $pages[ $page['page'] ] ) );
-			foreach ( $page['sections'] as $section ) {
-				$skey = $page['page'] . '.' . $section['key'];
-				$vis->set_section_visible( $page['page'], $section['key'], isset( $sections[ $skey ] ) );
-			}
 		}
 
 		// 5. Warn if the stored accent is now illegible for the active look.
@@ -243,7 +240,15 @@ final class Blueworx_Clubhouse_Setup_Controller {
 	}
 
 	public static function register(): void {
-		add_action( 'admin_menu', array( self::class, 'add_menu' ) );
+		// Priority 1, ahead of the vendored page editor library's own admin_menu
+		// hook (default priority, added while that library boots on
+		// plugins_loaded — see Page_Editors::register()). That hook adds Global
+		// content as a submenu of PAGE_SLUG; WordPress only resolves a submenu
+		// item's own hook name correctly once its parent's add_menu_page() call
+		// has already run, so the parent has to exist first. Registered any
+		// later, Global content opens to "Sorry, you are not allowed to access
+		// this page." even for an owner who holds the capability.
+		add_action( 'admin_menu', array( self::class, 'add_menu' ), 1 );
 		add_action( 'admin_enqueue_scripts', array( self::class, 'enqueue' ) );
 	}
 
@@ -319,8 +324,8 @@ final class Blueworx_Clubhouse_Setup_Controller {
 		// The menu builder saves through the content plumbing it has always used,
 		// nonce and all — it moved screen, not owner.
 		if ( $can_menu && isset( $_POST['clubhouse_content_submit'] ) ) {
-			check_admin_referer( Blueworx_Clubhouse_Content_Controller::NONCE );
-			$notices = Blueworx_Clubhouse_Content_Controller::handle_save( wp_unslash( $_POST ), $storage );
+			check_admin_referer( Blueworx_Clubhouse_Menu_Controller::NONCE );
+			$notices = Blueworx_Clubhouse_Menu_Controller::handle_save( wp_unslash( $_POST ), $storage );
 		}
 		echo self::screen_html( $storage, $notices, $can_demo, $can_menu, $can_setup ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped within Setup_Screen.
 	}
@@ -337,7 +342,7 @@ final class Blueworx_Clubhouse_Setup_Controller {
 			'tree'        => ( new Blueworx_Clubhouse_Menu( $storage ) )->tree(),
 			'targets'     => Blueworx_Clubhouse_Link_Catalogue::targets( new Blueworx_Clubhouse_WP_Collections() ),
 			'action_url'  => $action_url,
-			'nonce_field' => wp_nonce_field( Blueworx_Clubhouse_Content_Controller::NONCE, '_wpnonce', true, false ),
+			'nonce_field' => wp_nonce_field( Blueworx_Clubhouse_Menu_Controller::NONCE, '_wpnonce', true, false ),
 		);
 	}
 
@@ -351,6 +356,28 @@ final class Blueworx_Clubhouse_Setup_Controller {
 		$model['menu']      = $with_menu ? self::menu_model( $storage, $action_url ) : null;
 
 		return Blueworx_Clubhouse_Setup_Screen::render( $model );
+	}
+
+	/**
+	 * The pages the Visibility tab offers a switch for: every page this site can
+	 * actually serve, in Page_Map's own order. A page whose integration is absent
+	 * is not offered at all — an owner should not be given a switch for a page
+	 * that cannot render — and its stored state is left alone, so installing the
+	 * integration later brings the page back exactly as it was.
+	 *
+	 * Home's slug is '' everywhere in Page_Map and 'home' everywhere visibility is
+	 * stored; that one remap is why this is a method rather than a call to
+	 * Page_Map::available() at each site.
+	 *
+	 * @return array<int,array{page:string,label:string}>
+	 */
+	public static function visibility_pages(): array {
+		$out = array();
+		foreach ( Blueworx_Clubhouse_Page_Map::available() as $page ) {
+			$slug  = '' === $page['slug'] ? 'home' : (string) $page['slug'];
+			$out[] = array( 'page' => $slug, 'label' => (string) $page['label'] );
+		}
+		return $out;
 	}
 
 	/**
@@ -388,13 +415,9 @@ final class Blueworx_Clubhouse_Setup_Controller {
 		$plugin_url = defined( 'BLUEWORX_LABS_CLUBHOUSE_URL' ) ? BLUEWORX_LABS_CLUBHOUSE_URL : '';
 		$theming    = self::look_theming( $registry, $branding, $plugin_url );
 
-		$pages_state    = array();
-		$sections_state = array();
-		foreach ( Blueworx_Clubhouse_Setup_Sections::inventory() as $page ) {
+		$pages_state = array();
+		foreach ( self::visibility_pages() as $page ) {
 			$pages_state[ $page['page'] ] = $vis->is_page_visible( $page['page'] );
-			foreach ( $page['sections'] as $section ) {
-				$sections_state[ $page['page'] . '.' . $section['key'] ] = $vis->is_section_visible( $page['page'], $section['key'] );
-			}
 		}
 
 		$auth = new Blueworx_Clubhouse_Auth_Settings( $storage );
@@ -443,8 +466,8 @@ final class Blueworx_Clubhouse_Setup_Controller {
 				'linkedin'            => $branding->get_linkedin_url(),
 				'x'                   => $branding->get_x_url(),
 			),
-			'inventory'     => Blueworx_Clubhouse_Setup_Sections::inventory(),
-			'visibility'    => array( 'pages' => $pages_state, 'sections' => $sections_state ),
+			'pages'         => self::visibility_pages(),
+			'visibility'    => array( 'pages' => $pages_state ),
 			'active_slug'   => null !== $active_look ? $active_look->slug() : '',
 			'look_tokens'   => $theming['tokens'],
 			'font_face_css' => $theming['faces'],

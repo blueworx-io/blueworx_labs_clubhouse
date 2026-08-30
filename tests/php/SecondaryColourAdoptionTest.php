@@ -114,7 +114,7 @@ final class SecondaryColourAdoptionTest extends TestCase {
 
 	/** The Clubhouse admin screens pick it up, so the setting is visible where it is set. */
 	public function test_the_admin_screens_adopt_the_secondary(): void {
-		foreach ( array( 'assets/css/admin-setup.css', 'assets/css/admin-content.css' ) as $sheet ) {
+		foreach ( array( 'assets/css/admin-setup.css' ) as $sheet ) {
 			$this->assertStringContainsString( 'var(--color-secondary', $this->css( $sheet ), $sheet );
 		}
 	}
@@ -124,7 +124,7 @@ final class SecondaryColourAdoptionTest extends TestCase {
 	 * repainted the Save button would not be a secondary colour.
 	 */
 	public function test_the_admin_primary_action_is_not_repainted(): void {
-		foreach ( array( 'assets/css/admin-setup.css', 'assets/css/admin-content.css' ) as $sheet ) {
+		foreach ( array( 'assets/css/admin-setup.css' ) as $sheet ) {
 			$this->assertMatchesRegularExpression(
 				'/\.clubhouse-btn--primary[^{]*\{[^}]*var\(--color-ink\)/',
 				$this->css( $sheet ),

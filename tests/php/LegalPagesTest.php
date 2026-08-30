@@ -11,6 +11,10 @@ use PHPUnit\Framework\TestCase;
  */
 final class LegalPagesTest extends TestCase {
 
+	protected function setUp(): void {
+		wp_stub_reset();
+	}
+
 	private function branding(): Blueworx_Clubhouse_Branding {
 		return new Blueworx_Clubhouse_Branding( new Blueworx_Clubhouse_Fake_Storage() );
 	}
@@ -23,11 +27,11 @@ final class LegalPagesTest extends TestCase {
 		return new Blueworx_Clubhouse_Demo_Collections();
 	}
 
-	private function privacy( ?Blueworx_Clubhouse_Content_Store $content = null ): string {
+	private function privacy( ?Blueworx_Clubhouse_Page_Content $content = null ): string {
 		return Blueworx_Clubhouse_Page_Renderer::privacy( $this->branding(), $this->visibility(), $this->collections(), '', $content );
 	}
 
-	private function terms( ?Blueworx_Clubhouse_Content_Store $content = null ): string {
+	private function terms( ?Blueworx_Clubhouse_Page_Content $content = null ): string {
 		return Blueworx_Clubhouse_Page_Renderer::terms( $this->branding(), $this->visibility(), $this->collections(), '', $content );
 	}
 
@@ -78,7 +82,8 @@ final class LegalPagesTest extends TestCase {
 	}
 
 	public function test_a_club_can_replace_the_wording_entirely(): void {
-		$content = new Blueworx_Clubhouse_Content_Store( new Blueworx_Clubhouse_Fake_Storage() );
+		update_option( 'clubhouse_page_id_privacy', 42 );
+		$content = new Blueworx_Clubhouse_Page_Content( new Blueworx_Clubhouse_Fake_Storage() );
 		$content->set_items( 'privacy', 'body', array(
 			array( 'heading' => 'Our policy', 'body' => "First para.\n\nSecond para." ),
 		) );
@@ -94,7 +99,8 @@ final class LegalPagesTest extends TestCase {
 	public function test_pasted_markup_is_escaped_rather_than_rendered(): void {
 		// The one page a club is most likely to paste something into from
 		// elsewhere, so it is also the one that must not honour what it pastes.
-		$content = new Blueworx_Clubhouse_Content_Store( new Blueworx_Clubhouse_Fake_Storage() );
+		update_option( 'clubhouse_page_id_privacy', 42 );
+		$content = new Blueworx_Clubhouse_Page_Content( new Blueworx_Clubhouse_Fake_Storage() );
 		$content->set_items( 'privacy', 'body', array(
 			array( 'heading' => 'X', 'body' => '<script>alert(1)</script>' ),
 		) );
@@ -143,7 +149,7 @@ final class LegalPagesTest extends TestCase {
 	public function test_a_club_can_switch_the_cookie_notice_off_by_emptying_it(): void {
 		// Clubs running a real consent plugin need this out of the way, and an
 		// empty text is the plainest way to ask for that.
-		$content = new Blueworx_Clubhouse_Content_Store( new Blueworx_Clubhouse_Fake_Storage() );
+		$content = new Blueworx_Clubhouse_Page_Content( new Blueworx_Clubhouse_Fake_Storage() );
 		$content->set( 'global', 'cookies', 'show', '0' );
 		$this->assertStringNotContainsString( 'ch-cookie', $this->privacy( $content ) );
 	}

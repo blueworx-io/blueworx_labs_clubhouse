@@ -52,8 +52,8 @@ final class MenuTabLocationTest extends TestCase {
 				'linkedin'            => '',
 				'x'                   => '',
 			),
-			'inventory'     => array(),
-			'visibility'    => array( 'pages' => array(), 'sections' => array() ),
+			'pages'         => array(),
+			'visibility'    => array( 'pages' => array() ),
 			'members'       => array( 'post_login' => '', 'post_logout' => '', 'dashboard_url' => '' ),
 			'active_slug'   => '',
 			'look_tokens'   => array(),
@@ -112,13 +112,6 @@ final class MenuTabLocationTest extends TestCase {
 		$html = Blueworx_Clubhouse_Setup_Screen::render( $this->setup_model( true, false ) );
 		$this->assertStringNotContainsString( 'data-tab="menu"', $html );
 		$this->assertStringContainsString( 'data-tab="look"', $html );
-	}
-
-	/** Club Pages no longer offers it. */
-	public function test_club_pages_has_no_menu_tab_left(): void {
-		$php = (string) file_get_contents( dirname( __DIR__, 2 ) . '/includes/admin/class-content-screen.php' );
-		$this->assertStringNotContainsString( 'Blueworx_Clubhouse_Menu_Panel::render', $php );
-		$this->assertStringNotContainsString( 'data-tab="menu"', $php );
 	}
 
 	/** The guide sends people to the new place. */

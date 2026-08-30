@@ -11,6 +11,11 @@ use PHPUnit\Framework\TestCase;
  */
 final class MembershipPromiseTest extends TestCase {
 
+	protected function setUp(): void {
+		wp_stub_reset();
+		update_option( 'clubhouse_page_id_membership', 42 );
+	}
+
 	protected function tearDown(): void {
 		Blueworx_Clubhouse_Products_Source::set( null );
 		Blueworx_Clubhouse_Checkout::set_base_url( '' );
@@ -29,18 +34,18 @@ final class MembershipPromiseTest extends TestCase {
 	}
 
 	/** A shop with a checkout, and one tier connected to a real price. */
-	private function selling_content(): Blueworx_Clubhouse_Content_Store {
+	private function selling_content(): Blueworx_Clubhouse_Page_Content {
 		Blueworx_Clubhouse_Products_Source::set( new Blueworx_Clubhouse_Demo_Products() );
 		Blueworx_Clubhouse_Checkout::set_base_url( 'https://club.test/checkout/' );
 
-		$content = new Blueworx_Clubhouse_Content_Store( new Blueworx_Clubhouse_Fake_Storage() );
+		$content = new Blueworx_Clubhouse_Page_Content( new Blueworx_Clubhouse_Fake_Storage() );
 		$content->set_items( 'membership', 'tiers', array(
 			array( 'name' => 'Adult', 'price' => '£99', 'period' => '/yr', 'features' => 'One', 'cta_label' => 'Join', 'price_id' => 'price_adult_monthly' ),
 		) );
 		return $content;
 	}
 
-	private function page( ?Blueworx_Clubhouse_Content_Store $content ): string {
+	private function page( ?Blueworx_Clubhouse_Page_Content $content ): string {
 		return Blueworx_Clubhouse_Page_Renderer::membership(
 			$this->branding(),
 			$this->visibility(),
@@ -101,7 +106,7 @@ final class MembershipPromiseTest extends TestCase {
 		Blueworx_Clubhouse_Products_Source::set( new Blueworx_Clubhouse_Demo_Products() );
 		Blueworx_Clubhouse_Checkout::set_base_url( '' );
 
-		$content = new Blueworx_Clubhouse_Content_Store( new Blueworx_Clubhouse_Fake_Storage() );
+		$content = new Blueworx_Clubhouse_Page_Content( new Blueworx_Clubhouse_Fake_Storage() );
 		$content->set_items( 'membership', 'tiers', array(
 			array( 'name' => 'Adult', 'price' => '£99', 'period' => '/yr', 'features' => 'One', 'cta_label' => 'Join', 'price_id' => 'price_adult_monthly' ),
 		) );

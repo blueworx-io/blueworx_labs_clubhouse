@@ -50,8 +50,8 @@ final class SetupScreenTest extends TestCase {
 				'linkedin' => 'https://linkedin.com/company/riverside',
 				'x' => 'https://x.com/riverside',
 			),
-			'inventory'     => Blueworx_Clubhouse_Setup_Sections::inventory(),
-			'visibility'    => array( 'pages' => array( 'events' => false ), 'sections' => array( 'home.ticker' => false ) ),
+			'pages'         => Blueworx_Clubhouse_Setup_Controller::visibility_pages(),
+			'visibility'    => array( 'pages' => array( 'events' => false ) ),
 		);
 	}
 
@@ -104,43 +104,37 @@ final class SetupScreenTest extends TestCase {
 		$this->assertStringContainsString( 'value="https://linkedin.com/company/riverside"', $html );
 	}
 
-	public function test_renders_a_toggle_per_section_plus_per_page(): void {
+	/**
+	 * Per-section on/off moved onto each panel's own Shown switch, on the page
+	 * that section belongs to. This tab keeps the page switches and nothing
+	 * else — two lists of the same switches is how they end up disagreeing.
+	 */
+	public function test_the_visibility_tab_lists_pages_and_no_longer_lists_sections(): void {
 		$html = Blueworx_Clubhouse_Setup_Screen::render( $this->model() );
-		// Counted from the live inventory rather than pinned: the Booking page is
-		// only in it when LatePoint is installed, so a literal would encode which
-		// integrations the test machine happens to have.
-		$expected = array_sum( array_map(
-			static fn( array $p ): int => count( $p['sections'] ),
-			Blueworx_Clubhouse_Setup_Sections::inventory()
-		) );
-		$this->assertSame( $expected, substr_count( $html, 'name="clubhouse_section[' ) );
-		$this->assertSame( count( Blueworx_Clubhouse_Setup_Sections::inventory() ), substr_count( $html, 'name="clubhouse_page[' ) );
-		$this->assertStringContainsString( 'name="clubhouse_section[home.hero]" value="1" checked', $html );
-		$this->assertStringContainsString( 'name="clubhouse_section[home.ticker]" value="1">', $html );
+		$this->assertStringNotContainsString( 'clubhouse_section[', $html );
+		$this->assertStringNotContainsString( 'clubhouse-toggle-grid', $html );
+		// One page switch per page this site can serve, counted live rather than
+		// pinned: the Booking page is only offered when LatePoint is installed,
+		// so a literal would encode which integrations the test machine has.
+		$this->assertSame(
+			count( Blueworx_Clubhouse_Page_Map::available() ),
+			substr_count( $html, 'name="clubhouse_page[' )
+		);
+		$this->assertStringContainsString( 'name="clubhouse_page[home]" value="1" checked', $html );
+		$this->assertStringContainsString( 'name="clubhouse_page[events]" value="1">', $html );
 	}
 
 	/**
-	 * The member area has no sections, so the tab and panel must not pretend it
-	 * does: no "0/0" count chip, no "… sections" heading, no empty toggle grid.
-	 * The tab and the page-level "Page shown" toggle still render — that switch
-	 * is the point of the panel.
+	 * No page has a section count any more, so no tab may show one — "0/0" and
+	 * "12/15" alike. The tab and its page-level switch are the whole panel now.
 	 */
-	public function test_a_page_with_no_sections_gets_no_count_chip_or_empty_grid(): void {
+	public function test_no_tab_carries_a_section_count(): void {
 		$html = Blueworx_Clubhouse_Setup_Screen::render( $this->model() );
 		$this->assertStringContainsString( 'data-vistab="member-dashboard"', $html );
 		$this->assertStringContainsString( 'data-vispanel="member-dashboard"', $html );
 		$this->assertStringContainsString( 'name="clubhouse_page[member-dashboard]"', $html );
-
-		$panel_start = strpos( $html, 'data-vispanel="member-dashboard"' );
-		$this->assertIsInt( $panel_start );
-		$panel_end = strpos( $html, 'data-vispanel=', $panel_start + 1 );
-		$panel     = substr( $html, $panel_start, ( false === $panel_end ? strlen( $html ) : $panel_end ) - $panel_start );
-
-		// The count chip is emitted in the tab list, which is written before any
-		// data-vispanel= — outside $panel — so this must check the whole $html.
-		$this->assertStringNotContainsString( '0/0', $html );
-		$this->assertStringNotContainsString( 'Member area sections', $panel );
-		$this->assertStringNotContainsString( 'clubhouse-toggle-grid', $panel );
+		$this->assertStringNotContainsString( 'clubhouse-vistab__count', $html );
+		$this->assertStringNotContainsString( 'Member area sections', $html );
 	}
 
 	public function test_save_button_is_never_disabled(): void {

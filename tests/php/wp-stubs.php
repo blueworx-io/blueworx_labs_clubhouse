@@ -60,6 +60,7 @@ function wp_stub_reset(): void {
 	$GLOBALS['wp_stub_post_type']         = 'page';
 	$GLOBALS['wp_stub_the_id']            = 0;
 	$GLOBALS['wp_stub_is_404']            = false;
+	$GLOBALS['wp_stub_attachment_urls']   = array();
 	unset( $GLOBALS['menu'], $GLOBALS['wp_meta_boxes'] );
 }
 
@@ -187,8 +188,32 @@ if ( ! function_exists( 'get_post_meta' ) ) {
 		return $single ? ( $meta[ $key ] ?? '' ) : array( $meta[ $key ] ?? '' );
 	}
 }
+if ( ! function_exists( 'metadata_exists' ) ) {
+	function metadata_exists( string $type, int $id, string $key ): bool {
+		return array_key_exists( $key, $GLOBALS['wp_stub_postmeta'][ $id ] ?? array() );
+	}
+}
+if ( ! function_exists( 'delete_post_meta' ) ) {
+	function delete_post_meta( int $id, string $key ): bool {
+		unset( $GLOBALS['wp_stub_postmeta'][ $id ][ $key ] );
+		return true;
+	}
+}
 if ( ! function_exists( 'register_post_type' ) ) {
 	function register_post_type( ...$a ) { wp_stub_record( 'register_post_type', $a ); return (object) array( 'name' => $a[0] ?? '' ); }
+}
+// 'post' and 'page' are WordPress's own built-in types, always registered on
+// a real site — this stub never saw them go through register_post_type(), so
+// it has to know them by name rather than only by what was recorded above.
+if ( ! function_exists( 'post_type_exists' ) ) {
+	function post_type_exists( string $post_type ): bool {
+		return in_array( $post_type, array( 'post', 'page' ), true );
+	}
+}
+if ( ! function_exists( 'get_post_type_object' ) ) {
+	function get_post_type_object( string $post_type ) {
+		return post_type_exists( $post_type ) ? (object) array( 'name' => $post_type, 'cap' => (object) array() ) : null;
+	}
 }
 if ( ! function_exists( 'register_post_meta' ) ) {
 	function register_post_meta( ...$a ) { wp_stub_record( 'register_post_meta', $a ); return true; }
@@ -559,6 +584,19 @@ if ( ! function_exists( 'media_sideload_image' ) ) {
 		}
 		return $GLOBALS['wp_stub_sideload_next']++;
 	}
+}
+// Resolves an attachment's own URL back to its post id, the way the real
+// function does — everything else answers 0, a miss. Register a URL first
+// with wp_stub_register_attachment() to make a test's URL a hit.
+$GLOBALS['wp_stub_attachment_urls'] = array();
+if ( ! function_exists( 'attachment_url_to_postid' ) ) {
+	function attachment_url_to_postid( string $url ): int {
+		wp_stub_record( 'attachment_url_to_postid', array( $url ) );
+		return $GLOBALS['wp_stub_attachment_urls'][ $url ] ?? 0;
+	}
+}
+function wp_stub_register_attachment( string $url, int $post_id ): void {
+	$GLOBALS['wp_stub_attachment_urls'][ $url ] = $post_id;
 }
 if ( ! function_exists( 'wp_update_post' ) ) {
 	function wp_update_post( array $post = array() ) {

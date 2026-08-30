@@ -23,7 +23,6 @@ final class SetupControllerTest extends TestCase {
 			'clubhouse_facebook'  => 'https://facebook.com/riverside',
 			'clubhouse_instagram' => 'https://instagram.com/riverside',
 			'clubhouse_page'      => array( 'events' => '1' ),
-			'clubhouse_section'   => array( 'home.hero' => '1' ),
 		);
 		$notices = Blueworx_Clubhouse_Setup_Controller::handle_save( $post, $storage );
 
@@ -36,8 +35,7 @@ final class SetupControllerTest extends TestCase {
 		$this->assertSame( 'Riverside RFC', $branding->get_club_name() );
 		$this->assertSame( '42', $branding->get_logo() );
 		$this->assertTrue( $vis->is_page_visible( 'events' ) );
-		$this->assertFalse( $vis->is_section_visible( 'home', 'ticker' ) ); // unticked => hidden
-		$this->assertTrue( $vis->is_section_visible( 'home', 'hero' ) );
+		$this->assertFalse( $vis->is_page_visible( 'about' ) ); // unticked => hidden
 		$this->assertSame( array(), array_values( array_filter( $notices, static fn( $n ) => 'error' === $n['type'] ) ) );
 	}
 
@@ -96,6 +94,28 @@ final class SetupControllerTest extends TestCase {
 		$actions = array_map( static fn( $c ) => $c['args'][0], wp_stub_calls( 'add_action' ) );
 		$this->assertContains( 'admin_menu', $actions );
 		$this->assertContains( 'admin_enqueue_scripts', $actions );
+	}
+
+	/**
+	 * Priority 1, not the default — see the comment on register(). The
+	 * vendored page editor library boots its own admin_menu hook (default
+	 * priority, but registered while that library loads on plugins_loaded,
+	 * ahead of this plugin's own registration) and only resolves Global
+	 * content's internal hook name correctly once this top-level page already
+	 * exists. Tidy this back to the default and nothing else here fails —
+	 * Global content just 403s for every user again.
+	 */
+	public function test_admin_menu_registers_ahead_of_the_page_editor_library(): void {
+		wp_stub_reset();
+		Blueworx_Clubhouse_Setup_Controller::register();
+		$menu_call = null;
+		foreach ( wp_stub_calls( 'add_action' ) as $call ) {
+			if ( 'admin_menu' === $call['args'][0] ) {
+				$menu_call = $call;
+			}
+		}
+		$this->assertNotNull( $menu_call );
+		$this->assertSame( 1, $menu_call['args'][2] ?? null );
 	}
 
 	public function test_owner_save_leaves_demo_state_untouched(): void {
