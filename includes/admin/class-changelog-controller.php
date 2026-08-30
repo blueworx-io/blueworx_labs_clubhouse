@@ -32,7 +32,7 @@ final class Blueworx_Clubhouse_Changelog_Controller {
 
 	public static function add_menu(): void {
 		add_submenu_page(
-			Blueworx_Clubhouse_Setup_Controller::PAGE_SLUG,
+			Blueworx_Clubhouse_Setup_Editor::PAGE_SLUG,
 			"What's new",
 			"What's new",
 			self::CAPABILITY,

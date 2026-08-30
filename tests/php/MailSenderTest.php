@@ -47,29 +47,42 @@ final class MailSenderTest extends TestCase {
 
 	public function test_an_owners_own_address_is_kept_across_a_save(): void {
 		$storage = new Blueworx_Clubhouse_Fake_Storage();
-		Blueworx_Clubhouse_Setup_Controller::handle_save(
-			array( 'clubhouse_mail_from_name' => 'Crewe Vagrants Membership', 'clubhouse_mail_from_address' => 'hello@club.co.uk' ),
-			$storage
+		( new Blueworx_Clubhouse_Setup_Storage( $storage ) )->write(
+			array( 'mail_from_name' => 'Crewe Vagrants Membership', 'mail_from_address' => 'hello@club.co.uk' )
 		);
 		$mail = new Blueworx_Clubhouse_Mail_Settings( $storage );
 		$this->assertSame( 'Crewe Vagrants Membership', $mail->get_from_name() );
 		$this->assertSame( 'hello@club.co.uk', $mail->get_from_address() );
 	}
 
-	public function test_an_address_that_is_not_one_is_refused_with_a_notice(): void {
-		$storage = new Blueworx_Clubhouse_Fake_Storage();
-		$notices = Blueworx_Clubhouse_Setup_Controller::handle_save(
-			array( 'clubhouse_mail_from_address' => 'not an address' ),
-			$storage
+	/**
+	 * The refusal is the library's now, from the field's own `email` format,
+	 * rather than a notice the screen wrote by hand — so it is asserted where
+	 * a save is actually judged, against the real screen.
+	 */
+	public function test_an_address_that_is_not_one_is_refused_before_it_is_saved(): void {
+		$errors = \Blueworx\PageEditor\v1\Validate::run(
+			\Blueworx\PageEditor\v1\Schema::validate( Blueworx_Clubhouse_Setup_Editor::screen() ),
+			array( 'mail_from_address' => 'not an address' )
 		);
-		$this->assertSame( '', ( new Blueworx_Clubhouse_Mail_Settings( $storage ) )->get_from_address() );
-		$this->assertNotEmpty( array_filter( $notices, static fn( $n ) => 'error' === $n['type'] ) );
+
+		$this->assertArrayHasKey( 'mail_from_address', $errors );
+	}
+
+	public function test_a_real_address_is_not_refused(): void {
+		$errors = \Blueworx\PageEditor\v1\Validate::run(
+			\Blueworx\PageEditor\v1\Schema::validate( Blueworx_Clubhouse_Setup_Editor::screen() ),
+			array( 'mail_from_address' => 'hello@club.co.uk' )
+		);
+
+		$this->assertArrayNotHasKey( 'mail_from_address', $errors );
 	}
 
 	public function test_clearing_the_address_puts_the_club_back_on_its_own_domain(): void {
 		$storage = new Blueworx_Clubhouse_Fake_Storage();
-		Blueworx_Clubhouse_Setup_Controller::handle_save( array( 'clubhouse_mail_from_address' => 'hello@club.co.uk' ), $storage );
-		Blueworx_Clubhouse_Setup_Controller::handle_save( array( 'clubhouse_mail_from_address' => '' ), $storage );
+		$bridge  = new Blueworx_Clubhouse_Setup_Storage( $storage );
+		$bridge->write( array( 'mail_from_address' => 'hello@club.co.uk' ) );
+		$bridge->write( array( 'mail_from_address' => '' ) );
 		$this->assertSame( '', ( new Blueworx_Clubhouse_Mail_Settings( $storage ) )->get_from_address() );
 	}
 }

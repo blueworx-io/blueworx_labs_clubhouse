@@ -37,7 +37,7 @@ final class Blueworx_Clubhouse_Guide_Controller {
 	 */
 	public static function add_menu(): void {
 		add_submenu_page(
-			Blueworx_Clubhouse_Setup_Controller::PAGE_SLUG,
+			Blueworx_Clubhouse_Setup_Editor::PAGE_SLUG,
 			'User guide',
 			'User guide',
 			self::CAPABILITY,
@@ -126,7 +126,7 @@ final class Blueworx_Clubhouse_Guide_Controller {
 			'pages'       => $pages,
 			'screens'     => self::screens(),
 			'collections' => self::collections(),
-			'setup_url'   => admin_url( 'admin.php?page=' . Blueworx_Clubhouse_Setup_Controller::PAGE_SLUG ),
+			'setup_url'   => admin_url( 'admin.php?page=' . Blueworx_Clubhouse_Setup_Editor::PAGE_SLUG ),
 			// The Pages list, not a screen of this plugin's own: a club page is a
 			// real WordPress page now, and its Edit button opens its own editor.
 			'content_url' => admin_url( 'edit.php?post_type=page' ),

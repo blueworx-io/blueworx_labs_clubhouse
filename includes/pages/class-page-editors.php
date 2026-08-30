@@ -62,7 +62,7 @@ final class Blueworx_Clubhouse_Page_Editors {
 					? 'The header, footer, welcome pack and cookie notice — the parts that appear on every page.'
 					: sprintf( 'The words on your %s page. Nothing changes on the site until you save.', strtolower( $spec['label'] ) ),
 				'capability' => Blueworx_Clubhouse_Owner_Capabilities::CONTENT_CAP,
-				'parent'     => Blueworx_Clubhouse_Setup_Controller::PAGE_SLUG,
+				'parent'     => Blueworx_Clubhouse_Setup_Editor::PAGE_SLUG,
 				'tabs'       => $spec['tabs'],
 			);
 			if ( $global ) {
@@ -244,7 +244,7 @@ final class Blueworx_Clubhouse_Page_Editors {
 			if ( self::GLOBAL_SLUG === $slug ) {
 				continue;
 			}
-			remove_submenu_page( Blueworx_Clubhouse_Setup_Controller::PAGE_SLUG, $slug );
+			remove_submenu_page( Blueworx_Clubhouse_Setup_Editor::PAGE_SLUG, $slug );
 		}
 	}
 }
