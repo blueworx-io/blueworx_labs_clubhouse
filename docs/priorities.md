@@ -5,9 +5,10 @@ is below everything on it.
 
 Written 14 August 2026, rewritten 17 August 2026 against main at v0.76.0,
 23 August 2026 against v0.87.1, 27 August 2026 against v0.91.1,
-28 August 2026 against v0.97.0, and 30 August 2026 against v0.98.0. Keep it
-current — the surest way is to close the issue as the pull request merges,
-which is what let this list drift the last time.
+28 August 2026 against v0.97.0, 30 August 2026 against v0.98.0, and again
+30 August 2026 against v0.100.0. Keep it current — the surest way is to close
+the issue as the pull request merges, which is what let this list drift the
+last time.
 
 ---
 
@@ -19,16 +20,16 @@ each phase gets its own plan and its own release.
 
 | Phase | What | State |
 | --- | --- | --- |
-| 1 | The three foundation additions — a repeater that takes more than text, a screen that owns its own storage, link suggestions | Not started. `bluegroup_core_foundation`. No longer blocking: phase 3 worked around all three locally |
+| 1 | The three foundation additions — a repeater that takes more than text, a screen that owns its own storage, link suggestions | **Done**, in `bluegroup_core_foundation`, and vendored here. Checked 30 August 2026: `Schema::REPEATER_KINDS` carries textarea, select, toggle and media; `Store::for()` honours a screen's own read and write; suggestions are honoured on a repeater cell. The vendored copy is byte-identical to the foundation's, so none of it was a local workaround |
 | 2 | Vendor the design system; rebuild the five screens the editor library will not replace | **Done, v0.97.0.** [Plan](superpowers/plans/2026-08-28-design-system-adoption.md) |
-| 3 | Club pages become records; the Club Pages screen is deleted | **Done, v0.98.0.** [Plan](superpowers/plans/2026-08-28-club-pages-become-records.md). It did not wait on phase 1 in the end — the three foundation additions were worked around locally |
-| 4 | Setup rebuilt on the library, absorbing [#283](../../issues/283), [#284](../../issues/284) and [#285](../../issues/285) | Next. Phase 3 has landed, so nothing is holding it |
-| 5 | Collection record editors replace the Details meta box | Waits on phase 4 |
+| 3 | Club pages become records; the Club Pages screen is deleted | **Done, v0.98.0.** [Plan](superpowers/plans/2026-08-28-club-pages-become-records.md). It did not wait on phase 1, which was already in the foundation by then |
+| 4 | Setup rebuilt on the library, absorbing [#283](../../issues/283), [#284](../../issues/284) and [#285](../../issues/285) | **Done, v0.100.0.** [Plan](superpowers/plans/2026-08-30-setup-rebuilt-on-the-library.md). No migration was needed: the screen reads and writes through the stores that already owned every value |
+| 5 | Collection record editors replace the Details meta box | Next. Phase 4 has landed, so nothing is holding it |
 | 6 | The remaining screens | Waits on phase 5 |
 
-[#282](../../issues/282) spans phases 2 to 4 — the club's look leaves wp-admin
-one screen at a time, and the last of it goes with Setup. [#287](../../issues/287)
-closed with phase 2.
+[#282](../../issues/282) spanned phases 2 to 4 — the club's look left wp-admin
+one screen at a time, and the last of it went with Setup, along with
+`admin-setup.css`. [#287](../../issues/287) closed with phase 2.
 
 ## Also open
 
@@ -37,7 +38,7 @@ closed with phase 2.
 | [#256](../../issues/256) | An honours board page | Club champions, chairpersons, captains, with categories the club sets and two tiers of filters. Phase 3 has landed, so it can be built the new way now — once, rather than the old way twice. |
 | [#294](../../issues/294) | Point the AI import at the page fields, not the old catalogue | Two declarations of the same fields, held together by a lockstep test. Worth doing before that test is all that stands between them. |
 | [#274](../../issues/274) | Put a shop in the CI test harness | Genuinely uncertain: SureCart has to install and authenticate in CI, which nobody has proved yet. |
-| [#295](../../issues/295) | A tier whose shop product was deleted reads as "Not connected" | Small, and needs a change to the page editor library first, so it waits on phase 1. |
+| [#295](../../issues/295) | A tier whose shop product was deleted reads as "Not connected" | Small. It was parked behind phase 1, which turns out to be done — worth re-reading before starting to see whether anything still blocks it. |
 
 **Cannot start yet:** [#229](../../issues/229), pulling the social feed
 straight from Facebook or Instagram. It needs Meta app review before a line of
@@ -57,6 +58,26 @@ now. They were the top two on this list until they moved, so nothing here is
 waiting on them.
 
 ## Done, and worth knowing
+
+**Setup is a page editor screen** (phase 4, v0.100.0). Six tabs, one save bar,
+and the menu saves with everything else ([#285](../../issues/285)). What a club
+asks its members has a tab of its own ([#283](../../issues/283)) and the tabs
+are in the order [#284](../../issues/284) asked for. The club's own look is out
+of wp-admin altogether ([#282](../../issues/282)).
+
+**Nothing moved in the database to do it.** Setup's values were never one
+option — they live in the look registry, Branding, Visibility, Menu,
+Profile_Store, Auth_Settings, Mail_Settings and Demo_State — so the screen
+supplies its own read and write (`Setup_Storage`) instead of a store, and every
+existing setter and side effect stays where it was. That is the pattern to
+reach for whenever a screen's values are spread across stores that already work.
+
+**Three things went with the old screen, on purpose.** The live re-skin as you
+pick a look (there is no club look in wp-admin to re-skin), the setup progress
+bar, and the ten preset colour swatches (the library's colour control is the
+browser's own). A low-contrast second colour is still allowed and now says so
+in the field's help, because the library has field errors and no warning
+channel.
 
 **A club page is edited on the page itself** (phase 3, v0.98.0). The Club Pages
 screen is deleted. Three things it quietly owned went with it and needed homes

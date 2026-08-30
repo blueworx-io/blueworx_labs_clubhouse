@@ -5,6 +5,15 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.100.0
+
+- Clubhouse Setup has been rebuilt. It looks and behaves like every other Clubhouse screen now, with one save bar that tells you what is unsaved and one Save that covers everything on the page.
+- Your menu saves with the rest of Setup. It used to have a second Save button of its own, which was easy to miss.
+- What you ask your members has a tab of its own, separate from the settings that were sitting beside it. Removing a question takes it off your form and leaves answers members have already given alone.
+- The Visibility switches now read each page's real state, so a page you publish from WordPress's own Pages list shows as on here too.
+- Setup no longer takes on your club's colours and fonts. Your site still does; the admin screens are the same on every club's site, which makes them easier to describe and to help with.
+- Your WordPress dashboard now shows a short welcome with links to Setup, your pages and your members, instead of the whole Setup form.
+
 ## 0.99.3
 
 - Internal only: the priority list is brought up to date. Nothing changes on a site.
