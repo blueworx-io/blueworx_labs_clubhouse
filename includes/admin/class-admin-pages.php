@@ -47,13 +47,13 @@ final class Blueworx_Clubhouse_Admin_Pages {
 	public static function all(): array {
 		return array(
 			array(
-				'slug'        => Blueworx_Clubhouse_Setup_Controller::PAGE_SLUG,
+				'slug'        => Blueworx_Clubhouse_Setup_Editor::PAGE_SLUG,
 				'label'       => 'Clubhouse Setup',
 				// Registered with the content capability, not manage_clubhouse:
 				// the Menu tab on this screen belongs to the Content Editor. Every
 				// setup tab is still gated on CAPABILITY inside the screen.
-				'cap'         => Blueworx_Clubhouse_Setup_Controller::MENU_CAPABILITY,
-				'menu'        => Blueworx_Clubhouse_Setup_Controller::PAGE_SLUG,
+				'cap'         => Blueworx_Clubhouse_Owner_Capabilities::CONTENT_CAP,
+				'menu'        => Blueworx_Clubhouse_Setup_Editor::PAGE_SLUG,
 				'description' => 'Base look, branding, page visibility and the header menu.',
 			),
 			// The one content editor with a menu item of its own. The other
@@ -63,28 +63,28 @@ final class Blueworx_Clubhouse_Admin_Pages {
 				'slug'        => Blueworx_Clubhouse_Page_Editors::GLOBAL_SLUG,
 				'label'       => 'Global content',
 				'cap'         => Blueworx_Clubhouse_Owner_Capabilities::CONTENT_CAP,
-				'menu'        => Blueworx_Clubhouse_Setup_Controller::PAGE_SLUG,
+				'menu'        => Blueworx_Clubhouse_Setup_Editor::PAGE_SLUG,
 				'description' => 'The header, footer, welcome pack and cookie notice.',
 			),
 			array(
 				'slug'        => Blueworx_Clubhouse_Import_Controller::PAGE_SLUG,
 				'label'       => 'Import',
 				'cap'         => Blueworx_Clubhouse_Import_Controller::CAPABILITY,
-				'menu'        => Blueworx_Clubhouse_Setup_Controller::PAGE_SLUG,
+				'menu'        => Blueworx_Clubhouse_Setup_Editor::PAGE_SLUG,
 				'description' => 'Bring a club\'s existing content in, under Clubhouse.',
 			),
 			array(
 				'slug'        => Blueworx_Clubhouse_Seo_Controller::PAGE_SLUG,
 				'label'       => 'Search & sharing',
 				'cap'         => Blueworx_Clubhouse_Seo_Controller::CAPABILITY,
-				'menu'        => Blueworx_Clubhouse_Setup_Controller::PAGE_SLUG,
+				'menu'        => Blueworx_Clubhouse_Setup_Editor::PAGE_SLUG,
 				'description' => 'How each page reads in search results and when it is shared.',
 			),
 			array(
 				'slug'        => Blueworx_Clubhouse_Guide_Controller::PAGE_SLUG,
 				'label'       => 'User guide',
 				'cap'         => Blueworx_Clubhouse_Guide_Controller::CAPABILITY,
-				'menu'        => Blueworx_Clubhouse_Setup_Controller::PAGE_SLUG,
+				'menu'        => Blueworx_Clubhouse_Setup_Editor::PAGE_SLUG,
 				'description' => 'How ClubHouse works, built from this site as it stands.',
 			),
 			array(

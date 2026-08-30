@@ -68,20 +68,6 @@ final class Blueworx_Clubhouse_Access_Controller {
 	 * The tag markup for a ClubHouse page, or '' when the viewer is not an
 	 * administrator. Called by each screen's controller as it builds its model.
 	 */
-	public static function role_tags_for( string $page_slug ): string {
-		if ( ! self::may_see_role_tags() ) {
-			return '';
-		}
-		return Blueworx_Clubhouse_Access_Screen::role_tags(
-			Blueworx_Clubhouse_Admin_Pages::access_labels( $page_slug )
-		);
-	}
-
-	/**
-	 * The same tags in the design system's chips, for a screen built from it.
-	 * Replaces role_tags_for() screen by screen; the two converge when Setup
-	 * and Club Pages move over.
-	 */
 	public static function role_chips_for( string $page_slug ): string {
 		if ( ! self::may_see_role_tags() ) {
 			return '';

@@ -20,12 +20,28 @@ final class ColorEngineSecondaryTest extends TestCase {
 	}
 
 	/**
-	 * The exact swatches the picker offers. Asserting against these rather than an
-	 * invented list is the point: a preset the engine would refuse is a screen
-	 * offering a colour it then rejects, which is how #1f8a5c was caught.
+	 * The ten colours the old Setup screen offered as preset swatches. The
+	 * picker is the browser's own now — the page editor library's colour
+	 * control has no preset list — so these are no longer offered anywhere,
+	 * but they are still the colours a club actually reaches for, and each one
+	 * has to survive the engine. #1f8a5c was caught this way: a mid-green that
+	 * cleared neither black nor white.
+	 *
+	 * @return array<int,string>
 	 */
 	private function hues(): array {
-		return Blueworx_Clubhouse_Setup_Controller::PALETTE;
+		return array(
+			'#c6f24e', // Volt lime — the shipped default.
+			'#166534', // Pitch green.
+			'#0b6fd1', // Club blue.
+			'#123a8c', // Navy.
+			'#7b2ff2', // Violet.
+			'#c2185b', // Magenta.
+			'#d62828', // Club red.
+			'#e2711d', // Orange.
+			'#f2b705', // Gold.
+			'#0f766e', // Teal.
+		);
 	}
 
 	public function test_it_emits_the_full_token_set(): void {

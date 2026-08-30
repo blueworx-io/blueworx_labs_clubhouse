@@ -113,7 +113,7 @@ final class PageEditorsTest extends TestCase {
 
 	public function test_every_club_page_screen_hangs_off_the_clubhouse_menu(): void {
 		foreach ( $this->screens() as $slug => $screen ) {
-			$this->assertSame( Blueworx_Clubhouse_Setup_Controller::PAGE_SLUG, $screen['parent'], $slug );
+			$this->assertSame( Blueworx_Clubhouse_Setup_Editor::PAGE_SLUG, $screen['parent'], $slug );
 		}
 	}
 
@@ -255,7 +255,7 @@ final class PageEditorsTest extends TestCase {
 		$this->assertContains( 'clubhouse-page-home', $removed );
 		$this->assertNotContains( Blueworx_Clubhouse_Page_Editors::GLOBAL_SLUG, $removed );
 		foreach ( wp_stub_calls( 'remove_submenu_page' ) as $call ) {
-			$this->assertSame( Blueworx_Clubhouse_Setup_Controller::PAGE_SLUG, $call['args'][0] );
+			$this->assertSame( Blueworx_Clubhouse_Setup_Editor::PAGE_SLUG, $call['args'][0] );
 		}
 	}
 }

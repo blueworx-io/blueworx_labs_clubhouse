@@ -1,97 +1,89 @@
 const { test, expect } = require('@playwright/test');
 
-// @wordpress only: the menu builder lives in wp-admin, on the Clubhouse screen
-// (it moved there in issue #144), which the DB-free preview does not have.
+// @wordpress only: the menu builder lives in wp-admin, on the Clubhouse screen,
+// which the DB-free preview does not have.
+//
+// The menu is a repeater on the Setup screen now, so it saves with everything
+// else: one save bar per screen, whatever tab is showing (issue #285). It used
+// to carry its own "Save menu" button, because it was a second form sitting
+// inside somebody else's screen.
+//
 // These specs mutate a stored option, so they run in series — the wordpress
 // project is already non-parallel.
 
-async function loginAsAdmin(page) {
+const OWNER = { login: 'clubowner', pass: 'owner-test-pw' };
+
+async function signInAsOwner(page) {
   await page.goto('/wp-login.php');
-  await page.fill('#user_login', 'admin');
-  await page.fill('#user_pass', 'wptest-admin-pw');
+  await page.fill('#user_login', OWNER.login);
+  await page.fill('#user_pass', OWNER.pass);
   await page.click('#wp-submit');
   await expect(page.locator('#wpadminbar')).toBeVisible();
 }
 
-// The Clubhouse screen opens on Base Look & Branding, so the Menu tab has to be
-// selected — and re-selected after every move button, since each one posts and
-// reloads the screen back to its first tab.
-async function openMenuTab(page) {
-  // 'domcontentloaded', not the default 'load': this screen enqueues
-  // wp_enqueue_media(), whose scripts keep the load event pending well past
-  // Playwright's default timeout even though the form itself is fully usable.
-  // force: true for the same reason as the Save click below — this screen's
-  // media scripts keep reflowing the chrome, so Playwright's "stable" wait
-  // never converges even though the tab is sitting still.
-  // Clicking once is not enough: only this screen's own JS puts .is-active on a
-  // panel, and on a loaded machine that JS can land well after DOMContentLoaded.
-  // A click that arrives before the handler is bound does nothing at all and the
-  // panel never opens — which is what made this flake in CI while passing
-  // locally. So keep asking until the panel is actually open.
-  await page.waitForLoadState('domcontentloaded');
-  const tab = page.locator('.clubhouse-tab[data-tab="menu"]');
-  const panel = page.locator('.clubhouse-panel[data-panel="menu"]');
-  await tab.waitFor({ state: 'attached' });
-  await expect
-    .poll(
-      async () => {
-        await tab.click({ force: true }).catch(() => {});
-        return panel.evaluate((el) => el.classList.contains('is-active')).catch(() => false);
-      },
-      { timeout: 60_000, intervals: [250, 500, 1000], message: 'the Menu tab never opened' }
-    )
-    .toBe(true);
-  await expect(panel).toBeVisible();
+async function openSetup(page) {
+  await page.goto('/wp-admin/admin.php?page=clubhouse-setup', { waitUntil: 'domcontentloaded' });
+  // The editor mounts itself, so nothing on the screen is real until the save
+  // bar is.
+  await expect(page.locator('.bw-savebar')).toBeVisible({ timeout: 30_000 });
 }
 
-test('an owner can rename, reorder and nest a menu item @wordpress', async ({ page }) => {
-  await loginAsAdmin(page);
-  await page.goto('/wp-admin/admin.php?page=clubhouse-setup', { waitUntil: 'domcontentloaded' });
-  await openMenuTab(page);
+async function openTab(page, label) {
+  await page.locator('.bw-tab', { hasText: label }).first().click();
+}
 
-  // Row 1 of the defaults is About. Rename it, then hang it under Home.
-  await page.fill('input[name="menu[1][label]"]', 'Our club');
-  await page.click('button[name="clubhouse_menu_indent[1]"]');
-  await openMenuTab(page);
-  await expect(page.locator('input[name="menu[0][children][0][label]"]')).toHaveValue('Our club');
+async function save(page) {
+  await page.locator('.bw-savebar button', { hasText: 'Save changes' }).click();
+  await expect(page.locator('.bw-savebar')).toContainText('Everything is saved', { timeout: 30_000 });
+}
 
-  // The Menu tab's Save reads "Save menu", which distinguishes it from the
-  // setup form's own "Save changes" on the same screen.
-  //
-  // force: true — the Indent click just above submitted its own form and
-  // reloaded the page (every move button posts the same as Save, per
-  // Menu_Panel's docblock); WP-admin's own chrome (admin bar, notices) keeps
-  // reflowing for a beat right after that reload, so Playwright's actionability
-  // "stable" wait on this far-down button never converges even though its
-  // bounding box is provably static. Confirmed by hand: identical coordinates
-  // sampled a second apart, yet the plain click still timed out waiting to be
-  // "stable" — only forcing it past that check gets the click to land.
-  await page.getByRole('button', { name: 'Save menu' }).click({ force: true });
-  await expect(page.locator('.notice-success')).toContainText('menu has been saved');
+test.describe('@wordpress the menu editor', () => {
+  test('an owner can rename an item and nest it under the one above', async ({ page }) => {
+    await signInAsOwner(page);
+    await openSetup(page);
+    await openTab(page, 'Menu');
 
-  // The front end shows it nested under its parent.
-  await page.goto('/');
-  const parent = page.locator('.ch-nav__item--has-children').first();
-  await expect(parent).toBeVisible();
-  await expect(parent.locator('.ch-nav__sub')).toContainText('Our club');
+    const rows = page.locator('.bw-repeater__row');
+    await expect(rows.first()).toBeVisible();
 
-  // A submenu opens on keyboard focus alone — no pointer, no JavaScript.
-  await parent.locator('.ch-nav__link').first().focus();
-  await expect(parent.locator('.ch-nav__sub')).toBeVisible();
-});
+    // Row 2 of the defaults is About. Rename it and hang it under Home.
+    const about = rows.nth(1);
+    await about.locator('#label-1').fill('Our club');
+    await about.locator('#nested-1').check();
 
-test('a removed item leaves the nav @wordpress', async ({ page }) => {
-  await loginAsAdmin(page);
-  await page.goto('/wp-admin/admin.php?page=clubhouse-setup', { waitUntil: 'domcontentloaded' });
-  await openMenuTab(page);
+    await save(page);
+    await page.reload({ waitUntil: 'domcontentloaded' });
+    await expect(page.locator('.bw-savebar')).toBeVisible({ timeout: 30_000 });
+    await openTab(page, 'Menu');
 
-  const doomed = await page.inputValue('input[name="menu[1][label]"]');
-  await page.click('button[name="clubhouse_menu_remove[1]"]');
-  await openMenuTab(page);
-  // force: true — see the comment on the identical click above; the Remove
-  // click just above reloaded the page the same way the Indent click does.
-  await page.getByRole('button', { name: 'Save menu' }).click({ force: true });
+    await expect(page.locator('.bw-repeater__row').nth(1).locator('#label-1')).toHaveValue('Our club');
+    await expect(page.locator('.bw-repeater__row').nth(1).locator('#nested-1')).toBeChecked();
 
-  await page.goto('/');
-  await expect(page.locator('.ch-nav__links')).not.toContainText(doomed);
+    // And it reaches the site: the renamed item is in the nav.
+    await page.goto('/', { waitUntil: 'domcontentloaded' });
+    await expect(page.locator('header')).toContainText('Our club');
+  });
+
+  test('there is one save bar on the screen, whatever tab is showing', async ({ page }) => {
+    await signInAsOwner(page);
+    await openSetup(page);
+
+    for (const tab of ['Base Look & Branding', 'Visibility', 'Menu', 'Members', 'Settings']) {
+      await openTab(page, tab);
+      await expect(page.locator('.bw-savebar')).toHaveCount(1);
+    }
+  });
+
+  test('a menu item can be added and removed', async ({ page }) => {
+    await signInAsOwner(page);
+    await openSetup(page);
+    await openTab(page, 'Menu');
+
+    const before = await page.locator('.bw-repeater__row').count();
+    await page.locator('button', { hasText: 'Add a row' }).click();
+    await expect(page.locator('.bw-repeater__row')).toHaveCount(before + 1);
+
+    await page.locator('.bw-repeater__row').last().locator('[aria-label="Remove this row"]').click();
+    await expect(page.locator('.bw-repeater__row')).toHaveCount(before);
+  });
 });

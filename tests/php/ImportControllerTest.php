@@ -66,7 +66,7 @@ final class ImportControllerTest extends TestCase {
 	public function test_it_registers_a_submenu_under_clubhouse(): void {
 		Blueworx_Clubhouse_Import_Controller::add_menu();
 		$call = wp_stub_calls( 'add_submenu_page' )[0]['args'];
-		$this->assertSame( Blueworx_Clubhouse_Setup_Controller::PAGE_SLUG, $call[0] );
+		$this->assertSame( Blueworx_Clubhouse_Setup_Editor::PAGE_SLUG, $call[0] );
 		$this->assertSame( Blueworx_Clubhouse_Owner_Capabilities::SETUP_CAP, $call[3] );
 		$this->assertSame( Blueworx_Clubhouse_Import_Controller::PAGE_SLUG, $call[4] );
 	}

@@ -38,8 +38,8 @@ final class AdminPagesTest extends TestCase {
 		// the menu builder on it belongs to the Content Editor (issue #144). The
 		// setup tabs themselves are still gated on CAPABILITY inside the screen.
 		$this->assertSame(
-			Blueworx_Clubhouse_Setup_Controller::MENU_CAPABILITY,
-			$by_slug[ Blueworx_Clubhouse_Setup_Controller::PAGE_SLUG ]['cap']
+			Blueworx_Clubhouse_Owner_Capabilities::CONTENT_CAP,
+			$by_slug[ Blueworx_Clubhouse_Setup_Editor::PAGE_SLUG ]['cap']
 		);
 		$this->assertSame(
 			Blueworx_Clubhouse_Owner_Capabilities::CONTENT_CAP,
@@ -64,7 +64,7 @@ final class AdminPagesTest extends TestCase {
 	public function test_import_hangs_off_its_parents_menu(): void {
 		$import = Blueworx_Clubhouse_Admin_Pages::find( Blueworx_Clubhouse_Import_Controller::PAGE_SLUG );
 		$this->assertNotNull( $import );
-		$this->assertSame( Blueworx_Clubhouse_Setup_Controller::PAGE_SLUG, $import['menu'] );
+		$this->assertSame( Blueworx_Clubhouse_Setup_Editor::PAGE_SLUG, $import['menu'] );
 	}
 
 	public function test_an_unknown_slug_is_not_a_clubhouse_page(): void {
@@ -118,7 +118,7 @@ final class AdminPagesTest extends TestCase {
 
 		$this->assertTrue( Blueworx_Clubhouse_Admin_Pages::role_can( $editor, Blueworx_Clubhouse_Page_Editors::GLOBAL_SLUG ), 'Global content' );
 		$this->assertTrue( Blueworx_Clubhouse_Admin_Pages::role_can( $editor, Blueworx_Clubhouse_Collection_Types::CONTENT_SLUG ), 'Collections' );
-		$this->assertTrue( Blueworx_Clubhouse_Admin_Pages::role_can( $editor, Blueworx_Clubhouse_Setup_Controller::PAGE_SLUG ), 'Clubhouse — for the Menu tab' );
+		$this->assertTrue( Blueworx_Clubhouse_Admin_Pages::role_can( $editor, Blueworx_Clubhouse_Setup_Editor::PAGE_SLUG ), 'Clubhouse — for the Menu tab' );
 
 		$this->assertFalse( Blueworx_Clubhouse_Admin_Pages::role_can( $editor, Blueworx_Clubhouse_Import_Controller::PAGE_SLUG ), 'Import' );
 		$this->assertFalse( Blueworx_Clubhouse_Admin_Pages::role_can( $editor, Blueworx_Clubhouse_Seo_Controller::PAGE_SLUG ), 'Search & sharing' );
@@ -139,7 +139,7 @@ final class AdminPagesTest extends TestCase {
 	public function test_the_content_editor_can_open_the_user_guide(): void {
 		$guide = Blueworx_Clubhouse_Admin_Pages::find( Blueworx_Clubhouse_Guide_Controller::PAGE_SLUG );
 		$this->assertNotNull( $guide );
-		$this->assertSame( Blueworx_Clubhouse_Setup_Controller::PAGE_SLUG, $guide['menu'] );
+		$this->assertSame( Blueworx_Clubhouse_Setup_Editor::PAGE_SLUG, $guide['menu'] );
 		$this->assertContains(
 			$guide['menu'],
 			Blueworx_Clubhouse_Owner_Capabilities::editor_menu_allowlist(),
@@ -205,7 +205,7 @@ final class AdminPagesTest extends TestCase {
 			)
 		);
 		$this->assertContains(
-			Blueworx_Clubhouse_Setup_Controller::PAGE_SLUG,
+			Blueworx_Clubhouse_Setup_Editor::PAGE_SLUG,
 			Blueworx_Clubhouse_Owner_Capabilities::editor_menu_allowlist(),
 			'the menu item itself is open, for the Menu tab'
 		);
@@ -215,7 +215,7 @@ final class AdminPagesTest extends TestCase {
 	public function test_access_labels_are_display_names_senior_first(): void {
 		// All three reach the Clubhouse screen now — the Content Editor for the
 		// Menu tab on it, and nothing else.
-		$labels = Blueworx_Clubhouse_Admin_Pages::access_labels( Blueworx_Clubhouse_Setup_Controller::PAGE_SLUG );
+		$labels = Blueworx_Clubhouse_Admin_Pages::access_labels( Blueworx_Clubhouse_Setup_Editor::PAGE_SLUG );
 		$this->assertSame(
 			array( 'Administrator', Blueworx_Clubhouse_Owner_Capabilities::DISPLAY, Blueworx_Clubhouse_Owner_Capabilities::EDITOR_DISPLAY ),
 			$labels

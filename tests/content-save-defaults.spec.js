@@ -26,7 +26,9 @@ async function openGlobalContent(page) {
     waitUntil: 'domcontentloaded',
   });
   // The editor is a JS app; nothing below exists until it has mounted.
-  await expect(page.locator('.bw-savebar')).toBeVisible();
+  // 30 seconds, not the default five: this is a JS app mounting on a server
+  // that answers one request at a time (see docs/testing.md).
+  await expect(page.locator('.bw-savebar')).toBeVisible({ timeout: 30_000 });
 }
 
 const SWITCHES = ['Show the cookie notice', 'Show announcement bar'];
@@ -51,10 +53,15 @@ test('saving Global content leaves the cookie notice and banner alone @wordpress
   await openGlobalContent(page);
   // Change something unrelated, so there is a real save to make — the switches
   // themselves are left exactly as the screen drew them, which is the point.
+  //
+  // Something different every time, not a fixed string: the run seeds this
+  // field, so typing the value it already holds leaves the screen clean and
+  // Save disabled, and the test then waits out its budget on a button that is
+  // right to refuse it.
   const heading = page.getByLabel('Heading').first();
-  await heading.fill('Welcome to the club');
+  await heading.fill(`Welcome to the club ${Date.now()}`);
   await page.getByRole('button', { name: /save/i }).click();
-  await expect(page.locator('.bw-savebar')).toContainText('Everything is saved');
+  await expect(page.locator('.bw-savebar')).toContainText('Everything is saved', { timeout: 30_000 });
 
   await page.goto('/?clubhouse_page=privacy');
   await expect(page.locator('#ch-cookie'), 'a save switched the cookie notice off').toBeVisible();

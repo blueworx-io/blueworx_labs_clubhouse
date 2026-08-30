@@ -325,7 +325,15 @@ if ( ! function_exists( 'is_email' ) ) {
 	function is_email( $email ) { return false !== filter_var( (string) $email, FILTER_VALIDATE_EMAIL ) ? (string) $email : false; }
 }
 if ( ! function_exists( 'sanitize_email' ) ) {
-	function sanitize_email( $email ) { return (string) filter_var( trim( (string) $email ), FILTER_SANITIZE_EMAIL ); }
+	// WordPress returns '' for anything that is not an address — it does not
+	// hand back a stripped-down version of the typed text. Callers test the
+	// empty string to decide whether to refuse a save, so a stub that returned
+	// 'notanaddress' for 'not an address' would let an invalid address through
+	// in a test and refuse it on a real site.
+	function sanitize_email( $email ) {
+		$stripped = (string) filter_var( trim( (string) $email ), FILTER_SANITIZE_EMAIL );
+		return false !== filter_var( $stripped, FILTER_VALIDATE_EMAIL ) ? $stripped : '';
+	}
 }
 if ( ! function_exists( 'wp_get_attachment_image_url' ) ) {
 	function wp_get_attachment_image_url( $id, $size = 'thumbnail' ) { return $id ? 'https://club.test/wp-content/uploads/att-' . (int) $id . '.png' : false; }

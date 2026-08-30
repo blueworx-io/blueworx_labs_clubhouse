@@ -32,14 +32,14 @@ final class ClubhouseSubmenusTest extends TestCase {
 	public function test_import_is_registered_under_clubhouse(): void {
 		Blueworx_Clubhouse_Import_Controller::add_menu();
 		$args = wp_stub_calls( 'add_submenu_page' )[0]['args'];
-		$this->assertSame( Blueworx_Clubhouse_Setup_Controller::PAGE_SLUG, $args[0] );
+		$this->assertSame( Blueworx_Clubhouse_Setup_Editor::PAGE_SLUG, $args[0] );
 		$this->assertSame( Blueworx_Clubhouse_Import_Controller::PAGE_SLUG, $args[4] );
 	}
 
 	public function test_the_guide_is_registered_under_clubhouse(): void {
 		Blueworx_Clubhouse_Guide_Controller::add_menu();
 		$args = wp_stub_calls( 'add_submenu_page' )[0]['args'];
-		$this->assertSame( Blueworx_Clubhouse_Setup_Controller::PAGE_SLUG, $args[0] );
+		$this->assertSame( Blueworx_Clubhouse_Setup_Editor::PAGE_SLUG, $args[0] );
 		$this->assertSame( Blueworx_Clubhouse_Guide_Controller::PAGE_SLUG, $args[4] );
 	}
 

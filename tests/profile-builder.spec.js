@@ -29,34 +29,30 @@ async function signIn(page, user, pass) {
 const signInAsAdmin = (page) => signIn(page, 'admin', 'wptest-admin-pw');
 const signInAsMember = (page) => signIn(page, 'member', 'wptest-member-pw');
 
-// The Clubhouse Setup screen calls wp_enqueue_media(), which is ~200 requests
-// through a single-threaded php -S. Loading it is the expensive thing here, so
-// the builder is driven once, in one test, rather than three times to define
-// three fields — those are seeded by global-setup.js instead.
-//
-// Only the screen's own JS puts .is-active on a panel, and on this server that
-// JS can be a long way behind DOMContentLoaded. A plain click() waits for a
-// button that is still display:none and eventually gives up; dispatching once
-// can land before the handler is attached and do nothing at all. So: keep
-// asking until the panel is actually open.
+// The builder is a repeater on the Setup screen's Members tab now. Its rows are
+// driven once, in one test, rather than three times to define three fields —
+// those are seeded by global-setup.js instead.
 async function showMembersTab(page) {
-  const tab = page.locator('.clubhouse-tab[data-tab="members"]');
-  const panel = page.locator('.clubhouse-panel[data-panel="members"]');
-  await tab.waitFor({ state: 'attached' });
-  await expect
-    .poll(
-      async () => {
-        await tab.dispatchEvent('click').catch(() => {});
-        return panel.evaluate((el) => el.classList.contains('is-active')).catch(() => false);
-      },
-      { timeout: 60_000, intervals: [250, 500, 1000], message: 'the Members tab never opened' }
-    )
-    .toBe(true);
+  // The editor mounts itself, so nothing on the screen is real until the save
+  // bar is.
+  await expect(page.locator('.bw-savebar')).toBeVisible({ timeout: 60_000 });
+  await page.locator('.bw-tab', { hasText: 'Members' }).first().click();
+  await expect(page.locator('.bw-repeater').first()).toBeVisible();
 }
 
 async function openSetupMembers(page) {
   await page.goto('/wp-admin/admin.php?page=clubhouse-setup', { waitUntil: 'domcontentloaded' });
   await showMembersTab(page);
+}
+
+/** One member field's row, by position. */
+function fieldRow(page, i) {
+  return page.locator('.bw-repeater__row').nth(i);
+}
+
+async function saveSetup(page) {
+  await page.locator('.bw-savebar button', { hasText: 'Save changes' }).click();
+  await expect(page.locator('.bw-savebar')).toContainText('Everything is saved', { timeout: 30_000 });
 }
 
 // A wp-admin screen served by a single-threaded php -S never sits still long
@@ -90,15 +86,18 @@ test.describe.serial('profile builder', () => {
     await signInAsAdmin(page);
     await openSetupMembers(page);
 
-    await expect(page.locator('[name="clubhouse_profile_field[0][key]"]')).toHaveValue('shirt_size');
-    await expect(page.locator('[name="clubhouse_profile_field[1][key]"]')).toHaveValue('squad_number');
-    await expect(page.locator('[name="clubhouse_profile_field[2][key]"]')).toHaveValue('notes');
-    // Every kind of answer, and every setting for who fills it in.
-    await expect(page.locator('[name="clubhouse_profile_field[0][type]"] option')).toHaveCount(7);
-    await expect(page.locator('[name="clubhouse_profile_field[0][who]"] option')).toHaveCount(3);
-    // One blank row past the end, carrying no key — the next field.
-    await expect(page.locator('[name="clubhouse_profile_field[3][label]"]')).toHaveValue('');
-    await expect(page.locator('[name="clubhouse_profile_field[3][key]"]')).toHaveCount(0);
+    await expect(fieldRow(page, 0).locator('#key-0')).toHaveValue('shirt_size');
+    await expect(fieldRow(page, 1).locator('#key-1')).toHaveValue('squad_number');
+    await expect(fieldRow(page, 2).locator('#key-2')).toHaveValue('notes');
+    await expect(fieldRow(page, 3).locator('#key-3')).toHaveValue('emergency_contact');
+    // Every kind of answer, and every setting for who fills it in. One more
+    // option than the model has in each case: the library's select carries a
+    // leading blank.
+    await expect(fieldRow(page, 0).locator('#type-0 option')).toHaveCount(8);
+    await expect(fieldRow(page, 0).locator('#who-0 option')).toHaveCount(4);
+    // The four the run seeded, and no blank row past the end — a row is added
+    // deliberately now.
+    await expect(page.locator('.bw-repeater__row')).toHaveCount(4);
   });
 
   test('an owner adds a field and then removes it', async ({ page }) => {
@@ -106,25 +105,48 @@ test.describe.serial('profile builder', () => {
     await signInAsAdmin(page);
     await openSetupMembers(page);
 
-    await page.fill('[name="clubhouse_profile_field[3][label]"]', 'Dietary needs');
-    await page.selectOption('[name="clubhouse_profile_field[3][type]"]', 'text');
-    await page.selectOption('[name="clubhouse_profile_field[3][who]"]', 'member');
-    await submitAdminForm(page, 'button[name="clubhouse_setup_submit"]');
+    await page.locator('button', { hasText: 'Add a row' }).click();
+    await fieldRow(page, 4).locator('#label-4').fill('Dietary needs');
+    await fieldRow(page, 4).locator('#type-4').selectOption('text');
+    await fieldRow(page, 4).locator('#who-4').selectOption('member');
+    await saveSetup(page);
 
+    await page.reload({ waitUntil: 'domcontentloaded' });
     await showMembersTab(page);
     // Saved, and given a permanent key of its own from the label.
-    await expect(page.locator('[name="clubhouse_profile_field[3][key]"]')).toHaveValue('dietary_needs');
+    await expect(fieldRow(page, 4).locator('#key-4')).toHaveValue('dietary_needs');
 
-    // Removing it takes it off the screen. The other three are untouched.
-    //
-    // force: this screen never sits still long enough for Playwright's
-    // actionability check once the media library's assets are trickling in
-    // behind it, and what is under test is that removing a field works — not
-    // that a button nothing overlaps is un-overlapped.
-    await submitAdminForm(page, 'button[name="clubhouse_profile_field_remove"][value="3"]');
+    // Removing it takes it off the screen. The other four are untouched.
+    await fieldRow(page, 4).locator('[aria-label="Remove this row"]').click();
+    await saveSetup(page);
+
+    await page.reload({ waitUntil: 'domcontentloaded' });
     await showMembersTab(page);
-    await expect(page.locator('[name="clubhouse_profile_field[3][key]"]')).toHaveCount(0);
-    await expect(page.locator('[name="clubhouse_profile_field[0][key]"]')).toHaveValue('shirt_size');
+    await expect(page.locator('.bw-repeater__row')).toHaveCount(4);
+    await expect(fieldRow(page, 0).locator('#key-0')).toHaveValue('shirt_size');
+  });
+
+  /**
+   * The key is what every answer is stored under. The old screen carried it in
+   * a hidden input; it is a visible cell now, because the library rebuilds a
+   * repeater row from its declared cells alone and a key that is not one does
+   * not survive a save. Renaming the question must still keep the answers.
+   */
+  test('renaming a question keeps the answers already given', async ({ page }) => {
+    test.slow();
+    await signInAsAdmin(page);
+    await openSetupMembers(page);
+
+    await fieldRow(page, 0).locator('#label-0').fill('Kit size');
+    await saveSetup(page);
+
+    await page.reload({ waitUntil: 'domcontentloaded' });
+    await showMembersTab(page);
+    await expect(fieldRow(page, 0).locator('#key-0')).toHaveValue('shirt_size');
+
+    // Put the question back, so the rest of the suite finds what it expects.
+    await fieldRow(page, 0).locator('#label-0').fill('Shirt size');
+    await saveSetup(page);
   });
 
   test('the club sets a field only it can fill in', async ({ page }) => {

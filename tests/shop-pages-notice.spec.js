@@ -1,4 +1,5 @@
 const { test, expect } = require('@playwright/test');
+const { hasShop } = require('./helpers/shop');
 
 // @wordpress only: this is a wp-admin notice, and the DB-free preview has no
 // admin.
@@ -39,6 +40,12 @@ test('a club with no shop gets no Shop link in its nav @wordpress', async ({ pag
   // The Shop item ships in the default nav and must disappear on every site
   // that cannot serve it, the same way Bookings does without LatePoint. A nav
   // link to a page that does not exist is worse than no link.
+  //
+  // This one is about a site with no shop, so it has nothing to say on a
+  // machine where one is installed — CI has none, and a developer who has run
+  // "npm run wp:shop" should not be told their branch broke the nav.
+  test.skip(await hasShop(page), 'a shop is installed — this is about a site without one');
+
   await page.goto('/');
   await expect(page.locator('.ch-nav a', { hasText: /^Shop$/ })).toHaveCount(0);
 });

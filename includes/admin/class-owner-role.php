@@ -267,8 +267,8 @@ final class Blueworx_Clubhouse_Owner_Role {
 		wp_add_dashboard_widget( 'clubhouse_setup_dashboard', 'Clubhouse Setup', array( self::class, 'render_dashboard' ) );
 	}
 
-	/** Dashboard widget body: the reused Setup screen (its form posts to the Setup page). */
+	/** Dashboard widget body: where an owner starts. Setup itself is a page editor screen and mounts on its own page. */
 	public static function render_dashboard(): void {
-		echo Blueworx_Clubhouse_Setup_Controller::screen_html( new Blueworx_Clubhouse_Options_Storage(), array() ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped within Setup_Screen.
+		echo Blueworx_Clubhouse_Owner_Welcome::render(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped within Owner_Welcome.
 	}
 }
