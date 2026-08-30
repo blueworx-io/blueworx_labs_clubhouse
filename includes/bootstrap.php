@@ -109,6 +109,7 @@ require_once __DIR__ . '/collections/class-demo-content.php';
 require_once __DIR__ . '/collections/class-demo-collections.php';
 require_once __DIR__ . '/collections/class-demo-posts.php';
 require_once __DIR__ . '/collections/class-collection-meta.php';
+require_once __DIR__ . '/collections/class-collection-fields.php';
 
 // Frontend (pure)
 require_once __DIR__ . '/frontend/class-auth-view.php';
