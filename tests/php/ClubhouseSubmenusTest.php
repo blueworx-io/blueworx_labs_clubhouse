@@ -18,6 +18,17 @@ final class ClubhouseSubmenusTest extends TestCase {
 		wp_stub_reset();
 	}
 
+	/**
+	 * WordPress escapes a menu title itself, so one passed in pre-escaped is
+	 * escaped twice and the entity shows in the sidebar (issue #291).
+	 */
+	public function test_the_seo_screen_gives_its_menu_a_plain_title(): void {
+		Blueworx_Clubhouse_Seo_Controller::add_menu();
+		$args = wp_stub_calls( 'add_submenu_page' )[0]['args'];
+		$this->assertSame( 'Search & sharing', $args[1] );
+		$this->assertSame( 'Search & sharing', $args[2] );
+	}
+
 	public function test_import_is_registered_under_clubhouse(): void {
 		Blueworx_Clubhouse_Import_Controller::add_menu();
 		$args = wp_stub_calls( 'add_submenu_page' )[0]['args'];
