@@ -29,8 +29,56 @@ final class OwnerCapabilitiesTest extends TestCase {
 
 	public function test_denied_list_covers_the_dangerous_caps(): void {
 		$denied = Blueworx_Clubhouse_Owner_Capabilities::denied();
-		foreach ( array( 'manage_options', 'activate_plugins', 'edit_theme_options', 'install_plugins', 'update_core', 'edit_pages', 'create_users', 'promote_users', 'delete_users' ) as $cap ) {
+		foreach ( array( 'manage_options', 'activate_plugins', 'edit_theme_options', 'install_plugins', 'update_core', 'create_users', 'promote_users', 'delete_users' ) as $cap ) {
 			$this->assertContains( $cap, $denied );
+		}
+	}
+
+	/**
+	 * A club page is a real WordPress page, edited from WordPress's own Pages
+	 * list — that list is the only way into a page's editor, because the
+	 * fourteen editors have no menu item of their own.
+	 *
+	 * The page capabilities used to be stripped from both roles, and correctly
+	 * so: pages were edited on the Club Pages screen, and the raw Pages list was
+	 * not a Clubhouse surface. That screen is gone, and stripping them now
+	 * leaves an owner unable to edit their own club's words at all.
+	 *
+	 * Every club page is authored by nobody (post_author 0), so editing one is
+	 * editing somebody else's published page — which is why all three of these
+	 * are needed and not just edit_pages.
+	 */
+	public function test_both_roles_can_open_a_club_page_for_editing(): void {
+		$live = array( 'edit_posts' => true, 'edit_pages' => true, 'edit_others_pages' => true, 'edit_published_pages' => true, 'edit_private_pages' => true, 'publish_pages' => true, 'read_private_pages' => true );
+		foreach ( array( Blueworx_Clubhouse_Owner_Capabilities::ROLE, Blueworx_Clubhouse_Owner_Capabilities::EDITOR_ROLE ) as $role ) {
+			$caps = Blueworx_Clubhouse_Owner_Capabilities::capabilities_for( $role, $live );
+			foreach ( array( 'edit_pages', 'edit_others_pages', 'edit_published_pages' ) as $cap ) {
+				$this->assertTrue( $caps[ $cap ] ?? false, "{$role} cannot edit a club page without {$cap}" );
+			}
+			// The member area is a private page, so both are needed for it to be
+			// in the list at all and openable once it is.
+			$this->assertTrue( $caps['read_private_pages'] ?? false, $role );
+			$this->assertTrue( $caps['edit_private_pages'] ?? false, $role );
+			// Switching a page on republishes a draft, which is the owner's to do.
+			$this->assertTrue( $caps['publish_pages'] ?? false, $role );
+		}
+	}
+
+	/**
+	 * Editing a club page is not deleting one. The routing depends on those
+	 * pages existing, the Pages list already hides Trash on their rows, and a
+	 * deleted page is not something a club can put back.
+	 */
+	public function test_neither_role_can_delete_a_page(): void {
+		$live = array_fill_keys(
+			array( 'edit_posts', 'delete_pages', 'delete_others_pages', 'delete_published_pages', 'delete_private_pages' ),
+			true
+		);
+		foreach ( array( Blueworx_Clubhouse_Owner_Capabilities::ROLE, Blueworx_Clubhouse_Owner_Capabilities::EDITOR_ROLE ) as $role ) {
+			$caps = Blueworx_Clubhouse_Owner_Capabilities::capabilities_for( $role, $live );
+			foreach ( array( 'delete_pages', 'delete_others_pages', 'delete_published_pages', 'delete_private_pages' ) as $cap ) {
+				$this->assertArrayNotHasKey( $cap, $caps, "{$role} must not be able to {$cap}" );
+			}
 		}
 	}
 
@@ -100,12 +148,12 @@ final class OwnerCapabilitiesTest extends TestCase {
 	}
 
 	public function test_both_roles_are_cloned_from_the_live_editor(): void {
-		$live = array( 'edit_posts' => true, 'wpseo_manage_options' => true, 'moderate_comments' => true, 'edit_pages' => true );
+		$live = array( 'edit_posts' => true, 'wpseo_manage_options' => true, 'moderate_comments' => true, 'delete_pages' => true );
 		foreach ( array( Blueworx_Clubhouse_Owner_Capabilities::ROLE, Blueworx_Clubhouse_Owner_Capabilities::EDITOR_ROLE ) as $role ) {
 			$caps = Blueworx_Clubhouse_Owner_Capabilities::capabilities_for( $role, $live );
 			$this->assertTrue( $caps['wpseo_manage_options'], 'a site-specific editor cap travels with the clone' );
 			$this->assertArrayNotHasKey( 'moderate_comments', $caps, 'comments are not a Clubhouse surface' );
-			$this->assertArrayNotHasKey( 'edit_pages', $caps, 'pages are served by Clubhouse routing' );
+			$this->assertArrayNotHasKey( 'delete_pages', $caps, 'a club page is edited here, never deleted' );
 		}
 	}
 
