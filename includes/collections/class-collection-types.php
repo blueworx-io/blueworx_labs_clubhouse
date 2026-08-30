@@ -59,7 +59,11 @@ final class Blueworx_Clubhouse_Collection_Types {
 				'labels'       => array( 'name' => $plural, 'singular_name' => $singular ),
 				'public'       => false,
 				'show_ui'      => true,
-				'show_in_menu' => self::CONTENT_SLUG,
+				// Under the Clubhouse menu, beside everything else a club
+				// edits. The six used to nest under a "Collections" menu of
+				// their own, which meant two Clubhouse menus in the sidebar
+				// and two plausible places to look for a fixture.
+				'show_in_menu' => Blueworx_Clubhouse_Setup_Editor::PAGE_SLUG,
 				'menu_icon'    => 'dashicons-groups',
 				'supports'     => array( 'title', 'page-attributes' ),
 				'has_archive'  => false,
@@ -80,13 +84,4 @@ final class Blueworx_Clubhouse_Collection_Types {
 		}
 	}
 
-	/**
-	 * Registers the top-level "Collections" menu the six CPTs nest under, and removes
-	 * the auto-created duplicate submenu so the parent link opens the first CPT.
-	 * Hooked on admin_menu.
-	 */
-	public static function register_content_menu(): void {
-		add_menu_page( 'Collections', 'Collections', self::CONTENT_CAP, self::CONTENT_SLUG, '', Blueworx_Clubhouse_Admin_Menu_Icons::data_uri( self::CONTENT_SLUG ), 4 );
-		remove_submenu_page( self::CONTENT_SLUG, self::CONTENT_SLUG );
-	}
 }

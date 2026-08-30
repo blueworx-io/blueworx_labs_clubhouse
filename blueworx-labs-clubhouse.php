@@ -57,7 +57,7 @@ require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/collections/class-wp-collec
 require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/collections/class-wp-posts.php';
 require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/collections/class-collection-types.php';
 require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/collections/class-collection-seeder.php';
-require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/collections/class-collection-meta-boxes.php';
+require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/collections/class-collection-columns.php';
 
 /**
  * Boot the plugin.
@@ -81,7 +81,7 @@ function blueworx_labs_clubhouse_init() {
 	Blueworx_Clubhouse_Setup_Editor::register();
 	Blueworx_Clubhouse_Images_Needed::register();
 	Blueworx_Clubhouse_Demo_Controller::register();
-	Blueworx_Clubhouse_Collection_Meta_Boxes::register();
+	Blueworx_Clubhouse_Collection_Columns::register();
 	Blueworx_Clubhouse_Collection_Editors::register();
 	Blueworx_Clubhouse_Owner_Role::register();
 	Blueworx_Clubhouse_Import_Controller::register();
@@ -94,7 +94,6 @@ function blueworx_labs_clubhouse_init() {
 	Blueworx_Clubhouse_Wordpress_Pages::register();
 	Blueworx_Clubhouse_Club_Page_Editing::register();
 	Blueworx_Clubhouse_Page_Editors::register();
-	add_action( 'admin_menu', array( Blueworx_Clubhouse_Collection_Types::class, 'register_content_menu' ) );
 }
 add_action( 'plugins_loaded', 'blueworx_labs_clubhouse_init' );
 
