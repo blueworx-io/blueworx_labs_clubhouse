@@ -61,7 +61,7 @@ final class Blueworx_Clubhouse_Setup_Editor {
 			'menu_title' => 'Clubhouse',
 			'icon'       => Blueworx_Clubhouse_Admin_Menu_Icons::data_uri( self::PAGE_SLUG ),
 			'eyebrow'    => 'Clubhouse',
-			'lede'       => 'How your site looks, which pages it shows, and what it asks your members.',
+			'lede'       => self::lede(),
 			// The lower of the two capabilities, deliberately. Editing the menu
 			// is a Content Editor's job and the menu lives on this screen, so
 			// they have to be able to reach it; every field outside the Menu tab
@@ -79,6 +79,29 @@ final class Blueworx_Clubhouse_Setup_Editor {
 				Blueworx_Clubhouse_Setup_Fields::tabs( self::can(), self::looks( $storage ), self::pages() )
 			),
 		);
+	}
+
+	/**
+	 * What the screen says under its title — and, for an administrator, who can
+	 * open it.
+	 *
+	 * Every other Clubhouse screen puts that in chips in its top bar. A page
+	 * editor screen's header is the library's, built from a title, an eyebrow
+	 * and a line of text, with nowhere to put markup of ours — so the fact is
+	 * said in words instead. An administrator is still told; nobody else sees
+	 * it, exactly as before.
+	 */
+	private static function lede(): string {
+		$lede = 'How your site looks, which pages it shows, and what it asks your members.';
+		if ( ! class_exists( 'Blueworx_Clubhouse_Access_Controller' )
+			|| ! Blueworx_Clubhouse_Access_Controller::may_see_role_tags() ) {
+			return $lede;
+		}
+		$labels = Blueworx_Clubhouse_Admin_Pages::access_labels( self::PAGE_SLUG );
+		if ( array() === $labels ) {
+			return $lede;
+		}
+		return $lede . ' Who can open this screen: ' . implode( ', ', $labels ) . '.';
 	}
 
 	/**

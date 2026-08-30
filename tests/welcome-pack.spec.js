@@ -78,33 +78,22 @@ async function loginAsAdmin(page) {
 // notice and announcement bar off as a side effect. Worth its own issue; not
 // something a test about the welcome pack should be doing to the site.
 async function setPackVisible(page, visible) {
-  await page.goto('/wp-admin/admin.php?page=clubhouse-setup', { waitUntil: 'domcontentloaded' });
-  // Two levels of tab, and force, for the reasons user-guide.spec.js documents.
-  await page.getByRole('tab', { name: 'Visibility' }).click({ force: true });
-  await page.locator('button.clubhouse-vistab[data-vistab="home"]').click({ force: true });
+  // The pack's own Shown switch, on the panel it belongs to. Section
+  // visibility left Setup in phase 3 — a section is switched off on the page
+  // it is part of, which for the welcome pack is Global content.
+  await page.goto('/wp-admin/admin.php?page=clubhouse-global-content', {
+    waitUntil: 'domcontentloaded',
+  });
+  // The editor is a JS app; nothing below exists until it has mounted.
+  await expect(page.locator('.bw-savebar')).toBeVisible({ timeout: 30_000 });
 
-  // The checkbox is opacity:0 and 0×0 with the switch drawn beside it, so the
-  // input is driven directly. Clicking the visible switch is the more faithful
-  // gesture, but this one sits well down a long grid and wp-admin's chrome
-  // keeps reflowing after load, so a positional click lands on stale
-  // coordinates and silently misses.
-  const toggle = page.locator('input[name="clubhouse_section[home.welcome]"]');
-  const label = page.locator('label.clubhouse-toggle', { has: toggle });
-  await expect(label).toBeVisible();
-
+  const toggle = page.locator('#welcome__shown');
+  await expect(toggle).toBeVisible();
   if ((await toggle.isChecked()) !== visible) {
-    // A real click event on the real switch, dispatched in the page rather than
-    // aimed at screen coordinates. The input is 0×0 with the switch drawn beside
-    // it, and wp-admin's chrome keeps reflowing after this screen loads, so a
-    // positional click either misses or never satisfies Playwright's stability
-    // wait — the problem menu-editor.spec.js documents. This still exercises the
-    // control an owner uses; only the aiming is different.
-    await label.evaluate((el) => el.click());
+    await toggle.setChecked(visible);
+    await page.locator('.bw-savebar button', { hasText: 'Save changes' }).click();
   }
-  expect(await toggle.isChecked()).toBe(visible);
-
-  await page.getByRole('button', { name: /save/i }).first().click({ force: true });
-  await expect(page.locator('.notice-success')).toBeVisible();
+  await expect(page.locator('.bw-savebar')).toContainText('Everything is saved', { timeout: 30_000 });
 }
 
 test('switching the welcome pack off takes it off the dashboard @wordpress', async ({ page }) => {
