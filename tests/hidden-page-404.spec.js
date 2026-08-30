@@ -34,23 +34,26 @@ async function setPageVisible(page, slug, visible) {
   await expect(page.locator('.bw-savebar')).toContainText('Everything is saved', { timeout: 30_000 });
 }
 
-/** The titles WordPress lists under one post status on its own Pages screen. */
-async function titlesWithStatus(page, status) {
-  await page.goto(`/wp-admin/edit.php?post_type=page&post_status=${status}`, {
+/**
+ * What status WordPress itself has a page in — 'publish', 'draft', or
+ * 'missing'.
+ *
+ * One request, not one per status. Every page load here is a couple of hundred
+ * requests through a server that answers one at a time (see docs/testing.md),
+ * and asking twice per check is what put this spec over its budget once Setup
+ * became a screen that mounts itself.
+ */
+async function pageStatus(page, title) {
+  await page.goto('/wp-admin/edit.php?post_type=page&post_status=all', {
     waitUntil: 'domcontentloaded',
   });
-  return page.locator('#the-list .column-title strong').allInnerTexts();
-}
-
-/** What status WordPress itself has a page in — 'publish', 'draft', or 'missing'. */
-async function pageStatus(page, title) {
-  for (const status of ['draft', 'publish']) {
-    const titles = await titlesWithStatus(page, status);
-    if (titles.some((text) => text.trim().startsWith(title))) {
-      return status;
-    }
+  const cell = page.locator('#the-list .column-title').filter({ hasText: title }).first();
+  if ((await cell.count()) === 0) {
+    return 'missing';
   }
-  return 'missing';
+  // WordPress marks anything unpublished in the title cell itself — "Contact —
+  // Draft". Nothing is appended to a published page.
+  return (await cell.innerText()).includes('— Draft') ? 'draft' : 'publish';
 }
 
 /** Change status on the named pages through Bulk Edit, as an admin would. */
