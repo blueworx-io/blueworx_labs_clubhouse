@@ -123,6 +123,23 @@ final class Blueworx_Clubhouse_Collection_Meta {
 		return array_keys( self::FIELDS );
 	}
 
+	/**
+	 * Where a field's value is stored on its record.
+	 *
+	 * The page editor library's post store derives this from the post type and
+	 * the field id, and offers no way to override it per field. This is the one
+	 * place in the plugin that mirrors it — every read and every write goes
+	 * through here, so the convention cannot end up as six copies that
+	 * disagree. CollectionMetaKeyTest holds it against what the library
+	 * actually writes rather than against a repeated literal.
+	 *
+	 * The keys were the bare field name until v0.101.0; the values were copied
+	 * across by Collection_Migration when a site updated.
+	 */
+	public static function meta_key( string $type, string $key ): string {
+		return $type . '_' . $key;
+	}
+
 	/** @return array<int,array{key:string,label:string,type:string,options?:array<int,string>,default?:string}> */
 	public static function fields( string $type ): array {
 		return self::FIELDS[ $type ] ?? array();
