@@ -82,6 +82,7 @@ function blueworx_labs_clubhouse_init() {
 	Blueworx_Clubhouse_Images_Needed::register();
 	Blueworx_Clubhouse_Demo_Controller::register();
 	Blueworx_Clubhouse_Collection_Meta_Boxes::register();
+	Blueworx_Clubhouse_Collection_Editors::register();
 	Blueworx_Clubhouse_Owner_Role::register();
 	Blueworx_Clubhouse_Import_Controller::register();
 	Blueworx_Clubhouse_Access_Controller::register();

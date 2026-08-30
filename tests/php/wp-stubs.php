@@ -205,9 +205,23 @@ if ( ! function_exists( 'register_post_type' ) ) {
 // 'post' and 'page' are WordPress's own built-in types, always registered on
 // a real site — this stub never saw them go through register_post_type(), so
 // it has to know them by name rather than only by what was recorded above.
+//
+// Everything else is what this run actually registered. Without that half, a
+// type the code under test registers itself still reads as absent, and
+// anything that asks "does this record type exist" — the page editor library
+// does, before it will open a screen — is told no on a site where it plainly
+// does.
 if ( ! function_exists( 'post_type_exists' ) ) {
 	function post_type_exists( string $post_type ): bool {
-		return in_array( $post_type, array( 'post', 'page' ), true );
+		if ( in_array( $post_type, array( 'post', 'page' ), true ) ) {
+			return true;
+		}
+		foreach ( wp_stub_calls( 'register_post_type' ) as $call ) {
+			if ( ( $call['args'][0] ?? '' ) === $post_type ) {
+				return true;
+			}
+		}
+		return false;
 	}
 }
 if ( ! function_exists( 'get_post_type_object' ) ) {
