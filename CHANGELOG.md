@@ -5,6 +5,10 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.98.2
+
+- Internal only: a test was reporting another plugin's JavaScript error as this one's, and was checking a demo setting it had never actually set. Nothing changes on a site.
+
 ## 0.98.1
 
 - "Search & sharing" now reads as it should, in the menu and on the access screen. It was printing the raw code for its ampersand.
