@@ -40,7 +40,11 @@ final class Blueworx_Clubhouse_Collection_Seeder {
 				'menu_order'  => $order++,
 			) );
 			foreach ( $meta_keys as $key ) {
-				add_post_meta( (int) $id, $key, isset( $item[ $key ] ) ? (string) $item[ $key ] : '' );
+				add_post_meta(
+					(int) $id,
+					Blueworx_Clubhouse_Collection_Meta::meta_key( $type, $key ),
+					isset( $item[ $key ] ) ? (string) $item[ $key ] : ''
+				);
 			}
 			add_post_meta( (int) $id, self::DEMO_META, '1' );
 		}
@@ -64,7 +68,11 @@ final class Blueworx_Clubhouse_Collection_Seeder {
 				'score' => $f['score'], 'outcome' => $f['outcome'], 'result_summary' => $f['result_summary'],
 			);
 			foreach ( $meta as $key => $value ) {
-				add_post_meta( (int) $id, $key, (string) $value );
+				add_post_meta(
+					(int) $id,
+					Blueworx_Clubhouse_Collection_Meta::meta_key( 'clubhouse_fixture', (string) $key ),
+					(string) $value
+				);
 			}
 			add_post_meta( (int) $id, self::DEMO_META, '1' );
 		}

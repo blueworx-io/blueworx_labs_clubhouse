@@ -220,8 +220,15 @@ final class Blueworx_Clubhouse_Import_Applier {
 				$by_title[ $title ] = $id;
 			}
 
+			// Through Collection_Meta::meta_key(): an import writes the same
+			// addresses the collection's own editor reads, or a club would
+			// import a season of fixtures and find every screen empty.
 			foreach ( $item['meta'] as $key => $value ) {
-				update_post_meta( $id, (string) $key, (string) $value );
+				update_post_meta(
+					$id,
+					Blueworx_Clubhouse_Collection_Meta::meta_key( $type, (string) $key ),
+					(string) $value
+				);
 			}
 			foreach ( $item['images'] as $key => $ref ) {
 				$attachment = self::sideload( (string) $ref['url'], (string) $ref['alt'] );
@@ -229,7 +236,11 @@ final class Blueworx_Clubhouse_Import_Applier {
 					$warnings[] = sprintf( 'Could not fetch the image at %s for "%s".', $ref['url'], $title );
 					continue;
 				}
-				update_post_meta( $id, (string) $key, $attachment );
+				update_post_meta(
+					$id,
+					Blueworx_Clubhouse_Collection_Meta::meta_key( $type, (string) $key ),
+					$attachment
+				);
 			}
 		}
 

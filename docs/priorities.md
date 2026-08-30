@@ -24,8 +24,8 @@ each phase gets its own plan and its own release.
 | 2 | Vendor the design system; rebuild the five screens the editor library will not replace | **Done, v0.97.0.** [Plan](superpowers/plans/2026-08-28-design-system-adoption.md) |
 | 3 | Club pages become records; the Club Pages screen is deleted | **Done, v0.98.0.** [Plan](superpowers/plans/2026-08-28-club-pages-become-records.md). It did not wait on phase 1, which was already in the foundation by then |
 | 4 | Setup rebuilt on the library, absorbing [#283](../../issues/283), [#284](../../issues/284) and [#285](../../issues/285) | **Done, v0.100.0.** [Plan](superpowers/plans/2026-08-30-setup-rebuilt-on-the-library.md). No migration was needed: the screen reads and writes through the stores that already owned every value |
-| 5 | Collection record editors replace the Details meta box | Next. Phase 4 has landed, so nothing is holding it |
-| 6 | The remaining screens | Waits on phase 5 |
+| 5 | Collection record editors replace the Details meta box | **Done, v0.101.0.** [Plan](superpowers/plans/2026-08-30-collection-record-editors.md). The meta keys moved with it — [the record](upgrades/2026-08-30-collections-become-records.md) has what happens on update and on a rollback |
+| 6 | The remaining screens | Next. Import, Search & sharing, User guide, What's new and Access — none of them an editor, so they move to the design system without the library |
 
 [#282](../../issues/282) spanned phases 2 to 4 — the club's look left wp-admin
 one screen at a time, and the last of it went with Setup, along with
@@ -58,6 +58,18 @@ now. They were the top two on this list until they moved, so nothing here is
 waiting on them.
 
 ## Done, and worth knowing
+
+**The six collections are records** (phase 5, v0.101.0). Sports, Teams,
+Fixtures, Events, Sponsors and People are edited on their own screens, opened
+from their own lists. The "Details" meta box is gone, and so is the separate
+Collections menu — the lists sit under Clubhouse with everything else.
+
+**Their meta keys moved, and that is the thing to remember.** A team's sport
+was stored as `sport` and is now `clubhouse_team_sport`, because the page
+editor library derives the key from the post type and the field id and has no
+per-field override. One place knows it — `Collection_Meta::meta_key()` — and
+every read and write goes through there. Reach for that whenever you touch a
+collection field, and never write the key by hand.
 
 **Setup is a page editor screen** (phase 4, v0.100.0). Six tabs, one save bar,
 and the menu saves with everything else ([#285](../../issues/285)). What a club
