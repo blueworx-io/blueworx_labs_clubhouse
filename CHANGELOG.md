@@ -5,6 +5,10 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.99.3
+
+- Internal only: the priority list is brought up to date. Nothing changes on a site.
+
 ## 0.99.2
 
 - Fixes owners and content editors being unable to open any club page since v0.98.0. Your pages, and everything on them, were never at risk — the way in had simply closed. Nothing needs doing: it comes back on update.
