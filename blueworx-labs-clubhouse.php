@@ -79,7 +79,7 @@ function blueworx_labs_clubhouse_init() {
 	Blueworx_Clubhouse_Mail::register();
 	Blueworx_Clubhouse_Seo_Head::register();
 	Blueworx_Clubhouse_Admin_Menu_Icons::register();
-	Blueworx_Clubhouse_Setup_Controller::register();
+	Blueworx_Clubhouse_Setup_Editor::register();
 	Blueworx_Clubhouse_Images_Needed::register();
 	Blueworx_Clubhouse_Demo_Controller::register();
 	Blueworx_Clubhouse_Collection_Meta_Boxes::register();
