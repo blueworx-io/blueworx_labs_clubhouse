@@ -174,6 +174,27 @@ if ( ! $member_user ) {
 		$member_user = get_user_by( 'id', $member_user_id );
 	}
 }
+// An owner — the person this plugin is for. Every other spec signs in as an
+// administrator, who holds every capability WordPress has and therefore cannot
+// notice a role missing one. That is what hid an owner being unable to open a
+// club page at all when the Club Pages screen was deleted.
+//
+// The role is re-applied every run rather than only at creation: the capability
+// map is written into the user's role at the moment it is set, so a run against
+// a build that changed those capabilities would otherwise test the previous
+// build's map.
+$owner_user = get_user_by( 'login', 'clubowner' );
+if ( ! $owner_user ) {
+	$owner_user_id = wp_create_user( 'clubowner', 'owner-test-pw', 'owner@club.test' );
+	if ( is_int( $owner_user_id ) ) {
+		$owner_user = get_user_by( 'id', $owner_user_id );
+	}
+}
+if ( $owner_user instanceof WP_User ) {
+	Blueworx_Clubhouse_Owner_Role::activate();
+	$owner_user->set_role( Blueworx_Clubhouse_Owner_Capabilities::ROLE );
+}
+
 if ( $member_user instanceof WP_User ) {
 	$member_user->set_role( 'subscriber' );
 	// Start every run with a member who has answered nothing, so what the

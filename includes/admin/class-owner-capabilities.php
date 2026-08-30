@@ -102,17 +102,30 @@ final class Blueworx_Clubhouse_Owner_Capabilities {
 	}
 
 	/**
-	 * Caps stripped off the editor clone. Pages are served by Clubhouse's own
-	 * routing and edited under Club Pages, so the raw Pages editor is not a
-	 * Clubhouse surface; comments are not a Clubhouse surface either.
+	 * Caps stripped off the editor clone.
+	 *
+	 * The EDIT half of the page capabilities used to be here too, and correctly
+	 * so while pages were edited on the Club Pages screen: the raw Pages list
+	 * was not a Clubhouse surface. It is now the only one. A club page is a real
+	 * WordPress page, the fourteen page editors have no menu item of their own,
+	 * and the Pages list is the way in — so a role without these cannot edit its
+	 * own club's words at all.
+	 *
+	 * Every club page is authored by nobody (post_author 0) and published, which
+	 * is why edit_others_pages and edit_published_pages are needed and not just
+	 * edit_pages. The member area is private, hence the other two. publish_pages
+	 * is what switching a page back on needs — that republishes a draft.
+	 *
+	 * Deleting stays out. The routing depends on those pages existing, the Pages
+	 * list already hides Trash on their rows, and a deleted club page is not
+	 * something a club can put back. Comments are not a Clubhouse surface.
 	 *
 	 * @return array<int,string>
 	 */
 	public static function excluded_caps(): array {
 		return array(
-			'edit_pages', 'edit_others_pages', 'edit_published_pages', 'edit_private_pages',
-			'publish_pages', 'delete_pages', 'delete_others_pages', 'delete_published_pages',
-			'delete_private_pages', 'read_private_pages',
+			'delete_pages', 'delete_others_pages', 'delete_published_pages',
+			'delete_private_pages',
 			'moderate_comments',
 		);
 	}
@@ -198,7 +211,10 @@ final class Blueworx_Clubhouse_Owner_Capabilities {
 			'manage_options', 'edit_theme_options', 'switch_themes', 'activate_plugins',
 			'install_plugins', 'install_themes', 'update_core', 'update_plugins', 'update_themes',
 			'edit_files', 'edit_plugins', 'edit_themes', 'import', 'export',
-			'edit_pages', 'edit_others_pages', 'publish_pages',
+			// The page capabilities are NOT denied any more — see
+			// excluded_caps() above. A club page is edited from WordPress's own
+			// Pages list now, so a role denied these cannot edit its own club's
+			// words. Deleting is still refused, through excluded_caps().
 			'create_users', 'delete_users', 'remove_users', 'promote_users',
 		);
 	}
