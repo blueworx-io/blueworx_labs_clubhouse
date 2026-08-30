@@ -46,10 +46,27 @@ final class Blueworx_Clubhouse_Collection_Editors {
 		}
 		add_action( 'init', array( self::class, 'declare_screens' ), 20 );
 		add_action( 'admin_head', array( self::class, 'hide_menu_items' ) );
+		add_action( 'admin_init', array( self::class, 'maybe_migrate' ) );
 		add_filter( 'use_block_editor_for_post', array( self::class, 'on_use_block_editor_for_post' ), 10, 2 );
 		add_filter( 'get_edit_post_link', array( self::class, 'on_get_edit_post_link' ), 10, 2 );
 		add_action( 'load-post.php', array( self::class, 'redirect_to_editor' ) );
 		add_action( 'load-post-new.php', array( self::class, 'redirect_new_to_editor' ) );
+	}
+
+	/**
+	 * Move a club's collection fields to their new addresses, once.
+	 *
+	 * One option read per admin request while it has already run, which is the
+	 * same price Owner_Role::maybe_upgrade() pays and for the same reason: an
+	 * in-place plugin update never fires the activation hook, so a club that
+	 * updates rather than reinstalls has to be caught here or not at all.
+	 */
+	public static function maybe_migrate(): void {
+		$storage = new Blueworx_Clubhouse_Options_Storage();
+		if ( Blueworx_Clubhouse_Collection_Migration::has_run( $storage ) ) {
+			return;
+		}
+		Blueworx_Clubhouse_Collection_Migration::run( $storage );
 	}
 
 	public static function declare_screens(): void {

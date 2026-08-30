@@ -111,6 +111,7 @@ require_once __DIR__ . '/collections/class-demo-posts.php';
 require_once __DIR__ . '/collections/class-collection-meta.php';
 require_once __DIR__ . '/collections/class-collection-fields.php';
 require_once __DIR__ . '/collections/class-collection-editors.php';
+require_once __DIR__ . '/collections/class-collection-migration.php';
 
 // Frontend (pure)
 require_once __DIR__ . '/frontend/class-auth-view.php';
