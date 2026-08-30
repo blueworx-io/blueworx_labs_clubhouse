@@ -95,7 +95,7 @@ final class Blueworx_Clubhouse_Profile_Fields {
 	 *
 	 * @param array<string,mixed> $raw
 	 * @param array<int,string>   $taken
-	 * @return array{key:string,label:string,type:string,choices:array<int,string>,help:string,required:bool,who:string}|null
+	 * @return array{key:string,label:string,type:string,choices:array<int,string>,help:string,required:bool,who:string,column:bool}|null
 	 */
 	public static function sanitise_one( array $raw, array $taken ): ?array {
 		$label = sanitize_text_field( (string) ( $raw['label'] ?? '' ) );
@@ -128,6 +128,9 @@ final class Blueworx_Clubhouse_Profile_Fields {
 			'help'     => sanitize_text_field( (string) ( $raw['help'] ?? '' ) ),
 			'required' => ! empty( $raw['required'] ),
 			'who'      => $who,
+			// Off unless the owner asks for it. A club with thirty fields that
+			// all became columns would have a members list nobody could read.
+			'column'   => ! empty( $raw['column'] ),
 		);
 	}
 

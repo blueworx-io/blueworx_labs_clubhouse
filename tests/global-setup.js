@@ -113,6 +113,7 @@ update_option(
 			'help'     => '',
 			'required' => false,
 			'who'      => 'member',
+			'column'   => true,
 		),
 		array(
 			'key'      => 'squad_number',
@@ -122,6 +123,7 @@ update_option(
 			'help'     => '',
 			'required' => false,
 			'who'      => 'club',
+			'column'   => true,
 		),
 		array(
 			'key'      => 'notes',
@@ -131,6 +133,21 @@ update_option(
 			'help'     => '',
 			'required' => false,
 			'who'      => 'private',
+			'column'   => true,
+		),
+		// The fourth is deliberately NOT a column, so member-columns.spec.js has
+		// a real subject for "a field the club did not choose stays off the
+		// members list" rather than asserting the absence of a field that was
+		// never defined.
+		array(
+			'key'      => 'emergency_contact',
+			'label'    => 'Emergency contact',
+			'type'     => 'text',
+			'choices'  => array(),
+			'help'     => '',
+			'required' => false,
+			'who'      => 'club',
+			'column'   => false,
 		),
 	),
 	true

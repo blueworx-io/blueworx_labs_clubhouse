@@ -71,6 +71,29 @@ final class SetupProfileFieldsTest extends TestCase {
 		$this->assertSame( 'select', $fields[0]['type'] );
 	}
 
+	/**
+	 * Choosing a field as a column on the members list is part of describing
+	 * the field, so it is offered on the field's own row — issue #278.
+	 */
+	public function test_a_field_can_be_chosen_as_a_column_on_the_members_list(): void {
+		$html = Blueworx_Clubhouse_Setup_Screen::profile_fields_area( array( $this->one() ) );
+		$this->assertStringContainsString( 'clubhouse_profile_field[0][column]', $html );
+
+		Blueworx_Clubhouse_Setup_Controller::handle_save(
+			array( 'clubhouse_profile_field' => array( array( 'label' => 'Shirt size', 'column' => '1' ) ) ),
+			$this->storage
+		);
+		$this->assertTrue( $this->fields()[0]['column'] );
+	}
+
+	public function test_a_field_the_owner_did_not_choose_is_not_a_column(): void {
+		Blueworx_Clubhouse_Setup_Controller::handle_save(
+			array( 'clubhouse_profile_field' => array( array( 'label' => 'Shirt size' ) ) ),
+			$this->storage
+		);
+		$this->assertFalse( $this->fields()[0]['column'] );
+	}
+
 	public function test_the_blank_row_is_not_saved_as_a_nameless_field(): void {
 		Blueworx_Clubhouse_Setup_Controller::handle_save(
 			array(

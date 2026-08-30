@@ -5,6 +5,12 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.99.0
+
+- You can now show a custom member field as a column on your members list, so you can read everyone's shirt size on one screen instead of opening members one at a time. Tick "Show the answers as a column" on the field, under Clubhouse → Members.
+- Those columns sort, so you can put your members in order by any answer.
+- A field only the club can see stays that way: its column is never shown to anyone who could not already read it.
+
 ## 0.98.2
 
 - Internal only: a test was reporting another plugin's JavaScript error as this one's, and was checking a demo setting it had never actually set. Nothing changes on a site.

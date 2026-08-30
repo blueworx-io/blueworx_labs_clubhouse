@@ -53,6 +53,7 @@ require_once __DIR__ . '/dashboard/class-commerce-pages.php';
 require_once __DIR__ . '/profile/class-profile-fields.php';
 require_once __DIR__ . '/profile/class-profile-values.php';
 require_once __DIR__ . '/profile/class-profile-store.php';
+require_once __DIR__ . '/profile/class-profile-columns.php';
 require_once __DIR__ . '/profile/class-profile-panel.php';
 require_once __DIR__ . '/profile/class-profile-form.php';
 require_once __DIR__ . '/profile/class-profile-user-screen.php';
