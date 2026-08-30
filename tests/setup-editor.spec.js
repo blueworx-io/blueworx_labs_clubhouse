@@ -78,14 +78,15 @@ test.describe('@wordpress Clubhouse Setup', () => {
     await signIn(page, OWNER);
     await openSetup(page);
 
-    // Away from whatever is there and then back, for two reasons: filling a
-    // field with the value it already holds leaves the screen clean and Save
-    // rightly disabled, and the accent is site-wide — a spec that left the
-    // club a different colour would break every spec that reads one.
-    const was = await page.locator('#accent').inputValue();
-    const other = was.toLowerCase() === '#0b6fd1' ? '#166534' : '#0b6fd1';
+    // Away and then back to the shipped lime, for two reasons: filling a field
+    // with the value it already holds leaves the screen clean and Save rightly
+    // disabled, and the accent is site-wide — the colour specs read the tint
+    // derived from it, so this has to end where they expect it, not merely
+    // where it started. A run that ended halfway through would otherwise leave
+    // the club a colour every later run inherits.
+    const SHIPPED = '#c6f24e';
 
-    for (const colour of [other, was]) {
+    for (const colour of ['#0b6fd1', SHIPPED]) {
       await page.locator('#accent').fill(colour);
       await page.locator('.bw-savebar button', { hasText: 'Save changes' }).click();
       await expect(page.locator('.bw-savebar')).toContainText('Everything is saved', { timeout: 30_000 });
