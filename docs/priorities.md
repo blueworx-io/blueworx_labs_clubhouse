@@ -37,8 +37,7 @@ one screen at a time, and the last of it went with Setup, along with
 | --- | --- | --- |
 | [#256](../../issues/256) | An honours board page | Club champions, chairpersons, captains, with categories the club sets and two tiers of filters. Phase 3 has landed, so it can be built the new way now — once, rather than the old way twice. |
 | [#294](../../issues/294) | Point the AI import at the page fields, not the old catalogue | Two declarations of the same fields, held together by a lockstep test. Worth doing before that test is all that stands between them. |
-| [#274](../../issues/274) | Put a shop in the CI test harness | Genuinely uncertain: SureCart has to install and authenticate in CI, which nobody has proved yet. |
-| [#295](../../issues/295) | A tier whose shop product was deleted reads as "Not connected" | Small. It was parked behind phase 1, which turns out to be done — worth re-reading before starting to see whether anything still blocks it. |
+| [#274](../../issues/274) | Put a shop in the CI test harness | Deferred 30 August 2026 — the shop is hand-checked before a release, and that is accepted. Genuinely uncertain anyway: SureCart has to install and authenticate in CI, which nobody has proved yet. |
 
 **Cannot start yet:** [#229](../../issues/229), pulling the social feed
 straight from Facebook or Instagram. It needs Meta app review before a line of

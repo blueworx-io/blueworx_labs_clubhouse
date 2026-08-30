@@ -214,8 +214,96 @@ final class Blueworx_Clubhouse_Page_Editors {
 	public static function declare_screens(): void {
 		foreach ( self::screens( Blueworx_Clubhouse_Products_Source::get() ) as $screen ) {
 			$screen['tabs'] = self::with_suggestions( $screen['tabs'] );
+			$screen['tabs'] = self::with_sold_out_prices( $screen['tabs'] );
 			\Blueworx\PageEditor\v1\Editor::register( $screen );
 		}
+	}
+
+	/**
+	 * Keep a tier's stored product on its picker even after the shop stops
+	 * selling it (issue #295).
+	 *
+	 * A picker is built from its declared options and never sees the stored
+	 * value, so a tier connected to a deleted product drew as "Not connected"
+	 * — while still charging exactly what it always had. Nothing was lost, but
+	 * an owner could reconnect it to the wrong thing without ever being told
+	 * the old one had gone.
+	 *
+	 * So the stored id is added back as an option of its own, saying what
+	 * happened. Done here rather than in Page_Fields for the same reason as
+	 * the link suggestions: this reads what the club has actually saved, which
+	 * that class is deliberately kept free of.
+	 *
+	 * @param array<int,array<string,mixed>> $tabs
+	 * @return array<int,array<string,mixed>>
+	 */
+	private static function with_sold_out_prices( array $tabs ): array {
+		$stored = self::stored_price_ids();
+		if ( array() === $stored ) {
+			return $tabs;
+		}
+		foreach ( $tabs as &$tab ) {
+			foreach ( $tab['panels'] as &$panel ) {
+				foreach ( $panel['fields'] as &$field ) {
+					if ( 'repeater' !== ( $field['kind'] ?? '' ) || ! isset( $field['fields'] ) ) {
+						continue;
+					}
+					foreach ( $field['fields'] as &$cell ) {
+						if ( in_array( $cell['id'] ?? '', array( 'price_id', 'price_id_annual' ), true ) ) {
+							$cell['options'] = self::with_missing( (array) ( $cell['options'] ?? array() ), $stored );
+						}
+					}
+					unset( $cell );
+				}
+				unset( $field );
+			}
+			unset( $panel );
+		}
+		unset( $tab );
+		return $tabs;
+	}
+
+	/**
+	 * The options a picker already offers, plus any stored id missing from
+	 * them.
+	 *
+	 * @param array<int,array{value:string,label:string}> $options
+	 * @param array<int,string>                           $stored
+	 * @return array<int,array{value:string,label:string}>
+	 */
+	private static function with_missing( array $options, array $stored ): array {
+		$known = array_column( $options, 'value' );
+		foreach ( $stored as $id ) {
+			if ( in_array( $id, $known, true ) ) {
+				continue;
+			}
+			$options[] = array(
+				'value' => $id,
+				'label' => 'No longer in your shop — still charging what it did',
+			);
+		}
+		return $options;
+	}
+
+	/**
+	 * Every product id the club's tiers are connected to, monthly and annual.
+	 *
+	 * @return array<int,string>
+	 */
+	private static function stored_price_ids(): array {
+		if ( ! class_exists( 'Blueworx_Clubhouse_Page_Content' ) || ! function_exists( 'get_option' ) ) {
+			return array();
+		}
+		$out = array();
+		foreach ( ( new Blueworx_Clubhouse_Page_Content() )->get_items( 'membership', 'tiers' ) as $tier ) {
+			foreach ( array( 'price_id', 'price_id_annual' ) as $key ) {
+				$id = (string) ( ( (array) $tier )[ $key ] ?? '' );
+				if ( '' !== $id && ! in_array( $id, $out, true ) ) {
+					$out[] = $id;
+				}
+			}
+		}
+		return $out;
 	}
 
 	/**
