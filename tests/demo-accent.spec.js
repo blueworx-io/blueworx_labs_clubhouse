@@ -110,14 +110,28 @@ test('a mangled accent cookie is survivable, not fatal', async ({ page }) => {
   await openDemo(page);
   // A stray '%' makes decodeURIComponent throw; an uncaught URIError would kill the
   // pre-paint apply for every page load until the cookie is cleared.
+  //
+  // The cookie is set for whichever harness is answering, read off the page
+  // that just loaded. Pinned to the preview's own address, it was set for an
+  // origin the WordPress run never visits — so against WordPress this test was
+  // asserting that a cookie it had not set did no harm.
   await page.context().addCookies([
-    { name: 'clubhouse_demo_accent', value: '%E0%A4%A', url: 'http://127.0.0.1:8124' },
+    { name: 'clubhouse_demo_accent', value: '%E0%A4%A', url: page.url() },
   ]);
   const errors = [];
-  page.on('pageerror', (e) => errors.push(e.message));
+  page.on('pageerror', (e) => errors.push(e));
   await page.goto('?demo=1');
   await openDemo(page);
-  expect(errors).toEqual([]);
+
+  // This plugin's own scripts only. A real WordPress site runs other people's
+  // plugins, and the harness has SureCart on it, whose front-end modules
+  // reference `wp` before WordPress has defined it — on every page of the site,
+  // Clubhouse's or not. Reporting that here would be reporting SureCart's bug
+  // as this plugin's, which is what happened (issue #290). What this test is
+  // for is the accent script surviving a cookie it cannot decode.
+  const ours = errors.filter((e) => !/\/plugins\/(?!blueworx-labs-clubhouse\/)/.test(e.stack || ''));
+  expect(ours.map((e) => e.message)).toEqual([]);
+
   await expect(page.locator('.clubhouse-demo__swatch')).toHaveCount(5);
   await expect(page.locator('[data-clubhouse-accent][aria-pressed="true"]')).toHaveCount(0);
 });
