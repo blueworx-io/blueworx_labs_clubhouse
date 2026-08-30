@@ -35,10 +35,9 @@ closed with phase 2.
 | # | Do | Why here |
 | --- | --- | --- |
 | [#256](../../issues/256) | An honours board page | Club champions, chairpersons, captains, with categories the club sets and two tiers of filters. Phase 3 has landed, so it can be built the new way now — once, rather than the old way twice. |
-| [#278](../../issues/278) | Custom member fields as columns on the members list | Ordinary work, independent of the phases above. |
+| [#294](../../issues/294) | Point the AI import at the page fields, not the old catalogue | Two declarations of the same fields, held together by a lockstep test. Worth doing before that test is all that stands between them. |
 | [#274](../../issues/274) | Put a shop in the CI test harness | Genuinely uncertain: SureCart has to install and authenticate in CI, which nobody has proved yet. |
-| [#290](../../issues/290) | A demo page throws "wp is not defined" on real WordPress | One test fails against real WordPress. Found while fixing #288. |
-| [#291](../../issues/291) | "Search & sharing" prints its ampersand as an entity | One label, stored pre-escaped and escaped again. |
+| [#295](../../issues/295) | A tier whose shop product was deleted reads as "Not connected" | Small, and needs a change to the page editor library first, so it waits on phase 1. |
 
 **Cannot start yet:** [#229](../../issues/229), pulling the social feed
 straight from Facebook or Instagram. It needs Meta app review before a line of
@@ -58,6 +57,25 @@ now. They were the top two on this list until they moved, so nothing here is
 waiting on them.
 
 ## Done, and worth knowing
+
+**A club page is edited on the page itself** (phase 3, v0.98.0). The Club Pages
+screen is deleted. Three things it quietly owned went with it and needed homes
+first: the header menu's save, the reminder about pictures an import could not
+fetch, and an owner's route into a page at all.
+
+**That route is the thing to remember.** Deleting Club Pages locked owners and
+content editors out of every page (fixed in v0.99.2). The page capabilities had
+been stripped from both roles precisely because that screen existed, and
+WordPress then refused them the Pages list — which is now the only way into a
+page's editor. Nothing caught it because every browser spec signed in as an
+administrator, who holds every capability WordPress has and so can never notice
+a role missing one. There is an owner in the harness now
+([owner-edits-a-club-page.spec.js](../tests/owner-edits-a-club-page.spec.js));
+use it whenever a change touches what a role can reach.
+
+**Custom member fields show as columns on the members list**
+([#278](../../issues/278), v0.99.0), sortable, with private fields withheld from
+anybody who could not already read them.
 
 **Club pages are real WordPress pages.** They used to be rewrite-rule routes
 with nothing in the database behind them, which cost the SEO we cannot get back
