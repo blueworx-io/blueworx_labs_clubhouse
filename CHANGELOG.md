@@ -5,6 +5,10 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.101.1
+
+- A membership tier connected to a product you have since deleted from your shop used to read as "Not connected", even though it was still charging what it always had. It now says the product is no longer in your shop, so you can see what happened before you reconnect the tier to something else.
+
 ## 0.101.0
 
 - Your sports, teams, fixtures, events, sponsors and people are edited on their own screens now, the same as the rest of Clubhouse — one save bar that tells you what is unsaved, instead of a "Details" box halfway down WordPress's own editor.
