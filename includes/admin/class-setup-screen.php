@@ -470,6 +470,7 @@ final class Blueworx_Clubhouse_Setup_Screen {
 		$out .= self::text_field( $name . '[help]', 'A note under the box (optional)', (string) ( $field['help'] ?? '' ) );
 		$out .= '</div>';
 		$out .= self::toggle( $name . '[required]', 'A member must fill this in before they can save', ! empty( $field['required'] ) );
+		$out .= self::toggle( $name . '[column]', 'Show the answers as a column on the members list', ! empty( $field['column'] ) );
 
 		if ( ! $blank ) {
 			// Two ways out, because they are not the same thing. Remove takes the

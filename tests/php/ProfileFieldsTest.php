@@ -48,6 +48,7 @@ final class ProfileFieldsTest extends TestCase {
 				'help'     => '',
 				'required' => false,
 				'who'      => 'member',
+				'column'   => false,
 			),
 			$field
 		);
