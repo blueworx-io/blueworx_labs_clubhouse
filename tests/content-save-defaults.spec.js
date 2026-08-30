@@ -26,7 +26,9 @@ async function openGlobalContent(page) {
     waitUntil: 'domcontentloaded',
   });
   // The editor is a JS app; nothing below exists until it has mounted.
-  await expect(page.locator('.bw-savebar')).toBeVisible();
+  // 30 seconds, not the default five: this is a JS app mounting on a server
+  // that answers one request at a time (see docs/testing.md).
+  await expect(page.locator('.bw-savebar')).toBeVisible({ timeout: 30_000 });
 }
 
 const SWITCHES = ['Show the cookie notice', 'Show announcement bar'];
@@ -54,7 +56,7 @@ test('saving Global content leaves the cookie notice and banner alone @wordpress
   const heading = page.getByLabel('Heading').first();
   await heading.fill('Welcome to the club');
   await page.getByRole('button', { name: /save/i }).click();
-  await expect(page.locator('.bw-savebar')).toContainText('Everything is saved');
+  await expect(page.locator('.bw-savebar')).toContainText('Everything is saved', { timeout: 30_000 });
 
   await page.goto('/?clubhouse_page=privacy');
   await expect(page.locator('#ch-cookie'), 'a save switched the cookie notice off').toBeVisible();

@@ -85,13 +85,21 @@ async function setPackVisible(page, visible) {
     waitUntil: 'domcontentloaded',
   });
   // The editor is a JS app; nothing below exists until it has mounted.
-  await expect(page.locator('.bw-savebar')).toBeVisible({ timeout: 30_000 });
+  await expect(page.locator('.bw-savebar')).toContainText('Everything is saved', { timeout: 30_000 });
 
-  const toggle = page.locator('#welcome__shown');
-  await expect(toggle).toBeVisible();
+  // The panel's own Shown switch. Located as the panel's one checkbox rather
+  // than by a label, for the reason club-page-editor.spec.js documents: the
+  // library draws the switch as a styled span with the real input behind it,
+  // and that input carries no id of its own.
+  const panel = page
+    .locator('section.bw-card')
+    .filter({ has: page.getByRole('heading', { name: 'Welcome pack', exact: true }) });
+  const toggle = panel.locator('input[type="checkbox"]');
+  await expect(toggle).toBeAttached({ timeout: 30_000 });
+
   if ((await toggle.isChecked()) !== visible) {
     await toggle.setChecked(visible);
-    await page.locator('.bw-savebar button', { hasText: 'Save changes' }).click();
+    await page.getByRole('button', { name: 'Save changes' }).click();
   }
   await expect(page.locator('.bw-savebar')).toContainText('Everything is saved', { timeout: 30_000 });
 }
