@@ -89,13 +89,15 @@ test.describe.serial('profile builder', () => {
     await expect(fieldRow(page, 0).locator('#key-0')).toHaveValue('shirt_size');
     await expect(fieldRow(page, 1).locator('#key-1')).toHaveValue('squad_number');
     await expect(fieldRow(page, 2).locator('#key-2')).toHaveValue('notes');
+    await expect(fieldRow(page, 3).locator('#key-3')).toHaveValue('emergency_contact');
     // Every kind of answer, and every setting for who fills it in. One more
     // option than the model has in each case: the library's select carries a
     // leading blank.
     await expect(fieldRow(page, 0).locator('#type-0 option')).toHaveCount(8);
     await expect(fieldRow(page, 0).locator('#who-0 option')).toHaveCount(4);
-    // No blank row past the end — a row is added deliberately now.
-    await expect(page.locator('.bw-repeater__row')).toHaveCount(3);
+    // The four the run seeded, and no blank row past the end — a row is added
+    // deliberately now.
+    await expect(page.locator('.bw-repeater__row')).toHaveCount(4);
   });
 
   test('an owner adds a field and then removes it', async ({ page }) => {
@@ -104,23 +106,23 @@ test.describe.serial('profile builder', () => {
     await openSetupMembers(page);
 
     await page.locator('button', { hasText: 'Add a row' }).click();
-    await fieldRow(page, 3).locator('#label-3').fill('Dietary needs');
-    await fieldRow(page, 3).locator('#type-3').selectOption('text');
-    await fieldRow(page, 3).locator('#who-3').selectOption('member');
+    await fieldRow(page, 4).locator('#label-4').fill('Dietary needs');
+    await fieldRow(page, 4).locator('#type-4').selectOption('text');
+    await fieldRow(page, 4).locator('#who-4').selectOption('member');
     await saveSetup(page);
 
     await page.reload({ waitUntil: 'domcontentloaded' });
     await showMembersTab(page);
     // Saved, and given a permanent key of its own from the label.
-    await expect(fieldRow(page, 3).locator('#key-3')).toHaveValue('dietary_needs');
+    await expect(fieldRow(page, 4).locator('#key-4')).toHaveValue('dietary_needs');
 
-    // Removing it takes it off the screen. The other three are untouched.
-    await fieldRow(page, 3).locator('[aria-label="Remove this row"]').click();
+    // Removing it takes it off the screen. The other four are untouched.
+    await fieldRow(page, 4).locator('[aria-label="Remove this row"]').click();
     await saveSetup(page);
 
     await page.reload({ waitUntil: 'domcontentloaded' });
     await showMembersTab(page);
-    await expect(page.locator('.bw-repeater__row')).toHaveCount(3);
+    await expect(page.locator('.bw-repeater__row')).toHaveCount(4);
     await expect(fieldRow(page, 0).locator('#key-0')).toHaveValue('shirt_size');
   });
 
