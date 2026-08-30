@@ -140,14 +140,26 @@ final class Blueworx_Clubhouse_Collection_Meta_Boxes {
 		}
 		$key = substr( $col, strlen( self::PREFIX ) );
 		if ( 'clubhouse_fixture' === $type && 'matchup' === $key ) {
-			return self::e( (string) get_post_meta( $post_id, 'home_team', true ) . ' v ' . (string) get_post_meta( $post_id, 'away_team', true ) );
+			return self::e( self::field( $post_id, $type, 'home_team' ) . ' v ' . self::field( $post_id, $type, 'away_team' ) );
 		}
 		if ( 'clubhouse_fixture' === $type && 'result' === $key ) {
-			$score   = (string) get_post_meta( $post_id, 'score', true );
-			$outcome = (string) get_post_meta( $post_id, 'outcome', true );
+			$score   = self::field( $post_id, $type, 'score' );
+			$outcome = self::field( $post_id, $type, 'outcome' );
 			return self::e( trim( $score . ( '' !== $outcome ? ' (' . $outcome . ')' : '' ) ) );
 		}
-		return self::e( (string) get_post_meta( $post_id, $key, true ) );
+		return self::e( self::field( $post_id, $type, $key ) );
+	}
+
+	/**
+	 * One field's stored value, at the address the page editor library reads.
+	 *
+	 * Falls back to the bare key a value used to live under, so a list is not
+	 * blank between a plugin update and the migration that runs on the next
+	 * admin request.
+	 */
+	private static function field( int $post_id, string $type, string $key ): string {
+		$value = (string) get_post_meta( $post_id, Blueworx_Clubhouse_Collection_Meta::meta_key( $type, $key ), true );
+		return '' !== $value ? $value : (string) get_post_meta( $post_id, $key, true );
 	}
 
 	public static function enqueue( string $hook ): void {

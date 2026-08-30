@@ -66,7 +66,11 @@ final class Blueworx_Clubhouse_Collection_Types {
 				'rewrite'      => false,
 			) );
 			foreach ( self::META[ $type ] as $key ) {
-				register_post_meta( $type, $key, array(
+				// The address the page editor library reads and writes. The
+				// bare key these used to be registered under is left
+				// unregistered on purpose: it still holds the value it held
+				// before the migration, and nothing reads it.
+				register_post_meta( $type, Blueworx_Clubhouse_Collection_Meta::meta_key( $type, $key ), array(
 					'type'         => 'string',
 					'single'       => true,
 					'show_in_rest' => false,

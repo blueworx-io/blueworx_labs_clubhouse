@@ -32,8 +32,14 @@ final class ImportApplierCollectionsTest extends TestCase {
 		$this->assertSame( 'Squash', $insert['post_title'] );
 		$this->assertSame( 'publish', $insert['post_status'] );
 
+		// At the address the collection's own editor reads, not the bare field
+		// name it used to be — an import that wrote the old one would leave a
+		// club's imported season invisible on every screen.
 		$meta = wp_stub_calls( 'update_post_meta' );
-		$this->assertSame( 'subtitle', $meta[0]['args'][1] );
+		$this->assertSame(
+			Blueworx_Clubhouse_Collection_Meta::meta_key( 'clubhouse_sport', 'subtitle' ),
+			$meta[0]['args'][1]
+		);
 		$this->assertSame( 'Two courts', $meta[0]['args'][2] );
 	}
 
@@ -119,7 +125,8 @@ final class ImportApplierCollectionsTest extends TestCase {
 		Blueworx_Clubhouse_Import_Applier::apply( $plan, $this->storage );
 
 		$this->assertSame( 'https://e.test/s.jpg', wp_stub_calls( 'media_sideload_image' )[0]['args'][0] );
-		$image_meta = array_values( array_filter( wp_stub_calls( 'update_post_meta' ), static fn( $c ) => 'image' === $c['args'][1] ) );
+		$image_key  = Blueworx_Clubhouse_Collection_Meta::meta_key( 'clubhouse_sport', 'image' );
+		$image_meta = array_values( array_filter( wp_stub_calls( 'update_post_meta' ), static fn( $c ) => $image_key === $c['args'][1] ) );
 		$this->assertSame( 500, $image_meta[0]['args'][2] );
 	}
 
