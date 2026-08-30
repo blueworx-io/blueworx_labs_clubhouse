@@ -62,10 +62,14 @@ final class Blueworx_Clubhouse_Setup_Storage {
 			'demo_active'       => ( new Blueworx_Clubhouse_Demo_State( $this->storage ) )->is_on(),
 		);
 
+		// The page's own status is the fact; the stored flag is the fallback
+		// for a site whose pages have not been created yet. See
+		// Visibility::page_status_is_visible().
 		$vis = new Blueworx_Clubhouse_Visibility( $this->storage );
 		foreach ( Blueworx_Clubhouse_Setup_Editor::pages() as $page ) {
+			$status = $vis->page_status_is_visible( $page['page'] );
 			$values[ Blueworx_Clubhouse_Setup_Fields::PAGE_FIELD_PREFIX . $page['page'] ]
-				= $vis->is_page_visible( $page['page'] );
+				= null === $status ? $vis->is_page_visible( $page['page'] ) : $status;
 		}
 
 		return $values;

@@ -51,6 +51,39 @@ final class Blueworx_Clubhouse_Visibility {
 		return (bool) ( $state['pages'][ $page ] ?? true );
 	}
 
+	/**
+	 * Whether the real WordPress page behind this key is published, or null
+	 * when there is no page to ask — a site whose club pages have not been
+	 * created yet, or a preview with no WordPress under it.
+	 *
+	 * This is what Setup's Visibility switch reads. set_page_visible() writes
+	 * the flag and the page's status together, so the two normally agree; they
+	 * stop agreeing the moment somebody publishes or drafts the page from
+	 * WordPress's own Pages list, which is a thing an owner can now do. The
+	 * page's own status is the fact worth believing — it is what decides
+	 * whether a visitor gets the page or a "not found" — so the switch asks
+	 * that, and falls back to the stored flag only when there is nothing to
+	 * ask.
+	 */
+	public function page_status_is_visible( string $page ): ?bool {
+		if ( ! class_exists( 'Blueworx_Clubhouse_Club_Pages' ) || ! function_exists( 'get_post_status' ) ) {
+			return null;
+		}
+		$slug = Blueworx_Clubhouse_Club_Pages::slug_for_page_key( $page );
+		if ( null === $slug ) {
+			return null;
+		}
+		$post_id = Blueworx_Clubhouse_Club_Pages::post_id( $slug );
+		if ( $post_id <= 0 ) {
+			return null;
+		}
+		$status = get_post_status( $post_id );
+		if ( ! is_string( $status ) || '' === $status ) {
+			return null;
+		}
+		return Blueworx_Clubhouse_Club_Pages::status_for( true ) === $status;
+	}
+
 	public function is_section_visible( string $page, string $section ): bool {
 		$state = $this->state();
 		$key   = $this->section_key( $page, $section );
