@@ -108,15 +108,15 @@ final class AccessScreenTest extends TestCase {
 	}
 
 	public function test_role_tags_render_one_chip_per_role(): void {
-		$html = Blueworx_Clubhouse_Access_Screen::role_tags( array( 'Administrator', 'ClubHouse - Owner' ) );
-		$this->assertStringContainsString( 'class="clubhouse-roletags"', $html );
-		$this->assertSame( 2, substr_count( $html, 'class="clubhouse-roletag"' ) );
+		$html = Blueworx_Clubhouse_Access_Screen::role_chips( array( 'Administrator', 'ClubHouse - Owner' ) );
+		$this->assertStringContainsString( 'class="bw-chips"', $html );
+		$this->assertSame( 2, substr_count( $html, 'class="bw-chip bw-chip--plain"' ) );
 		$this->assertStringContainsString( 'Administrator', $html );
 		$this->assertStringContainsString( 'ClubHouse - Owner', $html );
 	}
 
 	/** Nothing to say, nothing rendered — no empty chrome in the top bar. */
 	public function test_no_roles_renders_no_tag_strip(): void {
-		$this->assertSame( '', Blueworx_Clubhouse_Access_Screen::role_tags( array() ) );
+		$this->assertSame( '', Blueworx_Clubhouse_Access_Screen::role_chips( array() ) );
 	}
 }

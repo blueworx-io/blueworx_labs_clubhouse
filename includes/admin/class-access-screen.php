@@ -38,33 +38,10 @@ final class Blueworx_Clubhouse_Access_Screen {
 	 * administrator — the screens take that as a model flag rather than deciding
 	 * it, so they stay WordPress-free.
 	 *
-	 * Still on the old classes, on purpose. Its callers include Setup and Club
-	 * Pages, which the page editor library replaces in the next two phases and
-	 * which are still styled by admin-setup.css. Moving these chips to the
-	 * design system now would leave those top bars unstyled for two releases.
-	 *
-	 * @param array<int,string> $labels Role display labels, seniority order.
-	 */
-	public static function role_tags( array $labels ): string {
-		if ( array() === $labels ) {
-			return '';
-		}
-		$out = '<div class="clubhouse-roletags" aria-label="Roles with access to this page">'
-			. '<span class="clubhouse-roletags__k">Access</span>';
-		foreach ( $labels as $label ) {
-			$out .= '<span class="clubhouse-roletag">' . self::esc( (string) $label ) . '</span>';
-		}
-		return $out . '</div>';
-	}
-
-	/**
-	 * The same tags, in the design system's chips, for a screen that has been
-	 * moved onto it.
-	 *
-	 * Two versions rather than one because the six screens showing these tags
-	 * are moving over across three releases, and a single markup cannot be
-	 * right on both sides of that. role_tags() and this method converge into
-	 * one when Setup and Club Pages become page editor screens.
+	 * There used to be a second version of this in the old Setup and Club Pages
+	 * markup, because the six screens showing these tags moved onto the design
+	 * system across three releases and one markup could not be right on both
+	 * sides of that. Setup was the last of them, so the two have converged.
 	 *
 	 * @param array<int,string> $labels Role display labels, seniority order.
 	 */

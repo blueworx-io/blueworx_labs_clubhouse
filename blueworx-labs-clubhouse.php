@@ -40,7 +40,6 @@ require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/frontend/class-auth.php';
 require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/frontend/class-seo-head.php';
 require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/admin/class-admin-menu-icons.php';
 require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/admin/class-admin-assets.php';
-require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/admin/class-setup-controller.php';
 require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/admin/class-demo-controller.php';
 require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/admin/class-owner-role.php';
 require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/admin/class-access-controller.php';
