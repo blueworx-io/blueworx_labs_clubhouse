@@ -78,12 +78,18 @@ test.describe('@wordpress Clubhouse Setup', () => {
     await signIn(page, OWNER);
     await openSetup(page);
 
-    // Club blue, not the shipped lime: filling a field with the value it
-    // already holds leaves the screen clean and the save button disabled.
-    await page.locator('#accent').fill('#0b6fd1');
-    await page.locator('.bw-savebar button', { hasText: 'Save changes' }).click();
+    // Away from whatever is there and then back, for two reasons: filling a
+    // field with the value it already holds leaves the screen clean and Save
+    // rightly disabled, and the accent is site-wide — a spec that left the
+    // club a different colour would break every spec that reads one.
+    const was = await page.locator('#accent').inputValue();
+    const other = was.toLowerCase() === '#0b6fd1' ? '#166534' : '#0b6fd1';
 
-    await expect(page.locator('.bw-savebar')).toContainText('Everything is saved', { timeout: 30_000 });
+    for (const colour of [other, was]) {
+      await page.locator('#accent').fill(colour);
+      await page.locator('.bw-savebar button', { hasText: 'Save changes' }).click();
+      await expect(page.locator('.bw-savebar')).toContainText('Everything is saved', { timeout: 30_000 });
+    }
   });
 
   test('switching a page off drafts it, and its address stops resolving', async ({ page }) => {
