@@ -58,7 +58,7 @@ final class Blueworx_Clubhouse_Setup_Storage {
 			'mail_from_name'    => $mail->get_from_name(),
 			'mail_from_address' => $mail->get_from_address(),
 			'menu'              => self::menu_rows( new Blueworx_Clubhouse_Menu( $this->storage ) ),
-			'profile_fields'    => ( new Blueworx_Clubhouse_Profile_Store( $this->storage ) )->fields(),
+			'profile_fields'    => self::profile_rows( new Blueworx_Clubhouse_Profile_Store( $this->storage ) ),
 			'demo_active'       => ( new Blueworx_Clubhouse_Demo_State( $this->storage ) )->is_on(),
 		);
 
@@ -150,6 +150,24 @@ final class Blueworx_Clubhouse_Setup_Storage {
 		( new Blueworx_Clubhouse_Theme_Cache( $this->storage ) )->invalidate();
 
 		return true;
+	}
+
+	/**
+	 * A club's member questions as repeater rows.
+	 *
+	 * Only one thing changes shape: a field's choices are stored as a list and
+	 * edited as a textarea, one per line. Profile_Fields::choices() already
+	 * takes either, so the write direction needs nothing.
+	 *
+	 * @return array<int,array<string,mixed>>
+	 */
+	private static function profile_rows( Blueworx_Clubhouse_Profile_Store $profile ): array {
+		$rows = array();
+		foreach ( $profile->fields() as $field ) {
+			$field['choices'] = implode( "\n", (array) ( $field['choices'] ?? array() ) );
+			$rows[]           = $field;
+		}
+		return $rows;
 	}
 
 	/**

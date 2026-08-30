@@ -20,21 +20,18 @@ async function setPageVisible(page, slug, visible) {
   await page.goto('/wp-admin/admin.php?page=clubhouse-setup', {
     waitUntil: 'domcontentloaded',
   });
-  // The page switches live on the Visibility tab, and each page has its own
-  // sub-tab within it. Both have to be open before the checkbox is on screen.
-  // force, for the reason menu-editor.spec.js documents: this screen's media
-  // scripts keep reflowing the chrome, so the "stable" wait never converges.
-  await page.click('.clubhouse-tab[data-tab="visibility"]', { force: true });
-  await page.click(`.clubhouse-vistab[data-vistab="${slug}"]`, { force: true });
+  // The editor mounts itself, so nothing on the screen is real until the save
+  // bar is.
+  await expect(page.locator('.bw-savebar')).toBeVisible({ timeout: 30_000 });
+  await page.locator('.bw-tab', { hasText: 'Visibility' }).first().click();
 
-  const toggle = page.locator(`input[name="clubhouse_page[${slug}]"]`);
+  const toggle = page.locator(`#page_visible_${slug}`);
   await expect(toggle).toBeVisible();
   if ((await toggle.isChecked()) !== visible) {
-    await toggle.click({ force: true });
+    await toggle.setChecked(visible);
+    await page.locator('.bw-savebar button', { hasText: 'Save changes' }).click();
   }
-  // force, for the reason menu-editor.spec.js documents.
-  await page.locator('button[name="clubhouse_setup_submit"]').click({ force: true });
-  await expect(page.locator('.notice, .clubhouse-notice').first()).toBeVisible();
+  await expect(page.locator('.bw-savebar')).toContainText('Everything is saved', { timeout: 30_000 });
 }
 
 /** The titles WordPress lists under one post status on its own Pages screen. */

@@ -261,6 +261,15 @@ final class Blueworx_Clubhouse_Setup_Fields {
 	 * @return array<string,mixed>
 	 */
 	private static function members_tab(): array {
+		$types = array();
+		foreach ( Blueworx_Clubhouse_Profile_Fields::TYPES as $value => $label ) {
+			$types[] = array( 'value' => (string) $value, 'label' => (string) $label );
+		}
+		$who = array();
+		foreach ( Blueworx_Clubhouse_Profile_Fields::WHO as $value => $label ) {
+			$who[] = array( 'value' => (string) $value, 'label' => (string) $label );
+		}
+
 		return array(
 			'id'     => 'members',
 			'label'  => 'Members',
@@ -275,7 +284,31 @@ final class Blueworx_Clubhouse_Setup_Fields {
 							'kind'       => 'repeater',
 							'label'      => 'Member fields',
 							'capability' => self::cap(),
+							// The cells are Profile_Fields' own definition, read
+							// from it rather than restated: the two drifting
+							// apart is a club losing a field's type or who
+							// fills it in, silently, on the next save.
 							'fields'     => array(
+								// The key is generated from the label once and
+								// then never changes — it is what keeps a
+								// renamed question attached to every answer
+								// already given.
+								//
+								// The old screen carried it as a hidden input.
+								// The library has no hidden cell, and its
+								// server-side sanitiser rebuilds every row from
+								// the declared cells alone, so a key that is not
+								// a cell does not survive a save at all. Shown,
+								// then — because the alternative is re-attaching
+								// keys by row position, and the repeater can
+								// reorder rows, which would hand one member's
+								// answers to another field.
+								array(
+									'id'    => 'key',
+									'kind'  => 'text',
+									'label' => 'Reference',
+									'help'  => 'Set once from the question, and used to store every answer to it. Leave it alone — changing it starts a new, empty field.',
+								),
 								array(
 									'id'       => 'label',
 									'kind'     => 'text',
@@ -286,17 +319,23 @@ final class Blueworx_Clubhouse_Setup_Fields {
 									'id'      => 'type',
 									'kind'    => 'select',
 									'label'   => 'Answer',
-									'options' => array(
-										array( 'value' => 'text', 'label' => 'Short text' ),
-										array( 'value' => 'textarea', 'label' => 'Long text' ),
-										array( 'value' => 'select', 'label' => 'Choice' ),
-										array( 'value' => 'toggle', 'label' => 'Yes or no' ),
-									),
+									'options' => $types,
 								),
 								array(
-									'id'    => 'options',
+									'id'    => 'choices',
 									'kind'  => 'textarea',
 									'label' => 'Choices, one per line',
+								),
+								array(
+									'id'      => 'who',
+									'kind'    => 'select',
+									'label'   => 'Who fills it in',
+									'options' => $who,
+								),
+								array(
+									'id'    => 'help',
+									'kind'  => 'text',
+									'label' => 'Hint under the question',
 								),
 								array(
 									'id'    => 'required',
@@ -304,9 +343,9 @@ final class Blueworx_Clubhouse_Setup_Fields {
 									'label' => 'Must be answered',
 								),
 								array(
-									'id'    => 'private',
+									'id'    => 'column',
 									'kind'  => 'toggle',
-									'label' => 'Only staff can see it',
+									'label' => 'Show the answers as a column',
 								),
 							),
 						),

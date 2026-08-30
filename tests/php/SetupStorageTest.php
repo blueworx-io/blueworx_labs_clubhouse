@@ -80,6 +80,43 @@ final class SetupStorageTest extends TestCase {
 		);
 	}
 
+	/**
+	 * The key is what every member's answer is stored under, so it has to
+	 * survive the round trip through the screen. The old builder carried it in
+	 * a hidden input; the library rebuilds a repeater row from its declared
+	 * cells alone, so it is a cell now — and this is the test that says so.
+	 */
+	public function test_renaming_a_question_keeps_the_key_its_answers_are_under(): void {
+		$storage = $this->storage();
+		$profile = new Blueworx_Clubhouse_Profile_Store( $storage );
+		$profile->save_fields( array( array( 'label' => 'Shirt size', 'type' => 'text' ) ) );
+
+		$rows = $this->bridge( $storage )->read()['profile_fields'];
+		$this->assertSame( 'shirt_size', $rows[0]['key'] );
+
+		$rows[0]['label'] = 'Kit size';
+		$this->bridge( $storage )->write( array( 'profile_fields' => $rows ) );
+
+		$after = $profile->fields();
+		$this->assertSame( 'Kit size', $after[0]['label'] );
+		$this->assertSame( 'shirt_size', $after[0]['key'] );
+	}
+
+	public function test_a_fields_choices_survive_the_round_trip(): void {
+		$storage = $this->storage();
+		$profile = new Blueworx_Clubhouse_Profile_Store( $storage );
+		$profile->save_fields(
+			array( array( 'label' => 'Shirt size', 'type' => 'select', 'choices' => array( 'Small', 'Large' ) ) )
+		);
+
+		$rows = $this->bridge( $storage )->read()['profile_fields'];
+		$this->assertSame( "Small\nLarge", $rows[0]['choices'] );
+
+		$this->bridge( $storage )->write( array( 'profile_fields' => $rows ) );
+
+		$this->assertSame( array( 'Small', 'Large' ), $profile->fields()[0]['choices'] );
+	}
+
 	public function test_it_reads_the_clubs_own_member_questions(): void {
 		$storage = $this->storage();
 		( new Blueworx_Clubhouse_Profile_Store( $storage ) )->save_fields(
