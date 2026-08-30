@@ -13,6 +13,19 @@ use PHPUnit\Framework\TestCase;
  */
 final class AdminPagesTest extends TestCase {
 
+	/**
+	 * A label is a label, not markup. Every screen that shows one escapes it on
+	 * the way out, so a label stored pre-escaped is escaped twice and prints its
+	 * entity — which is what "Search &amp; sharing" did on the access screen and
+	 * in the admin menu (issue #291).
+	 */
+	public function test_no_page_label_is_stored_pre_escaped(): void {
+		foreach ( Blueworx_Clubhouse_Admin_Pages::all() as $page ) {
+			$label = (string) $page['label'];
+			$this->assertSame( html_entity_decode( $label, ENT_QUOTES ), $label, $page['slug'] );
+		}
+	}
+
 	/** The registry names every ClubHouse page, and takes each cap from the page that enforces it. */
 	public function test_the_registry_reads_its_caps_from_the_pages_themselves(): void {
 		$by_slug = array();

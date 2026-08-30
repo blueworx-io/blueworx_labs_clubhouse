@@ -30,8 +30,8 @@ final class Blueworx_Clubhouse_Seo_Controller {
 	public static function add_menu(): void {
 		add_submenu_page(
 			Blueworx_Clubhouse_Setup_Controller::PAGE_SLUG,
-			'Search &amp; sharing',
-			'Search &amp; sharing',
+			'Search & sharing',
+			'Search & sharing',
 			self::CAPABILITY,
 			self::PAGE_SLUG,
 			array( self::class, 'render_page' )

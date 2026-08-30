@@ -75,7 +75,7 @@ final class Blueworx_Clubhouse_Admin_Pages {
 			),
 			array(
 				'slug'        => Blueworx_Clubhouse_Seo_Controller::PAGE_SLUG,
-				'label'       => 'Search &amp; sharing',
+				'label'       => 'Search & sharing',
 				'cap'         => Blueworx_Clubhouse_Seo_Controller::CAPABILITY,
 				'menu'        => Blueworx_Clubhouse_Setup_Controller::PAGE_SLUG,
 				'description' => 'How each page reads in search results and when it is shared.',
