@@ -46,6 +46,12 @@ INCLUDE=(
 	"includes"
 	"assets"
 	"templates"
+	# The vendored page editor library. The main plugin file requires it
+	# unguarded, so a zip without it fatals the moment WordPress activates the
+	# plugin — which is what happened when it was first vendored and this list
+	# was not updated. The "everything the plugin requires is in the zip" check
+	# below is what catches the next one of these.
+	"blueworx-page-editor"
 )
 
 # Belt and braces. The allowlist alone already excludes these, so a hit here means
@@ -147,6 +153,19 @@ check "no development files ship" "$(printf '%s' "$offenders" | sed '/^$/d')"
 
 check "the main plugin file sits directly inside $SLUG/" \
 	"$(printf '%s\n' "$ENTRIES" | grep -qxF "$SLUG/$SLUG.php" && true || echo "missing $SLUG/$SLUG.php")"
+
+# The allowlist above is a list of names, and a name is easy to forget. This
+# reads what the plugin actually requires on boot and insists the zip carries
+# it — so the next vendored directory is caught here rather than by a club
+# seeing a fatal error on activate.
+offenders=""
+while IFS= read -r required; do
+	[ -n "$required" ] || continue
+	printf '%s\n' "$ENTRIES" | grep -qxF "$SLUG/$required" || offenders="$offenders$required"$'\n'
+done <<EOF
+$(grep -oE "require(_once)? +__DIR__ *\. *'/[^']+'" "$ROOT/$SLUG.php" | grep -oE "/[^']+" | sed 's|^/||')
+EOF
+check "everything the plugin requires on boot is in the zip" "$(printf '%s' "$offenders" | sed '/^$/d')"
 
 [ "$fail" -eq 0 ] || die "the zip is not shippable — see the failures above"
 
