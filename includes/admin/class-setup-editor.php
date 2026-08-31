@@ -42,8 +42,81 @@ final class Blueworx_Clubhouse_Setup_Editor {
 		}
 		add_action( 'init', array( self::class, 'declare_screen' ), 20 );
 		// After Screen::menu() (default priority) has added the item, and after
-		// every other plugin's own admin_menu work.
+		// every other plugin's own admin_menu work — including the collection
+		// lists, which hang off this screen and have to be there before their
+		// order can be corrected.
+		add_action( 'admin_menu', array( self::class, 'ensure_own_submenu' ), 99 );
 		add_action( 'admin_menu', array( self::class, 'place_menu' ), 100 );
+	}
+
+	/**
+	 * Put Setup itself back on the menu.
+	 *
+	 * add_menu_page() makes the top-level Clubhouse item, and WordPress points
+	 * that item at the first thing hung underneath it. Nothing was hung
+	 * underneath it until the six collection lists moved there in v0.101.0 —
+	 * and from that release on, "Clubhouse" opened the Sports list and Setup
+	 * was on the menu nowhere at all. An owner could still reach it from the
+	 * panel on their dashboard; an administrator had only the address bar.
+	 *
+	 * WordPress's own menus answer this with a submenu entry pointing back at
+	 * the parent — "All Posts" under Posts. This is that entry, first in the
+	 * list because it is the screen the menu is named after.
+	 */
+	public static function ensure_own_submenu(): void {
+		if ( ! function_exists( 'add_submenu_page' ) ) {
+			return;
+		}
+		$items = $GLOBALS['submenu'][ self::PAGE_SLUG ] ?? array();
+		$has   = false;
+		foreach ( is_array( $items ) ? $items : array() as $item ) {
+			if ( is_array( $item ) && ( $item[2] ?? '' ) === self::PAGE_SLUG ) {
+				$has = true;
+				break;
+			}
+		}
+		if ( ! $has ) {
+			add_submenu_page(
+				self::PAGE_SLUG,
+				'Clubhouse Setup',
+				'Setup',
+				// The same capability the screen itself declares, so the menu
+				// can never offer a door that will not open.
+				Blueworx_Clubhouse_Owner_Capabilities::CONTENT_CAP,
+				self::PAGE_SLUG
+			);
+		}
+		self::name_own_submenu_and_put_it_first();
+	}
+
+	/**
+	 * Exactly one entry for this screen, called Setup, at the top of the list.
+	 *
+	 * WordPress names a menu's own first entry after the menu, so this one
+	 * arrived as a second row reading "Clubhouse" directly under the item
+	 * already reading "Clubhouse". It is the Setup screen, so it says Setup.
+	 */
+	private static function name_own_submenu_and_put_it_first(): void {
+		$items = $GLOBALS['submenu'][ self::PAGE_SLUG ] ?? null;
+		if ( ! is_array( $items ) ) {
+			return;
+		}
+		$ours = null;
+		$rest = array();
+		foreach ( $items as $item ) {
+			if ( null === $ours && is_array( $item ) && ( $item[2] ?? '' ) === self::PAGE_SLUG ) {
+				$item[0] = 'Setup';
+				$ours    = $item;
+				continue;
+			}
+			// A second entry for the same screen is a duplicate row, not a
+			// second door — dropped rather than renamed.
+			if ( is_array( $item ) && ( $item[2] ?? '' ) === self::PAGE_SLUG ) {
+				continue;
+			}
+			$rest[] = $item;
+		}
+		$GLOBALS['submenu'][ self::PAGE_SLUG ] = null === $ours ? $rest : array_merge( array( $ours ), $rest );
 	}
 
 	public static function declare_screen(): void {

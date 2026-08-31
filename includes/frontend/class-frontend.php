@@ -161,6 +161,13 @@ final class Blueworx_Clubhouse_Frontend {
 		Blueworx_Clubhouse_Checkout_Form::register();
 		add_action( 'init', array( self::class, 'maybe_upgrade' ) );
 		add_action( 'init', array( Blueworx_Clubhouse_Collection_Types::class, 'register' ) );
+		// The menu the six lists hang under. Priority 0, ahead of everything:
+		// WordPress works out a submenu's address from the parent as it stood
+		// when the submenu was added, so a parent registered afterwards leaves
+		// its children pointing at a bare slug that goes nowhere. Global
+		// content hangs off this one.
+		add_action( 'admin_menu', array( Blueworx_Clubhouse_Collection_Types::class, 'register_content_menu' ), 0 );
+		add_action( 'admin_menu', array( Blueworx_Clubhouse_Collection_Types::class, 'tidy_content_menu' ), 99 );
 		// Priority 20, not the default 10: the look stylesheet has to print after
 		// the active theme's. Our body rule is an element selector, so it ties on
 		// specificity with a theme reset's `body { font: inherit }` or

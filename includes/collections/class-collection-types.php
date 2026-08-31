@@ -59,11 +59,11 @@ final class Blueworx_Clubhouse_Collection_Types {
 				'labels'       => array( 'name' => $plural, 'singular_name' => $singular ),
 				'public'       => false,
 				'show_ui'      => true,
-				// Under the Clubhouse menu, beside everything else a club
-				// edits. The six used to nest under a "Collections" menu of
-				// their own, which meant two Clubhouse menus in the sidebar
-				// and two plausible places to look for a fixture.
-				'show_in_menu' => Blueworx_Clubhouse_Setup_Editor::PAGE_SLUG,
+				// Their own menu, under Clubhouse's. v0.101.0 folded the six
+				// into the Clubhouse menu; that buried Setup (WordPress opens
+				// a menu at its first child, which became Sports) and left one
+				// long list mixing the club's lists with its settings.
+				'show_in_menu' => self::CONTENT_SLUG,
 				'menu_icon'    => 'dashicons-groups',
 				'supports'     => array( 'title', 'page-attributes' ),
 				'has_archive'  => false,
@@ -84,4 +84,34 @@ final class Blueworx_Clubhouse_Collection_Types {
 		}
 	}
 
+	/**
+	 * The "Collections" menu the six lists hang under, directly below
+	 * Clubhouse. Hooked on admin_menu first, before anything is hung off it:
+	 * WordPress works out a submenu's address from the parent as it stood when
+	 * that submenu was added, so a parent registered afterwards leaves its
+	 * children pointing at a bare slug that goes nowhere.
+	 */
+	public static function register_content_menu(): void {
+		add_menu_page(
+			'Collections',
+			'Collections',
+			self::CONTENT_CAP,
+			self::CONTENT_SLUG,
+			'',
+			Blueworx_Clubhouse_Admin_Menu_Icons::data_uri( self::CONTENT_SLUG ),
+			4
+		);
+	}
+
+	/**
+	 * Drop the row WordPress adds for the menu itself.
+	 *
+	 * This menu has no screen of its own — it is a heading over six lists — so
+	 * that row would be a "Collections" leading to an empty page. Removed
+	 * last, once the six are in place: WordPress only adds the row when the
+	 * first child arrives, so removing it any earlier removes nothing.
+	 */
+	public static function tidy_content_menu(): void {
+		remove_submenu_page( self::CONTENT_SLUG, self::CONTENT_SLUG );
+	}
 }

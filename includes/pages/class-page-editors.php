@@ -62,7 +62,14 @@ final class Blueworx_Clubhouse_Page_Editors {
 					? 'The header, footer, welcome pack and cookie notice — the parts that appear on every page.'
 					: sprintf( 'The words on your %s page. Nothing changes on the site until you save.', strtolower( $spec['label'] ) ),
 				'capability' => Blueworx_Clubhouse_Owner_Capabilities::CONTENT_CAP,
-				'parent'     => Blueworx_Clubhouse_Setup_Editor::PAGE_SLUG,
+				// Global content is the one of these with a menu item of its
+				// own, and it sits with the club's other content under
+				// Collections. The fourteen club pages stay under Clubhouse,
+				// hidden — they are reached from the Pages list, and the
+				// parent only decides which menu stays lit while one is open.
+				'parent'     => $global
+					? Blueworx_Clubhouse_Collection_Types::CONTENT_SLUG
+					: Blueworx_Clubhouse_Setup_Editor::PAGE_SLUG,
 				'tabs'       => $spec['tabs'],
 			);
 			if ( $global ) {
@@ -311,6 +318,14 @@ final class Blueworx_Clubhouse_Page_Editors {
 	 * item: it is the one area with no page in the Pages list standing for it,
 	 * so without an item there would be no way to reach it.
 	 *
+	 * So does Setup. This walks every screen the library knows about, and Setup
+	 * is one of them — so this loop was quietly deleting the Clubhouse menu's
+	 * own entry for the screen it is named after. Nobody saw it while nothing
+	 * else hung under Clubhouse, because WordPress opens a menu's first child
+	 * and Setup was the only child there was; the moment the collection lists
+	 * arrived (v0.101.0), Clubhouse started opening Sports and Setup was on the
+	 * menu nowhere at all.
+	 *
 	 * remove_submenu_page(), on admin_head. An earlier version of this method
 	 * avoided remove_submenu_page() entirely, having found it broke a direct
 	 * visit to a hidden screen when called on admin_menu (priority 11): that
@@ -328,8 +343,9 @@ final class Blueworx_Clubhouse_Page_Editors {
 	 * screen still 200s, and its row is gone from the rendered menu.
 	 */
 	public static function hide_record_editors(): void {
+		$keep = array( self::GLOBAL_SLUG, Blueworx_Clubhouse_Setup_Editor::PAGE_SLUG );
 		foreach ( array_keys( \Blueworx\PageEditor\v1\Editor::all() ) as $slug ) {
-			if ( self::GLOBAL_SLUG === $slug ) {
+			if ( in_array( $slug, $keep, true ) ) {
 				continue;
 			}
 			remove_submenu_page( Blueworx_Clubhouse_Setup_Editor::PAGE_SLUG, $slug );

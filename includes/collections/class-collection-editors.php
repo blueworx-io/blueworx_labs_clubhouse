@@ -88,7 +88,7 @@ final class Blueworx_Clubhouse_Collection_Editors {
 		}
 		foreach ( Blueworx_Clubhouse_Collection_Meta::types() as $type ) {
 			remove_submenu_page(
-				Blueworx_Clubhouse_Setup_Editor::PAGE_SLUG,
+				Blueworx_Clubhouse_Collection_Types::CONTENT_SLUG,
 				Blueworx_Clubhouse_Collection_Fields::slug_for( $type )
 			);
 		}
