@@ -46,9 +46,9 @@ final class AccessScreenTest extends TestCase {
 	}
 
 	/**
-	 * role_tags() is deliberately not covered here: it renders into the top bar
-	 * of the Setup and Club Pages screens, which stay on the old stylesheet
-	 * until the page editor library replaces them.
+	 * role_tags() is deliberately not covered here: it is prebuilt markup this
+	 * screen hands to another one's header, so what it contains is that
+	 * screen's business, not the page body's.
 	 */
 	public function test_no_legacy_classes_survive_in_the_page_body(): void {
 		$html = Blueworx_Clubhouse_Access_Screen::render( $this->model() );

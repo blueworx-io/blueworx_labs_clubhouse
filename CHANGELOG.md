@@ -5,6 +5,11 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.101.4
+
+- Trying to delete a club page now tells you to open the page to edit its words. It used to point at a screen that no longer exists.
+- Internal only: the priority list records that the admin rebuild is finished, and why one automatic check is still only reporting rather than blocking. Nothing changes on a site.
+
 ## 0.101.3
 
 - The Clubhouse panel on your dashboard is properly laid out again. Since the Setup rebuild it had been showing as plain text and bare links — the first thing you see when you sign in, looking broken.

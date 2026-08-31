@@ -16,8 +16,8 @@ if ( ! defined( 'ABSPATH' ) ) {
  * page. Nothing serves from it yet — that is a later task.
  *
  * The page body it creates is always empty. A club's words live in the
- * content store and are still edited on the Club Pages screens; a body here
- * would be a second, contradictory copy.
+ * content store and are edited on the page's own editor; a body here would be
+ * a second, contradictory copy.
  *
  * @package BlueworxLabsClubhouse
  */

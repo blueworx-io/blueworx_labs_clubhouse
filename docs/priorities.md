@@ -6,32 +6,13 @@ is below everything on it.
 Written 14 August 2026, rewritten 17 August 2026 against main at v0.76.0,
 23 August 2026 against v0.87.1, 27 August 2026 against v0.91.1,
 28 August 2026 against v0.97.0, 30 August 2026 against v0.98.0 and again
-against v0.100.0, and 31 August 2026 against v0.101.2. Keep it current — the
+against v0.100.0, and 31 August 2026 against v0.101.4. Keep it current — the
 surest way is to close the issue as the pull request merges, which is what let
 this list drift the last time.
 
 ---
 
-## The admin moves onto the page editor standard
-
-This is the main line of work now, and it is one project in six phases. The
-design is [here](superpowers/specs/2026-08-28-page-editor-adoption-design.md);
-each phase gets its own plan and its own release.
-
-| Phase | What | State |
-| --- | --- | --- |
-| 1 | The three foundation additions — a repeater that takes more than text, a screen that owns its own storage, link suggestions | **Done**, in `bluegroup_core_foundation`, and vendored here. Checked 30 August 2026: `Schema::REPEATER_KINDS` carries textarea, select, toggle and media; `Store::for()` honours a screen's own read and write; suggestions are honoured on a repeater cell. The vendored copy is byte-identical to the foundation's, so none of it was a local workaround |
-| 2 | Vendor the design system; rebuild the five screens the editor library will not replace | **Done, v0.97.0.** [Plan](superpowers/plans/2026-08-28-design-system-adoption.md) |
-| 3 | Club pages become records; the Club Pages screen is deleted | **Done, v0.98.0.** [Plan](superpowers/plans/2026-08-28-club-pages-become-records.md). It did not wait on phase 1, which was already in the foundation by then |
-| 4 | Setup rebuilt on the library, absorbing [#283](../../issues/283), [#284](../../issues/284) and [#285](../../issues/285) | **Done, v0.100.0.** [Plan](superpowers/plans/2026-08-30-setup-rebuilt-on-the-library.md). No migration was needed: the screen reads and writes through the stores that already owned every value |
-| 5 | Collection record editors replace the Details meta box | **Done, v0.101.0.** [Plan](superpowers/plans/2026-08-30-collection-record-editors.md). The meta keys moved with it — [the record](upgrades/2026-08-30-collections-become-records.md) has what happens on update and on a rollback |
-| 6 | The remaining screens | Next. Import, Search & sharing, User guide, What's new and Access — none of them an editor, so they move to the design system without the library |
-
-[#282](../../issues/282) spanned phases 2 to 4 — the club's look left wp-admin
-one screen at a time, and the last of it went with Setup, along with
-`admin-setup.css`. [#287](../../issues/287) closed with phase 2.
-
-## Also open
+## What to do next
 
 | # | Do | Why here |
 | --- | --- | --- |
@@ -55,7 +36,59 @@ and [#184](https://github.com/blueworx-io/blueworx_labs_wordpress/issues/184)
 now. They were the top two on this list until they moved, so nothing here is
 waiting on them.
 
+## One decision waiting: the guardrail that is only warning
+
+CI's `admin_ui_adherence` check reports without failing
+([`.github/workflows/ci.yml`](../.github/workflows/ci.yml)). Its note used to
+say "take this back off with phase 4". Phase 4 has landed, the whole admin is
+on the design system, and it still cannot be taken off — so the reason is
+written down here once, rather than chased again.
+
+Run over the whole plugin on 31 August 2026 it raised 23 findings. What is
+actually left is three things, and none of them is a screen to rebuild:
+
+- **The club's own front end, judged as an admin screen.** The check decides
+  what is an admin file by looking for `class="… wrap …"`, and the front end's
+  own `ch-wrap` contains that word. So `Page_Renderer` and `Sections` are read
+  as admin screens and told off for their hand-written colours and icons. Any
+  pull request touching the front end would fail on rules that do not apply to
+  it. Fixing it means tightening the check in `bluegroup_core_foundation`,
+  which every project shares — Luke's call, not a Clubhouse one.
+- **The WordPress admin menu icon.** WordPress takes that as an inline SVG data
+  URI; there is no way to give it the design system's icon component, so the
+  finding has no action behind it.
+- **The shop-pages warning.** It is a real WordPress admin notice, shown on
+  every screen in wp-admin, so it wears WordPress's notice classes on purpose —
+  the design system's stylesheet is not loaded outside Clubhouse's own screens,
+  and a `bw-notice` there would arrive unstyled. Narrowing where the warning
+  appears is a change to what an administrator is told, not a change of clothes.
+
+The findings that were genuinely ours are fixed: the owner's dashboard panel
+([#307](../../issues/307), v0.101.3), which had been drawing as bare text.
+
 ## Done, and worth knowing
+
+### The admin is on the page editor standard, and that project is finished
+
+All six phases have landed, and there is no half-and-half left. It was the main
+line of work from 28 August to 31 August 2026. The design is
+[here](superpowers/specs/2026-08-28-page-editor-adoption-design.md); each phase
+got its own plan and its own release, and this table is the record.
+
+| Phase | What | State |
+| --- | --- | --- |
+| 1 | The three foundation additions — a repeater that takes more than text, a screen that owns its own storage, link suggestions | **Done**, in `bluegroup_core_foundation`, and vendored here. Checked 30 August 2026: `Schema::REPEATER_KINDS` carries textarea, select, toggle and media; `Store::for()` honours a screen's own read and write; suggestions are honoured on a repeater cell. The vendored copy is byte-identical to the foundation's, so none of it was a local workaround |
+| 2 | Vendor the design system; rebuild the five screens the editor library will not replace | **Done, v0.97.0.** [Plan](superpowers/plans/2026-08-28-design-system-adoption.md) |
+| 3 | Club pages become records; the Club Pages screen is deleted | **Done, v0.98.0.** [Plan](superpowers/plans/2026-08-28-club-pages-become-records.md). It did not wait on phase 1, which was already in the foundation by then |
+| 4 | Setup rebuilt on the library, absorbing [#283](../../issues/283), [#284](../../issues/284) and [#285](../../issues/285) | **Done, v0.100.0.** [Plan](superpowers/plans/2026-08-30-setup-rebuilt-on-the-library.md). No migration was needed: the screen reads and writes through the stores that already owned every value |
+| 5 | Collection record editors replace the Details meta box | **Done, v0.101.0.** [Plan](superpowers/plans/2026-08-30-collection-record-editors.md). The meta keys moved with it — [the record](upgrades/2026-08-30-collections-become-records.md) has what happens on update and on a rollback |
+| 6 | The remaining screens | **Done, v0.97.0** — by phase 2, not after it. Import, Search & sharing, User guide, What's new and Access are the five screens the editor library will not replace, and phase 2's plan converted all five (tasks 3 to 7). Checked 31 August 2026: each one opens through `Admin_Shell` and the design system's own components. This row said "next" until then, which was simply wrong |
+
+[#282](../../issues/282) spanned phases 2 to 4 — the club's look left wp-admin
+one screen at a time, and the last of it went with Setup, along with
+`admin-setup.css`. [#287](../../issues/287) closed with phase 2.
+
+### Everything else
 
 **The import reads the page fields** ([#294](../../issues/294), v0.101.2). It
 used to keep a second declaration of every field — `Content_Catalogue`, with
