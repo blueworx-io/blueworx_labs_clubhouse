@@ -11,11 +11,14 @@ jobs:
       # single run covers both harnesses, each with the specs it can actually serve.
       use_local_wordpress: true
       plugin_slug: blueworx-labs-clubhouse
-      # Reports without failing, while the admin moves onto the page editor
-      # library one screen at a time. The screens this flags are the Setup
-      # screen and the front-end renderer: Setup is rebuilt on the library in
-      # phase 4, and the renderer is not an admin screen at all — the check
-      # judges it by filename. Take this back off with phase 4.
+      # Reports without failing. Not because the admin is behind — every screen
+      # is on the design system now — but because the check reads the club's
+      # own front end as an admin screen: it decides by looking for a "wrap"
+      # class, and the front end's `ch-wrap` contains that word. Turning this on
+      # would fail pull requests that only touch the front end, on rules that do
+      # not apply to it. Tightening that belongs in the foundation, which every
+      # project shares. docs/priorities.md has the full account and the other
+      # two things it flags that have no action behind them.
       admin_ui_adherence: warn
       # Pin the check scripts to the same major as the workflow above. This
       # input defaults to `main`, so without it the v1 workflow would run

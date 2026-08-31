@@ -13,13 +13,13 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Pages list alongside a club's own pages, and the screen is on the menu for
  * that reason. It is somewhere to see them — to know they exist, and which
  * ones are ours — not somewhere to edit them. A club's words live in the
- * content store and are written on the Club Pages screen; the page body behind
+ * content store and are written on the page's own editor; the page body behind
  * each one is deliberately empty, and the plugin depends on these pages
  * existing at these slugs.
  *
  * So every row action that could change one is taken away: quick edit, which
  * renames and retitles inline, and trash. Edit stays, and Club_Page_Editing
- * has already pointed it at the Club Pages screen. Deleting is refused for
+ * has already pointed it at that editor. Deleting is refused for
  * real as well as hidden — a row action missing from a list is a courtesy, not
  * a guarantee, and a bulk action or another plugin reaches the same place.
  *
@@ -188,7 +188,7 @@ final class Blueworx_Clubhouse_Wordpress_Pages {
 		}
 		if ( function_exists( 'wp_die' ) ) {
 			wp_die(
-				esc_html__( 'This is a club page. The site is served from it, so it cannot be deleted. Edit its words on the Club Pages screen instead.', 'blueworx-labs-clubhouse' ),
+				esc_html__( 'This is a club page. The site is served from it, so it cannot be deleted. Open it to edit its words instead.', 'blueworx-labs-clubhouse' ),
 				esc_html__( 'Club page', 'blueworx-labs-clubhouse' ),
 				array( 'response' => 403 )
 			);
