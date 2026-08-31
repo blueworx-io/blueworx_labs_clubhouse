@@ -5,6 +5,11 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.101.3
+
+- The Clubhouse panel on your dashboard is properly laid out again. Since the Setup rebuild it had been showing as plain text and bare links — the first thing you see when you sign in, looking broken.
+- It is titled "Clubhouse" rather than "Clubhouse Setup", which is what it stopped being when Setup moved to its own screen.
+
 ## 0.101.2
 
 - An imported file can now only change things you can see and edit. The import used to keep its own separate list of what a file was allowed to write to, which could drift from the screens you actually use — and a file could then quietly fill in something no screen would ever show you.

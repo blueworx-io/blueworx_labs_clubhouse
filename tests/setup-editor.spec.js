@@ -128,4 +128,31 @@ test.describe('@wordpress Clubhouse Setup', () => {
     await expect(page.locator('#clubhouse_setup_dashboard a[href*="page=clubhouse-setup"]')).toBeVisible();
     await expect(page.locator('#clubhouse_setup_dashboard .bw-savebar')).toHaveCount(0);
   });
+
+  /**
+   * Issue #307: the panel is written in the design system's markup, but the
+   * dashboard was never given the design system, so it drew as bare text and
+   * plain links — the first thing an owner sees, looking broken. The test
+   * above could not tell, because unstyled words are still words. This one
+   * asks the browser what the button actually looks like.
+   */
+  test('the owner dashboard is dressed, not bare @wordpress', async ({ page }) => {
+    await signIn(page, OWNER);
+    await page.goto('/wp-admin/index.php', { waitUntil: 'domcontentloaded' });
+
+    const button = page.locator('#clubhouse_setup_dashboard .bw-btn').first();
+    await expect(button).toBeVisible();
+    const drawn = await button.evaluate((el) => {
+      const cs = getComputedStyle(el);
+      return { radius: cs.borderRadius, padding: cs.paddingLeft, display: cs.display };
+    });
+    expect(drawn.display, 'the design system stylesheet never reached the dashboard').not.toBe('inline');
+    expect(parseFloat(drawn.radius), 'the button has no corners, so nothing is styling it').toBeGreaterThan(0);
+    expect(parseFloat(drawn.padding), 'the button has no padding, so nothing is styling it').toBeGreaterThan(0);
+
+    // As a guest, though: the full-bleed chrome belongs to a screen that is
+    // entirely ours, and here it would move WordPress's own widgets.
+    await expect(page.locator('body.clubhouse-bw')).toHaveCount(0);
+    await expect(page.locator('#wpfooter')).toBeVisible();
+  });
 });

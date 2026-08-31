@@ -51,21 +51,35 @@ final class Blueworx_Clubhouse_Owner_Welcome {
 		);
 	}
 
+	/**
+	 * Three rows, each naming a place and saying what is there, with the way in
+	 * on the right. Built from the design system's own "a list of named things
+	 * you can act on" pattern rather than classes invented here — an invented
+	 * class has no styles behind it, which is how this panel came to draw as
+	 * bare text (issue #307).
+	 *
+	 * The link reads "Open" and carries the row's name as its accessible name,
+	 * so a screen reader hears "Open your club setup" rather than three links
+	 * all called "Open", and the eye is not shown the same words twice.
+	 */
 	public static function render(): string {
-		$body = '<div class="bw-stack">';
+		$body = '<div class="bw-fnstack">';
 		foreach ( self::links() as $link ) {
-			$body .= '<div class="bw-row">'
-				. '<p class="bw-row__title">' . self::esc( $link['title'] ) . '</p>'
-				. '<p class="bw-fieldnote">' . self::esc( $link['note'] ) . '</p>'
-				. '<p><a class="bw-btn bw-btn--secondary" href="' . self::esc( $link['url'] ) . '">'
-				. self::esc( $link['title'] ) . '</a></p>'
-				. '</div>';
+			$body .= '<div class="bw-fncard"><div class="bw-fncard__row"><div>'
+				. '<span class="bw-fncard__name">' . self::esc( $link['title'] ) . '</span>'
+				. '<p class="bw-fncard__desc">' . self::esc( $link['note'] ) . '</p>'
+				. '</div>'
+				. '<a class="bw-btn bw-btn--secondary" href="' . self::esc( $link['url'] ) . '"'
+				. ' aria-label="' . self::esc( $link['title'] ) . '">Open</a>'
+				. '</div></div>';
 		}
 		$body .= '</div>';
 
 		return '<div class="bw-admin">'
 			. Blueworx_Clubhouse_Admin_Shell::card(
-				'Clubhouse',
+				// No eyebrow: the widget WordPress draws around this already
+				// carries the word Clubhouse at the top of it.
+				'',
 				'Welcome back',
 				'Everything your club site needs is in these three places.',
 				$body
