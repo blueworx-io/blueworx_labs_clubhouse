@@ -5,6 +5,10 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.101.5
+
+- Internal only: a written design for the honours board page, with three questions to settle before it is built. Nothing changes on a site.
+
 ## 0.101.4
 
 - Trying to delete a club page now tells you to open the page to edit its words. It used to point at a screen that no longer exists.

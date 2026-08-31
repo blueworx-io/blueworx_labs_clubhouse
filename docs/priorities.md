@@ -6,7 +6,7 @@ is below everything on it.
 Written 14 August 2026, rewritten 17 August 2026 against main at v0.76.0,
 23 August 2026 against v0.87.1, 27 August 2026 against v0.91.1,
 28 August 2026 against v0.97.0, 30 August 2026 against v0.98.0 and again
-against v0.100.0, and 31 August 2026 against v0.101.4. Keep it current — the
+against v0.100.0, and 31 August 2026 against v0.101.5. Keep it current — the
 surest way is to close the issue as the pull request merges, which is what let
 this list drift the last time.
 
@@ -16,7 +16,7 @@ this list drift the last time.
 
 | # | Do | Why here |
 | --- | --- | --- |
-| [#256](../../issues/256) | An honours board page | Club champions, chairpersons, captains, with categories the club sets and two tiers of filters. Phase 3 has landed, so it can be built the new way now — once, rather than the old way twice. |
+| [#256](../../issues/256) | An honours board page | Club champions, chairpersons, captains, with categories the club sets and two tiers of filters. **Designed and waiting on three answers** — [the spec](superpowers/specs/2026-08-31-honours-board-design.md) has them at the end, and they are two minutes' reading. Nothing should be built until they are settled: two of the three change the markup and the addresses. |
 | [#274](../../issues/274) | Put a shop in the CI test harness | Deferred 30 August 2026 — the shop is hand-checked before a release, and that is accepted. Genuinely uncertain anyway: SureCart has to install and authenticate in CI, which nobody has proved yet. |
 
 **Cannot start yet:** [#229](../../issues/229), pulling the social feed
