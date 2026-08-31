@@ -11,8 +11,13 @@ const { test, expect } = require('@playwright/test');
 // The owner and content editor users are seeded by tests/global-setup.js.
 
 const OWNER = { login: 'clubowner', pass: 'owner-test-pw' };
+// Used only where a menu has to be right for both — an administrator holds
+// every capability, so a door offered to them proves nothing about the owner,
+// and vice versa.
+const ADMIN = { login: 'admin', pass: 'wptest-admin-pw' };
 
 async function signIn(page, user) {
+  await page.context().clearCookies();
   await page.goto('/wp-login.php');
   await page.fill('#user_login', user.login);
   await page.fill('#user_pass', user.pass);
@@ -155,4 +160,72 @@ test.describe('@wordpress Clubhouse Setup', () => {
     await expect(page.locator('body.clubhouse-bw')).toHaveCount(0);
     await expect(page.locator('#wpfooter')).toBeVisible();
   });
+
+  /**
+   * Setup has to be on the menu, and Clubhouse has to open it.
+   *
+   * It was on neither between v0.101.0 and v0.101.6. Two things had to be
+   * true at once and both were: the code that hides the fourteen page editors
+   * from the menu walked every screen the library knows about, and Setup is
+   * one of those, so its own entry was deleted; and WordPress points a menu at
+   * its first child, which — once the collection lists moved under Clubhouse —
+   * was the Sports list. Nothing caught it because every test opens Setup by
+   * typing its address.
+   *
+   * Both roles, because a capability the menu needs and the screen does not is
+   * exactly how a door gets offered to somebody who cannot open it.
+   */
+  const rows = (page, name) =>
+    page
+      .locator('#adminmenu > li.menu-top')
+      .filter({ has: page.locator('.wp-menu-name', { hasText: new RegExp(`^${name}$`) }) })
+      .first();
+
+  for (const [who, user] of [['an owner', OWNER], ['an administrator', ADMIN]]) {
+    test(`the two menus are the two menus, for ${who}`, async ({ page }) => {
+      await signIn(page, user);
+      await page.goto('/wp-admin/index.php', { waitUntil: 'domcontentloaded' });
+
+      const clubhouse = rows(page, 'Clubhouse');
+      await expect(clubhouse, 'no Clubhouse item on the menu at all').toHaveCount(1);
+      await expect(
+        clubhouse.locator('a.menu-top'),
+        'clicking Clubhouse goes somewhere other than Setup',
+      ).toHaveAttribute('href', 'admin.php?page=clubhouse-setup');
+      await expect(clubhouse.locator('.wp-submenu li a')).toHaveText([
+        'Setup',
+        'Import',
+        'Search & sharing',
+        'User guide',
+        'What’s new',
+      ]);
+
+      // The club's own lists, in a menu of their own directly beneath.
+      const collections = rows(page, 'Collections');
+      await expect(collections, 'no Collections item on the menu').toHaveCount(1);
+      await expect(collections.locator('.wp-submenu li a')).toHaveText([
+        'Sports',
+        'Teams',
+        'Fixtures',
+        'Events',
+        'Sponsors',
+        'People',
+        'Global content',
+      ]);
+
+      // Every row goes to a real address. A submenu added before its parent
+      // exists gets a bare slug that leads nowhere, and it looks fine on the
+      // menu right up until somebody clicks it.
+      for (const href of await collections.locator('.wp-submenu li a').evaluateAll((as) => as.map((a) => a.getAttribute('href')))) {
+        expect(href, 'a Collections row points at a bare slug').toMatch(/^(admin|edit)\.php\?/);
+      }
+
+      // And the two screens of ours behind those menus open. A row proves
+      // nothing if the screen refuses the person the menu offered it to.
+      for (const slug of ['clubhouse-setup', 'clubhouse-global-content']) {
+        await page.goto(`/wp-admin/admin.php?page=${slug}`, { waitUntil: 'domcontentloaded' });
+        await expect(page.locator('.bw-savebar'), `${slug} did not open`).toBeVisible({ timeout: 30_000 });
+      }
+    });
+  }
 });

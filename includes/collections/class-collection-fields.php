@@ -49,11 +49,11 @@ final class Blueworx_Clubhouse_Collection_Fields {
 			'capability' => Blueworx_Clubhouse_Owner_Capabilities::CONTENT_CAP,
 			'store'      => 'post',
 			'post_type'  => $type,
-			// Registered under the Clubhouse menu so that menu stays
+			// Registered under the Collections menu so that menu stays
 			// highlighted while a record is open. The item itself is hidden
 			// straight afterwards — a collection is reached from its own list,
 			// the way a club page is reached from the Pages list.
-			'parent'     => Blueworx_Clubhouse_Setup_Editor::PAGE_SLUG,
+			'parent'     => Blueworx_Clubhouse_Collection_Types::CONTENT_SLUG,
 			'tabs'       => array(
 				array(
 					'id'     => 'details',

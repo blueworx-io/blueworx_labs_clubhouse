@@ -92,12 +92,23 @@ test.describe('@wordpress collection editors', () => {
     await expect(page.locator('th#clubhouse_result')).toBeVisible();
   });
 
-  /** One Clubhouse menu, not a second one beside it. */
-  test('there is no Collections menu of its own', async ({ page }) => {
+  /**
+   * The six lists have a menu of their own, and they are not in the Clubhouse
+   * one. They were, from v0.101.0 to v0.101.5, and it buried the Setup screen:
+   * WordPress opens a menu at its first child, and the first child under
+   * Clubhouse had become the Sports list.
+   */
+  test('the lists live under Collections, not under Clubhouse', async ({ page }) => {
     await signInAsOwner(page);
     await page.goto('/wp-admin/index.php', { waitUntil: 'domcontentloaded' });
 
-    await expect(page.locator('#adminmenu a[href="admin.php?page=clubhouse-content"]')).toHaveCount(0);
-    await expect(page.locator('#adminmenu')).toContainText('Teams');
+    const menu = (name) =>
+      page
+        .locator('#adminmenu > li.menu-top')
+        .filter({ has: page.locator('.wp-menu-name', { hasText: new RegExp(`^${name}$`) }) })
+        .first();
+
+    await expect(menu('Collections').locator('.wp-submenu')).toContainText('Teams');
+    await expect(menu('Clubhouse').locator('.wp-submenu')).not.toContainText('Teams');
   });
 });

@@ -15,17 +15,19 @@ final class CollectionTypesTest extends TestCase {
 	}
 
 	/**
-	 * One Clubhouse menu, not two. The six lists used to hang off a
-	 * "Collections" menu of their own, which gave an owner two plausible
-	 * places to look for a fixture.
+	 * The six lists have a menu of their own, directly under Clubhouse.
+	 *
+	 * They spent v0.101.0 to v0.101.5 inside the Clubhouse menu instead, which
+	 * buried the Setup screen: WordPress opens a menu at its first child, and
+	 * the first child had become the Sports list.
 	 */
-	public function test_the_lists_sit_under_the_clubhouse_menu(): void {
+	public function test_the_lists_sit_under_the_collections_menu(): void {
 		wp_stub_reset();
 		Blueworx_Clubhouse_Collection_Types::register();
 		$calls = wp_stub_calls( 'register_post_type' );
 		$this->assertNotEmpty( $calls );
 		foreach ( $calls as $call ) {
-			$this->assertSame( Blueworx_Clubhouse_Setup_Editor::PAGE_SLUG, $call['args'][1]['show_in_menu'] );
+			$this->assertSame( Blueworx_Clubhouse_Collection_Types::CONTENT_SLUG, $call['args'][1]['show_in_menu'] );
 		}
 	}
 

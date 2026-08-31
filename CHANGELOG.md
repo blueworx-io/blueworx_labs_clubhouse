@@ -5,6 +5,11 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.101.6
+
+- Clubhouse Setup is back on the menu. Since the collections moved in v0.101.0 there was no Setup item anywhere and clicking "Clubhouse" opened the Sports list, so the only way in was the dashboard panel or typing the address.
+- Your lists have their own menu again. Clubhouse now holds Setup, Import, Search & sharing, User guide and What's new; Collections holds Sports, Teams, Fixtures, Events, Sponsors, People and Global content.
+
 ## 0.101.5
 
 - Internal only: a written design for the honours board page, with three questions to settle before it is built. Nothing changes on a site.
