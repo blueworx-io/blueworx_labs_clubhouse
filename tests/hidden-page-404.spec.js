@@ -64,7 +64,7 @@ async function bulkSetStatus(page, titles, status) {
     await row.locator('input[type="checkbox"]').first().check({ force: true });
   }
   await page.selectOption('#bulk-action-selector-top', 'edit');
-  // force, for the reason menu-editor.spec.js documents: this screen never settles.
+  // force, for the reason import-file.spec.js documents: this screen never settles.
   await page.locator('#doaction').click({ force: true });
   await expect(page.locator('#bulk-edit')).toBeVisible();
   await page.selectOption('#bulk-edit select[name="_status"]', status);

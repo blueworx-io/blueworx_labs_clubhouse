@@ -44,21 +44,19 @@ final class ImportPromptTest extends TestCase {
 
 	/**
 	 * The lockstep guarantee: every field the plugin can store is described in
-	 * the prompt. If this fails after a catalogue change, the prompt generator
-	 * has stopped covering the catalogue — fix the generator, never the test.
+	 * the prompt. If this fails after a change to the editors, the prompt
+	 * generator has stopped covering them — fix the generator, never the test.
 	 */
-	public function test_every_catalogue_field_key_appears(): void {
+	public function test_every_page_field_key_appears(): void {
 		$md = $this->md();
-		foreach ( Blueworx_Clubhouse_Content_Catalogue::pages() as $page ) {
-			foreach ( $page['sections'] as $section ) {
-				$address = (string) $section['store_page'] . '.' . (string) $section['key'];
-				$this->assertStringContainsString( $address, $md, 'missing section ' . $address );
-				foreach ( ( $section['fields'] ?? array() ) as $field ) {
-					$this->assertStringContainsString( '`' . $field['key'] . '`', $md, 'missing field ' . $field['key'] );
-				}
-				foreach ( ( $section['loop']['fields'] ?? array() ) as $field ) {
-					$this->assertStringContainsString( '`' . $field['key'] . '`', $md, 'missing loop field ' . $field['key'] );
-				}
+		foreach ( Blueworx_Clubhouse_Page_Fields::sections() as $address => $section ) {
+			$address = str_replace( '/', '.', $address );
+			$this->assertStringContainsString( $address, $md, 'missing section ' . $address );
+			foreach ( array_keys( $section['fields'] ) as $key ) {
+				$this->assertStringContainsString( '`' . $key . '`', $md, 'missing field ' . $key );
+			}
+			foreach ( ( $section['items']['fields'] ?? array() ) as $cell ) {
+				$this->assertStringContainsString( '`' . $cell['id'] . '`', $md, 'missing loop field ' . $cell['id'] );
 			}
 		}
 	}
@@ -74,7 +72,7 @@ final class ImportPromptTest extends TestCase {
 	}
 
 	/**
-	 * A section with neither `fields` nor `loop` (a plain auto/linkout, e.g.
+	 * A section with no fields of its own (one that shows a collection, e.g.
 	 * content.events.past) has nothing for the assistant to ask about. It must
 	 * say so explicitly, one such note per fields-less section — otherwise the
 	 * assistant may still address it and produce "Ignored unknown field" noise.
@@ -82,23 +80,19 @@ final class ImportPromptTest extends TestCase {
 	public function test_fields_less_sections_state_they_take_no_content(): void {
 		$md       = $this->md();
 		$expected = 0;
-		foreach ( Blueworx_Clubhouse_Content_Catalogue::pages() as $page ) {
-			foreach ( $page['sections'] as $section ) {
-				$fields = is_array( $section['fields'] ?? null ) ? $section['fields'] : array();
-				$loop   = is_array( $section['loop'] ?? null ) ? $section['loop'] : array();
-				if ( array() === $fields && array() === $loop ) {
-					++$expected;
-				}
+		foreach ( Blueworx_Clubhouse_Page_Fields::sections() as $section ) {
+			if ( array() === $section['fields'] && null === $section['items'] ) {
+				++$expected;
 			}
 		}
-		$this->assertGreaterThan( 0, $expected, 'expected at least one fields-less section in the catalogue' );
+		$this->assertGreaterThan( 0, $expected, 'expected at least one fields-less section' );
 		$this->assertSame( $expected, substr_count( $md, 'This section takes no content from you' ) );
 	}
 
 	public function test_loop_sections_are_described_as_repeatable(): void {
 		$md = $this->md();
-		// Membership tiers is a loop whose item is called "Tier".
-		$this->assertMatchesRegularExpression( '/repeatable list of .{0,20}Tier/i', $md );
+		// Membership tiers is a repeating list, labelled "Tiers".
+		$this->assertMatchesRegularExpression( '/repeatable list .{0,20}Tiers/i', $md );
 	}
 
 	public function test_image_fields_ask_for_a_public_url(): void {

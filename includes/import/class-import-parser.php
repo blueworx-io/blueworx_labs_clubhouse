@@ -12,10 +12,11 @@ if ( ! defined( 'ABSPATH' ) ) {
  * is dropped, so an owner always gets a reviewable plan plus an honest list of
  * what was ignored.
  *
- * The Content_Catalogue and Collection_Meta are the allow-list. Nothing reaches
- * the plan that they do not declare, and every value is sanitised by the same
- * code the admin editor uses — an AI-authored file is treated exactly like
- * form input.
+ * Page_Fields and Collection_Meta are the allow-list — the same two
+ * declarations the editing screens themselves are built from, so a file can
+ * only ever write to somewhere an owner can see and change. Values are cleaned
+ * by the page editor library's own Sanitise, which is literally the code a
+ * save runs through: an AI-authored file is treated exactly like form input.
  *
  * @package BlueworxLabsClubhouse
  */
@@ -94,40 +95,43 @@ final class Blueworx_Clubhouse_Import_Parser {
 	/**
 	 * Read a toggle value on its own terms rather than by presence:
 	 * `true`/`"true"`/`1`/`"1"` is on; `false`, `"false"`, `0`, `"0"`, `""`,
-	 * `null`, an absent key, or anything else non-scalar is off. Unlike
-	 * Content_Sanitiser::field()'s form-post semantics (where merely being
-	 * present means checked), a JSON file's toggle key can carry `false`
-	 * explicitly and must be read as such.
+	 * `null`, an absent key, or anything else non-scalar is off. A form post
+	 * means a switch by merely being there — an unticked checkbox never posts —
+	 * but a JSON file's toggle key is always there and can carry `false`
+	 * explicitly, so it must be read as such.
 	 */
 	private static function toggle_value( mixed $raw ): bool {
 		return true === $raw || 1 === $raw || '1' === $raw || 'true' === $raw;
 	}
 
 	/**
-	 * Catalogue sections keyed by their stored address, carrying the definition
-	 * and the labels needed to name an image slot for a human.
+	 * Every section a file may write to, keyed by its stored address.
 	 *
-	 * @return array<string,array{def:array<string,mixed>,tab_label:string,section_label:string}>
+	 * Without the products adapter the tier's price_id select has only its
+	 * empty option, and the library's Sanitise then reduces every imported
+	 * price_id to '' — silently clearing every tier's connection. The page
+	 * editors are declared with this same source for exactly that reason; the
+	 * importer must match them.
+	 *
+	 * @return array<string,array<string,mixed>>
 	 */
 	private static function sections(): array {
-		$labels = Blueworx_Clubhouse_Content_Catalogue::index();
-		$out    = array();
-		// Without the products adapter, the tier's price_id select has only its
-		// empty option, and Content_Sanitiser::field() then sanitises every
-		// imported price_id to '' — silently clearing every tier's connection.
-		// Content_Controller::find_page()/build_model() pass this same source
-		// for exactly this reason; the importer must match it.
-		foreach ( Blueworx_Clubhouse_Content_Catalogue::pages( Blueworx_Clubhouse_Products_Source::get() ) as $page ) {
-			foreach ( $page['sections'] as $section ) {
-				$address         = (string) $section['store_page'] . '/' . (string) $section['key'];
-				$out[ $address ] = array(
-					'def'           => $section,
-					'tab_label'     => $labels[ $address ]['tab_label'] ?? '',
-					'section_label' => $labels[ $address ]['section_label'] ?? '',
-				);
-			}
+		return Blueworx_Clubhouse_Page_Fields::sections( Blueworx_Clubhouse_Products_Source::get() );
+	}
+
+	/**
+	 * A link that is not one. The editor refuses a bad address with a field
+	 * error rather than quietly storing it, so the importer says the same thing
+	 * in its own voice — a warning, and the value dropped.
+	 *
+	 * @param array<string,mixed> $field
+	 */
+	private static function is_bad_link( array $field, mixed $value ): bool {
+		if ( 'url' !== ( $field['format'] ?? '' ) ) {
+			return false;
 		}
-		return $out;
+		$value = (string) $value;
+		return '' !== trim( $value ) && '' === esc_url_raw( $value );
 	}
 
 	/** @param array<string,mixed> $content */
@@ -157,16 +161,15 @@ final class Blueworx_Clubhouse_Import_Parser {
 	}
 
 	/**
-	 * @param array{def:array<string,mixed>,tab_label:string,section_label:string} $entry
-	 * @param array<string,mixed>                                                  $supplied
+	 * @param array<string,mixed> $entry    the section, exactly as Page_Fields declares it.
+	 * @param array<string,mixed> $supplied what the file said about that section.
 	 */
 	private static function parse_section( string $page, string $section_key, array $entry, array $supplied, Blueworx_Clubhouse_Import_Plan $plan ): void {
-		$def         = $entry['def'];
-		$field_defs  = is_array( $def['fields'] ?? null ) ? $def['fields'] : array();
-		$loop_fields = is_array( $def['loop']['fields'] ?? null ) ? $def['loop']['fields'] : array();
-		$by_key      = array();
-		foreach ( $field_defs as $field_def ) {
-			$by_key[ (string) $field_def['key'] ] = $field_def;
+		$by_key   = $entry['fields'];
+		$repeater = $entry['items'];
+		$cells    = array();
+		foreach ( is_array( $repeater ) ? $repeater['fields'] : array() as $cell ) {
+			$cells[ (string) $cell['id'] ] = $cell;
 		}
 
 		foreach ( $supplied as $field_key => $raw ) {
@@ -179,7 +182,9 @@ final class Blueworx_Clubhouse_Import_Parser {
 				continue;
 			}
 			$field_def = $by_key[ $field_key ];
-			if ( 'image' === $field_def['type'] ) {
+			$kind      = (string) ( $field_def['kind'] ?? 'text' );
+
+			if ( 'media' === $kind ) {
 				$ref = self::image_ref( $raw );
 				if ( null === $ref ) {
 					$plan->warn( sprintf( 'Ignored "%s/%s/%s": expected an image URL.', $page, $section_key, $field_key ) );
@@ -195,26 +200,36 @@ final class Blueworx_Clubhouse_Import_Parser {
 				);
 				continue;
 			}
-			if ( 'toggle' === $field_def['type'] ) {
-				// Content_Sanitiser::field()'s presence-means-true rule is correct
-				// for a form POST (an unticked checkbox never posts) and wrong here,
-				// where the key is present and can carry `false` — a JSON file must
-				// be read for what it says, not just whether the key showed up.
+			if ( 'toggle' === $kind ) {
+				// A form says a switch is on by posting it at all, which is right
+				// for a checkbox that never posts when unticked and wrong here: a
+				// JSON key is always present and can carry `false`, so a file is
+				// read for what it says rather than for what it mentions.
 				$plan->add_field( $page, $section_key, $field_key, self::toggle_value( $raw ) );
+				continue;
+			}
+			if ( ! is_scalar( $raw ) ) {
+				// The library casts a value to a string, so a list or an object
+				// under a text field would be stored as the literal "Array".
+				$plan->warn( sprintf( 'Ignored "%s/%s/%s": expected a single value.', $page, $section_key, $field_key ) );
+				continue;
+			}
+			if ( self::is_bad_link( $field_def, $raw ) ) {
+				$plan->warn( sprintf( 'Ignored "%s/%s/%s": expected a web address, like https://example.org.', $page, $section_key, $field_key ) );
 				continue;
 			}
 			$plan->add_field(
 				$page,
 				$section_key,
 				$field_key,
-				Blueworx_Clubhouse_Content_Sanitiser::field( $field_def, $raw, true )
+				\Blueworx\PageEditor\v1\Sanitise::field( $field_def, $raw )
 			);
 		}
 
 		if ( ! array_key_exists( self::ITEMS_KEY, $supplied ) ) {
 			return;
 		}
-		if ( array() === $loop_fields ) {
+		if ( ! is_array( $repeater ) ) {
 			$plan->warn( sprintf( 'Ignored "%s/%s/items": this section is not a repeatable list.', $page, $section_key ) );
 			return;
 		}
@@ -231,63 +246,94 @@ final class Blueworx_Clubhouse_Import_Parser {
 			return;
 		}
 
-		// Sanitise first, then force every image-typed field back to the ''
-		// sentinel: Content_Sanitiser::field() runs absint() on any scalar for an
-		// 'image' field, which is correct for a real form post (the value is
-		// genuinely an attachment ID) but not here, where the raw value is a URL
-		// or reference object. A loop item's image is never legitimately
-		// non-empty at parse time — the applier fills in the attachment ID after
-		// sideloading — so the field is always cleared, whether or not its URL
-		// was valid, and the image is queued separately below.
-		$items = Blueworx_Clubhouse_Content_Sanitiser::items( $loop_fields, $raw_items );
-		foreach ( $loop_fields as $field_def ) {
-			if ( 'image' !== $field_def['type'] ) {
+		// Drop anything in the list that is not an entry before cleaning, so the
+		// cleaned rows and the raw ones stay index for index — the passes below
+		// read each row's raw value back by its position.
+		$rows = array();
+		foreach ( $raw_items as $index => $raw_item ) {
+			if ( ! is_array( $raw_item ) ) {
+				$plan->warn( sprintf( 'Ignored "%s/%s/items[%d]": expected a group of fields.', $page, $section_key, (int) $index ) );
 				continue;
 			}
-			$field_key = (string) $field_def['key'];
-			foreach ( array_keys( $items ) as $index ) {
-				$items[ $index ][ $field_key ] = '';
+			$rows[] = $raw_item;
+		}
+		if ( array() === $rows ) {
+			return;
+		}
+
+		// Anything that is not a single value comes out first: the library casts
+		// a cell to a string, so a list or an object under a text cell would be
+		// stored as the literal "Array". A picture is the one cell whose value
+		// is legitimately an object — it is cleared below whatever it holds, and
+		// queued from the raw rows rather than from these.
+		$clean = array();
+		foreach ( $rows as $index => $row ) {
+			$clean[ $index ] = array();
+			foreach ( $cells as $cell_key => $cell ) {
+				if ( ! array_key_exists( $cell_key, $row ) ) {
+					continue;
+				}
+				if ( is_scalar( $row[ $cell_key ] ) ) {
+					$clean[ $index ][ $cell_key ] = $row[ $cell_key ];
+					continue;
+				}
+				if ( 'media' !== (string) ( $cell['kind'] ?? 'text' ) ) {
+					$plan->warn( sprintf( 'Ignored "%s/%s/items[%d]/%s": expected a single value.', $page, $section_key, $index, $cell_key ) );
+				}
 			}
 		}
-		// Same presence-vs-value correction as the section-level toggle above,
-		// applied per item: Content_Sanitiser::items() has already set every
-		// toggle to "was the key present", which is wrong for a JSON file. $items
-		// and $raw_items share the same 0-based order (both came from the same
-		// list), so the raw value for item N is read back by the same index.
-		foreach ( $loop_fields as $field_def ) {
-			if ( 'toggle' !== $field_def['type'] ) {
-				continue;
-			}
-			$field_key = (string) $field_def['key'];
+
+		// The library cleans a repeater exactly as it would on a save, so every
+		// row comes back with every declared cell and nothing else. Three things
+		// then need a second look, because a file is not a form.
+		$items = \Blueworx\PageEditor\v1\Sanitise::field( $repeater, $clean );
+
+		foreach ( $cells as $cell_key => $cell ) {
+			$kind = (string) ( $cell['kind'] ?? 'text' );
 			foreach ( array_keys( $items ) as $index ) {
-				$raw_item  = $raw_items[ $index ] ?? null;
-				$raw_value = ( is_array( $raw_item ) && array_key_exists( $field_key, $raw_item ) ) ? $raw_item[ $field_key ] : null;
-				$items[ $index ][ $field_key ] = self::toggle_value( $raw_value );
+				$has_value = array_key_exists( $cell_key, $rows[ $index ] );
+				$raw_value = $has_value ? $rows[ $index ][ $cell_key ] : null;
+
+				if ( 'media' === $kind ) {
+					// A picture arrives as a URL, never as the attachment ID the
+					// library casts it to. The applier fills that in once it has
+					// sideloaded the file, so the cell is always cleared here —
+					// valid URL or not — and the picture queued separately below.
+					$items[ $index ][ $cell_key ] = '';
+					continue;
+				}
+				if ( 'toggle' === $kind ) {
+					$items[ $index ][ $cell_key ] = self::toggle_value( $raw_value );
+					continue;
+				}
+				if ( $has_value && is_scalar( $raw_value ) && self::is_bad_link( $cell, $raw_value ) ) {
+					$plan->warn( sprintf( 'Ignored "%s/%s/items[%d]/%s": expected a web address, like https://example.org.', $page, $section_key, $index, $cell_key ) );
+					$items[ $index ][ $cell_key ] = '';
+				}
 			}
 		}
 		$plan->add_items( $page, $section_key, $items );
 
-		foreach ( $loop_fields as $field_def ) {
-			if ( 'image' !== $field_def['type'] ) {
+		foreach ( $cells as $cell_key => $cell ) {
+			if ( 'media' !== (string) ( $cell['kind'] ?? 'text' ) ) {
 				continue;
 			}
-			$field_key = (string) $field_def['key'];
-			foreach ( $raw_items as $index => $raw_item ) {
-				if ( ! is_array( $raw_item ) || ! array_key_exists( $field_key, $raw_item ) ) {
+			foreach ( $rows as $index => $row ) {
+				if ( ! array_key_exists( $cell_key, $row ) ) {
 					continue;
 				}
-				$ref = self::image_ref( $raw_item[ $field_key ] );
+				$ref = self::image_ref( $row[ $cell_key ] );
 				if ( null === $ref ) {
-					$plan->warn( sprintf( 'Ignored "%s/%s/items[%d]/%s": expected an image URL.', $page, $section_key, (int) $index, $field_key ) );
+					$plan->warn( sprintf( 'Ignored "%s/%s/items[%d]/%s": expected an image URL.', $page, $section_key, (int) $index, $cell_key ) );
 					continue;
 				}
 				$plan->add_image(
 					$page,
 					$section_key,
-					$field_key,
+					$cell_key,
 					$ref['url'],
 					$ref['alt'],
-					self::image_label( $entry, (string) $field_def['label'] ),
+					self::image_label( $entry, (string) $cell['label'] ),
 					(int) $index
 				);
 			}
@@ -382,8 +428,8 @@ final class Blueworx_Clubhouse_Import_Parser {
 		}
 	}
 
-	/** @param array{def:array<string,mixed>,tab_label:string,section_label:string} $entry */
+	/** @param array<string,mixed> $entry */
 	private static function image_label( array $entry, string $field_label ): string {
-		return $entry['tab_label'] . ' · ' . $entry['section_label'] . ' — ' . $field_label;
+		return $entry['area_label'] . ' · ' . $entry['section_label'] . ' — ' . $field_label;
 	}
 }

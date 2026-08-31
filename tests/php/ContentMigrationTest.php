@@ -220,10 +220,9 @@ final class ContentMigrationTest extends TestCase {
 	 * Booking and login are deliberately included by activating both
 	 * integrations for this one test — content behind an unavailable
 	 * integration is covered separately, above, by the tests that leave them
-	 * off. Page_Fields::all_areas() and Content_Catalogue agree field-for-field
-	 * whenever nothing is dropped — PageFieldsTest::test_every_catalogue_field_has_a_counterpart()
-	 * is the permanent guard for that — so walking Page_Fields here already
-	 * covers the union the two describe.
+	 * off. all_areas() is the whole declaration before availability drops
+	 * anything, so walking it here covers every address the migration could
+	 * ever meet.
 	 */
 	public function test_every_declared_field_round_trips_through_the_migration(): void {
 		Blueworx_Clubhouse_SureCart_Products::set_active_for_tests( true );

@@ -166,7 +166,7 @@ final class Blueworx_Clubhouse_Import_Screen {
 			$out  .= Blueworx_Clubhouse_Admin_Shell::card(
 				'Still to do',
 				'Images still needed',
-				'These picture slots are still empty. Add them under Club Pages whenever you have the images.',
+				'These picture slots are still empty. Open the page each one is on and add it whenever you have the picture.',
 				$list
 			);
 		}

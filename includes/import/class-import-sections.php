@@ -11,7 +11,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * switch off, so an owner who imports their own content is not left with demo
  * sections still showing beneath it.
  *
- * Pure: it reads the plan and the catalogue and returns a list of visibility
+ * Pure: it reads the plan and the page fields and returns a list of visibility
  * changes. Nothing here writes — the applier does that.
  *
  * Two rules keep it from over-reaching:
@@ -19,52 +19,40 @@ if ( ! defined( 'ABSPATH' ) ) {
  * - Only pages the file actually touched are considered. The prompt encourages
  *   importing a tab at a time, so a file covering only Home must leave About
  *   exactly as the owner left it.
- * - The two Global-stored sections (Header and Footer) are never switched off
- *   and never count as touching a page. They are site chrome, not page content;
- *   a file that happens not to mention the header must not take the header off
- *   the site.
+ * - The Global sections — the header, the footer, the welcome pack and the
+ *   cookie notice — are never switched off and never count as touching a page.
+ *   They are site chrome, not page content; a file that happens not to mention
+ *   the header must not take the header off the site.
  *
  * @package BlueworxLabsClubhouse
  */
 final class Blueworx_Clubhouse_Import_Sections {
 
 	/**
-	 * The content-store page whose sections are chrome rather than page content.
+	 * The content area whose sections are chrome rather than page content.
 	 */
-	private const CHROME_STORE_PAGE = 'global';
+	private const CHROME_AREA = 'global';
 
 	/**
-	 * The visibility page that owns the catalogue's "Global" tab. The tab holds
-	 * every Home-page section, so its visibility keys live under 'home' —
-	 * Setup_Sections::MAP is the authority and lists them there.
-	 */
-	private const GLOBAL_TAB_PAGE = 'home';
-
-	/**
-	 * Every visibility change this plan implies, in catalogue order.
+	 * Every visibility change this plan implies, in the order the editors
+	 * declare their sections.
 	 *
 	 * @return array<int,array{page:string,section:string,label:string,visible:bool}>
 	 */
 	public static function changes( Blueworx_Clubhouse_Import_Plan $plan ): array {
 		$by_page = array();
 
-		foreach ( Blueworx_Clubhouse_Content_Catalogue::pages() as $tab ) {
-			$page = (string) $tab['tab'];
-			$page = 'global' === $page ? self::GLOBAL_TAB_PAGE : $page;
-
-			foreach ( $tab['sections'] as $section ) {
-				if ( self::CHROME_STORE_PAGE === (string) $section['store_page'] ) {
-					continue;
-				}
-				$by_page[ $page ][] = array(
-					'page'    => $page,
-					'section' => (string) $section['key'],
-					'label'   => Blueworx_Clubhouse_Content_Catalogue::address_label(
-						(string) $section['store_page'] . '/' . (string) $section['key']
-					),
-					'visible' => self::is_covered( $plan, $section ),
-				);
+		foreach ( Blueworx_Clubhouse_Page_Fields::sections() as $address => $section ) {
+			$page = $section['area'];
+			if ( self::CHROME_AREA === $page ) {
+				continue;
 			}
+			$by_page[ $page ][] = array(
+				'page'    => $page,
+				'section' => $section['section'],
+				'label'   => Blueworx_Clubhouse_Page_Fields::address_label( $address ),
+				'visible' => self::is_covered( $plan, $section ),
+			);
 		}
 
 		$changes = array();
@@ -92,8 +80,8 @@ final class Blueworx_Clubhouse_Import_Sections {
 	 * @param array<string,mixed> $section
 	 */
 	private static function is_covered( Blueworx_Clubhouse_Import_Plan $plan, array $section ): bool {
-		$page = (string) $section['store_page'];
-		$key  = (string) $section['key'];
+		$page = $section['area'];
+		$key  = $section['section'];
 
 		if ( isset( $plan->fields()[ $page ][ $key ] ) || isset( $plan->items()[ $page ][ $key ] ) ) {
 			return true;
@@ -104,13 +92,8 @@ final class Blueworx_Clubhouse_Import_Sections {
 			}
 		}
 
-		$cpt = '';
-		if ( isset( $section['link']['cpt'] ) ) {
-			$cpt = (string) $section['link']['cpt'];
-		} elseif ( isset( $section['auto']['cpt'] ) ) {
-			$cpt = (string) $section['auto']['cpt'];
-		}
-		return '' !== $cpt && isset( $plan->collections()[ $cpt ] );
+		$collection = $section['collection'];
+		return '' !== $collection && isset( $plan->collections()[ $collection ] );
 	}
 
 	/**

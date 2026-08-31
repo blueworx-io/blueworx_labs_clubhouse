@@ -19,8 +19,8 @@ final class ImportParserContentTest extends TestCase {
 
 	public function test_a_tier_price_id_survives_import_when_a_shop_is_installed(): void {
 		// sections() must build its price_id select against the installed
-		// products adapter, the same way Content_Controller does — otherwise
-		// the select's only option is "not connected" and Content_Sanitiser
+		// products adapter, the same way the editors themselves are declared —
+		// otherwise the select's only option is "not connected", and the library
 		// clears any real price_id straight back to '', wiping the connection
 		// on every AI import that touches a tiers section.
 		Blueworx_Clubhouse_Products_Source::set( new Blueworx_Clubhouse_Demo_Products() );
@@ -228,5 +228,83 @@ final class ImportParserContentTest extends TestCase {
 		$this->assertSame( '', $out['plan']->items()['home']['news'][0]['image'] );
 		$this->assertSame( array(), $out['plan']->images() );
 		$this->assertNotSame( array(), $out['plan']->warnings() );
+	}
+
+	public function test_a_real_link_is_kept(): void {
+		$out = $this->parse( array( 'home' => array( 'hero' => array( 'cta_primary_href' => 'https://example.org/join' ) ) ) );
+		$this->assertSame( 'https://example.org/join', $out['plan']->fields()['home']['hero']['cta_primary_href'] );
+		$this->assertSame( array(), $out['plan']->warnings() );
+	}
+
+	/**
+	 * A script URL is refused outright rather than quietly emptied. The editor
+	 * refuses one with a field error, so the import says the same in its own
+	 * voice — and the owner sees it in the warnings rather than finding a
+	 * button that goes nowhere.
+	 */
+	public function test_a_script_url_is_warned_and_dropped(): void {
+		$out = $this->parse( array( 'home' => array( 'hero' => array(
+			'cta_primary'      => 'Join',
+			'cta_primary_href' => 'javascript:alert(1)',
+		) ) ) );
+		$this->assertSame( 'Join', $out['plan']->fields()['home']['hero']['cta_primary'] );
+		$this->assertArrayNotHasKey( 'cta_primary_href', $out['plan']->fields()['home']['hero'] );
+		$this->assertNotSame( array(), $out['plan']->warnings() );
+	}
+
+	public function test_a_script_url_in_a_list_row_is_warned_and_blanked(): void {
+		$out = $this->parse( array( 'home' => array( 'quick_tiles' => array( 'items' => array(
+			array( 'label' => 'Join', 'href' => 'javascript:alert(1)' ),
+		) ) ) ) );
+		$this->assertSame( 'Join', $out['plan']->items()['home']['quick_tiles'][0]['label'] );
+		$this->assertSame( '', $out['plan']->items()['home']['quick_tiles'][0]['href'] );
+		$this->assertNotSame( array(), $out['plan']->warnings() );
+	}
+
+	/** An entry that is not an entry is dropped, and the ones beside it survive. */
+	public function test_a_list_row_that_is_not_a_group_of_fields_is_warned(): void {
+		$out = $this->parse( array( 'home' => array( 'ticker' => array( 'items' => array(
+			'just a string',
+			array( 'text' => 'Doors open at six' ),
+		) ) ) ) );
+		$items = $out['plan']->items()['home']['ticker'];
+		$this->assertCount( 1, $items );
+		$this->assertSame( 'Doors open at six', $items[0]['text'] );
+		$this->assertSame(
+			array( 'Ignored "home/ticker/items[0]": expected a group of fields.' ),
+			$out['plan']->warnings()
+		);
+	}
+
+	/**
+	 * A field given a list or an object where a single value belongs. Left to
+	 * itself the library casts whatever it is handed to a string, and the club's
+	 * page ends up reading "Array".
+	 */
+	public function test_a_field_given_a_group_of_values_is_warned_and_dropped(): void {
+		$out = $this->parse( array( 'home' => array( 'hero' => array( 'eyebrow' => array( 'a', 'b' ) ) ) ) );
+		$this->assertTrue( $out['plan']->is_empty() );
+		$this->assertSame(
+			array( 'Ignored "home/hero/eyebrow": expected a single value.' ),
+			$out['plan']->warnings()
+		);
+	}
+
+	public function test_a_list_cell_given_a_group_of_values_is_warned_and_left_empty(): void {
+		$out = $this->parse( array( 'home' => array( 'ticker' => array( 'items' => array(
+			array( 'text' => array( 'a', 'b' ) ),
+		) ) ) ) );
+		$this->assertSame( '', $out['plan']->items()['home']['ticker'][0]['text'] );
+		$this->assertSame(
+			array( 'Ignored "home/ticker/items[0]/text": expected a single value.' ),
+			$out['plan']->warnings()
+		);
+	}
+
+	/** Every row of them being rubbish leaves the section untouched, not emptied. */
+	public function test_a_list_of_nothing_but_rubbish_plans_no_change(): void {
+		$out = $this->parse( array( 'home' => array( 'ticker' => array( 'items' => array( 'one', 'two' ) ) ) ) );
+		$this->assertTrue( $out['plan']->is_empty() );
+		$this->assertCount( 2, $out['plan']->warnings() );
 	}
 }

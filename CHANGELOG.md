@@ -5,6 +5,12 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.101.2
+
+- An imported file can now only change things you can see and edit. The import used to keep its own separate list of what a file was allowed to write to, which could drift from the screens you actually use — and a file could then quietly fill in something no screen would ever show you.
+- A link in an imported file that is not a real web address is skipped and listed with everything else that was ignored, rather than being silently emptied.
+- After an import, the reminder about pictures it could not fetch points you at the page each one belongs to. It used to name a screen that no longer exists.
+
 ## 0.101.1
 
 - A membership tier connected to a product you have since deleted from your shop used to read as "Not connected", even though it was still charging what it always had. It now says the product is no longer in your shop, so you can see what happened before you reconnect the tier to something else.

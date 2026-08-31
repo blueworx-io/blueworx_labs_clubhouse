@@ -239,7 +239,7 @@ final class SureCartProductsTest extends TestCase {
 
 		// A later request whose cache has expired and whose fetch then fails —
 		// e.g. the shop going briefly unreachable. Without the fix this would
-		// come back as array(), which the admin picker and Content_Sanitiser's
+		// come back as array(), which the admin picker and the library's own
 		// select handling would both read as "the shop has no products",
 		// clearing every stored price_id on the next Save.
 		$GLOBALS['wp_stub_transients'] = array();

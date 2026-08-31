@@ -115,10 +115,10 @@ final class Blueworx_Clubhouse_Link_Catalogue {
 	/**
 	 * Sections that share another section's rendered root and so have no root
 	 * of their own to carry an id — an anchor here would point at nothing.
-	 * `type` is NOT a signal for this: 'linkout'/'auto' sections (e.g.
-	 * about.committee, sports.directory, home.activity) still render their own
-	 * markup, they only source their *content* from elsewhere (a CPT, or
-	 * another page's section) — they need an anchor like any other section.
+	 * Having no fields of its own is NOT a signal for this: a section that shows
+	 * a collection (about.committee, sports.directory, home.activity) still
+	 * renders its own markup, it only sources its *content* from elsewhere — it
+	 * needs an anchor like any other section.
 	 *
 	 * Empty today: home.quick_tiles and home.info used to live here, sharing
 	 * home.hero's and home.social's roots respectively, until Page_Renderer
@@ -128,12 +128,10 @@ final class Blueworx_Clubhouse_Link_Catalogue {
 	 * future case that genuinely has no root of its own has one place to be
 	 * declared — and SectionAnchorTest fails loudly if this list and the
 	 * rendered markup ever disagree.
-	 *
-	 * @param array{key:string,type:string} $section
 	 */
-	private static function has_no_anchor( string $tab, array $section ): bool {
+	private static function has_no_anchor( string $tab, string $key ): bool {
 		$shared_root = array();
-		if ( in_array( (string) $section['key'], $shared_root[ $tab ] ?? array(), true ) ) {
+		if ( in_array( $key, $shared_root[ $tab ] ?? array(), true ) ) {
 			return true;
 		}
 		// The social feed is off until a club opts in, and renders nothing until
@@ -141,39 +139,36 @@ final class Blueworx_Clubhouse_Link_Catalogue {
 		// item leading to an anchor that is not on the page is worse than not
 		// offering it — a club that wants one can link to the page itself.
 		$opt_in = array( 'home' => array( 'social_feed' ) );
-		return in_array( (string) $section['key'], $opt_in[ $tab ] ?? array(), true );
+		return in_array( $key, $opt_in[ $tab ] ?? array(), true );
 	}
 
 	/**
 	 * One target per editable section, labelled "Page → Section" so a long list
 	 * stays scannable. Sections of a page the site cannot serve are skipped —
-	 * the catalogue's tabs and Page_Map's slugs share their spelling except for
-	 * Home, whose slug is ''. Sections with no root of their own (see
-	 * has_no_anchor()) are skipped too — the catalogue must never offer an
-	 * anchor the markup does not emit.
+	 * Page_Fields drops those areas itself, and its area keys and Page_Map's
+	 * slugs share their spelling except for Home, whose slug is ''. Sections
+	 * with no root of their own (see has_no_anchor()) are skipped too — the
+	 * catalogue must never offer an anchor the markup does not emit.
 	 *
 	 * @return array<int,array{target:string,label:string,group:string,url:string}>
 	 */
 	private static function anchors(): array {
 		$out = array();
-		foreach ( Blueworx_Clubhouse_Content_Catalogue::pages() as $page ) {
-			$tab  = (string) $page['tab'];
-			$slug = 'home' === $tab ? '' : $tab;
-			if ( 'global' === $tab || ! Blueworx_Clubhouse_Page_Map::is_available( $slug ) ) {
+		foreach ( Blueworx_Clubhouse_Page_Fields::sections() as $section ) {
+			$tab = $section['area'];
+			if ( 'global' === $tab ) {
 				continue;
 			}
-			foreach ( $page['sections'] as $section ) {
-				if ( self::has_no_anchor( $tab, $section ) ) {
-					continue;
-				}
-				$key   = (string) $section['key'];
-				$out[] = array(
-					'target' => 'anchor:' . $tab . '.' . $key,
-					'label'  => (string) $page['label'] . ' → ' . (string) $section['label'],
-					'group'  => 'Sections',
-					'url'    => Blueworx_Clubhouse_Links::url( $tab ) . '#' . self::anchor_id( $tab, $key ),
-				);
+			$key = $section['section'];
+			if ( self::has_no_anchor( $tab, $key ) ) {
+				continue;
 			}
+			$out[] = array(
+				'target' => 'anchor:' . $tab . '.' . $key,
+				'label'  => $section['area_label'] . ' → ' . $section['section_label'],
+				'group'  => 'Sections',
+				'url'    => Blueworx_Clubhouse_Links::url( $tab ) . '#' . self::anchor_id( $tab, $key ),
+			);
 		}
 		return $out;
 	}

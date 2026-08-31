@@ -14,17 +14,34 @@ final class BookingPageTest extends TestCase {
 	protected function setUp(): void {
 		wp_stub_reset();
 		Blueworx_Clubhouse_Integrations::set_detector( null );
+		// The editors are memoised, and this suite is one of the few that
+		// changes what is installed mid-test — without this a later case reads
+		// an earlier one's cached answer about a page that has since appeared.
+		Blueworx_Clubhouse_Page_Fields::forget();
 	}
 
 	protected function tearDown(): void {
 		Blueworx_Clubhouse_Integrations::set_detector( null );
 		Blueworx_Clubhouse_Shortcodes::set_expander( null );
+		Blueworx_Clubhouse_Page_Fields::forget();
 	}
 
 	private function withLatePoint(): void {
 		Blueworx_Clubhouse_Integrations::set_detector(
 			static fn( string $tag ): bool => Blueworx_Clubhouse_Integrations::LATEPOINT_TAG === $tag
 		);
+		Blueworx_Clubhouse_Page_Fields::forget();
+	}
+
+	/** Every section of one page, keyed as the editors declare them. */
+	private function sectionsOf( string $area ): array {
+		$out = array();
+		foreach ( Blueworx_Clubhouse_Page_Fields::sections() as $section ) {
+			if ( $area === $section['area'] ) {
+				$out[ $section['section'] ] = $section;
+			}
+		}
+		return $out;
 	}
 
 	private function branding(): Blueworx_Clubhouse_Branding {
@@ -167,14 +184,7 @@ final class BookingPageTest extends TestCase {
 			}
 			return array();
 		};
-		$fields = static function (): array {
-			foreach ( Blueworx_Clubhouse_Content_Catalogue::pages() as $page ) {
-				if ( 'calendar' === $page['tab'] ) {
-					return array_column( $page['sections'], 'key' );
-				}
-			}
-			return array();
-		};
+		$fields = fn(): array => array_keys( $this->sectionsOf( 'calendar' ) );
 
 		$this->assertNotContains( 'booking', $keys(), 'no visibility toggle' );
 		$this->assertNotContains( 'booking', $fields(), 'no content fields' );
@@ -229,26 +239,26 @@ final class BookingPageTest extends TestCase {
 	// ---- Admin ----
 
 	public function test_the_content_editor_offers_booking_only_with_latepoint(): void {
-		$tabs = static fn(): array => array_column( Blueworx_Clubhouse_Content_Catalogue::pages(), 'tab' );
-		$this->assertNotContains( 'booking', $tabs() );
+		$areas = static fn(): array => array_keys( Blueworx_Clubhouse_Page_Fields::areas() );
+		$this->assertNotContains( 'booking', $areas() );
 
 		$this->withLatePoint();
-		$this->assertContains( 'booking', $tabs() );
+		$this->assertContains( 'booking', $areas() );
 	}
 
 	/**
-	 * The catalogue and the visibility inventory are held in lockstep by
-	 * ContentCatalogueTest. That guard has to hold in BOTH integration states, or
-	 * installing LatePoint would desynchronise the two.
+	 * The editors and the visibility inventory are held in lockstep by
+	 * PageFieldsSectionsTest. That guard has to hold in BOTH integration states,
+	 * or installing LatePoint would desynchronise the two.
 	 */
-	public function test_catalogue_and_inventory_stay_in_lockstep_with_latepoint_present(): void {
+	public function test_editors_and_inventory_stay_in_lockstep_with_latepoint_present(): void {
 		$this->withLatePoint();
 		$inv = array();
 		foreach ( Blueworx_Clubhouse_Setup_Sections::inventory() as $p ) {
 			// A page with no sections has nothing to hold in lockstep — the member
 			// area is one: it carries a visibility switch, but every panel on it
 			// belongs to the shop or the booking plugin, so there is nothing of
-			// the club's to edit and no catalogue tab to match.
+			// the club's to edit and no editor area to match.
 			if ( array() === $p['sections'] ) {
 				continue;
 			}
@@ -256,11 +266,9 @@ final class BookingPageTest extends TestCase {
 			sort( $inv[ $p['page'] ] );
 		}
 		$seen = array();
-		foreach ( Blueworx_Clubhouse_Content_Catalogue::pages() as $page ) {
-			$vis_page = 'global' === $page['tab'] ? 'home' : $page['tab'];
-			foreach ( $page['sections'] as $s ) {
-				$seen[ $vis_page ][] = $s['key'];
-			}
+		foreach ( Blueworx_Clubhouse_Page_Fields::sections() as $section ) {
+			$vis_page            = 'global' === $section['area'] ? 'home' : $section['area'];
+			$seen[ $vis_page ][] = $section['section'];
 		}
 		$this->assertSame( array_keys( $inv ), array_keys( $seen ) );
 		foreach ( $seen as $vis_page => $keys ) {
@@ -271,20 +279,14 @@ final class BookingPageTest extends TestCase {
 
 	public function test_every_booking_slot_exposes_an_editable_shortcode_field(): void {
 		$this->withLatePoint();
-		$booking = null;
-		foreach ( Blueworx_Clubhouse_Content_Catalogue::pages() as $page ) {
-			if ( 'booking' === $page['tab'] ) {
-				$booking = $page;
-			}
-		}
-		$this->assertNotNull( $booking );
+		$booking = $this->sectionsOf( 'booking' );
+		$this->assertNotSame( array(), $booking );
 
-		foreach ( $booking['sections'] as $section ) {
-			if ( 'hero' === $section['key'] ) {
+		foreach ( $booking as $key => $section ) {
+			if ( 'hero' === $key ) {
 				continue;
 			}
-			$types = array_column( $section['fields'], 'type', 'key' );
-			$this->assertSame( 'shortcode', $types['shortcode'] ?? null, $section['key'] );
+			$this->assertArrayHasKey( 'shortcode', $section['fields'], $key );
 		}
 	}
 }

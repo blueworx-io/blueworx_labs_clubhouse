@@ -124,7 +124,7 @@ final class ClubRulesTest extends TestCase {
 	}
 
 	public function test_the_page_builder_offers_a_club_rules_tab(): void {
-		$tabs = array_column( Blueworx_Clubhouse_Content_Catalogue::pages(), 'tab' );
+		$tabs = array_keys( Blueworx_Clubhouse_Page_Fields::areas() );
 		$this->assertContains( 'rules', $tabs );
 	}
 

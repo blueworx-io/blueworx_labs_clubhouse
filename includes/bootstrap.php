@@ -18,7 +18,6 @@ require_once __DIR__ . '/core/class-null-storage.php';
 require_once __DIR__ . '/core/class-registry.php';
 
 // Content
-require_once __DIR__ . '/content/class-content-sanitiser.php';
 require_once __DIR__ . '/content/class-visibility.php';
 require_once __DIR__ . '/content/class-club-pages.php';
 require_once __DIR__ . '/content/class-link-catalogue.php';
@@ -86,7 +85,6 @@ require_once __DIR__ . '/admin/class-setup-fields.php';
 require_once __DIR__ . '/admin/class-setup-storage.php';
 require_once __DIR__ . '/admin/class-setup-editor.php';
 require_once __DIR__ . '/admin/class-owner-capabilities.php';
-require_once __DIR__ . '/admin/class-content-catalogue.php';
 require_once __DIR__ . '/admin/class-admin-pages.php';
 require_once __DIR__ . '/admin/class-access-screen.php';
 require_once __DIR__ . '/admin/class-owner-welcome.php';
