@@ -5,10 +5,10 @@ is below everything on it.
 
 Written 14 August 2026, rewritten 17 August 2026 against main at v0.76.0,
 23 August 2026 against v0.87.1, 27 August 2026 against v0.91.1,
-28 August 2026 against v0.97.0, 30 August 2026 against v0.98.0, and again
-30 August 2026 against v0.100.0. Keep it current — the surest way is to close
-the issue as the pull request merges, which is what let this list drift the
-last time.
+28 August 2026 against v0.97.0, 30 August 2026 against v0.98.0 and again
+against v0.100.0, and 31 August 2026 against v0.101.2. Keep it current — the
+surest way is to close the issue as the pull request merges, which is what let
+this list drift the last time.
 
 ---
 
@@ -36,7 +36,6 @@ one screen at a time, and the last of it went with Setup, along with
 | # | Do | Why here |
 | --- | --- | --- |
 | [#256](../../issues/256) | An honours board page | Club champions, chairpersons, captains, with categories the club sets and two tiers of filters. Phase 3 has landed, so it can be built the new way now — once, rather than the old way twice. |
-| [#294](../../issues/294) | Point the AI import at the page fields, not the old catalogue | Two declarations of the same fields, held together by a lockstep test. Worth doing before that test is all that stands between them. |
 | [#274](../../issues/274) | Put a shop in the CI test harness | Deferred 30 August 2026 — the shop is hand-checked before a release, and that is accepted. Genuinely uncertain anyway: SureCart has to install and authenticate in CI, which nobody has proved yet. |
 
 **Cannot start yet:** [#229](../../issues/229), pulling the social feed
@@ -57,6 +56,16 @@ now. They were the top two on this list until they moved, so nothing here is
 waiting on them.
 
 ## Done, and worth knowing
+
+**The import reads the page fields** ([#294](../../issues/294), v0.101.2). It
+used to keep a second declaration of every field — `Content_Catalogue`, with
+`Content_Sanitiser` beside it — held against `Page_Fields` by a lockstep test.
+Both are deleted. `Page_Fields::sections()` is the flat view everything outside
+the editors reads: the import's allow-list, the prompt it writes for an AI, the
+sections an import switches on and off, and the menu's list of anchors. An
+imported value is cleaned by the page editor library's own `Sanitise` — the
+same code a save runs through — so a file really is treated as form input now
+rather than nearly.
 
 **The six collections are records** (phase 5, v0.101.0). Sports, Teams,
 Fixtures, Events, Sponsors and People are edited on their own screens, opened

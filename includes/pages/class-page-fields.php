@@ -8,19 +8,19 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Every editable content area, said in the page editor library's vocabulary.
  *
- * One source, three readers: Page_Editors builds the fifteen screens from it,
- * Page_Content casts stored values back by the kinds it declares, and the
- * migration reads it to know where each old address now lives. A field that is
- * not here is a field that cannot be edited, cannot be read and will not be
- * migrated — which is why a lockstep test holds it against the catalogue it
- * replaces until that catalogue is deleted.
+ * The only declaration of it. Page_Editors builds the fifteen screens from it,
+ * Page_Content casts stored values back by the kinds it declares, the migration
+ * reads it to know where each old address now lives, and — through sections()
+ * below — the AI import, the prompt it writes and the menu's list of anchors
+ * all read it too. A field that is not here is a field that cannot be edited,
+ * cannot be read, will not be migrated and cannot be imported.
  *
- * A straight translation of Content_Catalogue::pages(), not a redesign: every
- * catalogue field keeps its label, its default and its options. `rows` is
- * carried across too, recording the author's intent, but the library does not
- * honour it yet — see area_field(). Nothing here reads the catalogue at
- * runtime — the two classes describe the same content independently, and
- * PageFieldsTest is what proves they still agree.
+ * It used to have a twin, Content_Catalogue, held against it by a lockstep
+ * test; the import was the last thing reading that twin, and it was deleted
+ * with issue #294.
+ *
+ * `rows` is carried on a textarea because it records the author's intent, but
+ * the library does not honour it yet — see area_field().
  *
  * @package BlueworxLabsClubhouse
  */
@@ -107,29 +107,71 @@ final class Blueworx_Clubhouse_Page_Fields {
 
 	/**
 	 * The human name for a stored content address ("Home · Hero"), or the raw
-	 * address when this class no longer has it. Replaces
-	 * Content_Catalogue::address_label() — task 10 repoints its callers.
+	 * address when this class no longer has it. The single place this string is
+	 * composed — the import preview, the applier's result rows and the
+	 * images-needed notice all name sections through here.
 	 */
 	public static function address_label( string $address ): string {
-		$slash = strpos( $address, '/' );
-		if ( false === $slash ) {
+		$section = self::sections()[ $address ] ?? null;
+		if ( null === $section ) {
 			return $address;
 		}
-		$area    = substr( $address, 0, $slash );
-		$section = substr( $address, $slash + 1 );
+		return $section['area_label'] . ' · ' . $section['section_label'];
+	}
 
-		$areas = self::areas();
-		if ( ! isset( $areas[ $area ] ) ) {
-			return $address;
-		}
-		foreach ( $areas[ $area ]['tabs'] as $tab ) {
-			foreach ( $tab['panels'] as $panel ) {
-				if ( $panel['id'] === $section ) {
-					return $areas[ $area ]['label'] . ' · ' . $panel['title'];
+	/**
+	 * Every editable section, flattened out of the fifteen screens and keyed by
+	 * the address its values are stored under ("home/hero"), in declaration
+	 * order.
+	 *
+	 * This is the shape every reader outside the editor wants: the import's
+	 * allow-list, the prompt it writes for an AI, the sections an import
+	 * switches on and off, and the menu's list of anchors. A screen is tabs
+	 * within panels within areas because that is how it is drawn; none of those
+	 * four care where a panel sits, only what it is called and what it accepts.
+	 *
+	 * `fields` is keyed by the bare field key an import file uses ("eyebrow"),
+	 * not the library's own screen-unique id ("hero_eyebrow"), and each value
+	 * is the field exactly as declared — so a caller can hand it straight to
+	 * the library's Sanitise and Validate. `items` is the panel's repeater, or
+	 * null when it has none. `collection` names the post type a panel renders
+	 * instead of content of its own, and is '' for every other panel.
+	 *
+	 * @return array<string,array{area:string,area_label:string,section:string,section_label:string,note:string,collection:string,fields:array<string,array<string,mixed>>,items:?array<string,mixed>}>
+	 */
+	public static function sections( ?Blueworx_Clubhouse_Products $products = null ): array {
+		$out = array();
+		foreach ( self::areas( $products ) as $area => $data ) {
+			foreach ( $data['tabs'] as $tab ) {
+				foreach ( $tab['panels'] as $panel ) {
+					$id     = (string) $panel['id'];
+					$fields = array();
+					$items  = null;
+					foreach ( $panel['fields'] as $field ) {
+						$key = self::field_key( $id, (string) $field['id'] );
+						if ( '' === $key ) {
+							continue;
+						}
+						if ( self::REPEATER_FIELD === $key ) {
+							$items = $field;
+							continue;
+						}
+						$fields[ $key ] = $field;
+					}
+					$out[ $area . '/' . $id ] = array(
+						'area'          => (string) $area,
+						'area_label'    => (string) $data['label'],
+						'section'       => $id,
+						'section_label' => (string) $panel['title'],
+						'note'          => (string) ( $panel['note'] ?? '' ),
+						'collection'    => (string) ( $panel['collection'] ?? '' ),
+						'fields'        => $fields,
+						'items'         => $items,
+					);
 				}
 			}
 		}
-		return $address;
+		return $out;
 	}
 
 	// ---------------------------------------------------------------------
@@ -245,6 +287,25 @@ final class Blueworx_Clubhouse_Page_Fields {
 	}
 
 	/**
+	 * Names the collection a panel renders instead of content of its own.
+	 *
+	 * A handful of panels have no editable fields at all — Sponsors, the
+	 * Committee, the directories, the activity tabs — because what they show
+	 * is a collection, managed elsewhere. The import is the reader that needs
+	 * this: it has no other way to tell whether a file covered such a section,
+	 * and a section it thinks was skipped is one it switches off. Kept as a
+	 * wrapper rather than another positional argument to panel(), which
+	 * already takes seven.
+	 *
+	 * @param array<string,mixed> $panel
+	 * @return array<string,mixed>
+	 */
+	private static function from_collection( array $panel, string $post_type ): array {
+		$panel['collection'] = $post_type;
+		return $panel;
+	}
+
+	/**
 	 * Every "<page>/<section>" pair a club can switch off today, read from
 	 * Setup_Sections::inventory() rather than duplicated here — the source
 	 * this class is told to match.
@@ -274,8 +335,8 @@ final class Blueworx_Clubhouse_Page_Fields {
 	}
 
 	// ---------------------------------------------------------------------
-	// Field sets shared by several panels, mirroring Content_Catalogue's own
-	// private hero_fields()/cta_fields()/etc. — translated the same way.
+	// Field sets shared by several panels — the hero, the call to action, and
+	// the rest, declared once and taken by the section they belong to.
 	// ---------------------------------------------------------------------
 
 	private static function hero_fields( string $section ): array {
@@ -404,12 +465,12 @@ final class Blueworx_Clubhouse_Page_Fields {
 				),
 			) ),
 			array( 'id' => 'club', 'label' => 'The club', 'panels' => array(
-				self::panel( $hideable, 'home', 'sports', 'Sports grid', array(
+				self::from_collection( self::panel( $hideable, 'home', 'sports', 'Sports grid', array(
 					self::text( 'sports', 'heading', 'Heading' ),
 					self::area_field( 'sports', 'eyebrow', 'Intro' ),
 				),
 					'The sports shown here are managed in one place — the Sports collection.'
-				),
+				), 'clubhouse_sport' ),
 				self::panel( $hideable, 'home', 'clubhouse', 'Clubhouse band', array(
 					self::text( 'clubhouse', 'eyebrow', 'Eyebrow' ),
 					self::text( 'clubhouse', 'heading', 'Heading' ),
@@ -426,9 +487,9 @@ final class Blueworx_Clubhouse_Page_Fields {
 				),
 					'Tiers are managed in one place — the Membership page.'
 				),
-				self::panel( $hideable, 'home', 'activity', 'Activity tabs', array(),
+				self::from_collection( self::panel( $hideable, 'home', 'activity', 'Activity tabs', array(),
 					'Built from each sport’s latest fixtures, results and standings.'
-				),
+				), 'clubhouse_event' ),
 			) ),
 			array( 'id' => 'community', 'label' => 'News and community', 'panels' => array(
 				self::panel( $hideable, 'home', 'news', 'News', array(
@@ -461,9 +522,9 @@ final class Blueworx_Clubhouse_Page_Fields {
 						self::cell( 'link_href', 'text', 'Link href', array( 'format' => 'url' ) ),
 					) ),
 				) ),
-				self::panel( $hideable, 'home', 'sponsors', 'Sponsors', array(),
+				self::from_collection( self::panel( $hideable, 'home', 'sponsors', 'Sponsors', array(),
 					'Sponsors are managed as a collection.'
-				),
+				), 'clubhouse_sponsor' ),
 				self::panel( $hideable, 'home', 'social', 'Social', array(
 					self::text( 'social', 'heading', 'Heading' ),
 					self::area_field( 'social', 'lede', 'Lede' ),
@@ -614,9 +675,9 @@ final class Blueworx_Clubhouse_Page_Fields {
 				),
 					'This renders as a single image band, not a list of facilities.'
 				),
-				self::panel( $h, 'about', 'committee', 'Committee', array(),
+				self::from_collection( self::panel( $h, 'about', 'committee', 'Committee', array(),
 					'The committee is managed in one place — the People collection.'
-				),
+				), 'clubhouse_person' ),
 				self::panel( $h, 'about', 'get_involved', 'Get involved', array(
 					self::repeater( 'get_involved', 'Ways to help', array(
 						self::cell( 'title', 'text', 'Title' ),
@@ -687,9 +748,9 @@ final class Blueworx_Clubhouse_Page_Fields {
 				),
 					'Paste a SureForms shortcode to take real enquiries. Until you do, the form here is a demo that does not send anywhere — so visitors are shown the club email and phone instead. The details beside it are the real club address, email and phone.'
 				),
-				self::panel( $h, 'contact', 'directory', 'Directory', array(),
+				self::from_collection( self::panel( $h, 'contact', 'directory', 'Directory', array(),
 					'The directory is managed in one place — the People collection.'
-				),
+				), 'clubhouse_person' ),
 				self::panel( $h, 'contact', 'social', 'Social', array(
 					self::text( 'social', 'heading', 'Heading' ),
 				),
@@ -713,38 +774,38 @@ final class Blueworx_Clubhouse_Page_Fields {
 				),
 					'The stories themselves are ordinary WordPress posts — write them under Posts.'
 				),
-				self::panel( $h, 'news', 'featured', 'Featured story', array(),
+				self::from_collection( self::panel( $h, 'news', 'featured', 'Featured story', array(),
 					'The featured story is whichever post is newest. Publish a post and it takes the top spot.'
-				),
-				self::panel( $h, 'news', 'posts', 'Stories', array(),
+				), 'post' ),
+				self::from_collection( self::panel( $h, 'news', 'posts', 'Stories', array(),
 					'Club news is written as ordinary WordPress posts, under Posts.'
-				),
+				), 'post' ),
 			) ) ),
 
 			'sports' => array( 'label' => 'Sports', 'tabs' => self::content_tab( array(
 				self::panel( $h, 'sports', 'hero', 'Hero', self::hero_filter_fields( 'hero' ) ),
-				self::panel( $h, 'sports', 'directory', 'Sports directory', array(),
+				self::from_collection( self::panel( $h, 'sports', 'directory', 'Sports directory', array(),
 					'Sports are managed in one place — the Sports collection.'
-				),
+				), 'clubhouse_sport' ),
 				self::panel( $h, 'sports', 'cta', 'Call to action', self::cta_fields( 'cta' ) ),
 			) ) ),
 
 			'teams' => array( 'label' => 'Teams', 'tabs' => self::content_tab( array(
 				self::panel( $h, 'teams', 'hero', 'Hero', self::hero_filter_fields( 'hero' ) ),
-				self::panel( $h, 'teams', 'directory', 'Teams directory', array(),
+				self::from_collection( self::panel( $h, 'teams', 'directory', 'Teams directory', array(),
 					'Teams are managed in one place — the Teams collection.'
-				),
+				), 'clubhouse_team' ),
 				self::panel( $h, 'teams', 'cta', 'Call to action', self::cta_fields( 'cta' ) ),
 			) ) ),
 
 			'events' => array( 'label' => 'Events', 'tabs' => self::content_tab( array(
 				self::panel( $h, 'events', 'hero', 'Hero', self::hero_filter_fields( 'hero' ) ),
-				self::panel( $h, 'events', 'upcoming', 'Upcoming events', array(),
+				self::from_collection( self::panel( $h, 'events', 'upcoming', 'Upcoming events', array(),
 					'Upcoming events are managed in one place — the Events collection.'
-				),
-				self::panel( $h, 'events', 'past', 'Past events', array(),
+				), 'clubhouse_event' ),
+				self::from_collection( self::panel( $h, 'events', 'past', 'Past events', array(),
 					'Derived from events marked past.'
-				),
+				), 'clubhouse_event' ),
 				self::panel( $h, 'events', 'cta', 'Call to action', self::cta_fields( 'cta' ) ),
 			) ) ),
 
@@ -753,12 +814,12 @@ final class Blueworx_Clubhouse_Page_Fields {
 				self::panel( $h, 'calendar', 'booking', 'Bookings', self::booking_slot_fields( 'booking' ),
 					'The Bookings calendar, above the fixtures — this is the "when" half of booking. The link beside the heading goes to the Bookings page, which is the what, where and who; a member seeing free slots with no idea what they are is how this got raised.'
 				),
-				self::panel( $h, 'calendar', 'schedule', 'Schedule', array(
+				self::from_collection( self::panel( $h, 'calendar', 'schedule', 'Schedule', array(
 					self::text( 'schedule', 'heading', 'Heading' ),
 					self::area_field( 'schedule', 'eyebrow', 'Intro' ),
 				),
 					'Built from each sport’s fixtures and results.'
-				),
+				), 'clubhouse_fixture' ),
 				self::panel( $h, 'calendar', 'cta', 'Call to action', self::cta_fields( 'cta' ) ),
 			) ) ),
 
@@ -813,7 +874,7 @@ final class Blueworx_Clubhouse_Page_Fields {
 	/**
 	 * Drops a whole area when its page's integration is absent, then drops
 	 * individual panels through Integrations::section_available() — the same
-	 * two filters Content_Catalogue::pages() ends with, so a club without
+	 * two filters the visibility inventory applies, so a club without
 	 * LatePoint is never offered a Bookings editor that cannot render.
 	 *
 	 * @param array<string,array<string,mixed>> $areas

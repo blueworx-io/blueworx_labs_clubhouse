@@ -336,7 +336,7 @@ final class Blueworx_Clubhouse_Import_Applier {
 			foreach ( $sections as $section => $fields ) {
 				$count  = count( $fields );
 				$rows[] = array(
-					'label'  => Blueworx_Clubhouse_Content_Catalogue::address_label( $page . '/' . $section ),
+					'label'  => Blueworx_Clubhouse_Page_Fields::address_label( $page . '/' . $section ),
 					'detail' => $count . ' ' . ( 1 === $count ? 'field' : 'fields' ) . ' saved',
 				);
 			}
@@ -345,7 +345,7 @@ final class Blueworx_Clubhouse_Import_Applier {
 			foreach ( $sections as $section => $items ) {
 				$count  = count( $items );
 				$rows[] = array(
-					'label'  => Blueworx_Clubhouse_Content_Catalogue::address_label( $page . '/' . $section ),
+					'label'  => Blueworx_Clubhouse_Page_Fields::address_label( $page . '/' . $section ),
 					'detail' => $count . ' ' . ( 1 === $count ? 'entry' : 'entries' ) . ' saved',
 				);
 			}

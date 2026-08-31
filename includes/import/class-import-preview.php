@@ -43,9 +43,9 @@ final class Blueworx_Clubhouse_Import_Preview {
 		$fields = $plan->fields();
 		$items  = $plan->items();
 
-		// Catalogue order, so the preview reads in the same order as the editor
-		// and the site, rather than in whatever order the file happened to use.
-		$addresses = array_keys( Blueworx_Clubhouse_Content_Catalogue::index() );
+		// The editors' own order, so the preview reads in the same order as the
+		// screens and the site, rather than in whatever order the file happened to use.
+		$addresses = array_keys( Blueworx_Clubhouse_Page_Fields::sections() );
 		foreach ( array_keys( $fields ) as $page ) {
 			foreach ( array_keys( $fields[ $page ] ) as $section ) {
 				$addresses[] = $page . '/' . $section;
@@ -79,7 +79,7 @@ final class Blueworx_Clubhouse_Import_Preview {
 			}
 
 			$rows[] = array(
-				'label'  => Blueworx_Clubhouse_Content_Catalogue::address_label( $address ),
+				'label'  => Blueworx_Clubhouse_Page_Fields::address_label( $address ),
 				'detail' => implode( ', ', $detail ),
 			);
 		}

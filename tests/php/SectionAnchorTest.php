@@ -34,9 +34,9 @@ final class SectionAnchorTest extends TestCase {
 	 * just as importantly, it must not withhold an anchor the markup DOES
 	 * emit. Two directions, both load-bearing:
 	 *
-	 *  1. Every catalogued section (Content_Catalogue::pages(), the brief's
-	 *     original unfiltered source) either carries its id in the rendered
-	 *     markup, or is named in $expected_missing — no silent third option.
+	 *  1. Every declared section (Page_Fields::sections(), what the editors
+	 *     themselves offer) either carries its id in the rendered markup, or is
+	 *     named in $expected_missing — no silent third option.
 	 *  2. What Link_Catalogue::targets() actually OFFERS as an anchor must be
 	 *     exactly "every catalogued id minus $expected_missing" — a single
 	 *     assertSame on two sorted arrays, not a one-directional
@@ -66,22 +66,20 @@ final class SectionAnchorTest extends TestCase {
 
 		$missing    = array();
 		$catalogued = array();
-		foreach ( Blueworx_Clubhouse_Content_Catalogue::pages() as $page ) {
-			$tab = (string) $page['tab'];
+		$rendered   = array();
+		foreach ( Blueworx_Clubhouse_Page_Fields::sections() as $section ) {
+			$tab = $section['area'];
 			if ( 'global' === $tab ) {
 				continue;
 			}
 			$slug = 'home' === $tab ? '' : $tab;
-			if ( ! Blueworx_Clubhouse_Page_Map::is_available( $slug ) ) {
-				continue;
+			if ( ! isset( $rendered[ $tab ] ) ) {
+				$rendered[ $tab ] = Blueworx_Clubhouse_Page_Map::render( $slug, $branding, $visibility, $collections );
 			}
-			$html = Blueworx_Clubhouse_Page_Map::render( $slug, $branding, $visibility, $collections );
-			foreach ( $page['sections'] as $section ) {
-				$id           = Blueworx_Clubhouse_Link_Catalogue::anchor_id( $tab, (string) $section['key'] );
-				$catalogued[] = $id;
-				if ( false === strpos( $html, 'id="' . $id . '"' ) ) {
-					$missing[] = $id;
-				}
+			$id           = Blueworx_Clubhouse_Link_Catalogue::anchor_id( $tab, $section['section'] );
+			$catalogued[] = $id;
+			if ( false === strpos( $rendered[ $tab ], 'id="' . $id . '"' ) ) {
+				$missing[] = $id;
 			}
 		}
 		sort( $missing );

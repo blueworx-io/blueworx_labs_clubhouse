@@ -8,10 +8,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 /**
  * Renders the Markdown prompt a club owner downloads and pastes into an AI
- * chat. Every field description is generated from Content_Catalogue and
- * Collection_Meta, so adding a section to ClubHouse updates the prompt on the
- * next download — there is no hand-maintained copy to drift. A lockstep test
- * asserts the coverage.
+ * chat. Every field description is generated from Page_Fields and
+ * Collection_Meta — the same two declarations the editing screens are built
+ * from — so adding a section to ClubHouse updates the prompt on the next
+ * download, and the prompt can never describe a field an owner cannot see.
+ * There is no hand-maintained copy to drift; a lockstep test asserts the
+ * coverage.
  *
  * @package BlueworxLabsClubhouse
  */
@@ -69,74 +71,117 @@ MD;
 	}
 
 	private static function content_inventory(): string {
-		$out = "## The pages\n\n";
+		$out  = "## The pages\n\n";
+		$area = '';
 		// Without the products adapter, the tier price_id select has only its
 		// "Not connected" option, so the AI is told that is the only valid
-		// value and a realistic import clears every tier's connection —
-		// Content_Controller and Import_Parser::sections() pass this same
-		// source for exactly this reason; the prompt generator must match it.
-		foreach ( Blueworx_Clubhouse_Content_Catalogue::pages( Blueworx_Clubhouse_Products_Source::get() ) as $page ) {
-			$out .= '### ' . $page['label'] . "\n\n";
-			foreach ( $page['sections'] as $section ) {
-				$address = (string) $section['store_page'] . '.' . (string) $section['key'];
-				$out    .= '#### ' . $section['label'] . ' — `content.' . $address . "`\n\n";
+		// value and a realistic import clears every tier's connection — the
+		// editing screens and Import_Parser::sections() pass this same source
+		// for exactly this reason; the prompt generator must match them.
+		foreach ( Blueworx_Clubhouse_Page_Fields::sections( Blueworx_Clubhouse_Products_Source::get() ) as $address => $section ) {
+			if ( $section['area'] !== $area ) {
+				$area = $section['area'];
+				$out .= '### ' . $section['area_label'] . "\n\n";
+			}
+			$out .= '#### ' . $section['section_label'] . ' — `content.' . str_replace( '/', '.', $address ) . "`\n\n";
 
-				$note = self::section_note( $section );
-				if ( '' !== $note ) {
-					$out .= $note . "\n\n";
-				}
+			if ( '' !== $section['note'] ) {
+				$out .= '_' . $section['note'] . "_\n\n";
+			}
 
-				$fields = is_array( $section['fields'] ?? null ) ? $section['fields'] : array();
-				$loop   = is_array( $section['loop'] ?? null ) ? $section['loop'] : array();
+			$fields = $section['fields'];
+			$items  = $section['items'];
 
-				if ( array() === $fields && array() === $loop ) {
-					// A purely descriptive section (an auto/linkout with nothing of
-					// its own to ask for) must say so explicitly. Otherwise the note
-					// alone still reads as an invitation, and the assistant may ask
-					// the club about it anyway and produce fields that only trigger
-					// "Ignored unknown field" noise on upload.
-					$out .= "This section takes no content from you — do not ask about it or include it in the file.\n\n";
-					continue;
-				}
+			if ( array() === $fields && null === $items ) {
+				// A purely descriptive section (one that shows a collection and
+				// has nothing of its own to ask for) must say so explicitly.
+				// Otherwise the note alone still reads as an invitation, and the
+				// assistant may ask the club about it anyway and produce fields
+				// that only trigger "Ignored unknown field" noise on upload.
+				$out .= "This section takes no content from you — do not ask about it or include it in the file.\n\n";
+				continue;
+			}
 
-				foreach ( $fields as $field ) {
-					$out .= self::field_line( $field );
-				}
-				if ( array() !== $fields ) {
-					$out .= "\n";
-				}
+			foreach ( $fields as $key => $field ) {
+				$out .= self::page_field_line( (string) $key, $field );
+			}
+			if ( array() !== $fields ) {
+				$out .= "\n";
+			}
 
-				if ( array() !== $loop ) {
-					$out .= 'Then a repeatable list of **' . $loop['name'] . '** entries, under `items`. Each entry has:' . "\n";
-					foreach ( $loop['fields'] as $field ) {
-						$out .= self::field_line( $field );
-					}
-					$out .= "\n";
+			if ( null !== $items ) {
+				// "Then" only reads right after a list of the section's own
+				// fields; a section that is nothing but a repeating list starts
+				// with it.
+				$lead = array() === $fields ? 'A' : 'Then a';
+				$out .= $lead . ' repeatable list — **' . $items['label'] . '** — under `items`. Each entry has:' . "\n";
+				foreach ( $items['fields'] as $cell ) {
+					$out .= self::page_field_line( (string) $cell['id'], $cell );
 				}
+				$out .= "\n";
 			}
 		}
 		return $out;
 	}
 
-	/** The catalogue's own explanatory note for a section, if it has one. */
-	private static function section_note( array $section ): string {
-		$parts = array();
-		if ( ! empty( $section['note'] ) ) {
-			$parts[] = (string) $section['note'];
+	/**
+	 * One line describing a page field. The key an import file uses is the bare
+	 * one, not the screen-unique id the library needs, so it is passed in
+	 * rather than read off the field.
+	 *
+	 * @param array<string,mixed> $field
+	 */
+	private static function page_field_line( string $key, array $field ): string {
+		$line = '- `' . $key . '` — ' . $field['label'] . ' (' . self::kind_hint( $field ) . ')';
+		if ( ! empty( $field['help'] ) ) {
+			// Some help already reads "e.g. …" itself; don't double it.
+			$help  = (string) $field['help'];
+			$line .= ' ' . ( 0 === stripos( $help, 'e.g.' ) ? $help : 'e.g. ' . $help );
 		}
-		if ( ! empty( $section['link']['text'] ) ) {
-			$parts[] = (string) $section['link']['text'];
+		return $line . "\n";
+	}
+
+	/**
+	 * A plain-English description of what a page field accepts, by the library
+	 * kind it was declared with. A link and an email address are a 'text' with
+	 * a format rather than kinds of their own — see Schema.
+	 *
+	 * @param array<string,mixed> $field
+	 */
+	private static function kind_hint( array $field ): string {
+		switch ( (string) ( $field['kind'] ?? 'text' ) ) {
+			case 'textarea':
+				return 'a short paragraph';
+			case 'media':
+				return 'a public image URL';
+			case 'toggle':
+				return 'true or false';
+			case 'date':
+				return 'a date, YYYY-MM-DD';
+			case 'number':
+				return 'a whole number';
+			case 'select':
+				$values = array();
+				foreach ( $field['options'] ?? array() as $option ) {
+					$values[] = '' === (string) $option['value'] ? '(leave out)' : (string) $option['value'];
+				}
+				return 'one of: ' . implode( ', ', $values );
+			case 'text':
+			default:
+				if ( 'url' === ( $field['format'] ?? '' ) ) {
+					return 'a link';
+				}
+				if ( 'email' === ( $field['format'] ?? '' ) ) {
+					return 'an email address';
+				}
+				return 'short text';
 		}
-		if ( ! empty( $section['auto']['text'] ) ) {
-			$parts[] = (string) $section['auto']['text'];
-		}
-		return '' === implode( '', $parts ) ? '' : '_' . implode( ' ', $parts ) . '_';
 	}
 
 	private static function field_line( array $field ): string {
 		$line = '- `' . $field['key'] . '` — ' . $field['label'] . ' (' . self::type_hint( $field ) . ')';
 		if ( ! empty( $field['placeholder'] ) ) {
-			// Some catalogue placeholders already read "e.g. …" themselves; don't double it.
+			// Some placeholders already read "e.g. …" themselves; don't double it.
 			$placeholder = (string) $field['placeholder'];
 			$line       .= ' ' . ( 0 === stripos( $placeholder, 'e.g.' ) ? $placeholder : 'e.g. ' . $placeholder );
 		}
@@ -171,9 +216,9 @@ MD;
 	}
 
 	/**
-	 * Select options come in two shapes: the content catalogue keys them
-	 * value => label, while Collection_Meta lists bare values. Handle both, and
-	 * name the empty value rather than printing nothing.
+	 * A collection field's select options. Collection_Meta lists bare values,
+	 * but a keyed value => label map is read too, and the empty value is named
+	 * rather than printed as nothing.
 	 */
 	private static function option_list( array $field ): string {
 		$options = is_array( $field['options'] ?? null ) ? $field['options'] : array();

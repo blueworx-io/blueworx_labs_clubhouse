@@ -119,7 +119,7 @@ final class PageRendererContentOverrideTest extends TestCase {
 
 	public function test_header_menu_cta_override_applies_across_pages(): void {
 		[ $b, $v, $c, $content ] = $this->ctx();
-		// Catalogue key for the header's menu CTA is 'join' (class-content-catalogue.php).
+		// The header's menu CTA is stored under 'join' — see Page_Fields.
 		$content->set( 'global', 'header', 'join', 'Sign up' );
 		$html = Blueworx_Clubhouse_Page_Renderer::contact( $b, $v, $c, '', $content );
 		$this->assertStringContainsString( 'Sign up', $html );
