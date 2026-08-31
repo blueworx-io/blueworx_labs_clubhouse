@@ -62,14 +62,11 @@ final class Blueworx_Clubhouse_Page_Editors {
 					? 'The header, footer, welcome pack and cookie notice — the parts that appear on every page.'
 					: sprintf( 'The words on your %s page. Nothing changes on the site until you save.', strtolower( $spec['label'] ) ),
 				'capability' => Blueworx_Clubhouse_Owner_Capabilities::CONTENT_CAP,
-				// Global content is the one of these with a menu item of its
-				// own, and it sits with the club's other content under
-				// Collections. The fourteen club pages stay under Clubhouse,
-				// hidden — they are reached from the Pages list, and the
-				// parent only decides which menu stays lit while one is open.
-				'parent'     => $global
-					? Blueworx_Clubhouse_Collection_Types::CONTENT_SLUG
-					: Blueworx_Clubhouse_Setup_Editor::PAGE_SLUG,
+				// All fifteen hang off Clubhouse. Global content is the one
+				// with a row of its own, directly under Setup; the fourteen
+				// club pages are hidden, so for them the parent only decides
+				// which menu stays lit while one is open.
+				'parent'     => Blueworx_Clubhouse_Setup_Editor::PAGE_SLUG,
 				'tabs'       => $spec['tabs'],
 			);
 			if ( $global ) {

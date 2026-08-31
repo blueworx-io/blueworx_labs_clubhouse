@@ -90,33 +90,51 @@ final class Blueworx_Clubhouse_Setup_Editor {
 	}
 
 	/**
-	 * Exactly one entry for this screen, called Setup, at the top of the list.
+	 * Exactly one entry for this screen, called Setup, at the top of the list,
+	 * with Global content directly beneath it.
 	 *
 	 * WordPress names a menu's own first entry after the menu, so this one
 	 * arrived as a second row reading "Clubhouse" directly under the item
 	 * already reading "Clubhouse". It is the Setup screen, so it says Setup.
+	 *
+	 * Global content is second because it is the other screen that changes
+	 * what a site says on every page, and the two belong together. The rest —
+	 * Import, Search & sharing, User guide, What's new — keep the order they
+	 * registered in.
 	 */
 	private static function name_own_submenu_and_put_it_first(): void {
 		$items = $GLOBALS['submenu'][ self::PAGE_SLUG ] ?? null;
 		if ( ! is_array( $items ) ) {
 			return;
 		}
-		$ours = null;
-		$rest = array();
+		$ours   = null;
+		$global = null;
+		$rest   = array();
 		foreach ( $items as $item ) {
-			if ( null === $ours && is_array( $item ) && ( $item[2] ?? '' ) === self::PAGE_SLUG ) {
-				$item[0] = 'Setup';
-				$ours    = $item;
+			$slug = is_array( $item ) ? (string) ( $item[2] ?? '' ) : '';
+			if ( self::PAGE_SLUG === $slug ) {
+				// A second entry for the same screen is a duplicate row, not a
+				// second door — the first is kept and renamed, the rest dropped.
+				if ( null === $ours ) {
+					$item[0] = 'Setup';
+					$ours    = $item;
+				}
 				continue;
 			}
-			// A second entry for the same screen is a duplicate row, not a
-			// second door — dropped rather than renamed.
-			if ( is_array( $item ) && ( $item[2] ?? '' ) === self::PAGE_SLUG ) {
+			if ( Blueworx_Clubhouse_Page_Editors::GLOBAL_SLUG === $slug && null === $global ) {
+				$global = $item;
 				continue;
 			}
 			$rest[] = $item;
 		}
-		$GLOBALS['submenu'][ self::PAGE_SLUG ] = null === $ours ? $rest : array_merge( array( $ours ), $rest );
+
+		$ordered = array();
+		foreach ( array( $ours, $global ) as $first ) {
+			if ( null !== $first ) {
+				$ordered[] = $first;
+			}
+		}
+		$GLOBALS['submenu'][ self::PAGE_SLUG ] = array_merge( $ordered, $rest );
 	}
 
 	public static function declare_screen(): void {

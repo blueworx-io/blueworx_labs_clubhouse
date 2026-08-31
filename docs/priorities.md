@@ -6,7 +6,7 @@ is below everything on it.
 Written 14 August 2026, rewritten 17 August 2026 against main at v0.76.0,
 23 August 2026 against v0.87.1, 27 August 2026 against v0.91.1,
 28 August 2026 against v0.97.0, 30 August 2026 against v0.98.0 and again
-against v0.100.0, and 31 August 2026 against v0.101.6. Keep it current — the
+against v0.100.0, and 31 August 2026 against v0.101.7. Keep it current — the
 surest way is to close the issue as the pull request merges, which is what let
 this list drift the last time.
 
@@ -110,7 +110,8 @@ Setup: WordPress opens a menu at its first child, the first child became the
 Sports list, and the code that hides the fourteen page editors was deleting
 Setup's own row along with theirs — so from v0.101.0 to v0.101.5 there was no
 way to reach Setup by looking. Clubhouse is Setup, Import, Search & sharing,
-User guide and What's new; Collections is the six lists and Global content.
+User guide and What's new, with Global content directly under Setup;
+Collections is the six lists.
 
 **Their meta keys moved, and that is the thing to remember.** A team's sport
 was stored as `sport` and is now `clubhouse_team_sport`, because the page

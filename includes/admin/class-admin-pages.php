@@ -63,7 +63,7 @@ final class Blueworx_Clubhouse_Admin_Pages {
 				'slug'        => Blueworx_Clubhouse_Page_Editors::GLOBAL_SLUG,
 				'label'       => 'Global content',
 				'cap'         => Blueworx_Clubhouse_Owner_Capabilities::CONTENT_CAP,
-				'menu'        => Blueworx_Clubhouse_Collection_Types::CONTENT_SLUG,
+				'menu'        => Blueworx_Clubhouse_Setup_Editor::PAGE_SLUG,
 				'description' => 'The header, footer, welcome pack and cookie notice.',
 			),
 			array(
