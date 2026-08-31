@@ -25,10 +25,13 @@ final class Blueworx_Clubhouse_Page_Editors {
 
 	public const GLOBAL_SLUG = 'clubhouse-global-content';
 
+	/** What every club page editor's slug begins with. */
+	public const PAGE_SLUG_PREFIX = 'clubhouse-page-';
+
 	public static function slug_for( string $area ): string {
 		return Blueworx_Clubhouse_Page_Content::GLOBAL_AREA === $area
 			? self::GLOBAL_SLUG
-			: 'clubhouse-page-' . $area;
+			: self::PAGE_SLUG_PREFIX . $area;
 	}
 
 	/** The address of an area's editor, carrying the record it edits. */
@@ -212,6 +215,31 @@ final class Blueworx_Clubhouse_Page_Editors {
 		}
 		add_action( 'init', array( self::class, 'declare_screens' ), 20 );
 		add_action( 'admin_head', array( self::class, 'hide_record_editors' ) );
+		add_filter( 'parent_file', array( self::class, 'light_the_pages_menu' ) );
+		add_filter( 'submenu_file', array( self::class, 'light_the_pages_menu' ) );
+	}
+
+	/**
+	 * Keep the Pages menu lit while a club page is open.
+	 *
+	 * These screens are registered under Clubhouse, because a hidden screen
+	 * has to hang off something and Clubhouse is where the rest of this plugin
+	 * lives. WordPress lights whatever it hangs off — so editing the About
+	 * page said Clubhouse, while the way in was the Pages list and the thing
+	 * being edited is a page. The sidebar was answering a question nobody
+	 * asked, and answering it wrongly.
+	 *
+	 * Global content is untouched: it has no page in the Pages list standing
+	 * for it, and its own row under Clubhouse is where it is reached from.
+	 *
+	 * @param mixed $file The menu WordPress is about to light.
+	 */
+	public static function light_the_pages_menu( $file ) {
+		$page = isset( $GLOBALS['plugin_page'] ) ? (string) $GLOBALS['plugin_page'] : '';
+		if ( self::GLOBAL_SLUG === $page || 0 !== strpos( $page, self::PAGE_SLUG_PREFIX ) ) {
+			return $file;
+		}
+		return 'edit.php?post_type=page';
 	}
 
 	/** Suggestions are applied here, not in screens(): see with_suggestions()'s own docblock. */

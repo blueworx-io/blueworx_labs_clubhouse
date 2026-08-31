@@ -5,6 +5,10 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.101.8
+
+- Editing one of your pages keeps Pages highlighted in the sidebar. It used to highlight Clubhouse, which is not where you came from and not where the page lives.
+
 ## 0.101.7
 
 - Global content sits under Clubhouse now, directly beneath Setup, rather than with the lists. It is the other screen that changes what your site says on every page, so the two belong together.

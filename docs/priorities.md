@@ -6,7 +6,7 @@ is below everything on it.
 Written 14 August 2026, rewritten 17 August 2026 against main at v0.76.0,
 23 August 2026 against v0.87.1, 27 August 2026 against v0.91.1,
 28 August 2026 against v0.97.0, 30 August 2026 against v0.98.0 and again
-against v0.100.0, and 31 August 2026 against v0.101.7. Keep it current — the
+against v0.100.0, and 31 August 2026 against v0.101.8. Keep it current — the
 surest way is to close the issue as the pull request merges, which is what let
 this list drift the last time.
 
