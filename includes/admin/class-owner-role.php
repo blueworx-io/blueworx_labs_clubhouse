@@ -108,6 +108,7 @@ final class Blueworx_Clubhouse_Owner_Role {
 		add_filter( 'editable_roles', array( self::class, 'limit_editable_roles' ) );
 		add_action( 'admin_menu', array( self::class, 'lock_menu' ), 999 );
 		add_action( 'wp_dashboard_setup', array( self::class, 'takeover_dashboard' ), 999 );
+		add_action( 'admin_enqueue_scripts', array( self::class, 'dress_dashboard' ) );
 		add_action( 'admin_init', array( self::class, 'maybe_upgrade' ) );
 	}
 
@@ -264,7 +265,27 @@ final class Blueworx_Clubhouse_Owner_Role {
 			return;
 		}
 		$GLOBALS['wp_meta_boxes']['dashboard'] = array();
-		wp_add_dashboard_widget( 'clubhouse_setup_dashboard', 'Clubhouse Setup', array( self::class, 'render_dashboard' ) );
+		// Titled for what it is rather than what it was: this stopped being the
+		// Setup form in v0.100.0. The id stays — it is what the browser tests
+		// find the widget by, and renaming it would only lose an owner's
+		// collapsed/expanded state for nothing.
+		wp_add_dashboard_widget( 'clubhouse_setup_dashboard', 'Clubhouse', array( self::class, 'render_dashboard' ) );
+	}
+
+	/**
+	 * The welcome widget is written in the design system's own markup, so the
+	 * dashboard has to carry the design system for it to be anything but bare
+	 * text — which is what it was until issue #307. As a guest, though: the
+	 * full-bleed chrome overrides belong to a screen that is entirely ours,
+	 * and on the dashboard they would move WordPress's own widgets.
+	 *
+	 * @param mixed $hook The screen WordPress is about to draw.
+	 */
+	public static function dress_dashboard( $hook = '' ): void {
+		if ( 'index.php' !== (string) $hook || ! self::is_owner( wp_get_current_user() ) ) {
+			return;
+		}
+		Blueworx_Clubhouse_Admin_Assets::enqueue_as_a_guest();
 	}
 
 	/** Dashboard widget body: where an owner starts. Setup itself is a page editor screen and mounts on its own page. */

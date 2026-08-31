@@ -15,6 +15,9 @@ if ( ! defined( 'ABSPATH' ) ) {
  * stylesheet but not the icon module draws every [data-lucide] element as an
  * empty box, which reads as a layout bug rather than a missing file.
  *
+ * Two ways in: enqueue() for a screen that is entirely ours, and
+ * enqueue_as_a_guest() for a panel of ours on somebody else's screen.
+ *
  * The body class is added here rather than being written into the stylesheet
  * as a page hook, because a submenu's hook is named after its parent and this
  * plugin's pages have been reparented once already (issue #145). A class we
@@ -38,28 +41,51 @@ final class Blueworx_Clubhouse_Admin_Assets {
 	 * de-duplicates by handle, and the body-class filter is added at most once.
 	 */
 	public static function enqueue(): void {
-		$url = BLUEWORX_LABS_CLUBHOUSE_URL;
-		$ver = BLUEWORX_LABS_CLUBHOUSE_VERSION;
+		self::enqueue_as_a_guest();
 
-		wp_enqueue_style( self::STYLE_HANDLE, $url . 'assets/blueworx-admin-design.css', array(), $ver );
-		wp_enqueue_style( self::CHROME_HANDLE, $url . 'assets/css/admin-chrome.css', array( self::STYLE_HANDLE ), $ver );
-
-		// A module, because the icon file is one: it upgrades every
-		// [data-lucide] element in place and watches for new ones.
-		if ( function_exists( 'wp_enqueue_script_module' ) ) {
-			wp_enqueue_script_module( self::ICONS_HANDLE, $url . 'assets/blueworx-admin-icons.js', array(), $ver );
-		} else {
-			// WordPress below 6.5 has no module API. A plain script tag still
-			// runs it, once the type is corrected on the way out.
-			wp_enqueue_script( self::ICONS_HANDLE, $url . 'assets/blueworx-admin-icons.js', array(), $ver, true );
-			add_filter( 'script_loader_tag', array( self::class, 'as_module' ), 10, 2 );
-		}
+		wp_enqueue_style(
+			self::CHROME_HANDLE,
+			BLUEWORX_LABS_CLUBHOUSE_URL . 'assets/css/admin-chrome.css',
+			array( self::STYLE_HANDLE ),
+			BLUEWORX_LABS_CLUBHOUSE_VERSION
+		);
 
 		// admin_enqueue_scripts fires before admin-header.php prints <body>, so
 		// a filter added here still reaches that class list.
 		if ( ! has_filter( 'admin_body_class', array( self::class, 'body_class' ) ) ) {
 			add_filter( 'admin_body_class', array( self::class, 'body_class' ) );
 		}
+	}
+
+	/**
+	 * The system's stylesheet and icons, and nothing else.
+	 *
+	 * For a Clubhouse panel sitting inside somebody else's screen — the
+	 * owner's dashboard widget is the one. The chrome overrides enqueue()
+	 * adds take the padding off the content column and hide the footer, which
+	 * is right for a screen that is entirely ours and wrong for one we are a
+	 * guest on: on the dashboard they would move WordPress's own widgets.
+	 *
+	 * The icons go with the stylesheet either way. A panel with the styles but
+	 * not the icons draws every [data-lucide] element as an empty box, which
+	 * reads as a layout bug rather than a missing file.
+	 */
+	public static function enqueue_as_a_guest(): void {
+		$url = BLUEWORX_LABS_CLUBHOUSE_URL;
+		$ver = BLUEWORX_LABS_CLUBHOUSE_VERSION;
+
+		wp_enqueue_style( self::STYLE_HANDLE, $url . 'assets/blueworx-admin-design.css', array(), $ver );
+
+		// A module, because the icon file is one: it upgrades every
+		// [data-lucide] element in place and watches for new ones.
+		if ( function_exists( 'wp_enqueue_script_module' ) ) {
+			wp_enqueue_script_module( self::ICONS_HANDLE, $url . 'assets/blueworx-admin-icons.js', array(), $ver );
+			return;
+		}
+		// WordPress below 6.5 has no module API. A plain script tag still
+		// runs it, once the type is corrected on the way out.
+		wp_enqueue_script( self::ICONS_HANDLE, $url . 'assets/blueworx-admin-icons.js', array(), $ver, true );
+		add_filter( 'script_loader_tag', array( self::class, 'as_module' ), 10, 2 );
 	}
 
 	/**
