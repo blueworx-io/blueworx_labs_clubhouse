@@ -55,4 +55,36 @@ test.describe('@wordpress an owner edits a club page', () => {
     await page.goto('/wp-admin/admin.php?page=clubhouse-global-content', { waitUntil: 'domcontentloaded' });
     await expect(page.locator('.bw-savebar')).toContainText('Everything is saved', { timeout: 30_000 });
   });
+
+  /**
+   * The sidebar has to agree with how you got here. These editors hang off the
+   * Clubhouse menu because a hidden screen has to hang off something, and
+   * WordPress lights whatever a screen hangs off — so editing the About page
+   * used to say Clubhouse, while the way in was the Pages list and the thing
+   * being edited is a page.
+   */
+  test('editing a club page lights Pages; global content still lights Clubhouse', async ({ page }) => {
+    await signInAsOwner(page);
+
+    const litMenus = () =>
+      page.evaluate(() =>
+        [...document.querySelectorAll('#adminmenu > li.menu-top')]
+          .filter((li) => li.classList.contains('wp-has-current-submenu') || li.classList.contains('current'))
+          .map((li) => li.querySelector('.wp-menu-name')?.textContent?.trim()));
+
+    await page.goto('/wp-admin/edit.php?post_type=page&post_status=all', { waitUntil: 'domcontentloaded' });
+    const href = await page
+      .locator('#the-list tr', { has: page.locator('a.row-title', { hasText: /^About$/ }) })
+      .first()
+      .locator('a.row-title')
+      .getAttribute('href');
+
+    await page.goto(href, { waitUntil: 'domcontentloaded' });
+    await expect(page.locator('.bw-savebar')).toContainText('Everything is saved', { timeout: 30_000 });
+    expect(await litMenus(), 'the sidebar names a different menu than the one you came from').toEqual(['Pages']);
+
+    await page.goto('/wp-admin/admin.php?page=clubhouse-global-content', { waitUntil: 'domcontentloaded' });
+    await expect(page.locator('.bw-savebar')).toContainText('Everything is saved', { timeout: 30_000 });
+    expect(await litMenus(), 'global content is reached from Clubhouse, so Clubhouse stays lit').toEqual(['Clubhouse']);
+  });
 });
