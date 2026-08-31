@@ -5,6 +5,10 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.101.7
+
+- Global content sits under Clubhouse now, directly beneath Setup, rather than with the lists. It is the other screen that changes what your site says on every page, so the two belong together.
+
 ## 0.101.6
 
 - Clubhouse Setup is back on the menu. Since the collections moved in v0.101.0 there was no Setup item anywhere and clicking "Clubhouse" opened the Sports list, so the only way in was the dashboard panel or typing the address.

@@ -112,17 +112,13 @@ final class PageEditorsTest extends TestCase {
 	}
 
 	/**
-	 * The fourteen club pages hang off Clubhouse — hidden, so the parent only
-	 * decides which menu stays lit while one is open. Global content is the
-	 * one with a row of its own, and it sits with the club's other content
-	 * under Collections.
+	 * All fifteen hang off Clubhouse. Global content is the one with a row of
+	 * its own, directly under Setup; the fourteen club pages are hidden, so
+	 * for them the parent only decides which menu stays lit while one is open.
 	 */
 	public function test_every_club_page_screen_hangs_off_the_clubhouse_menu(): void {
 		foreach ( $this->screens() as $slug => $screen ) {
-			$expected = Blueworx_Clubhouse_Page_Editors::GLOBAL_SLUG === $slug
-				? Blueworx_Clubhouse_Collection_Types::CONTENT_SLUG
-				: Blueworx_Clubhouse_Setup_Editor::PAGE_SLUG;
-			$this->assertSame( $expected, $screen['parent'], $slug );
+			$this->assertSame( Blueworx_Clubhouse_Setup_Editor::PAGE_SLUG, $screen['parent'], $slug );
 		}
 	}
 

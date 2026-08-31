@@ -194,6 +194,9 @@ test.describe('@wordpress Clubhouse Setup', () => {
       ).toHaveAttribute('href', 'admin.php?page=clubhouse-setup');
       await expect(clubhouse.locator('.wp-submenu li a')).toHaveText([
         'Setup',
+        // Directly under Setup: the other screen that changes what the site
+        // says on every page.
+        'Global content',
         'Import',
         'Search & sharing',
         'User guide',
@@ -210,7 +213,6 @@ test.describe('@wordpress Clubhouse Setup', () => {
         'Events',
         'Sponsors',
         'People',
-        'Global content',
       ]);
 
       // Every row goes to a real address. A submenu added before its parent
