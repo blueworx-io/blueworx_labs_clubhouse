@@ -1,6 +1,6 @@
 # Crewe Vagrants — upgrading the live site from 0.95.0 to 0.101.8
 
-Rehearsed on 12 September 2026 (and again on v0.101.9, below) on the local WordPress harness: a fresh site on
+Rehearsed on 12 September 2026 (and again on the version that runs the move itself, below) on the local WordPress harness: a fresh site on
 0.95.0, the club's own import file loaded, Setup filled in, images placed, then
 the plugin files swapped for 0.101.8 exactly as an in-place update does it.
 
@@ -32,13 +32,13 @@ the old content is untouched — but visitors would see it.
 
 ## How the window was closed
 
-From v0.101.9 the plugin runs that move itself, on the first request after
+From v0.101.11 the plugin runs that move itself, on the first request after
 the files update, and never again. So the update is one zip upload; nobody
 needs SSH, and the club's words are on the site from the first page load.
 The WP-CLI script stays for a re-run, and the report of the automatic run is
 kept in the option `clubhouse_content_migration_report` for support to read.
 
-Rehearsed again the same way on v0.101.9: files swapped, then a signed-out
+Rehearsed again the same way with the automatic run in place: files swapped, then a signed-out
 visit to the home page with nothing else done. That first page already read
 as the club's own words, and every page was byte-identical to the 0.95.0
 capture.
@@ -49,7 +49,7 @@ capture.
 2. Tell the club: a short blip, and that anything they edit that day should
    wait until it is done.
 3. Build the zip from `main` (`npm run build:zip`) and confirm its version is
-   0.101.9 or later.
+   0.101.11 or later.
 4. Plugins → Add New → Upload → choose the zip → "Replace current with
    uploaded". Do not deactivate and reactivate: reactivating puts demo
    entries back into any collection the club has emptied.
