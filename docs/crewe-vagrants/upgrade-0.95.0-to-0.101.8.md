@@ -38,6 +38,11 @@ needs SSH, and the club's words are on the site from the first page load.
 The WP-CLI script stays for a re-run, and the report of the automatic run is
 kept in the option `clubhouse_content_migration_report` for support to read.
 
+Rehearsed again the same way on v0.101.9: files swapped, then a signed-out
+visit to the home page with nothing else done. That first page already read
+as the club's own words, and every page was byte-identical to the 0.95.0
+capture.
+
 ## Runbook
 
 1. Take a Cloudways backup of the application. This is the undo.
