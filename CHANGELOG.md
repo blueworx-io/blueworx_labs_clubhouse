@@ -5,6 +5,10 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.101.12
+
+- Another plugin that draws its own complete page can now ask the club header and footer to stay off it. The Forge client workspace does, so it no longer appears wrapped in an unstyled club header and footer.
+
 ## 0.101.11
 
 - A site updating from before v0.98.0 keeps its own words on every page. The move onto the pages used to be a separate command someone had to run after updating; until they did, the site showed the design's demo words. It now happens on its own, on the first page load after the update, and never again.
