@@ -78,6 +78,22 @@ final class ExternalChromeTest extends TestCase {
 		);
 	}
 
+	/**
+	 * Another plugin that renders a complete document of its own — the Forge
+	 * client workspace, say — declines through the same filter, and is left
+	 * alone. Wrapping it printed the club's header and footer, unstyled, around
+	 * a page that had deliberately loaded no theme.
+	 */
+	public function test_the_filter_opts_a_request_out(): void {
+		$this->assertFalse( Blueworx_Clubhouse_External_Chrome::dresses( false, true, false, false ) );
+	}
+
+	/** No answer from the filter leaves the default rule in charge. */
+	public function test_no_answer_from_the_filter_keeps_the_default(): void {
+		$this->assertTrue( Blueworx_Clubhouse_External_Chrome::dresses( false, true, false, null ) );
+		$this->assertFalse( Blueworx_Clubhouse_External_Chrome::dresses( false, false, false, null ) );
+	}
+
 	public function test_chrome_goes_inside_the_body_not_around_it(): void {
 		$html = Blueworx_Clubhouse_External_Chrome::inject(
 			'<!doctype html><html><head></head><body class="page"><p>dash</p></body></html>',

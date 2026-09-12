@@ -55,14 +55,21 @@ final class Blueworx_Clubhouse_External_Chrome {
 	 * @param bool $is_clubhouse_page Whether Frontend is serving this request.
 	 * @param bool $is_dressable_view Whether this is a front-end view that renders
 	 *                                a page (not a feed, robots.txt or a redirect).
-	 * @param bool $is_surecart_view  Whether SureCart owns this page.
-	 * @param bool $forced            An explicit opt-in from the filter below.
+	 * @param bool      $is_surecart_view  Whether SureCart owns this page.
+	 * @param bool|null $answer            The filter's answer: true dresses the
+	 *                                     request regardless, false leaves it
+	 *                                     alone (a plugin that renders its own
+	 *                                     complete document says this), null
+	 *                                     leaves the default rule in charge.
 	 */
-	public static function dresses( bool $is_clubhouse_page, bool $is_dressable_view, bool $is_surecart_view, bool $forced = false ): bool {
+	public static function dresses( bool $is_clubhouse_page, bool $is_dressable_view, bool $is_surecart_view, ?bool $answer = null ): bool {
 		if ( $is_clubhouse_page || $is_surecart_view ) {
 			return false;
 		}
-		return $forced || $is_dressable_view;
+		if ( null !== $answer ) {
+			return $answer;
+		}
+		return $is_dressable_view;
 	}
 
 	/**
@@ -145,9 +152,15 @@ final class Blueworx_Clubhouse_External_Chrome {
 		 * because a club may run a plugin that renders its own complete document
 		 * the way Clubhouse pages do, and that page needs a way to say so.
 		 *
-		 * @param bool $forced Whether to dress this request regardless.
+		 * Return true to dress the request regardless, false to leave it alone
+		 * (the Forge client workspace does this: its page is a complete document
+		 * with no theme, and the chrome came out unstyled around it), or pass
+		 * the value through to keep the default rule.
+		 *
+		 * @param bool|null $answer null, unless a plugin has answered.
 		 */
-		$forced = (bool) apply_filters( 'blueworx_clubhouse_dress_external_page', false );
+		$answer = apply_filters( 'blueworx_clubhouse_dress_external_page', null );
+		$answer = is_bool( $answer ) ? $answer : null;
 		$slug   = function_exists( 'get_page_template_slug' ) ? get_page_template_slug() : '';
 		return self::dresses(
 			Blueworx_Clubhouse_Frontend::is_clubhouse_page(),
@@ -163,7 +176,7 @@ final class Blueworx_Clubhouse_External_Chrome {
 			// club could clear from the editor without knowing what it did.
 			self::is_surecart( is_string( $slug ) ? $slug : '', self::current_post_type() )
 				|| self::is_commerce_page(),
-			$forced
+			$answer
 		);
 	}
 
