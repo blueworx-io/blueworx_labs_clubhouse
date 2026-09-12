@@ -5,6 +5,15 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.101.10
+
+- The admin screens pick up the latest shared BlueWorx design: the save bar stays in view while you scroll and switches sit on the right of their row.
+- On a site with more than one BlueWorx plugin, Clubhouse's screens are always styled by the newest copy of that design present, rather than whichever plugin happened to load first.
+
+## 0.101.9
+
+- Internal only: the browser tests sign in with the shared test site's current admin password, which changed on 11 September. Nothing changes on a site.
+
 ## 0.101.8
 
 - Editing one of your pages keeps Pages highlighted in the sidebar. It used to highlight Clubhouse, which is not where you came from and not where the page lives.

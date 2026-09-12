@@ -59,7 +59,7 @@ if (command === 'up') {
   run('node', [require.resolve('@playwright/test/cli'), 'test', ...process.argv.slice(3)], {
     PLAYWRIGHT_BASE_URL: baseUrl,
     WP_ADMIN_USER: 'admin',
-    WP_ADMIN_PASS: 'wptest-admin-pw',
+    WP_ADMIN_PASS: 'admin',
   });
 } else {
   console.error(`Unknown command "${command}". Use up, test, or down.`);

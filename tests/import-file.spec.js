@@ -1,4 +1,5 @@
 const { test, expect } = require('@playwright/test');
+const { ADMIN_PASS } = require('./helpers/credentials');
 
 // @wordpress only: uploading a file to a wp-admin screen, and then reading the
 // value back out of the editor that owns it.
@@ -12,7 +13,7 @@ const { test, expect } = require('@playwright/test');
 async function signIn(page) {
   await page.goto('/wp-login.php');
   await page.fill('#user_login', 'admin');
-  await page.fill('#user_pass', 'wptest-admin-pw');
+  await page.fill('#user_pass', ADMIN_PASS);
   await page.click('#wp-submit');
   await expect(page.locator('#wpadminbar')).toBeVisible();
 }

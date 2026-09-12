@@ -71,6 +71,17 @@ final class Blueworx_Clubhouse_Admin_Assets {
 	 * reads as a layout bug rather than a missing file.
 	 */
 	public static function enqueue_as_a_guest(): void {
+		// The design system's own registrar (assets/blueworx-admin-design.php)
+		// loads the newest copy present on the site, once — so on a site with
+		// two BlueWorx plugins our screens are never styled by the other one's
+		// older stylesheet. It registers the same handle the chrome overrides
+		// depend on. The direct enqueue below is only for a build without it.
+		if ( function_exists( 'blueworx_admin_design_enqueue' ) ) {
+			blueworx_admin_design_enqueue();
+			blueworx_admin_design_enqueue_icons();
+			return;
+		}
+
 		$url = BLUEWORX_LABS_CLUBHOUSE_URL;
 		$ver = BLUEWORX_LABS_CLUBHOUSE_VERSION;
 
