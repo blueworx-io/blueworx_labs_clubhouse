@@ -5,6 +5,11 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.101.11
+
+- A site updating from before v0.98.0 keeps its own words on every page. The move onto the pages used to be a separate command someone had to run after updating; until they did, the site showed the design's demo words. It now happens on its own, on the first page load after the update, and never again.
+- Internal only: the rehearsal of that update for the first live club site is written up under docs/crewe-vagrants.
+
 ## 0.101.10
 
 - The admin screens pick up the latest shared BlueWorx design: the save bar stays in view while you scroll and switches sit on the right of their row.
