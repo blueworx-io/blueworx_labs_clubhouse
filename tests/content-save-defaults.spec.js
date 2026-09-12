@@ -1,4 +1,5 @@
 const { test, expect } = require('@playwright/test');
+const { ADMIN_PASS } = require('./helpers/credentials');
 
 // @wordpress only: this is a wp-admin screen and what one save does to the site.
 //
@@ -16,7 +17,7 @@ const { test, expect } = require('@playwright/test');
 async function loginAsAdmin(page) {
   await page.goto('/wp-login.php');
   await page.fill('#user_login', 'admin');
-  await page.fill('#user_pass', 'wptest-admin-pw');
+  await page.fill('#user_pass', ADMIN_PASS);
   await page.click('#wp-submit');
   await expect(page.locator('#wpadminbar')).toBeVisible();
 }

@@ -1,4 +1,5 @@
 const { test, expect } = require('@playwright/test');
+const { ADMIN_PASS } = require('./helpers/credentials');
 
 // @wordpress only: Setup is a wp-admin screen, and the DB-free preview has
 // neither wp-admin nor roles.
@@ -14,7 +15,7 @@ const OWNER = { login: 'clubowner', pass: 'owner-test-pw' };
 // Used only where a menu has to be right for both — an administrator holds
 // every capability, so a door offered to them proves nothing about the owner,
 // and vice versa.
-const ADMIN = { login: 'admin', pass: 'wptest-admin-pw' };
+const ADMIN = { login: 'admin', pass: ADMIN_PASS };
 
 async function signIn(page, user) {
   await page.context().clearCookies();

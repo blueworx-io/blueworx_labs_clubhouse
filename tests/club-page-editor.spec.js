@@ -1,4 +1,5 @@
 const { test, expect } = require('@playwright/test');
+const { ADMIN_PASS } = require('./helpers/credentials');
 
 // @wordpress only: a club page's words live on the page's own post now, so
 // this needs a real page and a real record — neither of which the DB-free
@@ -7,7 +8,7 @@ const { test, expect } = require('@playwright/test');
 async function signIn(page) {
   await page.goto('/wp-login.php');
   await page.fill('#user_login', 'admin');
-  await page.fill('#user_pass', 'wptest-admin-pw');
+  await page.fill('#user_pass', ADMIN_PASS);
   await page.click('#wp-submit');
   await expect(page.locator('#wpadminbar')).toBeVisible();
 }

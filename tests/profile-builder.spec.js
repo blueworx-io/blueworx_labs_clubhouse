@@ -1,4 +1,5 @@
 const { test, expect } = require('@playwright/test');
+const { ADMIN_PASS } = require('./helpers/credentials');
 
 // Issue #276: a club invents its own member fields, members fill in their own,
 // and club staff see every one of them on the WordPress user screen.
@@ -26,7 +27,7 @@ async function signIn(page, user, pass) {
   await expect(page.locator('#wpadminbar')).toBeAttached({ timeout: 60_000 });
 }
 
-const signInAsAdmin = (page) => signIn(page, 'admin', 'wptest-admin-pw');
+const signInAsAdmin = (page) => signIn(page, 'admin', ADMIN_PASS);
 const signInAsMember = (page) => signIn(page, 'member', 'wptest-member-pw');
 
 // The builder is a repeater on the Setup screen's Members tab now. Its rows are
