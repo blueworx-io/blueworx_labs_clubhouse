@@ -37,6 +37,44 @@ final class Blueworx_Clubhouse_Content_Migration {
 	private const DONE_KEY = 'content_migration_done';
 
 	/**
+	 * What the last run moved and what it could not place — the same report
+	 * bin/migrate-club-pages.php prints, kept where support can read it,
+	 * since the run that happens on its own has nobody at a terminal.
+	 */
+	private const REPORT_KEY = 'content_migration_report';
+
+	public static function register(): void {
+		if ( ! function_exists( 'add_action' ) ) {
+			return;
+		}
+		// Late on init, front end and admin alike: the first request after
+		// the files update is what moves the words, so a visitor never sees
+		// the design's own defaults where the club's used to be. Priority 30
+		// so every page, field and integration is declared before it walks
+		// them.
+		add_action( 'init', array( self::class, 'on_init' ), 30 );
+	}
+
+	public static function on_init(): void {
+		self::maybe_run( new Blueworx_Clubhouse_Options_Storage() );
+	}
+
+	/**
+	 * Move a club's words once, on whichever request comes first after an
+	 * update. Guarded by the same flag the WP-CLI script sets, so a run
+	 * already done by hand is not repeated — and that matters more here than
+	 * for the collections: run() overwrites the new store from the old one,
+	 * so a second run would undo anything edited on a page since.
+	 */
+	public static function maybe_run( Blueworx_Clubhouse_Storage $storage ): void {
+		if ( self::has_run( $storage ) ) {
+			return;
+		}
+		$result = self::run( $storage );
+		$storage->set( self::REPORT_KEY, $result );
+	}
+
+	/**
 	 * @return array{moved:int,skipped:array<int,string>,pages:array<string,int>}
 	 */
 	public static function run( Blueworx_Clubhouse_Storage $storage ): array {
