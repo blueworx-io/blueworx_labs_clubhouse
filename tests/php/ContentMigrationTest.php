@@ -322,4 +322,45 @@ final class ContentMigrationTest extends TestCase {
 
 		$this->assertSame( array(), $result['skipped'], 'nothing should have been skipped — every page exists and every integration is active' );
 	}
+	// -------------------------------------------------------------------
+	// The run that happens on its own, on the first request after an update.
+	// -------------------------------------------------------------------
+
+	public function test_it_runs_itself_once_and_records_that_it_has(): void {
+		$this->storage->set( 'content_home', array( 'hero' => array( 'title_lead' => 'Crewe Vagrants' ) ) );
+		$this->assertFalse( Blueworx_Clubhouse_Content_Migration::has_run( $this->storage ) );
+
+		Blueworx_Clubhouse_Content_Migration::maybe_run( $this->storage );
+
+		$this->assertSame( 'Crewe Vagrants', $GLOBALS['wp_stub_postmeta'][42]['page_hero_title_lead'] );
+		$this->assertTrue( Blueworx_Clubhouse_Content_Migration::has_run( $this->storage ) );
+	}
+
+	public function test_a_value_edited_on_the_page_since_is_never_overwritten(): void {
+		$this->storage->set( 'content_home', array( 'hero' => array( 'title_lead' => 'Crewe Vagrants' ) ) );
+		Blueworx_Clubhouse_Content_Migration::maybe_run( $this->storage );
+
+		( new Blueworx_Clubhouse_Page_Content( $this->storage ) )->set( 'home', 'hero', 'title_lead', 'Edited since' );
+		Blueworx_Clubhouse_Content_Migration::maybe_run( $this->storage );
+
+		$this->assertSame( 'Edited since', $GLOBALS['wp_stub_postmeta'][42]['page_hero_title_lead'] );
+	}
+
+	public function test_a_run_that_has_already_been_done_by_hand_is_not_repeated(): void {
+		$this->storage->set( 'content_home', array( 'hero' => array( 'title_lead' => 'Crewe Vagrants' ) ) );
+		Blueworx_Clubhouse_Content_Migration::run( $this->storage );
+		( new Blueworx_Clubhouse_Page_Content( $this->storage ) )->set( 'home', 'hero', 'title_lead', 'Edited since' );
+
+		Blueworx_Clubhouse_Content_Migration::maybe_run( $this->storage );
+
+		$this->assertSame( 'Edited since', $GLOBALS['wp_stub_postmeta'][42]['page_hero_title_lead'] );
+	}
+
+	public function test_the_report_of_the_run_is_kept_for_support(): void {
+		$this->storage->set( 'content_home', array( 'clubhouse' => array( 'image' => 'https://example.test/x.jpg' ) ) );
+		Blueworx_Clubhouse_Content_Migration::maybe_run( $this->storage );
+
+		$report = $this->storage->get( 'content_migration_report', array() );
+		$this->assertContains( 'home/clubhouse/image', $report['skipped'] );
+	}
 }
