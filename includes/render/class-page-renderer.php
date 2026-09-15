@@ -130,22 +130,27 @@ final class Blueworx_Clubhouse_Page_Renderer {
 	}
 
 	/**
-	 * Read a loop's stored items, falling back to the hardcoded demo items
-	 * only while the club has never written any.
+	 * Read a loop's stored items, falling back to the demo items when the club
+	 * has none of its own.
 	 *
-	 * Never written and written-as-empty are different answers (issue #320):
-	 * the demo words stand in until a club has its own, but a list the club
-	 * has emptied is empty — the ticker used to bring back the very demo
-	 * messages somebody had just deleted, because both read as "nothing".
+	 * An empty stored list means one of two things. Where the editor shows
+	 * the demo rows as the list's default (Page_Fields::list_default()), the
+	 * club saw them and deleted them, so empty is empty — the ticker used to
+	 * bring back the very messages somebody had just removed (issue #320).
+	 * Where the editor declares no default, its screen says "No rows yet"
+	 * over a site showing demo words, and a save that touched nothing writes
+	 * the list as empty; that empty still means "use the demo words".
 	 */
 	private static function citems( ?Blueworx_Clubhouse_Page_Content $c, string $page, string $sec, array $default ): array {
 		if ( null === $c ) {
 			return $default;
 		}
-		if ( ! $c->has_items( $page, $sec ) ) {
-			return $default;
+		$items = $c->get_items( $page, $sec );
+		if ( array() !== $items ) {
+			return $items;
 		}
-		return $c->get_items( $page, $sec );
+		$deliberate = $c->has_items( $page, $sec ) && null !== Blueworx_Clubhouse_Page_Fields::list_default( $page, $sec );
+		return $deliberate ? array() : $default;
 	}
 
 	/** Whether a section's own Shown switch is on. No store means nothing hidden. */
@@ -721,13 +726,8 @@ final class Blueworx_Clubhouse_Page_Renderer {
 			) ) );
 		}
 		if ( self::cshown( $content, 'home', 'ticker' ) ) {
-			$default = array(
-				array( 'text' => '1st XV promoted to Div 3 South' ),
-				array( 'text' => 'Open Day — Sat 26 Jul, 10:00–14:00' ),
-				array( 'text' => 'Clubhouse refurbishment complete' ),
-				array( 'text' => 'Summer Football Camp · 4–8 Aug' ),
-			);
-			$items = array_values( array_filter( array_map(
+			$default = Blueworx_Clubhouse_Page_Fields::ticker_default();
+			$items   = array_values( array_filter( array_map(
 				static fn( array $i ): string => trim( (string) ( $i['text'] ?? '' ) ),
 				self::citems( $content, 'home', 'ticker', $default )
 			) ) );

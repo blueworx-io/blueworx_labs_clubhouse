@@ -250,6 +250,56 @@ final class Blueworx_Clubhouse_Page_Fields {
 		);
 	}
 
+	/**
+	 * The demo messages the ticker starts with. One place, read by both the
+	 * field (as the rows the editor shows until a club writes its own) and the
+	 * renderer (as what the site shows until then) — so what a club sees on
+	 * the screen and what the site shows are the same four lines, and
+	 * deleting them on the screen is a real deletion (issue #320).
+	 *
+	 * @return array<int,array{text:string}>
+	 */
+	public static function ticker_default(): array {
+		return array(
+			array( 'text' => '1st XV promoted to Div 3 South' ),
+			array( 'text' => 'Open Day — Sat 26 Jul, 10:00–14:00' ),
+			array( 'text' => 'Clubhouse refurbishment complete' ),
+			array( 'text' => 'Summer Football Camp · 4–8 Aug' ),
+		);
+	}
+
+	/**
+	 * The rows a list's editor shows until the club writes its own, or null
+	 * for a list that declares none. Only a list with a declared default can
+	 * be emptied on purpose: with one, the demo rows are on the screen and
+	 * deleting them is a decision; without one the screen shows "No rows yet"
+	 * over a site that is showing demo words, and a save that touches nothing
+	 * writes the list as empty — which must go on meaning "use the demo
+	 * words", not "show nothing". The renderer asks this to tell the two apart.
+	 *
+	 * @return array<int,array<string,mixed>>|null
+	 */
+	public static function list_default( string $area, string $section ): ?array {
+		$areas = self::areas();
+		if ( ! isset( $areas[ $area ] ) ) {
+			return null;
+		}
+		$id = self::field_id( $section, self::REPEATER_FIELD );
+		foreach ( $areas[ $area ]['tabs'] as $tab ) {
+			foreach ( $tab['panels'] as $panel ) {
+				if ( $panel['id'] !== $section ) {
+					continue;
+				}
+				foreach ( $panel['fields'] as $f ) {
+					if ( $f['id'] === $id && 'repeater' === $f['kind'] && is_array( $f['default'] ?? null ) ) {
+						return $f['default'];
+					}
+				}
+			}
+		}
+		return null;
+	}
+
 	/** A row cell. Its id is bare — repeater scopes are separate, so no prefix. */
 	private static function cell( string $id, string $kind, string $label, array $extra = array() ): array {
 		return array_merge( array( 'id' => $id, 'kind' => $kind, 'label' => $label ), $extra );
@@ -458,9 +508,12 @@ final class Blueworx_Clubhouse_Page_Fields {
 				),
 				self::panel( $hideable, 'home', 'ticker', 'Ticker',
 					array(
-						self::repeater( 'ticker', 'Messages', array(
-							self::cell( 'text', 'text', 'Message' ),
-						) ),
+						array_merge(
+							self::repeater( 'ticker', 'Messages', array(
+								self::cell( 'text', 'text', 'Message' ),
+							) ),
+							array( 'default' => self::ticker_default() )
+						),
 					)
 				),
 			) ),
