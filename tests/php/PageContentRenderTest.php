@@ -50,4 +50,22 @@ final class PageContentRenderTest extends TestCase {
 		$html    = Blueworx_Clubhouse_Page_Map::render( '', $this->branding(), $this->visibility(), $this->collections(), '', $content );
 		$this->assertStringNotContainsString( 'ch-ticker', $html );
 	}
+
+	/**
+	 * Issue #320. The demo messages stand in only while a club has never
+	 * written its own. A list the club has emptied is empty — it must not
+	 * fall back to the demo words it just deleted.
+	 */
+	public function test_a_list_the_club_has_emptied_does_not_show_the_demo_items(): void {
+		update_option( 'clubhouse_page_id_home', 42 );
+
+		$untouched = Blueworx_Clubhouse_Page_Map::render( '', $this->branding(), $this->visibility(), $this->collections(), '', new Blueworx_Clubhouse_Page_Content( new Blueworx_Clubhouse_Fake_Storage() ) );
+		$this->assertStringContainsString( '1st XV promoted', $untouched, 'positive control: the demo words stand in until the club writes its own' );
+
+		$content = new Blueworx_Clubhouse_Page_Content( new Blueworx_Clubhouse_Fake_Storage() );
+		$content->set_items( 'home', 'ticker', array() );
+		$html = Blueworx_Clubhouse_Page_Map::render( '', $this->branding(), $this->visibility(), $this->collections(), '', $content );
+		$this->assertStringNotContainsString( '1st XV promoted', $html );
+		$this->assertStringNotContainsString( 'ch-ticker', $html, 'an emptied ticker is not drawn at all' );
+	}
 }

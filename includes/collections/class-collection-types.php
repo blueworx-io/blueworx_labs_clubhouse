@@ -97,10 +97,33 @@ final class Blueworx_Clubhouse_Collection_Types {
 			'Collections',
 			self::CONTENT_CAP,
 			self::CONTENT_SLUG,
-			'',
+			array( self::class, 'render_content_menu' ),
 			Blueworx_Clubhouse_Admin_Menu_Icons::data_uri( self::CONTENT_SLUG ),
 			4
 		);
+		// The heading's own address goes to the first list (issue #330). The
+		// sidebar never links to it, but wp-admin's command search lists every
+		// menu by its slug, and picking Collections there used to land on
+		// "Cannot load clubhouse-content". Sent on before anything is drawn.
+		add_action( 'load-toplevel_page_' . self::CONTENT_SLUG, array( self::class, 'send_to_first_list' ) );
+	}
+
+	/** Where the heading's address goes: the first of the six lists. */
+	public static function first_list_url(): string {
+		return admin_url( 'edit.php?post_type=' . self::POST_TYPES[0] );
+	}
+
+	public static function send_to_first_list(): void {
+		wp_safe_redirect( self::first_list_url() );
+		exit;
+	}
+
+	/**
+	 * Only reached if the redirect above did not run — a link, so the page is
+	 * never a dead end even then.
+	 */
+	public static function render_content_menu(): void {
+		echo '<div class="wrap"><p><a href="' . esc_url( self::first_list_url() ) . '">Sports</a></p></div>';
 	}
 
 	/**

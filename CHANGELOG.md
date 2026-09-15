@@ -5,6 +5,15 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.103.0
+
+- The green "Saved" notice on every editing screen now looks like every other notice: an icon, the message, and a close button on the far right level with the text. It also sits in line with the sections beneath it rather than running edge to edge. (#315, #319)
+- Clubhouse Setup: the one Branding block is now four sections — Club name, Branding, Colours and Socials — so the tab is easier to scan. Nothing about what is saved has changed. (#317)
+- Clubhouse Setup: the paragraph describing each look has gone; a link to the demo site sits under the choices instead, opening in a new tab. (#318)
+- A ticker whose messages have all been deleted no longer shows the demo messages again — it is simply not shown. The same holds for any list a club has emptied: the demo words only ever stand in for a list that has never been written. (#320)
+- Picking "Collections" in wp-admin's command search now opens the Sports list instead of an error page. (#330)
+- The plugin carries the latest shared admin design system and page editor library (v1.16.0).
+
 ## 0.102.0
 
 - The guides have moved. The User guide screen under Clubhouse has gone; instead, a ClubHouse section now appears on the Guides page of the BlueWorx WordPress Enhancements plugin, next to the WordPress, SureCart and LatePoint guides. There are around forty of them, covering everything a club can do — the look, pages and menu, every collection, news, members, bookings, search, import and admin — each as numbered steps with a note of who can do it. Guides about the shop or bookings only show on a site that has them. Without the Enhancements plugin there are no guides.

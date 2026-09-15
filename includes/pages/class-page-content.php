@@ -132,6 +132,15 @@ final class Blueworx_Clubhouse_Page_Content {
 		update_post_meta( $id, $this->meta_key( $section, $field ), $value );
 	}
 
+	/**
+	 * Whether a list has ever been written — including written as empty.
+	 * get_items() answers array() to both, and the renderer needs to tell
+	 * them apart: an emptied list is a decision, an unwritten one is not.
+	 */
+	public function has_items( string $page, string $section ): bool {
+		return is_array( $this->get( $page, $section, Blueworx_Clubhouse_Page_Fields::REPEATER_FIELD, null ) );
+	}
+
 	/** @return array<int,array<string,mixed>> */
 	public function get_items( string $page, string $section ): array {
 		$value = $this->get( $page, $section, Blueworx_Clubhouse_Page_Fields::REPEATER_FIELD, array() );

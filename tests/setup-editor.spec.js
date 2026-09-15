@@ -54,6 +54,21 @@ test.describe('@wordpress Clubhouse Setup', () => {
     ]);
   });
 
+  // Issues #317 and #318: the Branding block is four titled sections, and the
+  // look picker links to the demo site instead of describing each look.
+  test('the first tab is five sections, with a demo link under the looks', async ({ page }) => {
+    await signIn(page, OWNER);
+    await openSetup(page);
+
+    await expect(page.locator('.bw-card__title').filter({ hasText: /^(Base Look|Club name|Branding|Colours|Socials)$/ }))
+      .toHaveText(['Base Look', 'Club name', 'Branding', 'Colours', 'Socials']);
+
+    const demo = page.getByRole('link', { name: /demo site/ });
+    await expect(demo).toHaveAttribute('href', 'https://demo.305media.co.uk/');
+    await expect(demo).toHaveAttribute('target', '_blank');
+    await expect(page.locator('.bw-card', { hasText: 'Base Look' }).first()).not.toContainText('Bright, playful-premium');
+  });
+
   test('changing a field wakes the save bar, and the change survives a tab switch', async ({ page }) => {
     await signIn(page, OWNER);
     await openSetup(page);

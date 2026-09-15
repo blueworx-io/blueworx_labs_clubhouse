@@ -68,6 +68,33 @@ final class SetupFieldsTest extends TestCase {
 		$this->assertSame( array( 'court-side', 'floodlight' ), array_column( $fields['look']['options'], 'value' ) );
 	}
 
+	/**
+	 * Issue #318: the paragraph describing every look went, and a single link
+	 * to the demo site sits beneath the choices instead, opening in a new tab
+	 * so the Setup screen and anything unsaved on it stay put.
+	 */
+	public function test_the_look_picker_links_to_the_demo_site_instead_of_describing_each_look(): void {
+		$tabs   = array_column( $this->tabs(), null, 'id' );
+		$fields = $tabs['look']['panels'][0]['fields'];
+		$this->assertSame( array( 'look', 'look_demo' ), array_column( $fields, 'id' ) );
+		$this->assertSame( '', $fields[0]['help'] ?? '', 'no description paragraph under the radios' );
+		$this->assertSame( 'link', $fields[1]['kind'] );
+		$this->assertSame( 'https://demo.305media.co.uk/', $fields[1]['url'] );
+		$this->assertTrue( $fields[1]['wide'], 'beneath the choices, not beside them' );
+	}
+
+	/** Issue #317: the one Branding block is four titled sections, the fields unchanged. */
+	public function test_branding_is_split_into_four_sections(): void {
+		$tabs   = array_column( $this->tabs(), null, 'id' );
+		$panels = array_column( $tabs['look']['panels'], null, 'id' );
+		$this->assertSame( array( 'base_look', 'club_name', 'branding', 'colours', 'socials' ), array_keys( $panels ) );
+		$this->assertSame( array( 'Club name', 'Branding', 'Colours', 'Socials' ), array_column( array_slice( $panels, 1 ), 'title' ) );
+		$this->assertSame( array( 'club_name' ), array_column( $panels['club_name']['fields'], 'id' ) );
+		$this->assertSame( array( 'logo', 'favicon' ), array_column( $panels['branding']['fields'], 'id' ) );
+		$this->assertSame( array( 'accent', 'secondary' ), array_column( $panels['colours']['fields'], 'id' ) );
+		$this->assertSame( array( 'facebook', 'instagram', 'linkedin', 'x' ), array_column( $panels['socials']['fields'], 'id' ) );
+	}
+
 	public function test_a_content_editor_gets_the_menu_tab_and_nothing_else(): void {
 		$this->assertSame(
 			array( 'menu' ),

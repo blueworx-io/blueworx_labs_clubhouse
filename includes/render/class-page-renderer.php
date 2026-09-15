@@ -129,13 +129,23 @@ final class Blueworx_Clubhouse_Page_Renderer {
 		return ( null === $v || '' === $v ) ? $default : $v;
 	}
 
-	/** Read a loop's stored items, falling back to the hardcoded default array when none saved. */
+	/**
+	 * Read a loop's stored items, falling back to the hardcoded demo items
+	 * only while the club has never written any.
+	 *
+	 * Never written and written-as-empty are different answers (issue #320):
+	 * the demo words stand in until a club has its own, but a list the club
+	 * has emptied is empty — the ticker used to bring back the very demo
+	 * messages somebody had just deleted, because both read as "nothing".
+	 */
 	private static function citems( ?Blueworx_Clubhouse_Page_Content $c, string $page, string $sec, array $default ): array {
 		if ( null === $c ) {
 			return $default;
 		}
-		$items = $c->get_items( $page, $sec );
-		return array() === $items ? $default : $items;
+		if ( ! $c->has_items( $page, $sec ) ) {
+			return $default;
+		}
+		return $c->get_items( $page, $sec );
 	}
 
 	/** Whether a section's own Shown switch is on. No store means nothing hidden. */
@@ -717,11 +727,15 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				array( 'text' => 'Clubhouse refurbishment complete' ),
 				array( 'text' => 'Summer Football Camp · 4–8 Aug' ),
 			);
-			$items = self::citems( $content, 'home', 'ticker', $default );
-			$out  .= self::anchored( 'home', 'ticker', Blueworx_Clubhouse_Sections::ticker( array_values( array_map(
-				static fn( array $i ): string => (string) ( $i['text'] ?? '' ),
-				$items
-			) ) ) );
+			$items = array_values( array_filter( array_map(
+				static fn( array $i ): string => trim( (string) ( $i['text'] ?? '' ) ),
+				self::citems( $content, 'home', 'ticker', $default )
+			) ) );
+			// A ticker with nothing to say is not drawn: an empty strip that
+			// scrolls nothing is worse than no strip.
+			if ( array() !== $items ) {
+				$out .= self::anchored( 'home', 'ticker', Blueworx_Clubhouse_Sections::ticker( $items ) );
+			}
 		}
 		if ( self::cshown( $content, 'home', 'sports' ) ) {
 			// One section, two collections: the reader switches between the club's
