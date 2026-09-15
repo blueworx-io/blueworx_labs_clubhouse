@@ -24,4 +24,11 @@ jobs:
       # input defaults to `main`, so without it the v1 workflow would run
       # against whatever is on the foundation's main branch today.
       foundation_ref: v1
+      # Identical to release.yml's list, deliberately: the check that runs on a
+      # pull request and the build that runs on a tag must agree on what ships.
+      exclude_paths: |
+        # The vendored update checker ships whole, as upstream publishes it. Its
+        # composer.json is the one file in it the zip check refuses — Composer
+        # never runs on a site, so it is left out rather than deleted.
+        /plugin-update-checker/composer.json
 

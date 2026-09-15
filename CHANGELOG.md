@@ -5,6 +5,10 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.104.0
+
+- The plugin now updates itself. Each release is published on GitHub and every site is offered it on Dashboard → Updates, like any other plugin — nobody uploads a zip any more.
+
 ## 0.103.0
 
 - The green "Saved" notice on every editing screen now looks like every other notice: an icon, the message, and a close button on the far right level with the text. It also sits in line with the sections beneath it rather than running edge to edge. (#315, #319)
