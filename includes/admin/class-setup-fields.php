@@ -65,10 +65,8 @@ final class Blueworx_Clubhouse_Setup_Fields {
 	 */
 	private static function look_tab( array $looks ): array {
 		$options = array();
-		$help    = array();
 		foreach ( $looks as $slug => $look ) {
 			$options[] = array( 'value' => (string) $slug, 'label' => $look['name'] );
-			$help[]    = $look['name'] . ' — ' . $look['description'];
 		}
 
 		return array(
@@ -85,15 +83,30 @@ final class Blueworx_Clubhouse_Setup_Fields {
 							'kind'       => 'radio',
 							'label'      => 'Base Look',
 							'options'    => $options,
-							'help'       => implode( ' · ', $help ),
+							'capability' => self::cap(),
+						),
+						// Each look used to be described in a paragraph under the
+						// radios (issue #318). Seeing them beats reading about
+						// them, so a link to the demo site stands there instead.
+						array(
+							'id'         => 'look_demo',
+							'kind'       => 'link',
+							'label'      => 'See each look in action on the demo site',
+							'url'        => 'https://demo.305media.co.uk/',
+							// The full row, so it sits under the choices rather
+							// than beside them in the second column.
+							'wide'       => true,
 							'capability' => self::cap(),
 						),
 					),
 				),
+				// Four sections rather than one block (issue #317), so the tab
+				// scans: name, then the pictures, then the colours, then the
+				// social accounts. Same fields, same ids, nothing saved differently.
 				array(
-					'id'     => 'branding',
-					'title'  => 'Branding',
-					'note'   => 'Your club name, colours, logo and social links.',
+					'id'     => 'club_name',
+					'title'  => 'Club name',
+					'note'   => 'As it reads in the header and in browser tabs.',
 					'fields' => array(
 						array(
 							'id'         => 'club_name',
@@ -101,6 +114,32 @@ final class Blueworx_Clubhouse_Setup_Fields {
 							'label'      => 'Club name',
 							'capability' => self::cap(),
 						),
+					),
+				),
+				array(
+					'id'     => 'branding',
+					'title'  => 'Branding',
+					'note'   => 'Your logo, and the icon shown in the browser tab.',
+					'fields' => array(
+						array(
+							'id'         => 'logo',
+							'kind'       => 'media',
+							'label'      => 'Logo',
+							'capability' => self::cap(),
+						),
+						array(
+							'id'         => 'favicon',
+							'kind'       => 'media',
+							'label'      => 'Browser tab icon',
+							'capability' => self::cap(),
+						),
+					),
+				),
+				array(
+					'id'     => 'colours',
+					'title'  => 'Colours',
+					'note'   => 'Used for buttons, links and highlights across the whole site.',
+					'fields' => array(
 						array(
 							'id'         => 'accent',
 							'kind'       => 'colour',
@@ -120,18 +159,13 @@ final class Blueworx_Clubhouse_Setup_Fields {
 							'help'       => 'Optional. Leave it empty to have one worked out from your main colour. A low-contrast colour is allowed here, but text on it may be hard to read.',
 							'capability' => self::cap(),
 						),
-						array(
-							'id'         => 'logo',
-							'kind'       => 'media',
-							'label'      => 'Logo',
-							'capability' => self::cap(),
-						),
-						array(
-							'id'         => 'favicon',
-							'kind'       => 'media',
-							'label'      => 'Browser tab icon',
-							'capability' => self::cap(),
-						),
+					),
+				),
+				array(
+					'id'     => 'socials',
+					'title'  => 'Socials',
+					'note'   => 'The full address of each account. Leave one empty and its icon is not shown.',
+					'fields' => array(
 						array(
 							'id'         => 'facebook',
 							'kind'       => 'text',

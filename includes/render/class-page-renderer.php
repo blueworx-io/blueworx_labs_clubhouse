@@ -129,13 +129,28 @@ final class Blueworx_Clubhouse_Page_Renderer {
 		return ( null === $v || '' === $v ) ? $default : $v;
 	}
 
-	/** Read a loop's stored items, falling back to the hardcoded default array when none saved. */
+	/**
+	 * Read a loop's stored items, falling back to the demo items when the club
+	 * has none of its own.
+	 *
+	 * An empty stored list means one of two things. Where the editor shows
+	 * the demo rows as the list's default (Page_Fields::list_default()), the
+	 * club saw them and deleted them, so empty is empty — the ticker used to
+	 * bring back the very messages somebody had just removed (issue #320).
+	 * Where the editor declares no default, its screen says "No rows yet"
+	 * over a site showing demo words, and a save that touched nothing writes
+	 * the list as empty; that empty still means "use the demo words".
+	 */
 	private static function citems( ?Blueworx_Clubhouse_Page_Content $c, string $page, string $sec, array $default ): array {
 		if ( null === $c ) {
 			return $default;
 		}
 		$items = $c->get_items( $page, $sec );
-		return array() === $items ? $default : $items;
+		if ( array() !== $items ) {
+			return $items;
+		}
+		$deliberate = $c->has_items( $page, $sec ) && null !== Blueworx_Clubhouse_Page_Fields::list_default( $page, $sec );
+		return $deliberate ? array() : $default;
 	}
 
 	/** Whether a section's own Shown switch is on. No store means nothing hidden. */
@@ -711,17 +726,16 @@ final class Blueworx_Clubhouse_Page_Renderer {
 			) ) );
 		}
 		if ( self::cshown( $content, 'home', 'ticker' ) ) {
-			$default = array(
-				array( 'text' => '1st XV promoted to Div 3 South' ),
-				array( 'text' => 'Open Day — Sat 26 Jul, 10:00–14:00' ),
-				array( 'text' => 'Clubhouse refurbishment complete' ),
-				array( 'text' => 'Summer Football Camp · 4–8 Aug' ),
-			);
-			$items = self::citems( $content, 'home', 'ticker', $default );
-			$out  .= self::anchored( 'home', 'ticker', Blueworx_Clubhouse_Sections::ticker( array_values( array_map(
-				static fn( array $i ): string => (string) ( $i['text'] ?? '' ),
-				$items
-			) ) ) );
+			$default = Blueworx_Clubhouse_Page_Fields::ticker_default();
+			$items   = array_values( array_filter( array_map(
+				static fn( array $i ): string => trim( (string) ( $i['text'] ?? '' ) ),
+				self::citems( $content, 'home', 'ticker', $default )
+			) ) );
+			// A ticker with nothing to say is not drawn: an empty strip that
+			// scrolls nothing is worse than no strip.
+			if ( array() !== $items ) {
+				$out .= self::anchored( 'home', 'ticker', Blueworx_Clubhouse_Sections::ticker( $items ) );
+			}
 		}
 		if ( self::cshown( $content, 'home', 'sports' ) ) {
 			// One section, two collections: the reader switches between the club's

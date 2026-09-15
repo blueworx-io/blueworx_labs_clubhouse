@@ -50,4 +50,45 @@ final class PageContentRenderTest extends TestCase {
 		$html    = Blueworx_Clubhouse_Page_Map::render( '', $this->branding(), $this->visibility(), $this->collections(), '', $content );
 		$this->assertStringNotContainsString( 'ch-ticker', $html );
 	}
+
+	/**
+	 * Issue #320. The demo messages stand in only while a club has never
+	 * written its own. A list the club has emptied is empty — it must not
+	 * fall back to the demo words it just deleted.
+	 */
+	public function test_a_list_the_club_has_emptied_does_not_show_the_demo_items(): void {
+		update_option( 'clubhouse_page_id_home', 42 );
+
+		$untouched = Blueworx_Clubhouse_Page_Map::render( '', $this->branding(), $this->visibility(), $this->collections(), '', new Blueworx_Clubhouse_Page_Content( new Blueworx_Clubhouse_Fake_Storage() ) );
+		$this->assertStringContainsString( '1st XV promoted', $untouched, 'positive control: the demo words stand in until the club writes its own' );
+
+		$content = new Blueworx_Clubhouse_Page_Content( new Blueworx_Clubhouse_Fake_Storage() );
+		$content->set_items( 'home', 'ticker', array() );
+		$html = Blueworx_Clubhouse_Page_Map::render( '', $this->branding(), $this->visibility(), $this->collections(), '', $content );
+		$this->assertStringNotContainsString( '1st XV promoted', $html );
+		$this->assertStringNotContainsString( 'ch-ticker', $html, 'an emptied ticker is not drawn at all' );
+	}
+
+	/**
+	 * The other half of #320. A list whose editor declares no default rows
+	 * shows "No rows yet" over a site that is showing demo words, and a save
+	 * that touched nothing writes it as empty. That empty must go on meaning
+	 * "use the demo words" — or one visit to the About editor would blank its
+	 * values cards.
+	 */
+	public function test_an_empty_save_of_a_list_with_no_editor_default_keeps_the_demo_words(): void {
+		update_option( 'clubhouse_page_id_about', 43 );
+		$this->assertNull( Blueworx_Clubhouse_Page_Fields::list_default( 'about', 'values' ), 'precondition: values declares no default rows' );
+
+		$content = new Blueworx_Clubhouse_Page_Content( new Blueworx_Clubhouse_Fake_Storage() );
+		$content->set_items( 'about', 'values', array() );
+		$html = Blueworx_Clubhouse_Page_Map::render( 'about', $this->branding(), $this->visibility(), $this->collections(), '', $content );
+		$this->assertStringContainsString( 'Everyone plays', $html, 'the values cards are still drawn' );
+	}
+
+	/** The editor and the site start from the same four ticker messages. */
+	public function test_the_ticker_editor_default_is_what_the_site_shows(): void {
+		$this->assertSame( Blueworx_Clubhouse_Page_Fields::ticker_default(), Blueworx_Clubhouse_Page_Fields::list_default( 'home', 'ticker' ) );
+		$this->assertCount( 4, Blueworx_Clubhouse_Page_Fields::ticker_default() );
+	}
 }
