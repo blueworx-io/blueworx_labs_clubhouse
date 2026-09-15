@@ -1,3 +1,8 @@
+	# The update checker's own vendor/ is runtime code it loads on every page —
+	# the foundation's zip check ships it too. Composer's dev tree at the root is
+	# still refused.
+	hit="$(printf '%s
+' "$hit" | grep -v "^$SLUG/plugin-update-checker/vendor/" || true)"
 #!/usr/bin/env bash
 #
 # Build the deployable plugin zip from an explicit allowlist, then verify the
@@ -52,6 +57,10 @@ INCLUDE=(
 	# was not updated. The "everything the plugin requires is in the zip" check
 	# below is what catches the next one of these.
 	"blueworx-page-editor"
+	# The update checker. Required unguarded on boot, like the editor above, so
+	# a zip without it fatals on activate — and a site running such a zip could
+	# never receive another update.
+	"plugin-update-checker"
 )
 
 # Belt and braces. The allowlist alone already excludes these, so a hit here means
@@ -99,6 +108,9 @@ for item in "${INCLUDE[@]}"; do
 	[ -e "$ROOT/$item" ] || die "allowlisted path is missing from the repo: $item"
 	cp -R "$ROOT/$item" "$STAGE/$SLUG/"
 done
+# The update checker ships whole, as upstream publishes it, bar the one file
+# the forbidden list refuses: Composer never runs on a site.
+rm -f "$STAGE/$SLUG/plugin-update-checker/composer.json"
 
 # --- build -------------------------------------------------------------------
 mkdir -p "$OUT_DIR"
@@ -140,6 +152,10 @@ check "every entry is nested under $SLUG/" "$(printf '%s\n' "$ENTRIES" | grep -v
 offenders=""
 for seg in "${FORBIDDEN_SEGMENTS[@]}"; do
 	hit="$(printf '%s\n' "$ENTRIES" | grep -E "(^|/)$(printf '%s' "$seg" | sed 's/\./\\./g')(/|$)" || true)"
+	# The update checker's own vendor/ is runtime code it loads on every page —
+	# the foundation's zip check ships it too. Composer's dev tree at the root
+	# is still refused.
+	hit="$(printf '%s\n' "$hit" | grep -v "^$SLUG/plugin-update-checker/vendor/" || true)"
 	[ -n "$hit" ] && offenders="$offenders$hit"$'\n'
 done
 check "no development directories ship" "$(printf '%s' "$offenders" | sed '/^$/d')"

@@ -3,7 +3,7 @@
  * Plugin Name:       Blueworx Labs | Clubhouse
  * Plugin URI:        https://github.com/blueworx-io/blueworx_labs_clubhouse
  * Description:        Blueworx Labs Clubhouse WordPress plugin.
- * Version:           0.103.0
+ * Version:           0.104.0
  * Requires at least: 6.0
  * Requires PHP:      8.2
  * Author:            Blueworx
@@ -21,10 +21,49 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'BLUEWORX_LABS_CLUBHOUSE_VERSION', '0.103.0' );
+define( 'BLUEWORX_LABS_CLUBHOUSE_VERSION', '0.104.0' );
 define( 'BLUEWORX_LABS_CLUBHOUSE_FILE', __FILE__ );
 define( 'BLUEWORX_LABS_CLUBHOUSE_DIR', plugin_dir_path( __FILE__ ) );
 define( 'BLUEWORX_LABS_CLUBHOUSE_URL', plugin_dir_url( __FILE__ ) );
+
+/*
+ * Automatic updates. Sites watch this repo's GitHub releases and install the
+ * zip attached to each one — nobody uploads a zip by hand. The library is
+ * vendored whole at plugin-update-checker/ and swapped, never edited.
+ *
+ * At file scope, and not inside a function, conditional or hook: the library's
+ * "use" import below cannot be wrapped without a parse error.
+ */
+require_once plugin_dir_path( __FILE__ ) . 'plugin-update-checker/plugin-update-checker.php';
+
+use YahnisElsts\PluginUpdateChecker\v5\PucFactory;
+
+// The slug must equal the plugin's folder name on the site, and the folder name
+// inside the release zip. If they disagree, an update installs alongside the
+// original as a second copy and deactivates it.
+$blueworx_update_checker = PucFactory::buildUpdateChecker(
+	'https://github.com/blueworx-io/blueworx_labs_clubhouse/',
+	__FILE__,
+	'blueworx-labs-clubhouse'
+);
+
+/*
+ * This repo is public, so releases are readable without credentials and no site
+ * needs a token. The guard is kept so that making the repo private later is a
+ * line in each site's wp-config.php and no change here:
+ *
+ *     define( 'BLUEWORX_PLUGIN_UPDATE_TOKEN', 'github_pat_...' );
+ */
+if ( defined( 'BLUEWORX_PLUGIN_UPDATE_TOKEN' ) && BLUEWORX_PLUGIN_UPDATE_TOKEN ) {
+	$blueworx_update_checker->setAuthentication( BLUEWORX_PLUGIN_UPDATE_TOKEN );
+}
+
+/*
+ * Install the zip attached to the release, not GitHub's own source tarball. The
+ * tarball's folder is named after the repo and version, so without this an
+ * update would extract to the wrong folder and ship every dev file in the repo.
+ */
+$blueworx_update_checker->getVcsApi()->enableReleaseAssets();
 
 // The BlueWorx page editor library. Vendored from bluegroup_core_foundation and
 // hash-compared against it on every pull request — never edited here. Loaded
