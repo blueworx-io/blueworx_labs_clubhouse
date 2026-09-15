@@ -5,6 +5,10 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.102.0
+
+- The guides have moved. The User guide screen under Clubhouse has gone; instead, a ClubHouse section now appears on the Guides page of the BlueWorx WordPress Enhancements plugin, next to the WordPress, SureCart and LatePoint guides. There are around forty of them, covering everything a club can do — the look, pages and menu, every collection, news, members, bookings, search, import and admin — each as numbered steps with a note of who can do it. Guides about the shop or bookings only show on a site that has them. Without the Enhancements plugin there are no guides.
+
 ## 0.101.13
 
 - The automatic content move promised in v0.101.11 now actually runs. The line that switched it on was lost in a merge, so a site updating from before v0.98.0 on v0.101.11 or v0.101.12 showed the design's default words instead of its own. Updating to this version puts them back on the first page load; nothing was lost.

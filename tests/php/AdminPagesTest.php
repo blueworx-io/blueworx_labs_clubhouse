@@ -32,7 +32,7 @@ final class AdminPagesTest extends TestCase {
 		foreach ( Blueworx_Clubhouse_Admin_Pages::all() as $page ) {
 			$by_slug[ $page['slug'] ] = $page;
 		}
-		$this->assertCount( 6, $by_slug );
+		$this->assertCount( 5, $by_slug );
 
 		// The Clubhouse screen is REGISTERED with the content capability, because
 		// the menu builder on it belongs to the Content Editor (issue #144). The
@@ -81,7 +81,7 @@ final class AdminPagesTest extends TestCase {
 				$page['slug']
 			);
 		}
-		$this->assertCount( 6, Blueworx_Clubhouse_Admin_Pages::pages_for_role( 'administrator' ) );
+		$this->assertCount( 5, Blueworx_Clubhouse_Admin_Pages::pages_for_role( 'administrator' ) );
 	}
 
 	/**
@@ -90,7 +90,7 @@ final class AdminPagesTest extends TestCase {
 	 */
 	public function test_the_owner_reaches_every_page(): void {
 		$this->assertCount(
-			6,
+			5,
 			Blueworx_Clubhouse_Admin_Pages::pages_for_role( Blueworx_Clubhouse_Owner_Capabilities::ROLE )
 		);
 	}
@@ -127,30 +127,6 @@ final class AdminPagesTest extends TestCase {
 		// itself is still behind the capability the role does not hold.
 		$caps = Blueworx_Clubhouse_Owner_Capabilities::editor_capabilities();
 		$this->assertArrayNotHasKey( Blueworx_Clubhouse_Owner_Capabilities::SETUP_CAP, $caps );
-	}
-
-	/**
-	 * The guide moved to Clubhouse with Import (issue #145). It could not have
-	 * gone there before: Clubhouse was stripped from the Content Editor's menu,
-	 * and the guide parented there would have been invisible to the role most
-	 * likely to need it. That menu is open to the role now, so this asserts the
-	 * guide is still reachable — the reason for the old parent, not the parent.
-	 */
-	public function test_the_content_editor_can_open_the_user_guide(): void {
-		$guide = Blueworx_Clubhouse_Admin_Pages::find( Blueworx_Clubhouse_Guide_Controller::PAGE_SLUG );
-		$this->assertNotNull( $guide );
-		$this->assertSame( Blueworx_Clubhouse_Setup_Editor::PAGE_SLUG, $guide['menu'] );
-		$this->assertContains(
-			$guide['menu'],
-			Blueworx_Clubhouse_Owner_Capabilities::editor_menu_allowlist(),
-			'the guide is only reachable if its parent menu is'
-		);
-		$this->assertTrue(
-			Blueworx_Clubhouse_Admin_Pages::role_can(
-				Blueworx_Clubhouse_Owner_Capabilities::EDITOR_ROLE,
-				Blueworx_Clubhouse_Guide_Controller::PAGE_SLUG
-			)
-		);
 	}
 
 	/**

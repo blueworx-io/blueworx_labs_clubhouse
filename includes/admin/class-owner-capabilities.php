@@ -384,6 +384,7 @@ final class Blueworx_Clubhouse_Owner_Capabilities {
 	public static function menu_allowlist(): array {
 		return array(
 			'index.php',              // Dashboard.
+			'blueworx-guides',        // Guides — the Enhancements plugin's page, where ClubHouse's guides live.
 			'clubhouse-setup',        // Clubhouse.
 			'edit.php?post_type=page', // Pages — where a club page is opened for editing.
 			'clubhouse-content',      // Collections.
@@ -411,6 +412,7 @@ final class Blueworx_Clubhouse_Owner_Capabilities {
 	public static function editor_menu_allowlist(): array {
 		return array(
 			'index.php',              // Dashboard.
+			'blueworx-guides',        // Guides — the Enhancements plugin's page, where ClubHouse's guides live.
 			'clubhouse-setup',        // Clubhouse — the Menu tab only, for this role.
 			'edit.php?post_type=page', // Pages — where a club page is opened for editing.
 			'clubhouse-content',      // Collections.

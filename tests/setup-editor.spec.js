@@ -200,7 +200,6 @@ test.describe('@wordpress Clubhouse Setup', () => {
         'Global content',
         'Import',
         'Search & sharing',
-        'User guide',
         'What’s new',
       ]);
 
