@@ -27,6 +27,13 @@ function normalise(html) {
     .replace(/Back to the club site/g, 'Back to the site')
     .replace(/_wpnonce=[a-f0-9]+/g, '_wpnonce=NONCE')
     .replace(/nonce=[a-f0-9]+/g, 'nonce=NONCE')
+    // A hidden nonce field's value sits in its own attribute, not a query
+    // string — mask it whichever way round the attributes render, and
+    // whether the field is picked out by its name or its id.
+    .replace(/(name="[^"]*nonce"[^>]*value=")[a-f0-9]+(")/g, '$1NONCE$2')
+    .replace(/(value=")[a-f0-9]{10}("[^>]*name="[^"]*nonce")/g, '$1NONCE$2')
+    .replace(/(id="[^"]*nonce"[^>]*value=")[a-f0-9]+(")/g, '$1NONCE$2')
+    .replace(/(value=")[a-f0-9]{10}("[^>]*id="[^"]*nonce")/g, '$1NONCE$2')
     .replace(/\?ver=[^"&]+/g, '?ver=VER')
     .replace(/page_id=\d+/g, 'page_id=ID')
     .replace(/\s+/g, ' ')
