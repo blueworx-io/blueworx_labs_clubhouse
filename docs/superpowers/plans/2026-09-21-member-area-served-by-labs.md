@@ -81,6 +81,9 @@ function normalise(html) {
     // reduced to a marker on both sides.
     .replace(/<svg\b[\s\S]*?<\/svg>/g, '<ICON>')
     .replace(/<i class="bw-icon" data-lucide="[^"]*" aria-hidden="true"><\/i>/g, '<ICON>')
+    // Two phrases Labs made site-agnostic (a ruling in its plan's ledger):
+    .replace(/The club never sees it./g, 'The site never sees it.')
+    .replace(/Back to the club site/g, 'Back to the site')
     .replace(/_wpnonce=[a-f0-9]+/g, '_wpnonce=NONCE')
     .replace(/nonce=[a-f0-9]+/g, 'nonce=NONCE')
     .replace(/\?ver=[^"&]+/g, '?ver=VER')
