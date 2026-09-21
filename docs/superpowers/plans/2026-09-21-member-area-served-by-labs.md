@@ -17,7 +17,7 @@
 - Nothing about addresses changes: `/member-dashboard/`, `?view=`, the redirect from SureCart's dashboard page with `view`/`model`/`action`/`id` kept, the checkout and thank-you pages.
 - No stand-down guard between the two plugins; the live switch is by hand (spec §8).
 - Every Labs function is called through `Blueworx_Clubhouse_Labs_Store` and nowhere else, so "Labs missing" is one code path.
-- Class names in markup change from `clubhouse-member__*` / `clubhouse-checkout__*` to `bw-store__*` / `bw-checkout__*` (Labs' names); root `clubhouse-member` → `bw-store`, `clubhouse-checkout` → `bw-checkout`, `data-clubhouse-member` → `data-bw-store`. ClubHouse's own profile card keeps `clubhouse-profile__*`.
+- Class names in markup change from `clubhouse-member__*` / `clubhouse-checkout__*` to `blueworx-store__*` / `blueworx-checkout__*` (Labs' names); root `clubhouse-member` → `blueworx-store`, `clubhouse-checkout` → `blueworx-checkout`, `data-clubhouse-member` → `data-blueworx-store`. ClubHouse's own profile card keeps `clubhouse-profile__*`.
 - Commit after every task, trailer `Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>`. Lint once at the end.
 - Work on a branch `member-area-served-by-labs` off `main`.
 
@@ -62,20 +62,25 @@ Done on `main` **before** any code changes, with SureCart in the harness. This i
 // post ids and the plugin's asset version differ per site. What is left is
 // the structure and the words, which is what a member actually sees.
 const RENAMES = [
-  [/data-clubhouse-member/g, 'data-bw-store'],
-  [/clubhouse-member-navtab-/g, 'bw-store-navtab-'],
-  [/clubhouse-member-tab-/g, 'bw-store-tab-'],
-  [/clubhouse-member-view/g, 'bw-store-view'],
-  [/clubhouse-member__/g, 'bw-store__'],
-  [/clubhouse-checkout__/g, 'bw-checkout__'],
-  [/\bclubhouse-member\b/g, 'bw-store'],
-  [/\bclubhouse-checkout\b/g, 'bw-checkout'],
+  [/data-clubhouse-member/g, 'data-blueworx-store'],
+  [/clubhouse-member-navtab-/g, 'blueworx-store-navtab-'],
+  [/clubhouse-member-tab-/g, 'blueworx-store-tab-'],
+  [/clubhouse-member-view/g, 'blueworx-store-view'],
+  [/clubhouse-member__/g, 'blueworx-store__'],
+  [/clubhouse-checkout__/g, 'blueworx-checkout__'],
+  [/\bclubhouse-member\b/g, 'blueworx-store'],
+  [/\bclubhouse-checkout\b/g, 'blueworx-checkout'],
 ];
 
 function normalise(html) {
   let out = html;
   for (const [from, to] of RENAMES) out = out.replace(from, to);
   return out
+    // Labs draws icons as the design system's <i data-lucide> element where
+    // ClubHouse inlined the SVG; both render the same glyph, so icons are
+    // reduced to a marker on both sides.
+    .replace(/<svg[sS]*?</svg>/g, '<ICON>')
+    .replace(/<i class="bw-icon" data-lucide="[^"]*" aria-hidden="true"></i>/g, '<ICON>')
     .replace(/_wpnonce=[a-f0-9]+/g, '_wpnonce=NONCE')
     .replace(/nonce=[a-f0-9]+/g, 'nonce=NONCE')
     .replace(/\?ver=[^"&]+/g, '?ver=VER')
@@ -170,7 +175,7 @@ In `tests/global-setup.js`, after the existing seeding, when `.wp-test/wp` exist
 npm run wp:up && npm run wp:labs
 ```
 
-Expected: the script prints that Labs is active. Then `curl -s http://127.0.0.1:<port>/checkout-fixture/ | grep -c bw-checkout` prints a number ≥ 1 **and** `grep -c clubhouse-checkout` also ≥ 1 — two frames, because ClubHouse's own code is still here. That is expected until Task 3 and is exactly why the live switch is done by hand.
+Expected: the script prints that Labs is active. Then `curl -s http://127.0.0.1:<port>/checkout-fixture/ | grep -c blueworx-checkout` prints a number ≥ 1 **and** `grep -c clubhouse-checkout` also ≥ 1 — two frames, because ClubHouse's own code is still here. That is expected until Task 3 and is exactly why the live switch is done by hand.
 
 - [ ] **Step 4: Commit**
 
@@ -291,7 +296,7 @@ public static function register(): void {
 - `enqueue_dashboard()`: `blueworx_store_enqueue_dashboard()` when available, then `wp_enqueue_style( 'clubhouse-member-profile', BLUEWORX_LABS_CLUBHOUSE_URL . 'assets/css/member-profile.css', array( 'blueworx-store' ), BLUEWORX_LABS_CLUBHOUSE_VERSION )`.
 - `notice_html( bool $installed, string $version ): string` → a `notice notice-error` saying "Clubhouse needs the BlueWorx Labs plugin (version 1.87.0 or newer) to serve the member area, checkout and thank-you pages. It is not active." or "… You have 1.86.0." `render_notice()` prints it for `manage_options` users when `! available()`.
 
-`assets/css/member-profile.css`: the `.clubhouse-profile*` rules from `assets/bw/bw.css` lines 670–690, with the `.clubhouse-member` ancestor selector changed to `.bw-store`.
+`assets/css/member-profile.css`: the `.clubhouse-profile*` rules from `assets/bw/bw.css` lines 670–690, with the `.clubhouse-member` ancestor selector changed to `.blueworx-store`.
 
 In `blueworx-labs-clubhouse.php`: add the `require_once` beside the other includes and `Blueworx_Clubhouse_Labs_Store::register();` in `blueworx_labs_clubhouse_init()`. Add the header line `Requires Plugins: blueworx-labs-wordpress` — note WordPress then refuses to deactivate Labs while ClubHouse is active, so the cutover order (ClubHouse off first) matters.
 
@@ -354,11 +359,11 @@ git commit -m "The member area, checkout and thank-you page are now served by Bl
 
 - [ ] **Step 1: Rename selectors**
 
-In the six specs, apply the rename table (a search-and-replace of `clubhouse-member__` → `bw-store__`, `clubhouse-checkout__` → `bw-checkout__`, `.clubhouse-member` → `.bw-store`, `.clubhouse-checkout` → `.bw-checkout`, `data-clubhouse-member` → `data-bw-store`). `checkout-frame.spec.js`'s stylesheet assertion changes from `surecart.css` to `store-surecart.css`. `shop-pages-notice.spec.js`: the notice is Labs' now and prefixed "BlueWorx:"; the no-shop case still asserts no notice — change the text it looks for.
+In the six specs, apply the rename table (a search-and-replace of `clubhouse-member__` → `blueworx-store__`, `clubhouse-checkout__` → `blueworx-checkout__`, `.clubhouse-member` → `.blueworx-store`, `.clubhouse-checkout` → `.blueworx-checkout`, `data-clubhouse-member` → `data-blueworx-store`). `checkout-frame.spec.js`'s stylesheet assertion changes from `surecart.css` to `store-surecart.css`. `shop-pages-notice.spec.js`: the notice is Labs' now and prefixed "BlueWorx:"; the no-shop case still asserts no notice — change the text it looks for.
 
 - [ ] **Step 2: The Labs-missing spec**
 
-`tests/labs-missing.spec.js`: signs in as admin, deactivates Labs via `/wp-admin/plugins.php` (the row's Deactivate link for `blueworx-labs-wordpress`), then: `/wp-admin/` shows a notice containing "BlueWorx Labs"; `/member-dashboard/` answers 200 with the text "not available" and no PHP error; `/checkout-fixture/` shows `#shop-content` and no `.bw-checkout`. `finally`: reactivate Labs and re-run `node bin/wp-labs.mjs` is not needed — activation alone restores it. Skip the spec when `hasShop()` is false (the member area is not served without a shop).
+`tests/labs-missing.spec.js`: signs in as admin, deactivates Labs via `/wp-admin/plugins.php` (the row's Deactivate link for `blueworx-labs-wordpress`), then: `/wp-admin/` shows a notice containing "BlueWorx Labs"; `/member-dashboard/` answers 200 with the text "not available" and no PHP error; `/checkout-fixture/` shows `#shop-content` and no `.blueworx-checkout`. `finally`: reactivate Labs and re-run `node bin/wp-labs.mjs` is not needed — activation alone restores it. Skip the spec when `hasShop()` is false (the member area is not served without a shop).
 
 - [ ] **Step 3: Run the whole suite, then the snapshot spec last**
 
