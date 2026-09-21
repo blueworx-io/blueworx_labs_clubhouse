@@ -12,6 +12,7 @@
     "wp:up": "node bin/wp-test.mjs up",
     "wp:down": "node bin/wp-test.mjs down",
     "wp:shop": "node bin/wp-shop.mjs",
+    "wp:labs": "node bin/wp-labs.mjs",
     "test:wp": "node bin/wp-test.mjs test"
   },
   "devDependencies": {
