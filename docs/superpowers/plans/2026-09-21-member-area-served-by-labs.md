@@ -79,8 +79,8 @@ function normalise(html) {
     // Labs draws icons as the design system's <i data-lucide> element where
     // ClubHouse inlined the SVG; both render the same glyph, so icons are
     // reduced to a marker on both sides.
-    .replace(/<svg[sS]*?</svg>/g, '<ICON>')
-    .replace(/<i class="bw-icon" data-lucide="[^"]*" aria-hidden="true"></i>/g, '<ICON>')
+    .replace(/<svg\b[\s\S]*?<\/svg>/g, '<ICON>')
+    .replace(/<i class="bw-icon" data-lucide="[^"]*" aria-hidden="true"><\/i>/g, '<ICON>')
     .replace(/_wpnonce=[a-f0-9]+/g, '_wpnonce=NONCE')
     .replace(/nonce=[a-f0-9]+/g, 'nonce=NONCE')
     .replace(/\?ver=[^"&]+/g, '?ver=VER')
