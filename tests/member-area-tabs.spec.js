@@ -47,7 +47,7 @@ test('a nav item is a real link to a real address @wordpress', async ({ page }) 
 
 // A second view is injected rather than clicked for real: the point is the
 // swap itself, and an injected pair keeps this independent of which plugins
-// happen to be installed. member-area.js reads its
+// happen to be installed. Labs' store-dashboard.js reads its
 // panels and links off the DOM once, at load, so the injected second panel
 // and link have to be present in the HTML *before* the script runs — a
 // page.evaluate() after goto() is too late, the script has already captured
@@ -93,7 +93,7 @@ test('clicking a nav item swaps panels without navigating @wordpress', async ({ 
   await expect(page.locator('[data-view="test-second-view"]')).toBeVisible();
   await expect(page).toHaveURL(/view=test-second-view/);
   // Two now — the page head's and the brand block's phone-only pair — and
-  // the script updates every one of them (see member-area.js), not just the
+  // the script updates every one of them (see Labs' store-dashboard.js), not just the
   // first it finds.
   await expect(page.locator('[data-member-title]')).toHaveText(['Second view', 'Second view']);
 
@@ -151,7 +151,7 @@ test('a phone gets the bottom bar, not the sidebar nav @wordpress', async ({ pag
   await page.locator('.clubhouse-member__tab[data-view-link="billing"]').click();
   await expect(page.locator('.clubhouse-member__more')).toHaveCount(0);
   // The way out is now the bar's own last item, not a separate control beside
-  // the club badge — see the media query in assets/bw/bw.css.
+  // the club badge — see the media query in Labs' store stylesheet.
   await expect(page.locator('.clubhouse-member__side .clubhouse-member__back')).toBeHidden();
 
   // The reverse above the phone breakpoint: the sidebar carries every view, so
@@ -165,7 +165,7 @@ test('a phone gets the bottom bar, not the sidebar nav @wordpress', async ({ pag
 
 // No splicing here: this is the club the harness actually is — no shop, no
 // bookings. Billing and Account are built from the shop's blocks, so neither
-// is offered — see Dashboard_Views::all() — leaving Dashboard and the way
+// is offered — see Labs' store views — leaving Dashboard and the way
 // out. The bar is still drawn for one view, rather than appearing the day a
 // plugin is installed.
 test('the bar shows exactly the curated list, not every view @wordpress', async ({ page }) => {
@@ -190,7 +190,7 @@ test('the bar shows exactly the curated list, not every view @wordpress', async 
 
 // The page head (.clubhouse-member__head) is dropped on a phone; its title,
 // lede and sign-out move into the top row instead — see the phone-only pair
-// in Dashboard_Shell::sidebar() and the media query in assets/bw/bw.css.
+// in Labs' store sidebar and the media query in its store stylesheet.
 test('a phone drops the page head in favour of the top row, the desktop keeps it @wordpress', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/member-dashboard/');

@@ -110,10 +110,8 @@ final class ClubRulesTest extends TestCase {
 	}
 
 	public function test_the_checkout_footer_offers_the_club_rules_too(): void {
-		$links = Blueworx_Clubhouse_Commerce_Pages::footer_links(
-			static fn( string $slug ): bool => true,
-			static fn( string $slug ): string => 'https://club.test/' . $slug . '/'
-		);
+		// Labs draws the checkout footer now; the club hands it the links.
+		$links = Blueworx_Clubhouse_Labs_Store::checkout_links( array() );
 		$this->assertContains( 'Club rules', array_column( $links, 'label' ) );
 	}
 

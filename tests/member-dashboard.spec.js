@@ -55,10 +55,11 @@ test('the member area stylesheet loads, and before the page is drawn @wordpress'
   page.on('response', (r) => responses.push(r));
   await page.goto(DASHBOARD);
 
-  const sheet = responses.find((r) => r.url().includes('/assets/bw/bw.css'));
-  expect(sheet, 'the vendored stylesheet was never requested').toBeTruthy();
+  // Labs' own store stylesheet: the member area is drawn by the Labs plugin now.
+  const sheet = responses.find((r) => r.url().includes('/assets/css/store.css'));
+  expect(sheet, "Labs' store stylesheet was never requested").toBeTruthy();
   expect(sheet.status()).toBe(200);
-  await expect(page.locator('head link[href*="/assets/bw/bw.css"]')).toHaveCount(1);
+  await expect(page.locator('head link[href*="/assets/css/store.css"]')).toHaveCount(1);
 });
 
 test('no dead nav items are offered @wordpress', async ({ page }) => {

@@ -44,6 +44,44 @@ final class LabsStoreTest extends TestCase {
 		$this->assertSame( '', Blueworx_Clubhouse_Labs_Store::crest( '', '' ) );
 	}
 
+	public function test_the_checkout_footer_offers_only_pages_the_club_has_switched_on(): void {
+		// A dead link on a payment page is the worst place for one. Terms and
+		// privacy are switchable like every other club page, so the footer has
+		// to ask rather than assume. Labs' own list is replaced, not added to:
+		// its "Privacy policy" is the club's privacy notice under another name.
+		wp_stub_reset();
+		$visibility = new Blueworx_Clubhouse_Visibility( new Blueworx_Clubhouse_Options_Storage() );
+		foreach ( array( 'terms', 'rules', 'contact' ) as $slug ) {
+			$visibility->set_page_visible( $slug, false );
+		}
+
+		$links = Blueworx_Clubhouse_Labs_Store::checkout_links(
+			array( array( 'label' => 'Privacy policy', 'href' => 'https://club.test/?page_id=3' ) )
+		);
+
+		$this->assertSame(
+			array( array( 'label' => 'Privacy notice', 'href' => 'https://club.test/privacy/' ) ),
+			$links
+		);
+		wp_stub_reset();
+	}
+
+	public function test_the_checkout_footer_carries_all_four_club_pages_in_order(): void {
+		wp_stub_reset();
+		$labels = array_column( Blueworx_Clubhouse_Labs_Store::checkout_links( array() ), 'label' );
+		$this->assertSame( array( 'Terms and conditions', 'Privacy notice', 'Club rules', 'Contact the club' ), $labels );
+	}
+
+	public function test_a_club_with_nothing_switched_on_gets_no_checkout_links(): void {
+		wp_stub_reset();
+		$visibility = new Blueworx_Clubhouse_Visibility( new Blueworx_Clubhouse_Options_Storage() );
+		foreach ( array( 'terms', 'privacy', 'rules', 'contact' ) as $slug ) {
+			$visibility->set_page_visible( $slug, false );
+		}
+		$this->assertSame( array(), Blueworx_Clubhouse_Labs_Store::checkout_links( array() ) );
+		wp_stub_reset();
+	}
+
 	public function test_without_labs_the_seam_answers_nothing(): void {
 		// The test bootstrap never loads Labs, so this IS the "Labs missing" site.
 		$this->assertFalse( Blueworx_Clubhouse_Labs_Store::available() );

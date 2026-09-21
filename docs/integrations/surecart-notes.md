@@ -105,13 +105,14 @@ activation.
 So a site can be missing shop pages for two different reasons — never seeded, or
 seeded and later deleted.
 
-`Blueworx_Clubhouse_Shop_Pages` reports the state of all four (checkout, order
-confirmation, customer dashboard, shop) and, on an owner's say-so, repairs what
-it can. **It does not write any of these pages itself.** It calls SureCart's own
-seeder, resolved from SureCart's container as `surecart.pages.seeder`, so the
-pages come out exactly as SureCart makes them and stay right when SureCart
-changes them. The shop runs the shop; this plugin only makes sure the pages the
-links point at exist.
+The BlueWorx Labs plugin (its Store pages feature) reports the state of all
+four (checkout, order confirmation, customer dashboard, shop) and, on an
+owner's say-so, repairs what it can. **It does not write any of these pages
+itself.** It calls SureCart's own seeder, resolved from SureCart's container as
+`surecart.pages.seeder`, so the pages come out exactly as SureCart makes them
+and stay right when SureCart changes them. The shop runs the shop; Labs only
+makes sure the pages the links point at exist. Clubhouse asks Labs for those
+pages through `Blueworx_Clubhouse_Labs_Store` and never reads them itself.
 
 Two things the seeder cannot do, both handled directly:
 

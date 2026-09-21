@@ -54,7 +54,7 @@ final class Blueworx_Clubhouse_Legacy_Urls {
 		if ( ! function_exists( 'add_action' ) ) {
 			return;
 		}
-		// Priority 1: ahead of Member_Dashboard::route() at 5 and Frontend's own
+		// Priority 1: ahead of Labs' store route at 5 and Frontend's own
 		// 404 pass at 10, so an old address is forwarded to the page it named
 		// before anything else decides what to make of the request.
 		add_action( 'template_redirect', array( self::class, 'redirect' ), 1 );

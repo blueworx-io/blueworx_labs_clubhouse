@@ -168,8 +168,8 @@ final class Blueworx_Clubhouse_External_Chrome {
 			// Two ways to be a shop page. The template slug and post type below
 			// are SureCart's own marks, and they are what a product or an order
 			// page carries. Checkout and the thank-you page are also matched
-			// directly, by the ids SureCart stores for them: this plugin serves
-			// those two from its own template now (see Commerce_Pages), so they
+			// directly, by the ids SureCart stores for them: BlueWorx Labs serves
+			// those two from its own template now (see Labs_Store), so they
 			// already render a complete document, and dressing them injected the
 			// club's header and footer around one — two footers on a payment
 			// page. A page id is a fact; a template slug is a convention that a
@@ -181,14 +181,14 @@ final class Blueworx_Clubhouse_External_Chrome {
 	}
 
 	/**
-	 * Whether the page being rendered is one of the two this plugin dresses
-	 * and serves its own document for — checkout, or the thank-you page.
+	 * Whether the page being rendered is one of the two Labs dresses and
+	 * serves its own document for — checkout, or the thank-you page.
 	 */
 	private static function is_commerce_page(): bool {
 		if ( ! function_exists( 'get_queried_object_id' ) ) {
 			return false;
 		}
-		return '' !== Blueworx_Clubhouse_Dashboard_Assets::page_key( (int) get_queried_object_id() );
+		return '' !== Blueworx_Clubhouse_Labs_Store::page_key( (int) get_queried_object_id() );
 	}
 
 	/** The post type being rendered, or '' when the view has no single post. */

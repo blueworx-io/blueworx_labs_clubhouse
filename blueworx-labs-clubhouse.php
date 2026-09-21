@@ -90,7 +90,6 @@ require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/admin/class-access-controll
 require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/admin/class-seo-controller.php';
 require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/admin/class-guides-registrar.php';
 require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/admin/class-changelog-controller.php';
-require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/admin/class-shop-pages-controller.php';
 require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/admin/class-wordpress-pages.php';
 require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/import/class-import-applier.php';
 require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/import/class-import-controller.php';
@@ -114,11 +113,9 @@ function blueworx_labs_clubhouse_init() {
 	Blueworx_Clubhouse_External_Chrome::register();
 	Blueworx_Clubhouse_Welcome_Pack::register();
 	Blueworx_Clubhouse_Labs_Store::register();
-	Blueworx_Clubhouse_Member_Dashboard::register();
 	Blueworx_Clubhouse_Profile_Form::register();
 	Blueworx_Clubhouse_Profile_User_Screen::register();
 	Blueworx_Clubhouse_Profile_Columns::register();
-	Blueworx_Clubhouse_Commerce_Pages::register();
 	Blueworx_Clubhouse_Auth::register();
 	Blueworx_Clubhouse_Mail::register();
 	Blueworx_Clubhouse_Seo_Head::register();
@@ -136,7 +133,6 @@ function blueworx_labs_clubhouse_init() {
 	Blueworx_Clubhouse_Guides_Registrar::register();
 	Blueworx_Clubhouse_Changelog_Controller::register();
 	Blueworx_Clubhouse_SureCart_Products::register();
-	Blueworx_Clubhouse_Shop_Pages_Controller::register();
 	Blueworx_Clubhouse_Wordpress_Pages::register();
 	Blueworx_Clubhouse_Club_Page_Editing::register();
 	Blueworx_Clubhouse_Page_Editors::register();
@@ -150,10 +146,6 @@ register_activation_hook(
 		Blueworx_Clubhouse_Collection_Types::register();
 		Blueworx_Clubhouse_Collection_Seeder::seed();
 		Blueworx_Clubhouse_Owner_Role::activate();
-		// A club activating this beside a shop that is already here gets a
-		// working checkout straight away, rather than a warning about a page
-		// neither plugin makes on its own.
-		Blueworx_Clubhouse_Shop_Pages::ensure_confirmation();
 		// The plugin declares no rewrite rules of its own. This clears whatever
 		// an older version left in WordPress's cache — without it those rules
 		// would go on answering for every club page, routing them past the real

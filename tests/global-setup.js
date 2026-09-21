@@ -79,7 +79,7 @@ if ( is_int( $member_id ) && $member_id > 0 ) {
 
 // A page standing in for SureCart's checkout. CI has no SureCart, and
 // installing it to assert our own frame would be testing SureCart. The stored
-// page id IS the contract — Commerce_Pages dresses whichever post it names.
+// page id IS the contract — Labs dresses whichever post it names.
 $checkout_existing = get_page_by_path( 'checkout-fixture' );
 $checkout_id       = $checkout_existing instanceof WP_Post ? $checkout_existing->ID : wp_insert_post( array(
 	'post_type'    => 'page',

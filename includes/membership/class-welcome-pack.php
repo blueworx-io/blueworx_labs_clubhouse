@@ -154,7 +154,7 @@ final class Blueworx_Clubhouse_Welcome_Pack {
 		if ( ! is_singular() || ! in_the_loop() || ! is_main_query() ) {
 			return $content;
 		}
-		$dashboard = Blueworx_Clubhouse_Shop_Pages::page_id( 'dashboard' );
+		$dashboard = Blueworx_Clubhouse_Labs_Store::page_id( 'dashboard' );
 		if ( 0 === $dashboard || get_the_ID() !== $dashboard ) {
 			return $content;
 		}
