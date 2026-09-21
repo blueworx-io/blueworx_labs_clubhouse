@@ -44,19 +44,36 @@ final class Blueworx_Clubhouse_Labs_Store {
 	/** The view every dashboard has, and the one Bookings sits directly after. */
 	private const DASHBOARD_VIEW = 'dashboard';
 
+	/** The Labs feature switch that turns the store pages on. */
+	private const LABS_FEATURE = 'store_pages';
+
 	/**
-	 * True when Labs is here and new enough to serve the store pages.
+	 * True when Labs is here, new enough, and its Store pages feature is on.
 	 *
 	 * Checks the function as well as the version: a Labs build old enough to
 	 * predate the store pages defines the constant and none of the functions,
 	 * and the version compare alone would not catch a build with the constant
-	 * removed.
+	 * removed. The feature switch matters too: with it off Labs registers no
+	 * assets, so a screen drawn anyway would be a frame no stylesheet reaches.
 	 */
 	public static function available(): bool {
+		return self::installed() && self::feature_on();
+	}
+
+	/** True when a Labs new enough to serve the store pages is active. */
+	private static function installed(): bool {
 		if ( ! function_exists( 'blueworx_store_dashboard_screen' ) || ! defined( 'BLUEWORX_LABS_VERSION' ) ) {
 			return false;
 		}
 		return version_compare( (string) BLUEWORX_LABS_VERSION, self::MIN_LABS_VERSION, '>=' );
+	}
+
+	/**
+	 * Whether Labs' Store pages feature is switched on. True when Labs has no
+	 * feature switches to ask, so an older answer is never mistaken for "off".
+	 */
+	private static function feature_on(): bool {
+		return ! function_exists( 'blueworx_feature_enabled' ) || (bool) blueworx_feature_enabled( self::LABS_FEATURE );
 	}
 
 	public static function register(): void {
@@ -69,6 +86,7 @@ final class Blueworx_Clubhouse_Labs_Store {
 		add_filter( 'blueworx_store_checkout_links', array( self::class, 'checkout_links' ), 10, 2 );
 		add_filter( 'blueworx_store_dashboard_url', array( self::class, 'dashboard_url' ) );
 		add_action( 'admin_notices', array( self::class, 'render_notice' ) );
+		add_action( 'admin_enqueue_scripts', array( self::class, 'enqueue_notice_assets' ) );
 	}
 
 	/*
@@ -226,7 +244,7 @@ final class Blueworx_Clubhouse_Labs_Store {
 	 * @param callable(string):string $url
 	 * @return array<int,array{label:string,href:string}>
 	 */
-	public static function footer_links( callable $visible, callable $url ): array {
+	private static function footer_links( callable $visible, callable $url ): array {
 		$out = array();
 		foreach ( array(
 			'terms'   => 'Terms and conditions',
@@ -347,31 +365,55 @@ final class Blueworx_Clubhouse_Labs_Store {
 		}
 		$installed = defined( 'BLUEWORX_LABS_VERSION' );
 		// Escaped by notice_html(); the version is the only variable in it.
-		echo self::notice_html( $installed, $installed ? (string) BLUEWORX_LABS_VERSION : '' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+		echo self::notice_html( $installed, $installed ? (string) BLUEWORX_LABS_VERSION : '', self::feature_on() ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 	}
 
 	/**
-	 * The notice's markup. Pure: says which of the two things is wrong — Labs
-	 * missing, or Labs too old — and names the version that would fix it.
+	 * The design system's stylesheet and icons, on whichever admin screen the
+	 * notice is printed on. admin_notices runs on Plugins and the Dashboard
+	 * as much as on this plugin's own screens, and there nothing else loads
+	 * them — without this the notice is a plain box with an empty icon.
+	 */
+	public static function enqueue_notice_assets(): void {
+		if ( self::available() || ! class_exists( 'Blueworx_Clubhouse_Admin_Assets' ) ) {
+			return;
+		}
+		if ( ! function_exists( 'current_user_can' ) || ! current_user_can( 'manage_options' ) ) {
+			return;
+		}
+		Blueworx_Clubhouse_Admin_Assets::enqueue_as_a_guest();
+	}
+
+	/**
+	 * The notice's markup. Pure: says which of the three things is wrong —
+	 * Labs missing, Labs too old, or its Store pages feature switched off —
+	 * and what would fix it.
 	 *
 	 * The outer core .notice is what admin_notices places at the top of the
 	 * screen; the .bw-admin inside it opts the notice into the design system,
 	 * so it is drawn as the same danger notice the plugin's own screens use.
 	 *
-	 * @param bool   $installed Whether any Labs is active at all.
-	 * @param string $version   The version it reports, '' when none.
+	 * @param bool   $installed  Whether any Labs is active at all.
+	 * @param string $version    The version it reports, '' when none.
+	 * @param bool   $feature_on Whether Labs' Store pages feature is on; only read when Labs is new enough.
 	 */
-	public static function notice_html( bool $installed, string $version ): string {
-		$reason = $installed
-			? 'You have ' . self::e( $version ) . '.'
-			: 'It is not active.';
+	public static function notice_html( bool $installed, string $version, bool $feature_on = true ): string {
+		if ( ! $installed ) {
+			$reason = 'It is not active.';
+		} elseif ( version_compare( $version, self::MIN_LABS_VERSION, '<' ) ) {
+			$reason = 'You have ' . self::e( $version ) . '.';
+		} elseif ( ! $feature_on ) {
+			$reason = 'Its Store pages feature is switched off — turn it on under BlueWorx → Enhancements.';
+		} else {
+			$reason = 'You have ' . self::e( $version ) . '.';
+		}
 		return '<div class="notice"><div class="bw-admin">'
 			. '<div class="bw-notice bw-notice--danger" role="alert">'
 			. '<i class="bw-icon bw-notice__icon" data-lucide="circle-alert"></i>'
 			. '<div class="bw-notice__body">'
 			. '<p class="bw-notice__title">Clubhouse needs the BlueWorx Labs plugin</p>'
-			. '<p class="bw-notice__text">Clubhouse needs the BlueWorx Labs plugin (version ' . self::e( self::MIN_LABS_VERSION ) . ' or newer) '
-			. 'to serve the member area, checkout and thank-you pages. ' . $reason . '</p>'
+			. '<p class="bw-notice__text">Version ' . self::e( self::MIN_LABS_VERSION ) . ' or newer serves the member area, '
+			. 'checkout and thank-you pages. ' . $reason . '</p>'
 			. '</div></div></div></div>';
 	}
 
