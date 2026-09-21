@@ -11,6 +11,7 @@
  * License:           GPL-2.0-or-later
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain:       blueworx-labs-clubhouse
+ * Requires Plugins:  blueworx-labs-wordpress
  * Domain Path:       /languages
  *
  * @package BlueworxLabsClubhouse
@@ -77,6 +78,10 @@ require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/frontend/class-frontend.php
 require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/frontend/class-external-chrome.php';
 require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/frontend/class-auth.php';
 require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/frontend/class-seo-head.php';
+// The one class that talks to the BlueWorx Labs plugin, which serves the
+// member area, checkout and thank-you pages. Loads and answers safely
+// without Labs; register() below hooks Labs' filters if it is there.
+require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/store/class-labs-store.php';
 require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/admin/class-admin-menu-icons.php';
 require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/admin/class-admin-assets.php';
 require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/admin/class-demo-controller.php';
@@ -108,6 +113,7 @@ function blueworx_labs_clubhouse_init() {
 	Blueworx_Clubhouse_Legacy_Urls::register();
 	Blueworx_Clubhouse_External_Chrome::register();
 	Blueworx_Clubhouse_Welcome_Pack::register();
+	Blueworx_Clubhouse_Labs_Store::register();
 	Blueworx_Clubhouse_Member_Dashboard::register();
 	Blueworx_Clubhouse_Profile_Form::register();
 	Blueworx_Clubhouse_Profile_User_Screen::register();

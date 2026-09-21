@@ -59,6 +59,9 @@ require_once dirname( __DIR__, 2 ) . '/includes/frontend/class-external-chrome.p
 // the "nothing can build one" branch and never the real one.
 require_once dirname( __DIR__, 2 ) . '/includes/frontend/class-auth.php';
 require_once dirname( __DIR__, 2 ) . '/includes/frontend/class-seo-head.php';
+// The one class that talks to the BlueWorx Labs plugin. Labs itself is never
+// loaded here, so the tests see the "Labs missing" answers by construction.
+require_once dirname( __DIR__, 2 ) . '/includes/store/class-labs-store.php';
 require_once dirname( __DIR__, 2 ) . '/includes/admin/class-admin-assets.php';
 require_once dirname( __DIR__, 2 ) . '/includes/admin/class-admin-menu-icons.php';
 require_once dirname( __DIR__, 2 ) . '/includes/admin/class-demo-controller.php';

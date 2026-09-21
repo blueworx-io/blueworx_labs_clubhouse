@@ -176,18 +176,27 @@ final class Blueworx_Clubhouse_Welcome_Pack {
 				'link_href'  => (string) $store->get( self::STORE_PAGE, self::SECTION, 'link_href', '' ),
 			)
 		);
-		// The club's own accent, so the banner reads as the club's even on a page
-		// wearing none of its design. Derived through the same colour engine the
-		// site uses, against a white ground and near-black text — the dashboard's
-		// own colours are SureCart's and cannot be read from here.
+		return self::compose( $content, $block, ...self::accent_pair( $storage ) );
+	}
+
+	/**
+	 * The club's own accent and the ink that reads on it, so the banner reads
+	 * as the club's even on a page wearing none of its design. Derived through
+	 * the same colour engine the site uses, against a white ground and
+	 * near-black text — the page's own colours are the shop's and cannot be
+	 * read from here.
+	 *
+	 * The one copy of that derivation: the Labs seam draws the same pack on
+	 * the member area and asks here, so the two can never drift apart.
+	 *
+	 * @return array{0:string,1:string} Accent, then accent ink; '' for either the engine cannot answer.
+	 */
+	public static function accent_pair( Blueworx_Clubhouse_Options_Storage $storage ): array {
 		$branding = new Blueworx_Clubhouse_Branding( $storage );
 		$derived  = Blueworx_Clubhouse_Color_Engine::derive( $branding->get_accent(), '#ffffff', '#111111' );
-
-		return self::compose(
-			$content,
-			$block,
+		return array(
 			(string) ( $derived['--color-accent'] ?? '' ),
-			(string) ( $derived['--color-accent-ink'] ?? '' )
+			(string) ( $derived['--color-accent-ink'] ?? '' ),
 		);
 	}
 
