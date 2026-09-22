@@ -493,16 +493,26 @@ final class Blueworx_Clubhouse_Labs_Store {
 		return '<section class="bw-card"><div class="bw-card__body">' . $inner . '</div></section>';
 	}
 
-	/** The club's welcome pack, or '' when nobody has written one or it is switched off. */
+	/** Cache for welcome_pack(): the panel and the head CSS both ask for it on the same request. */
+	private static ?string $welcome_pack_cache = null;
+
+	/**
+	 * The club's welcome pack, or '' when nobody has written one or it is
+	 * switched off. Rendered once per request and cached: panel() and
+	 * enqueue_dashboard() both call this on the same dashboard view.
+	 */
 	private static function welcome_pack(): string {
+		if ( null !== self::$welcome_pack_cache ) {
+			return self::$welcome_pack_cache;
+		}
 		if ( ! class_exists( 'Blueworx_Clubhouse_Welcome_Pack' ) || ! class_exists( 'Blueworx_Clubhouse_Page_Content' ) ) {
-			return '';
+			return self::$welcome_pack_cache = '';
 		}
 		$store = new Blueworx_Clubhouse_Page_Content( new Blueworx_Clubhouse_Options_Storage() );
 		// The same Shown switch the Global content editor writes, read the same
 		// way Welcome_Pack::add_to_dashboard() reads it — one switch, one answer.
 		if ( ! $store->is_section_shown( Blueworx_Clubhouse_Welcome_Pack::STORE_PAGE, Blueworx_Clubhouse_Welcome_Pack::SECTION ) ) {
-			return '';
+			return self::$welcome_pack_cache = '';
 		}
 		$field = static fn ( string $name ): string => (string) $store->get(
 			Blueworx_Clubhouse_Welcome_Pack::STORE_PAGE,
@@ -510,7 +520,7 @@ final class Blueworx_Clubhouse_Labs_Store {
 			$name,
 			''
 		);
-		return Blueworx_Clubhouse_Welcome_Pack::render(
+		return self::$welcome_pack_cache = Blueworx_Clubhouse_Welcome_Pack::render(
 			array(
 				'heading'    => $field( 'heading' ),
 				'body'       => $field( 'body' ),

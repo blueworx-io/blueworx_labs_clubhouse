@@ -18,6 +18,7 @@
 - No stand-down guard between the two plugins; the live switch is by hand (spec §8).
 - Every Labs function is called through `Blueworx_Clubhouse_Labs_Store` and nowhere else, so "Labs missing" is one code path.
 - Class names in markup change from `clubhouse-member__*` / `clubhouse-checkout__*` to `blueworx-store__*` / `blueworx-checkout__*` (Labs' names); root `clubhouse-member` → `blueworx-store`, `clubhouse-checkout` → `blueworx-checkout`, `data-clubhouse-member` → `data-blueworx-store`. ClubHouse's own profile card keeps `clubhouse-profile__*`.
+- The sidebar sub-line now reads "Your account" (Labs' wording), where it used to read "Member area".
 - Commit after every task, trailer `Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>`. Lint once at the end.
 - Work on a branch `member-area-served-by-labs` off `main`.
 
