@@ -87,3 +87,20 @@ test('a club page is read-only in the Pages list @wordpress', async ({ page }) =
   await expect(theirs.locator('.row-actions .trash')).toHaveCount(1);
   await expect(theirs.locator('.column-clubhouse_club_page')).toHaveText('');
 });
+
+// The shop's pages are served by BlueWorx Labs, and the site depends on them
+// just as much: the same two row actions, and the column says whose they are.
+test('a commerce page is read-only in the Pages list too @wordpress', async ({ page }) => {
+  await signIn(page);
+  await page.goto('/wp-admin/edit.php?post_type=page&post_status=all');
+
+  // Seeded by global-setup.js as the shop's checkout page.
+  const checkout = page
+    .locator('#the-list tr', { has: page.locator('a.row-title', { hasText: /^Checkout fixture$/ }) })
+    .first();
+  await expect(checkout.locator('.column-clubhouse_club_page')).toHaveText('Commerce page');
+  await expect(checkout.locator('.row-actions .inline')).toHaveCount(0);
+  await expect(checkout.locator('.row-actions .trash')).toHaveCount(0);
+  await expect(checkout.locator('.row-actions .edit')).toHaveCount(1);
+  await expect(checkout.locator('.row-actions .view')).toHaveCount(1);
+});
