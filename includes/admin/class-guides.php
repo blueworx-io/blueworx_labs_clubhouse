@@ -731,9 +731,9 @@ final class Blueworx_Clubhouse_Guides {
 				$setup,
 				'The checkout and confirmation pages',
 				'Pages → All Pages',
-				'The shop needs a checkout page and a confirmation page, and ClubHouse makes them for you.',
+				'The shop needs a checkout page and a confirmation page, and BlueWorx keeps them present for you.',
 				array(
-					'If a notice in the admin says a shop page is missing, press the button on it and the page is made.',
+					'If a BlueWorx notice in the admin says a shop page is missing, press the button on it and the page is made.',
 					'The two pages are ordinary pages under *Pages*, drawn without the club\'s header and footer so the checkout stands on its own.',
 				),
 				'Nothing else on those pages needs editing.'

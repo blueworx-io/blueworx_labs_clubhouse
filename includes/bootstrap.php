@@ -39,6 +39,13 @@ require_once __DIR__ . '/membership/class-surecart-products.php';
 require_once __DIR__ . '/membership/class-checkout-form.php';
 require_once __DIR__ . '/membership/class-welcome-pack.php';
 
+// The one class that talks to the BlueWorx Labs plugin, which serves the
+// member area, checkout and thank-you pages. Loaded here, not only by the
+// plugin file: the link catalogue asks it for the shop pages' addresses, and
+// the DB-free preview loads this file alone. Pure at load, and answers
+// safely without Labs.
+require_once __DIR__ . '/store/class-labs-store.php';
+
 // Profile. The rules first, then the screens that draw them.
 require_once __DIR__ . '/profile/class-profile-fields.php';
 require_once __DIR__ . '/profile/class-profile-values.php';

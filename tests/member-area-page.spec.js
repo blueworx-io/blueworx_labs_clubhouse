@@ -11,8 +11,9 @@ test.beforeEach(async ({ page }) => {
 // @wordpress only: these prove the routing, which the DB-free preview has none of.
 //
 // SureCart is installed for these (see the guard above); LatePoint is not, so what is covered
-// here is the frame and the journeys around it — not the shop's own panels,
-// which would be testing SureCart.
+// here is the frame — BlueWorx Labs draws it now, on the club's own route —
+// and the journeys around it; not the shop's own panels, which would be
+// testing SureCart.
 
 async function signIn(page) {
   await page.goto('/wp-login.php');
@@ -60,7 +61,7 @@ async function setPageVisible(page, slug, visible) {
 test('the member area serves at its own club address @wordpress', async ({ page }) => {
   await signIn(page);
   await page.goto('/member-dashboard/');
-  await expect(page.locator('.bw-admin.clubhouse-member')).toHaveCount(1);
+  await expect(page.locator('.bw-admin.blueworx-store')).toHaveCount(1);
 });
 
 // Regression found in review: the member area's real page was created as a
@@ -73,7 +74,7 @@ test('an ordinary signed-in member reaches the member area, not a 404 @wordpress
   await signInAsMember(page);
   const res = await page.goto('/member-dashboard/');
   expect(res.status(), 'a subscriber must be able to open the member area').toBe(200);
-  await expect(page.locator('.bw-admin.clubhouse-member')).toHaveCount(1);
+  await expect(page.locator('.bw-admin.blueworx-store')).toHaveCount(1);
 });
 
 test('the old account page carries a member across, panel and all @wordpress', async ({ page }) => {

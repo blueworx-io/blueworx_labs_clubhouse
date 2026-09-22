@@ -22,6 +22,31 @@ final class LabsStoreTest extends TestCase {
 		$this->assertSame( array( 'dashboard', 'bookings', 'orders' ), array_column( $views, 'key' ) );
 	}
 
+	public function test_the_views_carry_the_clubs_own_words(): void {
+		// Labs describes its views for any site; a club's member reads about
+		// the club, in the words the member area used before Labs drew it.
+		Blueworx_Clubhouse_Integrations::set_detector( static fn ( string $tag ): bool => false );
+		$views = Blueworx_Clubhouse_Labs_Store::views(
+			array(
+				array( 'key' => 'dashboard', 'lede' => 'Everything the site keeps for you, in one place.' ),
+				array( 'key' => 'orders', 'lede' => 'Everything you have bought.' ),
+				array( 'key' => 'invoices', 'lede' => 'Your receipts, and anything still to pay.' ),
+				array( 'key' => 'profile', 'lede' => 'Who you are, and what the site keeps about you.' ),
+				array( 'key' => 'account', 'lede' => 'How you pay.' ),
+			)
+		);
+		$this->assertSame(
+			array(
+				'Everything the club keeps for you, in one place.',
+				'Everything you have bought from the club.',
+				'Your receipts, and anything still to pay.',
+				'Who you are, and what the club keeps about you.',
+				'How you pay the club.',
+			),
+			array_column( $views, 'lede' )
+		);
+	}
+
 	public function test_the_notice_names_what_is_missing(): void {
 		$this->assertStringContainsString( 'BlueWorx Labs', Blueworx_Clubhouse_Labs_Store::notice_html( false, '' ) );
 		$this->assertStringContainsString( 'is not active', Blueworx_Clubhouse_Labs_Store::notice_html( false, '' ) );
@@ -36,6 +61,17 @@ final class LabsStoreTest extends TestCase {
 		$this->assertSame( 'http://club.test/member-dashboard/', Blueworx_Clubhouse_Labs_Store::claim( true, 'http://club.test/member-dashboard/', '' ) );
 		$this->assertSame( '', Blueworx_Clubhouse_Labs_Store::claim( false, 'http://club.test/member-dashboard/', '' ) );
 		$this->assertSame( 'http://other/', Blueworx_Clubhouse_Labs_Store::claim( false, 'http://club.test/member-dashboard/', 'http://other/' ) );
+	}
+
+	public function test_a_signed_out_visitor_to_the_member_area_is_sent_to_log_in(): void {
+		// Labs honours the club's claim on the dashboard signed in or not, so
+		// guarding the member area's door is the club's job — the same rule the
+		// member area's own route applied before Labs took it over.
+		$this->assertSame( '/login/', Blueworx_Clubhouse_Labs_Store::door( true, false, '/login/' ) );
+		$this->assertSame( '', Blueworx_Clubhouse_Labs_Store::door( true, true, '/login/' ) );
+		$this->assertSame( '', Blueworx_Clubhouse_Labs_Store::door( false, false, '/login/' ) );
+		// No login page to send them to: stay put, and let the 404 pass answer.
+		$this->assertSame( '', Blueworx_Clubhouse_Labs_Store::door( true, false, '' ) );
 	}
 
 	public function test_context_prefers_the_club_favicon_then_logo(): void {

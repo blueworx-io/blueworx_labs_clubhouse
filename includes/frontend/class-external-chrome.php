@@ -181,8 +181,10 @@ final class Blueworx_Clubhouse_External_Chrome {
 	}
 
 	/**
-	 * Whether the page being rendered is one of the two Labs dresses and
-	 * serves its own document for — checkout, or the thank-you page.
+	 * Whether the page being rendered is one of the three Labs answers for:
+	 * the checkout, the thank-you page, or SureCart's dashboard page. Labs
+	 * serves the first two from its own template and redirects the third to
+	 * the member area, so none of them wants the club's chrome around it.
 	 */
 	private static function is_commerce_page(): bool {
 		if ( ! function_exists( 'get_queried_object_id' ) ) {

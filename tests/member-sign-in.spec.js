@@ -6,9 +6,10 @@ const { test, expect } = require('@playwright/test');
 //
 // CI has no shop, so these skip there. Run them locally with:
 //   npm run wp:up && npm run wp:shop
-// The member account is created by the first test that needs it.
+// The member account is the subscriber tests/global-setup.js seeds before
+// every run — the same one the member-area specs sign in as.
 
-const MEMBER = { login: 'clubmember', pass: 'member-test-pw' };
+const MEMBER = { login: 'member', pass: 'wptest-member-pw' };
 
 async function shopIsInstalled(page) {
   const res = await page.goto('/login/', { waitUntil: 'domcontentloaded' });
@@ -39,7 +40,7 @@ test('a member signs in through the shop form on the club page @wordpress', asyn
   // Signed in, and sent where the club's setting says — the member area by
   // default, which is what this plugin has always meant by a blank setting.
   await page.waitForURL(/member-dashboard/, { timeout: 20000 });
-  await expect(page.locator('.clubhouse-member')).toBeVisible();
+  await expect(page.locator('.blueworx-store')).toBeVisible();
 });
 
 test('the club heading titles the shop form, not the shop wording @wordpress', async ({ page }) => {

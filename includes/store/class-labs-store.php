@@ -85,8 +85,43 @@ final class Blueworx_Clubhouse_Labs_Store {
 		add_filter( 'blueworx_store_context', array( self::class, 'context' ) );
 		add_filter( 'blueworx_store_checkout_links', array( self::class, 'checkout_links' ), 10, 2 );
 		add_filter( 'blueworx_store_dashboard_url', array( self::class, 'dashboard_url' ) );
+		// Priority 5: before Frontend's own 404 pass at the default 10, so a
+		// signed-out visitor is moved on rather than shown a page they cannot
+		// use — where the member area's own route stood before Labs took it.
+		add_action( 'template_redirect', array( self::class, 'guard_member_area' ), 5 );
 		add_action( 'admin_notices', array( self::class, 'render_notice' ) );
 		add_action( 'admin_enqueue_scripts', array( self::class, 'enqueue_notice_assets' ) );
+	}
+
+	/**
+	 * Sends a stranger on the member area's route to the club's own login
+	 * page. Labs honours the club's claim on the dashboard whether or not
+	 * anyone is signed in — the claimant guards its own door — and this is
+	 * the door.
+	 */
+	public static function guard_member_area(): void {
+		if ( ! function_exists( 'wp_safe_redirect' ) || ! function_exists( 'is_user_logged_in' ) || ! class_exists( 'Blueworx_Clubhouse_Frontend' ) ) {
+			return;
+		}
+		$target = self::door(
+			Blueworx_Clubhouse_Frontend::MEMBER_AREA === Blueworx_Clubhouse_Frontend::current_page_slug(),
+			is_user_logged_in(),
+			self::link_url( 'login' )
+		);
+		if ( '' === $target ) {
+			return;
+		}
+		wp_safe_redirect( $target, 302 );
+		exit;
+	}
+
+	/**
+	 * The pure half of guard_member_area(): the login page for a signed-out
+	 * visitor on the member area, '' for everyone else and for a club whose
+	 * login page has no address.
+	 */
+	public static function door( bool $on_member_area, bool $signed_in, string $login_url ): string {
+		return $on_member_area && ! $signed_in ? trim( $login_url ) : '';
 	}
 
 	/*
@@ -96,7 +131,20 @@ final class Blueworx_Clubhouse_Labs_Store {
 	 */
 
 	/**
-	 * Adds the Bookings view when LatePoint can fill it.
+	 * The club's own words for the views Labs describes site-neutrally. Labs
+	 * says "the site"; a member of a club is a member of the club, and these
+	 * are the ledes the member area carried before Labs took the frame over.
+	 */
+	private const CLUB_LEDES = array(
+		'dashboard' => 'Everything the club keeps for you, in one place.',
+		'orders'    => 'Everything you have bought from the club.',
+		'profile'   => 'Who you are, and what the club keeps about you.',
+		'account'   => 'How you pay the club.',
+	);
+
+	/**
+	 * The club's wording on Labs' views, and the Bookings view when LatePoint
+	 * can fill it.
 	 *
 	 * Detection is by the shortcode the view renders, not by has_latepoint():
 	 * the question is "will this panel have anything in it?", and a LatePoint
@@ -113,6 +161,12 @@ final class Blueworx_Clubhouse_Labs_Store {
 	 */
 	public static function views( $views ): array {
 		$views = array_values( (array) $views );
+		foreach ( $views as $i => $view ) {
+			$key = is_array( $view ) ? (string) ( $view['key'] ?? '' ) : '';
+			if ( isset( self::CLUB_LEDES[ $key ] ) ) {
+				$views[ $i ]['lede'] = self::CLUB_LEDES[ $key ];
+			}
+		}
 		if ( ! Blueworx_Clubhouse_Integrations::provides( self::BOOKINGS_SHORTCODE ) ) {
 			return $views;
 		}
@@ -155,9 +209,10 @@ final class Blueworx_Clubhouse_Labs_Store {
 	 * The club's additions to two panels: its welcome above the overview, and
 	 * its own profile questions under the shop's account block.
 	 *
-	 * The welcome pack's rules ride with it in a <style> tag, as they always
-	 * have: a handful of rules on exactly one panel, and enqueueing them would
-	 * put them on every dashboard request including the ones with no pack.
+	 * The welcome pack's rules are not here: enqueue_dashboard() puts them in
+	 * the head, after Labs' stylesheet, on the requests that show a pack. The
+	 * member area used to print them ahead of the frame, so they have never
+	 * been part of the panel's markup and are not now.
 	 *
 	 * The profile card copies the markup Labs' own card helper emits rather
 	 * than calling it, so this filter stays pure and loads without Labs.
@@ -171,11 +226,7 @@ final class Blueworx_Clubhouse_Labs_Store {
 		$key  = (string) $key;
 		if ( self::DASHBOARD_VIEW === $key ) {
 			$welcome = self::welcome_pack();
-			if ( '' === $welcome ) {
-				return $html;
-			}
-			$accent = Blueworx_Clubhouse_Welcome_Pack::accent_pair( new Blueworx_Clubhouse_Options_Storage() );
-			return '<style>' . Blueworx_Clubhouse_Welcome_Pack::css( ...$accent ) . '</style>' . $welcome . $html;
+			return '' === $welcome ? $html : $welcome . $html;
 		}
 		if ( 'profile' === $key && class_exists( 'Blueworx_Clubhouse_Profile_Form' ) ) {
 			$own = Blueworx_Clubhouse_Profile_Form::panel( 'profile' );
@@ -330,9 +381,10 @@ final class Blueworx_Clubhouse_Labs_Store {
 	}
 
 	/**
-	 * Labs' dashboard assets, then the club's profile-card rules on top. The
-	 * rules depend on Labs' stylesheet so they land after it; without Labs
-	 * the dependency is unmet and WordPress simply prints nothing.
+	 * Labs' dashboard assets, then the club's profile-card rules on top, and
+	 * the welcome pack's few rules when there is a pack to show. Both depend
+	 * on Labs' stylesheet so they land after it; without Labs the dependency
+	 * is unmet and WordPress simply prints nothing.
 	 */
 	public static function enqueue_dashboard(): void {
 		if ( self::available() ) {
@@ -347,6 +399,12 @@ final class Blueworx_Clubhouse_Labs_Store {
 			array( self::LABS_STYLE_HANDLE ),
 			defined( 'BLUEWORX_LABS_CLUBHOUSE_VERSION' ) ? BLUEWORX_LABS_CLUBHOUSE_VERSION : null
 		);
+		// Only on a request that shows the pack, so a club with none written or
+		// switched off carries no rules for it.
+		if ( function_exists( 'wp_add_inline_style' ) && '' !== self::welcome_pack() ) {
+			$accent = Blueworx_Clubhouse_Welcome_Pack::accent_pair( new Blueworx_Clubhouse_Options_Storage() );
+			wp_add_inline_style( self::STYLE_HANDLE, Blueworx_Clubhouse_Welcome_Pack::css( ...$accent ) );
+		}
 	}
 
 	/*

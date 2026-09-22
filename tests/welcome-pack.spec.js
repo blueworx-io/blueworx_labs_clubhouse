@@ -39,7 +39,7 @@ test('the pack greets a member above everything else on the page @wordpress', as
 
   const order = await page.evaluate(() => {
     const pack = document.querySelector('.clubhouse-welcome');
-    const rest = document.querySelector('.clubhouse-member__quicks, .bw-card');
+    const rest = document.querySelector('.blueworx-store__quicks, .bw-card');
     if (!pack) return null;
     if (!rest) return 'before'; // Nothing else on the page to come after.
     return pack.compareDocumentPosition(rest) & 4 ? 'before' : 'after';
