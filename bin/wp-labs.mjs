@@ -29,7 +29,7 @@ import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 const { slug } = require('./dev-ports.js');
 
-const VERSION = '1.87.0';
+const VERSION = '1.88.0';
 const ZIP_URL = `https://github.com/blueworx-io/blueworx_labs_wordpress/releases/download/v${VERSION}/blueworx-labs-wordpress-${VERSION}.zip`;
 const WP_DIR = resolve('.wp-test/wp');
 const PLUGINS = join(WP_DIR, 'wp-content/plugins');

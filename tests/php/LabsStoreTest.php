@@ -51,8 +51,8 @@ final class LabsStoreTest extends TestCase {
 		$this->assertStringContainsString( 'BlueWorx Labs', Blueworx_Clubhouse_Labs_Store::notice_html( false, '' ) );
 		$this->assertStringContainsString( 'is not active', Blueworx_Clubhouse_Labs_Store::notice_html( false, '' ) );
 		$this->assertStringContainsString( '1.86.0', Blueworx_Clubhouse_Labs_Store::notice_html( true, '1.86.0' ) );
-		$this->assertStringContainsString( '1.87.0', Blueworx_Clubhouse_Labs_Store::notice_html( true, '1.86.0' ) );
-		$this->assertStringContainsString( 'Store pages feature is switched off', Blueworx_Clubhouse_Labs_Store::notice_html( true, '1.87.0', false ) );
+		$this->assertStringContainsString( '1.88.0', Blueworx_Clubhouse_Labs_Store::notice_html( true, '1.87.0' ) );
+		$this->assertStringContainsString( 'Store pages feature is switched off', Blueworx_Clubhouse_Labs_Store::notice_html( true, '1.88.0', false ) );
 	}
 
 	public function test_dashboard_url_claim_is_the_member_area_when_it_is_served(): void {

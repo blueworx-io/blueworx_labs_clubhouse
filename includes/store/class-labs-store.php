@@ -30,7 +30,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 final class Blueworx_Clubhouse_Labs_Store {
 
 	/** The first Labs release that ships the store pages and their filters. */
-	public const MIN_LABS_VERSION = '1.87.0';
+	public const MIN_LABS_VERSION = '1.88.0';
 
 	/** Labs' own dashboard stylesheet, which the profile rules layer on top of. */
 	private const LABS_STYLE_HANDLE = 'blueworx-store';

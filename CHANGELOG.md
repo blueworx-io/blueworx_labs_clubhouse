@@ -5,6 +5,10 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.106.0
+
+- The Pages list's column is now BlueWorx Labs' "Source" column, shared by every BlueWorx plugin: club pages read "Club page", the shop's read "Commerce page", and both can only be viewed or edited from the list — trashing or deleting either is refused outright. Needs BlueWorx Labs 1.88.0 or newer.
+
 ## 0.105.1
 
 - The Pages list now marks the shop's pages (checkout, thank-you, customer dashboard, shop) as "Commerce page", and offers only View and Edit on them — the same protection club pages already had.

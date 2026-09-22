@@ -63,9 +63,9 @@ test('editing a club page lands in that page\'s own editor, not the block editor
 });
 
 // The Pages list is somewhere to see club pages, not somewhere to edit them.
-// Quick Edit renames and retitles a page inline, and Trash removes it — both
-// break a site that routes through these pages, from a screen that looks
-// harmless. An ordinary page the club made itself keeps both.
+// Labs' Source column names them "Club page" through the filter this plugin
+// answers, and with a source comes Labs' protection: no Quick Edit, no Trash.
+// An ordinary page the club made itself keeps both.
 test('a club page is read-only in the Pages list @wordpress', async ({ page }) => {
   await signIn(page);
   await page.goto('/wp-admin/edit.php?post_type=page&post_status=all');
@@ -77,7 +77,7 @@ test('a club page is read-only in the Pages list @wordpress', async ({ page }) =
   await expect(club.locator('.row-actions .trash')).toHaveCount(0);
   await expect(club.locator('.row-actions .edit')).toHaveCount(1);
   // And the column says which rows are ours.
-  await expect(club.locator('.column-clubhouse_club_page')).toHaveText('Club page');
+  await expect(club.locator('.column-blueworx_page_source')).toHaveText('Club page');
 
   // Seeded by global-setup.js — a page this plugin does not own.
   const theirs = page
@@ -85,11 +85,11 @@ test('a club page is read-only in the Pages list @wordpress', async ({ page }) =
     .first();
   await expect(theirs.locator('.row-actions .inline')).toHaveCount(1);
   await expect(theirs.locator('.row-actions .trash')).toHaveCount(1);
-  await expect(theirs.locator('.column-clubhouse_club_page')).toHaveText('');
+  await expect(theirs.locator('.column-blueworx_page_source')).toHaveText('');
 });
 
-// The shop's pages are served by BlueWorx Labs, and the site depends on them
-// just as much: the same two row actions, and the column says whose they are.
+// The shop's pages are Labs' own, named and guarded by Labs itself — proven
+// here too, so the two plugins are seen to share one column.
 test('a commerce page is read-only in the Pages list too @wordpress', async ({ page }) => {
   await signIn(page);
   await page.goto('/wp-admin/edit.php?post_type=page&post_status=all');
@@ -98,9 +98,26 @@ test('a commerce page is read-only in the Pages list too @wordpress', async ({ p
   const checkout = page
     .locator('#the-list tr', { has: page.locator('a.row-title', { hasText: /^Checkout fixture$/ }) })
     .first();
-  await expect(checkout.locator('.column-clubhouse_club_page')).toHaveText('Commerce page');
+  await expect(checkout.locator('.column-blueworx_page_source')).toHaveText('Commerce page');
   await expect(checkout.locator('.row-actions .inline')).toHaveCount(0);
   await expect(checkout.locator('.row-actions .trash')).toHaveCount(0);
   await expect(checkout.locator('.row-actions .edit')).toHaveCount(1);
   await expect(checkout.locator('.row-actions .view')).toHaveCount(1);
+});
+
+// Hiding the row action is a courtesy; the refusal is the guarantee. A bulk
+// trash reaches the same hooks as any other route, and Labs turns it away
+// because this plugin named the page.
+test('a club page cannot be trashed, even in bulk @wordpress', async ({ page }) => {
+  await signIn(page);
+  await page.goto('/wp-admin/edit.php?post_type=page&post_status=all');
+  const about = page
+    .locator('#the-list tr', { has: page.locator('a.row-title', { hasText: /^About$/ }) })
+    .first();
+  await about.locator('input[type="checkbox"]').check();
+  await page.selectOption('#bulk-action-selector-top', 'trash');
+  await page.click('#doaction');
+  await expect(page.locator('body')).toContainText('This is a club page. The site is served from it, so it cannot be deleted.');
+  await page.goto('/wp-admin/edit.php?post_type=page&post_status=all');
+  await expect(page.locator('a.row-title', { hasText: /^About$/ })).toHaveCount(1);
 });
