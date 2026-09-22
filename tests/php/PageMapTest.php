@@ -87,7 +87,12 @@ final class PageMapTest extends TestCase {
 		$this->assertFalse( Blueworx_Clubhouse_Page_Map::is_private( 'nope' ) );
 	}
 
-	/** The one page that renders no club chrome — it is a BlueWorx admin screen. */
+	/**
+	 * The one page that renders no club chrome — it is a BlueWorx admin screen,
+	 * drawn by the Labs plugin. Labs is never loaded here, so what comes back
+	 * is the seam's "not available" screen: still that design system, still
+	 * no club header or footer around it.
+	 */
 	public function test_member_area_renders_its_own_frame_and_no_club_chrome(): void {
 		$html = Blueworx_Clubhouse_Page_Map::render(
 			'member-dashboard',
@@ -96,7 +101,7 @@ final class PageMapTest extends TestCase {
 			$this->collections()
 		);
 		$this->assertStringContainsString( 'bw-admin', $html );
-		$this->assertStringContainsString( 'clubhouse-member', $html );
+		$this->assertStringContainsString( 'Member area', $html );
 		$this->assertStringNotContainsString( 'ch-nav', $html );
 		$this->assertStringNotContainsString( 'ch-footer', $html );
 	}

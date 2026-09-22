@@ -1620,7 +1620,7 @@ final class Blueworx_Clubhouse_Page_Renderer {
 		?Blueworx_Clubhouse_Page_Content $content = null,
 		string $filter = ''
 	): string {
-		return Blueworx_Clubhouse_Member_Dashboard::screen(
+		return Blueworx_Clubhouse_Labs_Store::screen(
 			Blueworx_Clubhouse_Links::url( 'member-dashboard' ),
 			Blueworx_Clubhouse_Links::url( 'home' )
 		);

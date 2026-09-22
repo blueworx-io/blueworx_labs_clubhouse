@@ -5,6 +5,10 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.105.0
+
+- The member area, checkout and thank-you page are now served by the BlueWorx Labs plugin, which every BlueWorx site runs. Nothing changes for members: same addresses, same screens. Clubhouse now needs BlueWorx Labs 1.87.0 or newer, and says so in the admin if it is missing.
+
 ## 0.104.0
 
 - The plugin now updates itself. Each release is published on GitHub and every site is offered it on Dashboard → Updates, like any other plugin — nobody uploads a zip any more.

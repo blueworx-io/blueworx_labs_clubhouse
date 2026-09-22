@@ -9,6 +9,11 @@ use PHPUnit\Framework\TestCase;
  * engine while nothing on the site linked to them, so a member browsing the
  * club could never reach the shop. Issue #170 has the same shape for the
  * customer dashboard.
+ *
+ * The addresses come from the BlueWorx Labs plugin now, through Labs_Store,
+ * and the test bootstrap never loads Labs — so only the "no shop" half can be
+ * asserted here. That a reachable page becomes a target, and a trashed one
+ * does not, is covered on the harness, where Labs answers for real.
  */
 final class ShopLinksTest extends TestCase {
 
@@ -21,14 +26,6 @@ final class ShopLinksTest extends TestCase {
 		Blueworx_Clubhouse_SureCart_Products::set_active_for_tests( null );
 		Blueworx_Clubhouse_Link_Catalogue::forget_shop_targets();
 		wp_stub_reset();
-	}
-
-	private function shop_page( string $key, int $id, string $url ): void {
-		Blueworx_Clubhouse_SureCart_Products::set_active_for_tests( true );
-		update_option( Blueworx_Clubhouse_Shop_Pages::option_name( $key ), $id );
-		$GLOBALS['wp_stub_post_status'][ $id ] = 'publish';
-		$GLOBALS['wp_stub_permalinks'][ $id ]  = $url;
-		Blueworx_Clubhouse_Link_Catalogue::forget_shop_targets();
 	}
 
 	private function collections(): Blueworx_Clubhouse_Collections {
@@ -49,25 +46,13 @@ final class ShopLinksTest extends TestCase {
 		$this->assertNotContains( 'shop:dashboard', $this->target_tags() );
 	}
 
-	public function test_a_reachable_shop_page_becomes_something_a_link_can_point_at(): void {
-		$this->shop_page( 'shop', 12, 'https://club.test/shop/' );
-		$this->assertContains( 'shop:shop', $this->target_tags() );
-		$this->assertSame(
-			'https://club.test/shop/',
-			Blueworx_Clubhouse_Link_Catalogue::resolve( 'shop:shop', $this->collections() )
-		);
-	}
-
-	public function test_the_customer_dashboard_is_offered_too(): void {
-		$this->shop_page( 'dashboard', 13, 'https://club.test/customer-dashboard/' );
-		$this->assertContains( 'shop:dashboard', $this->target_tags() );
-	}
-
-	public function test_a_trashed_shop_page_is_not_offered(): void {
-		$this->shop_page( 'shop', 12, 'https://club.test/shop/' );
-		$GLOBALS['wp_stub_post_status'][12] = 'trash';
-		Blueworx_Clubhouse_Link_Catalogue::forget_shop_targets();
+	public function test_without_labs_no_shop_page_is_offered_even_with_a_shop(): void {
+		// Labs is what knows where the shop's pages are. Without it the answer
+		// is "no address", and a link to nowhere is never offered.
+		Blueworx_Clubhouse_SureCart_Products::set_active_for_tests( true );
+		$this->assertSame( '', Blueworx_Clubhouse_Labs_Store::page_url( 'shop' ) );
 		$this->assertNotContains( 'shop:shop', $this->target_tags() );
+		$this->assertSame( '', Blueworx_Clubhouse_Link_Catalogue::resolve( 'shop:shop', $this->collections() ) );
 	}
 
 	public function test_the_default_nav_shows_shop_only_when_there_is_one(): void {
@@ -85,15 +70,5 @@ final class ShopLinksTest extends TestCase {
 			$menu->items( $this->collections(), new Blueworx_Clubhouse_Visibility( new Blueworx_Clubhouse_Fake_Storage() ) )
 		);
 		$this->assertNotContains( 'Shop', $labels );
-	}
-
-	public function test_a_club_with_a_shop_gets_the_link_in_its_nav(): void {
-		$this->shop_page( 'shop', 12, 'https://club.test/shop/' );
-		$menu  = new Blueworx_Clubhouse_Menu( new Blueworx_Clubhouse_Fake_Storage() );
-		$items = $menu->items( $this->collections(), new Blueworx_Clubhouse_Visibility( new Blueworx_Clubhouse_Fake_Storage() ) );
-
-		$shop = array_values( array_filter( $items, static fn ( array $i ): bool => 'Shop' === $i['label'] ) );
-		$this->assertCount( 1, $shop );
-		$this->assertSame( 'https://club.test/shop/', $shop[0]['href'] );
 	}
 }

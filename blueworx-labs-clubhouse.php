@@ -3,7 +3,7 @@
  * Plugin Name:       Blueworx Labs | Clubhouse
  * Plugin URI:        https://github.com/blueworx-io/blueworx_labs_clubhouse
  * Description:        Blueworx Labs Clubhouse WordPress plugin.
- * Version:           0.104.0
+ * Version:           0.105.0
  * Requires at least: 6.0
  * Requires PHP:      8.2
  * Author:            Blueworx
@@ -21,7 +21,16 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'BLUEWORX_LABS_CLUBHOUSE_VERSION', '0.104.0' );
+/*
+ * No "Requires Plugins: blueworx-labs-wordpress" header here, deliberately.
+ * WordPress's activate_plugin() refuses to activate a plugin that declares a
+ * required plugin which is not already active — which breaks provisioning a
+ * fresh site or test harness where this plugin is activated before Labs is.
+ * Blueworx_Clubhouse_Labs_Store::available() and its admin notice give the
+ * same requirement at runtime instead, and tolerate either activation order.
+ */
+
+define( 'BLUEWORX_LABS_CLUBHOUSE_VERSION', '0.105.0' );
 define( 'BLUEWORX_LABS_CLUBHOUSE_FILE', __FILE__ );
 define( 'BLUEWORX_LABS_CLUBHOUSE_DIR', plugin_dir_path( __FILE__ ) );
 define( 'BLUEWORX_LABS_CLUBHOUSE_URL', plugin_dir_url( __FILE__ ) );
@@ -85,7 +94,6 @@ require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/admin/class-access-controll
 require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/admin/class-seo-controller.php';
 require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/admin/class-guides-registrar.php';
 require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/admin/class-changelog-controller.php';
-require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/admin/class-shop-pages-controller.php';
 require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/admin/class-wordpress-pages.php';
 require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/import/class-import-applier.php';
 require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/import/class-import-controller.php';
@@ -108,11 +116,10 @@ function blueworx_labs_clubhouse_init() {
 	Blueworx_Clubhouse_Legacy_Urls::register();
 	Blueworx_Clubhouse_External_Chrome::register();
 	Blueworx_Clubhouse_Welcome_Pack::register();
-	Blueworx_Clubhouse_Member_Dashboard::register();
+	Blueworx_Clubhouse_Labs_Store::register();
 	Blueworx_Clubhouse_Profile_Form::register();
 	Blueworx_Clubhouse_Profile_User_Screen::register();
 	Blueworx_Clubhouse_Profile_Columns::register();
-	Blueworx_Clubhouse_Commerce_Pages::register();
 	Blueworx_Clubhouse_Auth::register();
 	Blueworx_Clubhouse_Mail::register();
 	Blueworx_Clubhouse_Seo_Head::register();
@@ -130,7 +137,6 @@ function blueworx_labs_clubhouse_init() {
 	Blueworx_Clubhouse_Guides_Registrar::register();
 	Blueworx_Clubhouse_Changelog_Controller::register();
 	Blueworx_Clubhouse_SureCart_Products::register();
-	Blueworx_Clubhouse_Shop_Pages_Controller::register();
 	Blueworx_Clubhouse_Wordpress_Pages::register();
 	Blueworx_Clubhouse_Club_Page_Editing::register();
 	Blueworx_Clubhouse_Page_Editors::register();
@@ -144,10 +150,6 @@ register_activation_hook(
 		Blueworx_Clubhouse_Collection_Types::register();
 		Blueworx_Clubhouse_Collection_Seeder::seed();
 		Blueworx_Clubhouse_Owner_Role::activate();
-		// A club activating this beside a shop that is already here gets a
-		// working checkout straight away, rather than a warning about a page
-		// neither plugin makes on its own.
-		Blueworx_Clubhouse_Shop_Pages::ensure_confirmation();
 		// The plugin declares no rewrite rules of its own. This clears whatever
 		// an older version left in WordPress's cache — without it those rules
 		// would go on answering for every club page, routing them past the real

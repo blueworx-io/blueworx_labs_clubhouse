@@ -69,7 +69,7 @@ final class Blueworx_Clubhouse_Link_Catalogue {
 		}
 		$out = array();
 		foreach ( array( 'shop' => 'Shop', 'dashboard' => 'My account' ) as $key => $label ) {
-			$url = Blueworx_Clubhouse_Shop_Pages::url( $key );
+			$url = Blueworx_Clubhouse_Labs_Store::page_url( $key );
 			if ( '' === $url ) {
 				continue;
 			}

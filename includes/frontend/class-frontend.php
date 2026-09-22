@@ -462,22 +462,13 @@ final class Blueworx_Clubhouse_Frontend {
 			return;
 		}
 		if ( 'member' === $family ) {
-			// A BlueWorx admin screen, so it gets that design system and none of
-			// the club's. No scroll reveal either: it ships elements hidden until
-			// they scroll into view, which on a page of the shop's own web
-			// components would hide a member's orders behind an animation.
-			Blueworx_Clubhouse_Dashboard_Assets::enqueue();
-			Blueworx_Clubhouse_Member_Dashboard::enqueue_shop_assets();
-			// Switching panels without a reload. Deferred and enhancement-only:
-			// the nav is real links, so the page works while this is still on
-			// its way and if it never arrives at all.
-			wp_enqueue_script(
-				'clubhouse-member-area',
-				BLUEWORX_LABS_CLUBHOUSE_URL . 'assets/js/member-area.js',
-				array(),
-				BLUEWORX_LABS_CLUBHOUSE_VERSION,
-				true
-			);
+			// A BlueWorx admin screen, drawn by the Labs plugin, so it gets that
+			// design system and none of the club's: Labs enqueues its stylesheet,
+			// the panel script and the shop's own assets. No scroll reveal
+			// either: it ships elements hidden until they scroll into view, which
+			// on a page of the shop's own web components would hide a member's
+			// orders behind an animation.
+			Blueworx_Clubhouse_Labs_Store::enqueue_dashboard();
 			return;
 		}
 		if ( ! self::enqueue_look_styles() ) {
@@ -488,7 +479,7 @@ final class Blueworx_Clubhouse_Frontend {
 			// and the script that brings them to life is declared by the shop's
 			// own dashboard block — which this page is not. Without this the form
 			// renders as inert markup and nobody can sign in.
-			Blueworx_Clubhouse_Member_Dashboard::enqueue_shop_assets();
+			self::enqueue_shop_assets();
 		}
 		wp_enqueue_script(
 			'clubhouse-reveal',
@@ -516,6 +507,29 @@ final class Blueworx_Clubhouse_Frontend {
 			BLUEWORX_LABS_CLUBHOUSE_VERSION,
 			true
 		);
+	}
+
+	/**
+	 * SureCart's sign-in form is a web component, and the script that boots it
+	 * is declared by its dashboard wrapper block — which the login page is not.
+	 * Without this the form can render correct markup that never comes alive.
+	 * Guarded, so a shop that registers these under other names, or no shop at
+	 * all, costs nothing.
+	 *
+	 * Called from the asset pass rather than from the render, so the shop's
+	 * stylesheet reaches the head rather than the footer, where the form
+	 * would snap into shape after the page had loaded.
+	 */
+	private static function enqueue_shop_assets(): void {
+		if ( ! function_exists( 'wp_script_is' ) || ! function_exists( 'wp_enqueue_script' ) ) {
+			return;
+		}
+		if ( wp_script_is( 'surecart-components', 'registered' ) ) {
+			wp_enqueue_script( 'surecart-components' );
+		}
+		if ( function_exists( 'wp_style_is' ) && wp_style_is( 'surecart-themes-default', 'registered' ) ) {
+			wp_enqueue_style( 'surecart-themes-default' );
+		}
 	}
 
 	/**

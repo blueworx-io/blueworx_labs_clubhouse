@@ -11,12 +11,13 @@ const { hasShop } = require('./helpers/shop');
 // and a warning about missing shop pages on every admin screen of a site that
 // will never sell anything would be pure noise.
 //
-// The other half — the notice appearing, and its button handing page creation
-// to SureCart's own seeder — needs SureCart installed. Installing it here to
-// assert our own notice would be testing SureCart, the same reasoning
-// external-chrome.spec.js records; the decisions are pure and covered branch by
-// branch in tests/php/ShopPagesTest.php, and the whole flow was exercised
-// against a real SureCart 4.6.3 install (see docs/integrations/surecart-notes.md).
+// The notice itself is BlueWorx Labs' now — it reads "BlueWorx: your shop is
+// not ready to take payments." — and so is the button that hands page creation
+// to SureCart's own seeder. The other half, the notice appearing, needs
+// SureCart installed and is Labs' to prove: its decisions are covered branch
+// by branch in Labs' own tests, and the whole flow was exercised against a
+// real SureCart 4.6.3 install (see docs/integrations/surecart-notes.md). What
+// is asserted here is only that a club with no shop never sees it.
 
 async function loginAsAdmin(page) {
   await page.goto('/wp-login.php');
@@ -26,15 +27,21 @@ async function loginAsAdmin(page) {
   await expect(page.locator('#wpadminbar')).toBeVisible();
 }
 
+const NOTICE = 'BlueWorx: your shop is not ready to take payments.';
+
 test('a club with no shop is never told its shop pages are missing @wordpress', async ({ page }) => {
+  // A site with a shop is the other case — Labs' notice may rightly appear
+  // there while its pages are being set up, and CI never has one.
+  test.skip(await hasShop(page), 'a shop is installed — this is about a site without one');
+
   await loginAsAdmin(page);
   await page.goto('/wp-admin/index.php', { waitUntil: 'domcontentloaded' });
-  await expect(page.locator('body')).not.toContainText('not ready to take payments');
+  await expect(page.locator('body')).not.toContainText(NOTICE);
 
   // The Clubhouse screens too — the notice hangs off admin_notices, which every
   // admin screen fires.
   await page.goto('/wp-admin/admin.php?page=clubhouse-setup', { waitUntil: 'domcontentloaded' });
-  await expect(page.locator('body')).not.toContainText('not ready to take payments');
+  await expect(page.locator('body')).not.toContainText(NOTICE);
 });
 
 test('a club with no shop gets no Shop link in its nav @wordpress', async ({ page }) => {

@@ -100,7 +100,7 @@ final class Blueworx_Clubhouse_Auth {
 			&& ( new Blueworx_Clubhouse_Visibility( new Blueworx_Clubhouse_Options_Storage() ) )->is_page_visible( Blueworx_Clubhouse_Frontend::MEMBER_AREA );
 		return $serving
 			? Blueworx_Clubhouse_Frontend::link_url( Blueworx_Clubhouse_Frontend::MEMBER_AREA )
-			: Blueworx_Clubhouse_Shop_Pages::url( 'dashboard' );
+			: Blueworx_Clubhouse_Labs_Store::page_url( 'dashboard' );
 	}
 
 	/**

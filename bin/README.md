@@ -77,3 +77,25 @@ throwaway local install, so prices, checkouts, customers and its passwordless
 sign-in codes stay unavailable. Everything SureCart implements in plain
 WordPress does work, including password sign-in and the customer dashboard's
 block routing.
+
+## wp-labs.mjs — BlueWorx Labs in the test harness
+
+```bash
+npm run wp:up      # WordPress with this plugin
+npm run wp:shop    # add SureCart (Labs' store pages dress its checkout)
+BLUEWORX_LABS_DIR=../blueworx_labs_wordpress npm run wp:labs   # add Labs, store_pages only
+```
+
+ClubHouse's member area, checkout and thank-you pages are moving to Labs. This
+puts a real copy of Labs beside this plugin so that move can be exercised
+locally and in CI.
+
+Source, in order of preference: `BLUEWORX_LABS_DIR` (a local checkout — copied,
+never symlinked, since a symlinked plugin folder breaks `plugin_basename()`),
+else the pinned GitHub release zip. After activation every Labs feature is
+switched off except `store_pages`, so Labs' login relocation, site protection
+and admin re-skin cannot interfere with ClubHouse's own specs.
+
+`tests/global-setup.js` runs this automatically in CI, once per fresh
+provision, so you don't normally need to run it by hand — opt in locally when
+what you're working on needs Labs present.

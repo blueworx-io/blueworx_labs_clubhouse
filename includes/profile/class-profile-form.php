@@ -24,7 +24,7 @@ final class Blueworx_Clubhouse_Profile_Form {
 	/** What the last save had to say, for the member to read. */
 	public const RESULT_ARG = 'clubhouse_profile_result';
 
-	/** The name of the panel this class draws, as Dashboard_Views declares it. */
+	/** The name of the panel this class draws, as Labs' store views declare it. */
 	public const PANEL = 'profile';
 
 	public static function register(): void {
@@ -32,7 +32,7 @@ final class Blueworx_Clubhouse_Profile_Form {
 	}
 
 	/**
-	 * The card, for Member_Dashboard's panel renderer.
+	 * The card, for Labs_Store's panel filter to place under the shop's own.
 	 *
 	 * Empty for a club that has defined no fields, which leaves the Profile page
 	 * as the shop's name-and-password block alone rather than a blank card.

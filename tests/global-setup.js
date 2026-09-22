@@ -79,7 +79,7 @@ if ( is_int( $member_id ) && $member_id > 0 ) {
 
 // A page standing in for SureCart's checkout. CI has no SureCart, and
 // installing it to assert our own frame would be testing SureCart. The stored
-// page id IS the contract — Commerce_Pages dresses whichever post it names.
+// page id IS the contract — Labs dresses whichever post it names.
 $checkout_existing = get_page_by_path( 'checkout-fixture' );
 $checkout_id       = $checkout_existing instanceof WP_Post ? $checkout_existing->ID : wp_insert_post( array(
 	'post_type'    => 'page',
@@ -90,6 +90,21 @@ $checkout_id       = $checkout_existing instanceof WP_Post ? $checkout_existing-
 ) );
 if ( is_int( $checkout_id ) && $checkout_id > 0 ) {
 	update_option( 'surecart_checkout_page_id', $checkout_id );
+}
+
+// A page standing in for SureCart's thank-you page, the same way the checkout
+// fixture above stands in for checkout. 'surecart_order-confirmation_page_id'
+// (note the hyphen) is SureCart's real option name, not a typo.
+$thanks_existing = get_page_by_path( 'thanks-fixture' );
+$thanks_id        = $thanks_existing instanceof WP_Post ? $thanks_existing->ID : wp_insert_post( array(
+	'post_type'    => 'page',
+	'post_status'  => 'publish',
+	'post_name'    => 'thanks-fixture',
+	'post_title'   => 'Thanks fixture',
+	'post_content' => '<p id="shop-content">SHOP CONTENT</p>',
+) );
+if ( is_int( $thanks_id ) && $thanks_id > 0 ) {
+	update_option( 'surecart_order-confirmation_page_id', $thanks_id );
 }
 
 // The club's own questions about a member (issue #276). Seeded rather than
@@ -264,4 +279,18 @@ echo ( get_option( 'clubhouse_demo_active' ) && is_int( $id ) && $id > 0 && is_i
     );
   }
   console.log('global-setup: demo mode on, external-page fixture seeded.');
+
+  // CI provisions a fresh WordPress per shard, so this is what gives CI Labs —
+  // locally you normally run `npm run wp:labs` by hand once and it stays.
+  //
+  // Run unconditionally rather than only when Labs' main file is missing:
+  // wp-labs.mjs is idempotent (the copy/download is skipped or refreshed,
+  // activation and the feature-switch reset are safe to repeat), so this also
+  // re-asserts "store_pages only" on a harness someone left in a different
+  // state, instead of trusting whatever an earlier run left behind.
+  console.log('global-setup: installing/refreshing BlueWorx Labs in the harness.');
+  const labsRes = spawnSync('node', [resolve('bin/wp-labs.mjs')], { stdio: 'inherit' });
+  if (labsRes.status !== 0) {
+    throw new Error(`global-setup: bin/wp-labs.mjs failed (exit ${labsRes.status}).`);
+  }
 };

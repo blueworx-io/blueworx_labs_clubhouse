@@ -18,7 +18,8 @@ test.beforeEach(async ({ page }) => {
 // has its own test, added in Task 7.
 //
 // SureCart is installed for these (see the guard above); LatePoint is not, so what these
-// assertions cover is the empty path: the frame renders, no dead nav items are
+// assertions cover is the empty path: the frame renders — BlueWorx Labs draws
+// it now, with the club's welcome pack hooked in — no dead nav items are
 // offered, and nothing fatals. Asserting SureCart's own panels would be testing
 // SureCart, the same reasoning external-chrome.spec.js records.
 //
@@ -41,7 +42,7 @@ test.beforeEach(async ({ page }) => {
 
 test('a member gets the club frame around their account page @wordpress', async ({ page }) => {
   await page.goto(DASHBOARD);
-  await expect(page.locator('.bw-admin.clubhouse-member')).toHaveCount(1);
+  await expect(page.locator('.bw-admin.blueworx-store')).toHaveCount(1);
   await expect(page.locator('.bw-pagehead__h1')).toContainText('Your account');
 });
 
@@ -55,10 +56,11 @@ test('the member area stylesheet loads, and before the page is drawn @wordpress'
   page.on('response', (r) => responses.push(r));
   await page.goto(DASHBOARD);
 
-  const sheet = responses.find((r) => r.url().includes('/assets/bw/bw.css'));
-  expect(sheet, 'the vendored stylesheet was never requested').toBeTruthy();
+  // Labs' own store stylesheet: the member area is drawn by the Labs plugin now.
+  const sheet = responses.find((r) => r.url().includes('/assets/css/store.css'));
+  expect(sheet, "Labs' store stylesheet was never requested").toBeTruthy();
   expect(sheet.status()).toBe(200);
-  await expect(page.locator('head link[href*="/assets/bw/bw.css"]')).toHaveCount(1);
+  await expect(page.locator('head link[href*="/assets/css/store.css"]')).toHaveCount(1);
 });
 
 test('no dead nav items are offered @wordpress', async ({ page }) => {
@@ -84,7 +86,7 @@ test('an address for a view this club does not have lands on the dashboard @word
 test('junk in the address does not break the page @wordpress', async ({ page }) => {
   const response = await page.goto(`${DASHBOARD}?view=%3Cscript%3Ealert(1)%3C/script%3E`);
   expect(response.status()).toBe(200);
-  await expect(page.locator('.bw-admin.clubhouse-member')).toHaveCount(1);
+  await expect(page.locator('.bw-admin.blueworx-store')).toHaveCount(1);
   await expect(page.locator('.bw-pagehead__h1')).toContainText('Your account');
 });
 
@@ -118,5 +120,5 @@ test('a signed-out visitor is sent to the club login page, not the bare frame @w
   await context.clearCookies();
   await page.goto(DASHBOARD);
   await expect(page).toHaveURL(/\/login\/?$/);
-  await expect(page.locator('.bw-admin.clubhouse-member')).toHaveCount(0);
+  await expect(page.locator('.bw-admin.blueworx-store')).toHaveCount(0);
 });
