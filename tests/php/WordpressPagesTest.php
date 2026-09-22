@@ -87,6 +87,16 @@ final class WordpressPagesTest extends TestCase {
 		$this->assertSame( '', Blueworx_Clubhouse_Wordpress_Pages::column_text( false ) );
 	}
 
+	public function test_the_column_reads_commerce_page_for_the_shops_pages(): void {
+		$this->assertSame( 'Commerce page', Blueworx_Clubhouse_Wordpress_Pages::column_text( false, true ) );
+		// A page cannot be both; club wins, because the club's editor owns it.
+		$this->assertSame( 'Club page', Blueworx_Clubhouse_Wordpress_Pages::column_text( true, true ) );
+	}
+
+	public function test_a_page_labs_does_not_know_is_not_a_commerce_page(): void {
+		$this->assertFalse( Blueworx_Clubhouse_Wordpress_Pages::is_commerce_page( 0 ) );
+	}
+
 	/**
 	 * A hidden row action is a UI change, not a guarantee. Anything that
 	 * reaches wp_trash_post() or wp_delete_post() by another route — a bulk

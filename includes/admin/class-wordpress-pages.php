@@ -7,7 +7,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * WordPress's own Pages screen, with club pages read-only on it.
+ * WordPress's own Pages screen, with club pages and commerce pages read-only
+ * on it.
  *
  * Club pages are real WordPress pages, so they turn up in WordPress's own
  * Pages list alongside a club's own pages, and the screen is on the menu for
@@ -22,6 +23,10 @@ if ( ! defined( 'ABSPATH' ) ) {
  * has already pointed it at that editor. Deleting is refused for
  * real as well as hidden — a row action missing from a list is a courtesy, not
  * a guarantee, and a bulk action or another plugin reaches the same place.
+ *
+ * The shop's pages — checkout, the thank-you page, the customer dashboard and
+ * the shop itself — are BlueWorx Labs' to serve, and the column says so:
+ * "Commerce page". They keep the same two row actions, for the same reason.
  *
  * @package BlueworxLabsClubhouse
  */
@@ -84,11 +89,11 @@ final class Blueworx_Clubhouse_Wordpress_Pages {
 	 * on a page the site depends on.
 	 *
 	 * @param array<string,string> $actions      What WordPress offered.
-	 * @param bool                 $is_club_page Whether this row is one of ours.
+	 * @param bool                 $read_only Whether this row is a club page or a commerce page.
 	 * @return array<string,string>
 	 */
-	public static function row_actions( array $actions, bool $is_club_page ): array {
-		if ( ! $is_club_page ) {
+	public static function row_actions( array $actions, bool $read_only ): array {
+		if ( ! $read_only ) {
 			return $actions;
 		}
 		return array_intersect_key( $actions, array_flip( self::SAFE_ACTIONS ) );
@@ -116,8 +121,18 @@ final class Blueworx_Clubhouse_Wordpress_Pages {
 	}
 
 	/** What that column reads on a row. Pure. */
-	public static function column_text( bool $is_club_page ): string {
-		return $is_club_page ? 'Club page' : '';
+	public static function column_text( bool $is_club_page, bool $is_commerce_page = false ): string {
+		if ( $is_club_page ) {
+			return 'Club page';
+		}
+		return $is_commerce_page ? 'Commerce page' : '';
+	}
+
+	/** Whether a post is one of the shop's pages, which Labs serves. */
+	public static function is_commerce_page( int $post_id ): bool {
+		return $post_id > 0
+			&& class_exists( 'Blueworx_Clubhouse_Labs_Store' )
+			&& '' !== Blueworx_Clubhouse_Labs_Store::page_key( $post_id );
 	}
 
 	/** Whether a post is one the plugin depends on, and so must not go. Pure-ish. */
@@ -131,9 +146,10 @@ final class Blueworx_Clubhouse_Wordpress_Pages {
 	 * @return array<string,string>
 	 */
 	public static function on_page_row_actions( $actions, $post = null ): array {
+		$id = self::post_id_of( $post );
 		return self::row_actions(
 			is_array( $actions ) ? $actions : array(),
-			Blueworx_Clubhouse_Club_Pages::is_club_page( self::post_id_of( $post ) )
+			Blueworx_Clubhouse_Club_Pages::is_club_page( $id ) || self::is_commerce_page( $id )
 		);
 	}
 
@@ -170,7 +186,8 @@ final class Blueworx_Clubhouse_Wordpress_Pages {
 		if ( self::COLUMN !== $column ) {
 			return;
 		}
-		echo esc_html( self::column_text( Blueworx_Clubhouse_Club_Pages::is_club_page( self::post_id_of( $post_id ) ) ) );
+		$id = self::post_id_of( $post_id );
+		echo esc_html( self::column_text( Blueworx_Clubhouse_Club_Pages::is_club_page( $id ), self::is_commerce_page( $id ) ) );
 	}
 
 	/**
