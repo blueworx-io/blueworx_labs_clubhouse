@@ -282,14 +282,15 @@ echo ( get_option( 'clubhouse_demo_active' ) && is_int( $id ) && $id > 0 && is_i
 
   // CI provisions a fresh WordPress per shard, so this is what gives CI Labs —
   // locally you normally run `npm run wp:labs` by hand once and it stays.
-  const labsPluginFile = resolve(
-    '.wp-test/wp/wp-content/plugins/blueworx-labs-wordpress/blueworx-labs-wordpress.php'
-  );
-  if (existsSync(WP_LOAD) && !existsSync(labsPluginFile)) {
-    console.log('global-setup: no BlueWorx Labs in the harness — installing it.');
-    const res = spawnSync('node', [resolve('bin/wp-labs.mjs')], { stdio: 'inherit' });
-    if (res.status !== 0) {
-      throw new Error(`global-setup: bin/wp-labs.mjs failed (exit ${res.status}).`);
-    }
+  //
+  // Run unconditionally rather than only when Labs' main file is missing:
+  // wp-labs.mjs is idempotent (the copy/download is skipped or refreshed,
+  // activation and the feature-switch reset are safe to repeat), so this also
+  // re-asserts "store_pages only" on a harness someone left in a different
+  // state, instead of trusting whatever an earlier run left behind.
+  console.log('global-setup: installing/refreshing BlueWorx Labs in the harness.');
+  const labsRes = spawnSync('node', [resolve('bin/wp-labs.mjs')], { stdio: 'inherit' });
+  if (labsRes.status !== 0) {
+    throw new Error(`global-setup: bin/wp-labs.mjs failed (exit ${labsRes.status}).`);
   }
 };

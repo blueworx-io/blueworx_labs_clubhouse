@@ -217,6 +217,12 @@ final class Blueworx_Clubhouse_Labs_Store {
 	 * The profile card copies the markup Labs' own card helper emits rather
 	 * than calling it, so this filter stays pure and loads without Labs.
 	 *
+	 * Finally, whatever is left is checked for emptiness: a panel Labs (or an
+	 * earlier filter) drew as nothing — a shop view with nothing configured —
+	 * is replaced with the club's own worded empty state rather than left as a
+	 * blank card. The member area used to say this before Labs took the frame
+	 * over, and "the site"/"your account" reads wrong for a club.
+	 *
 	 * @param mixed $html    The panel as Labs drew it.
 	 * @param mixed $key     The view's key.
 	 * @param mixed $context From blueworx_store_context(); unused here.
@@ -226,13 +232,12 @@ final class Blueworx_Clubhouse_Labs_Store {
 		$key  = (string) $key;
 		if ( self::DASHBOARD_VIEW === $key ) {
 			$welcome = self::welcome_pack();
-			return '' === $welcome ? $html : $welcome . $html;
+			$html    = '' === $welcome ? $html : $welcome . $html;
+		} elseif ( 'profile' === $key && class_exists( 'Blueworx_Clubhouse_Profile_Form' ) ) {
+			$own  = Blueworx_Clubhouse_Profile_Form::panel( 'profile' );
+			$html = '' !== $own ? $html . self::card( $own ) : $html;
 		}
-		if ( 'profile' === $key && class_exists( 'Blueworx_Clubhouse_Profile_Form' ) ) {
-			$own = Blueworx_Clubhouse_Profile_Form::panel( 'profile' );
-			return '' !== $own ? $html . self::card( $own ) : $html;
-		}
-		return $html;
+		return '' === trim( $html ) ? self::empty_state() : $html;
 	}
 
 	/**
@@ -491,6 +496,21 @@ final class Blueworx_Clubhouse_Labs_Store {
 	/** One card, in the markup Labs' own card helper emits for an untitled card. */
 	private static function card( string $inner ): string {
 		return '<section class="bw-card"><div class="bw-card__body">' . $inner . '</div></section>';
+	}
+
+	/**
+	 * The club's own words for a panel that renders empty — Labs draws
+	 * "Nothing here yet / The site has not set this part up …"; a member of a
+	 * club is a member of the club, not "the site". Drawn in Labs' own empty-
+	 * state markup rather than by calling Labs, so panel() stays pure and this
+	 * still renders correctly on a request that reaches here without Labs.
+	 */
+	private static function empty_state(): string {
+		return '<section class="bw-card"><div class="bw-card__body"><div class="bw-empty">'
+			. '<p class="bw-empty__title">Nothing here yet</p>'
+			. '<p class="bw-empty__text">The club has not set this part up. Nothing is missing from your membership.</p>'
+			. '<div class="bw-empty__actions"><a class="bw-btn bw-btn--secondary" href="' . self::e( self::link_url( 'home' ) ) . '">Back to the club site</a></div>'
+			. '</div></div></section>';
 	}
 
 	/** Cache for welcome_pack(): the panel and the head CSS both ask for it on the same request. */

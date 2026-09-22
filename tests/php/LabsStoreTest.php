@@ -118,6 +118,17 @@ final class LabsStoreTest extends TestCase {
 		wp_stub_reset();
 	}
 
+	public function test_an_empty_panel_gets_the_clubs_own_empty_state(): void {
+		// A shop view with nothing configured is club-worded rather than left as
+		// Labs' site-neutral "the site has not set this part up".
+		$this->assertStringContainsString(
+			'Nothing is missing from your membership.',
+			Blueworx_Clubhouse_Labs_Store::panel( '', 'orders', array() )
+		);
+		// A panel that already has something in it is left alone.
+		$this->assertSame( '<p>x</p>', Blueworx_Clubhouse_Labs_Store::panel( '<p>x</p>', 'orders', array() ) );
+	}
+
 	public function test_without_labs_the_seam_answers_nothing(): void {
 		// The test bootstrap never loads Labs, so this IS the "Labs missing" site.
 		$this->assertFalse( Blueworx_Clubhouse_Labs_Store::available() );

@@ -120,6 +120,17 @@ final class Blueworx_Clubhouse_Welcome_Pack {
 		// content at 10, so filtering at 10 could see an empty string and put the
 		// banner nowhere. Running after them and prepending is what puts it above
 		// their markup reliably.
+		//
+		// On a site whose member area is served by Labs, a visit to SureCart's
+		// own dashboard page never reaches this filter: Labs' own route
+		// (template_redirect, priority 5) sends it straight to /member-dashboard/
+		// before WordPress renders any content there. So this filter only
+		// matters when the member area is switched off — and even then, Labs'
+		// own the_content hook (priority 30, after this one — see
+		// BLUEWORX_STORE_CONTENT_PRIORITY in blueworx_labs_wordpress) draws its
+		// own dashboard frame on the same page, calling blueworx_store_panel
+		// (Blueworx_Clubhouse_Labs_Store::panel()) for the dashboard view, which
+		// is where the pack actually reaches a member on a Labs-served site.
 		add_filter( 'the_content', array( self::class, 'add_to_dashboard' ), 20 );
 	}
 

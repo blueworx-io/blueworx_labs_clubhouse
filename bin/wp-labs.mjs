@@ -75,7 +75,11 @@ if (!existsSync(TARGET)) {
   } else {
     const zip = join(WP_DIR, 'blueworx-labs-download.zip');
     console.log(`Downloading ${ZIP_URL} …`);
-    run('curl', ['-sSL', '-o', zip, ZIP_URL]);
+    // --fail: curl exits non-zero on a 404 instead of writing the error page to
+    // disk, so a missing release reports as "curl failed" (a download failure)
+    // rather than surfacing later as "could not unpack" once unpack() tries to
+    // open that HTML as a zip.
+    run('curl', ['-sSL', '--fail', '-o', zip, ZIP_URL]);
     console.log('Unpacking …');
     // unzip -> System32 tar.exe -> bsdtar fallback, the same chain wp-shop.mjs
     // uses, for the same reason: consistent behaviour across platforms.

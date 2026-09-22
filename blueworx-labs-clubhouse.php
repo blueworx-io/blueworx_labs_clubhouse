@@ -11,7 +11,6 @@
  * License:           GPL-2.0-or-later
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain:       blueworx-labs-clubhouse
- * Requires Plugins:  blueworx-labs-wordpress
  * Domain Path:       /languages
  *
  * @package BlueworxLabsClubhouse
@@ -21,6 +20,15 @@
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
+
+/*
+ * No "Requires Plugins: blueworx-labs-wordpress" header here, deliberately.
+ * WordPress's activate_plugin() refuses to activate a plugin that declares a
+ * required plugin which is not already active — which breaks provisioning a
+ * fresh site or test harness where this plugin is activated before Labs is.
+ * Blueworx_Clubhouse_Labs_Store::available() and its admin notice give the
+ * same requirement at runtime instead, and tolerate either activation order.
+ */
 
 define( 'BLUEWORX_LABS_CLUBHOUSE_VERSION', '0.105.0' );
 define( 'BLUEWORX_LABS_CLUBHOUSE_FILE', __FILE__ );

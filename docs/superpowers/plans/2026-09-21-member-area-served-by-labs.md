@@ -302,7 +302,7 @@ public static function register(): void {
 
 `assets/css/member-profile.css`: the `.clubhouse-profile*` rules from `assets/bw/bw.css` lines 670–690, with the `.clubhouse-member` ancestor selector changed to `.blueworx-store`.
 
-In `blueworx-labs-clubhouse.php`: add the `require_once` beside the other includes and `Blueworx_Clubhouse_Labs_Store::register();` in `blueworx_labs_clubhouse_init()`. Add the header line `Requires Plugins: blueworx-labs-wordpress` — note WordPress then refuses to deactivate Labs while ClubHouse is active, so the cutover order (ClubHouse off first) matters.
+In `blueworx-labs-clubhouse.php`: add the `require_once` beside the other includes and `Blueworx_Clubhouse_Labs_Store::register();` in `blueworx_labs_clubhouse_init()`. No `Requires Plugins` header: WordPress's `activate_plugin()` refuses to activate a plugin whose required plugin is not already active, which breaks provisioning a fresh site or test harness where ClubHouse is activated before Labs. `Blueworx_Clubhouse_Labs_Store::available()` and its admin notice give the requirement at runtime instead, so the two plugins can be activated or deactivated in either order.
 
 - [ ] **Step 4: Run the tests** — `composer test -- --filter LabsStoreTest` → green.
 
@@ -414,7 +414,7 @@ PR title: "Member area, checkout and thank-you page served by BlueWorx Labs". Bo
 ## Cutover on crewevagrantssquash.co.uk (from spec §8, restated here so it travels with the plan)
 
 1. Merge and tag both: Labs `v1.87.0`, ClubHouse `v0.105.0`, close together.
-2. On the site: deactivate ClubHouse **first** (WordPress will not let Labs be deactivated while ClubHouse requires it), then deactivate Labs. Update both. Activate Labs, then ClubHouse. On BlueWorx → Enhancements confirm Store pages is on.
+2. On the site: deactivate both (order does not matter — there is no `Requires Plugins` header holding one open for the other). Update both. Activate Labs, then ClubHouse. On BlueWorx → Enhancements confirm Store pages is on.
 3. Check, in a private window then signed in as a member: `/member-dashboard/` signed out → club login; signed in → same views as before; `?view=orders` → Orders; a Join button → the framed checkout; an "edit card" link → SureCart's form under Account; the thank-you page.
 4. Rollback: reinstall ClubHouse 0.104.0 (its release zip) and switch off Store pages on BlueWorx → Enhancements. No data changes either way.
 

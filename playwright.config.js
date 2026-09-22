@@ -38,6 +38,13 @@ module.exports = defineConfig({
   // Seeds the site-wide state the specs cannot set themselves (demo mode).
   // No-ops when the run targets the preview.
   globalSetup: require.resolve('./tests/global-setup.js'),
+  // Drops Playwright's default {-projectName}{-platform} suffix (e.g.
+  // "-wordpress-win32"). The suite only ever runs one project against a given
+  // snapshot (wordpress specs vs. wordpress snapshots), and the markup is
+  // captured once by hand and committed rather than re-recorded per platform,
+  // so a platform-specific filename only makes the committed snapshot harder
+  // to find and rename.
+  snapshotPathTemplate: '{testDir}/{testFileDir}/{testFileName}-snapshots/{arg}{ext}',
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
