@@ -7,8 +7,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * WordPress's own Pages screen, with club pages and commerce pages read-only
- * on it.
+ * WordPress's own Pages screen, with club pages named and read-only on it.
  *
  * Club pages are real WordPress pages, so they turn up in WordPress's own
  * Pages list alongside a club's own pages, and the screen is on the menu for
@@ -18,15 +17,14 @@ if ( ! defined( 'ABSPATH' ) ) {
  * each one is deliberately empty, and the plugin depends on these pages
  * existing at these slugs.
  *
- * So every row action that could change one is taken away: quick edit, which
- * renames and retitles inline, and trash. Edit stays, and Club_Page_Editing
- * has already pointed it at that editor. Deleting is refused for
- * real as well as hidden — a row action missing from a list is a courtesy, not
- * a guarantee, and a bulk action or another plugin reaches the same place.
+ * BlueWorx Labs owns the list's Source column and the protection that goes
+ * with it: a page with a source keeps only the View and Edit row actions, and
+ * trashing or deleting it is refused whichever route the request takes. This
+ * class answers Labs' filter with "Club page" for ours and leaves the rest to
+ * Labs, so club pages and the shop's pages are protected the same way.
  *
- * The shop's pages — checkout, the thank-you page, the customer dashboard and
- * the shop itself — are BlueWorx Labs' to serve, and the column says so:
- * "Commerce page". They keep the same two row actions, for the same reason.
+ * What stays here is club-specific: a club page's status means "switched on",
+ * which the Setup screen decides, so a status change from the list is undone.
  *
  * @package BlueworxLabsClubhouse
  */
@@ -35,25 +33,31 @@ final class Blueworx_Clubhouse_Wordpress_Pages {
 	/** WordPress's own top-level menu for pages. */
 	public const MENU_SLUG = 'edit.php?post_type=page';
 
-	/** The list column that says which rows are ours. */
-	public const COLUMN = 'clubhouse_club_page';
-
-	/**
-	 * Row actions that could rename, retitle or bin a page. Edit and view only
-	 * ever look at one, so they are the two that survive.
-	 */
-	private const SAFE_ACTIONS = array( 'edit', 'view' );
+	/** What the Source column calls one of ours. */
+	public const SOURCE = 'Club page';
 
 	public static function register(): void {
-		if ( ! function_exists( 'add_filter' ) || ! function_exists( 'add_action' ) ) {
+		if ( ! function_exists( 'add_filter' ) ) {
 			return;
 		}
-		add_filter( 'page_row_actions', array( self::class, 'on_page_row_actions' ), 10, 2 );
-		add_filter( 'manage_pages_columns', array( self::class, 'on_manage_pages_columns' ) );
-		add_action( 'manage_pages_custom_column', array( self::class, 'on_manage_pages_custom_column' ), 10, 2 );
-		add_action( 'wp_trash_post', array( self::class, 'refuse_deletion' ) );
-		add_action( 'before_delete_post', array( self::class, 'refuse_deletion' ) );
+		add_filter( 'blueworx_page_source', array( self::class, 'on_page_source' ), 10, 2 );
 		add_filter( 'wp_insert_post_data', array( self::class, 'on_insert_post_data' ), 10, 2 );
+	}
+
+	/**
+	 * What the Source column reads on a row. Pure.
+	 *
+	 * A label another plugin gave first is kept: a page is one plugin's, and
+	 * ours are only the ones the club-page options name.
+	 *
+	 * @param string $label        The label so far.
+	 * @param bool   $is_club_page Whether this row is one of ours.
+	 */
+	public static function source( string $label, bool $is_club_page ): string {
+		if ( '' !== $label ) {
+			return $label;
+		}
+		return $is_club_page ? self::SOURCE : '';
 	}
 
 	/**
@@ -82,74 +86,13 @@ final class Blueworx_Clubhouse_Wordpress_Pages {
 	}
 
 	/**
-	 * The row actions a page keeps. Pure.
-	 *
-	 * An allowlist rather than an unset() list: a plugin can add a row action
-	 * of its own, and anything we have not thought about should not be offered
-	 * on a page the site depends on.
-	 *
-	 * @param array<string,string> $actions      What WordPress offered.
-	 * @param bool                 $read_only Whether this row is a club page or a commerce page.
-	 * @return array<string,string>
+	 * @param mixed $label   The label so far.
+	 * @param mixed $post_id The page the row is for.
 	 */
-	public static function row_actions( array $actions, bool $read_only ): array {
-		if ( ! $read_only ) {
-			return $actions;
-		}
-		return array_intersect_key( $actions, array_flip( self::SAFE_ACTIONS ) );
-	}
-
-	/**
-	 * The Pages list's columns, with ours added beside the title rather than
-	 * after the date, where nobody reads it. Pure.
-	 *
-	 * @param array<string,string> $columns WordPress's columns.
-	 * @return array<string,string>
-	 */
-	public static function columns( array $columns ): array {
-		$out = array();
-		foreach ( $columns as $key => $label ) {
-			$out[ $key ] = $label;
-			if ( 'title' === $key ) {
-				$out[ self::COLUMN ] = 'Club page';
-			}
-		}
-		if ( ! isset( $out[ self::COLUMN ] ) ) {
-			$out[ self::COLUMN ] = 'Club page';
-		}
-		return $out;
-	}
-
-	/** What that column reads on a row. Pure. */
-	public static function column_text( bool $is_club_page, bool $is_commerce_page = false ): string {
-		if ( $is_club_page ) {
-			return 'Club page';
-		}
-		return $is_commerce_page ? 'Commerce page' : '';
-	}
-
-	/** Whether a post is one of the shop's pages, which Labs serves. */
-	public static function is_commerce_page( int $post_id ): bool {
-		return $post_id > 0
-			&& class_exists( 'Blueworx_Clubhouse_Labs_Store' )
-			&& '' !== Blueworx_Clubhouse_Labs_Store::page_key( $post_id );
-	}
-
-	/** Whether a post is one the plugin depends on, and so must not go. Pure-ish. */
-	public static function blocks_deletion( int $post_id ): bool {
-		return Blueworx_Clubhouse_Club_Pages::is_club_page( $post_id );
-	}
-
-	/**
-	 * @param mixed $actions Row actions WordPress built.
-	 * @param mixed $post    The page the row is for.
-	 * @return array<string,string>
-	 */
-	public static function on_page_row_actions( $actions, $post = null ): array {
-		$id = self::post_id_of( $post );
-		return self::row_actions(
-			is_array( $actions ) ? $actions : array(),
-			Blueworx_Clubhouse_Club_Pages::is_club_page( $id ) || self::is_commerce_page( $id )
+	public static function on_page_source( $label, $post_id = 0 ): string {
+		return self::source(
+			is_string( $label ) ? $label : '',
+			Blueworx_Clubhouse_Club_Pages::is_club_page( self::post_id_of( $post_id ) )
 		);
 	}
 
@@ -168,48 +111,6 @@ final class Blueworx_Clubhouse_Wordpress_Pages {
 			is_array( $data ) ? $data : array(),
 			self::post_id_of( $id )
 		);
-	}
-
-	/**
-	 * @param mixed $columns WordPress's columns.
-	 * @return array<string,string>
-	 */
-	public static function on_manage_pages_columns( $columns ): array {
-		return self::columns( is_array( $columns ) ? $columns : array() );
-	}
-
-	/**
-	 * @param mixed $column  Which column is being printed.
-	 * @param mixed $post_id The page the row is for.
-	 */
-	public static function on_manage_pages_custom_column( $column, $post_id = 0 ): void {
-		if ( self::COLUMN !== $column ) {
-			return;
-		}
-		$id = self::post_id_of( $post_id );
-		echo esc_html( self::column_text( Blueworx_Clubhouse_Club_Pages::is_club_page( $id ), self::is_commerce_page( $id ) ) );
-	}
-
-	/**
-	 * Refuses to trash or delete a club page, whoever asked.
-	 *
-	 * Both hooks fire before WordPress does the deed, so stopping the request
-	 * here stops the deletion. Blunt, deliberately: there is no correct way to
-	 * carry on once a page the site routes through has gone.
-	 *
-	 * @param mixed $post_id The page about to go.
-	 */
-	public static function refuse_deletion( $post_id = 0 ): void {
-		if ( ! self::blocks_deletion( self::post_id_of( $post_id ) ) ) {
-			return;
-		}
-		if ( function_exists( 'wp_die' ) ) {
-			wp_die(
-				esc_html__( 'This is a club page. The site is served from it, so it cannot be deleted. Open it to edit its words instead.', 'blueworx-labs-clubhouse' ),
-				esc_html__( 'Club page', 'blueworx-labs-clubhouse' ),
-				array( 'response' => 403 )
-			);
-		}
 	}
 
 	/** The post id behind a WP_Post, an id, or anything else. */
