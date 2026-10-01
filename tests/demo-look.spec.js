@@ -68,6 +68,22 @@ test('clicking a look writes the cookie and reloads', async ({ page }) => {
   expect(await survived(page), 'the look switch must reload the page').toBe(false);
 });
 
+// Some hosts' page caches pass a visitor's cookies to WordPress only when a
+// recognised "don't cache me" cookie is present. A logged-in admin always has
+// one; a logged-out visitor does not, so the look cookie never reached the
+// server and the switcher appeared to do nothing. wp-postpass_ is the name every
+// host cache honours; WordPress itself only reads wp-postpass_<COOKIEHASH>.
+test('clicking a look also sets the cache-bypass cookie', async ({ page }) => {
+  await page.goto('?demo=1');
+  await openDemo(page);
+
+  const navigated = page.waitForEvent('framenavigated');
+  await page.locator('[data-clubhouse-look="floodlight"]').click();
+  await navigated;
+
+  expect(await cookie(page, 'wp-postpass_clubhouse_demo')).toBe('1');
+});
+
 test('the look and accent branches do not cross-talk', async ({ page }) => {
   await page.goto('?demo=1');
   await openDemo(page);
