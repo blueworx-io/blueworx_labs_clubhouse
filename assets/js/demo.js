@@ -7,6 +7,12 @@
 
 	var LOOK = 'clubhouse_demo_look';
 	var ACCENT = 'clubhouse_demo_accent';
+	// Some host page caches only pass cookies to WordPress when a recognised
+	// "don't cache me" cookie is present. Logged-in admins always have one;
+	// logged-out visitors do not, so without this the look cookie never reaches
+	// the server and the switch does nothing. WordPress itself only reads
+	// wp-postpass_<COOKIEHASH>, so this name is inert to it.
+	var BYPASS = 'wp-postpass_clubhouse_demo';
 
 	function setCookie( name, value ) {
 		document.cookie = name + '=' + encodeURIComponent( value ) + '; path=/; SameSite=Lax';
@@ -56,6 +62,7 @@
 		if ( look ) {
 			e.preventDefault();
 			setCookie( LOOK, look.getAttribute( 'data-clubhouse-look' ) );
+			setCookie( BYPASS, '1' );
 			window.location.reload();
 			return;
 		}
