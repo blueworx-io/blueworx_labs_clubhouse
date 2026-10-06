@@ -43,6 +43,30 @@ final class ThemeCssTest extends TestCase {
 		$this->assertSame( '#3b5bdb', $vars['--color-accent'] );
 	}
 
+	/**
+	 * The footer sets the club's name at poster scale and sizes it from these,
+	 * so a long name shrinks to fit instead of running off the edge. A name of
+	 * wide letters has to count for more than one of narrow letters the same
+	 * length, or one of the two is sized wrong.
+	 */
+	public function test_includes_the_length_of_the_club_name(): void {
+		$length = function ( string $name ): array {
+			$b = $this->branding( '#c6f24e' );
+			$b->set_club_name( $name );
+			$vars = Blueworx_Clubhouse_Theme_Css::compose( new Blueworx_Clubhouse_Fake_Look(), $b );
+			$this->assertMatchesRegularExpression( '/^\d+(\.\d)?$/', $vars['--wordmark-len'] );
+			$this->assertMatchesRegularExpression( '/^\d+(\.\d)?$/', $vars['--wordmark-len-caps'] );
+			return array( (float) $vars['--wordmark-len'], (float) $vars['--wordmark-len-caps'] );
+		};
+		[ $short ]       = $length( 'Crewe' );
+		[ $long, $caps ] = $length( 'Crewe Squash Club' );
+		[ $narrow ]      = $length( 'illicit' );
+		[ $wide ]        = $length( 'mwmwmwm' );
+		$this->assertGreaterThan( $short, $long );
+		$this->assertGreaterThan( $long, $caps, 'capitals take more room than the same name in lower case' );
+		$this->assertGreaterThan( $narrow * 2, $wide );
+	}
+
 	public function test_to_css_emits_root_block(): void {
 		$css = Blueworx_Clubhouse_Theme_Css::to_css( array( '--color-bg' => '#fff', '--x' => '1px' ) );
 		$this->assertSame( ':root{--color-bg:#fff;--x:1px;}', $css );

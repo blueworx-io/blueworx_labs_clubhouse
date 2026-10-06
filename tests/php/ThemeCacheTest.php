@@ -42,6 +42,19 @@ final class ThemeCacheTest extends TestCase {
 		$this->assertNotSame( $first, $second );
 	}
 
+	/** The footer wordmark is sized from the name, so a renamed club must not keep the old size. */
+	public function test_club_name_change_recomputes(): void {
+		$storage  = new Blueworx_Clubhouse_Fake_Storage();
+		$branding = new Blueworx_Clubhouse_Branding( $storage );
+		$cache    = new Blueworx_Clubhouse_Theme_Cache( $storage );
+
+		$branding->set_club_name( 'Crewe' );
+		$first = $cache->root_css( $this->look(), $branding );
+		$branding->set_club_name( 'Crewe Vagrants Squash Club' );
+		$second = $cache->root_css( $this->look(), $branding );
+		$this->assertNotSame( $first, $second );
+	}
+
 	public function test_invalidate_clears_cache(): void {
 		$storage  = new Blueworx_Clubhouse_Fake_Storage();
 		$branding = new Blueworx_Clubhouse_Branding( $storage );

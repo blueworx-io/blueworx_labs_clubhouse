@@ -1504,16 +1504,33 @@ final class Blueworx_Clubhouse_Page_Renderer {
 		$club = $branding->get_club_name();
 		$out  = self::shell_header( $club, Blueworx_Clubhouse_Links::url( 'contact' ), $visibility, $collections, $logo_url, $content ) . '<main class="ch-main" id="ch-main" tabindex="-1">';
 
+		// The demo address, email and phone stand in as a set, and only until the
+		// club gives one of its own. Not every club has all three, and a blank that
+		// fell back on its own put the demo phone number beside a real address —
+		// the only way to be rid of it was to type something.
+		$address = (string) self::cget( $content, 'contact', 'form', 'address', '' );
+		$email   = (string) self::cget( $content, 'contact', 'form', 'email', '' );
+		$phone   = (string) self::cget( $content, 'contact', 'form', 'phone', '' );
+		if ( '' === $address && '' === $email && '' === $phone ) {
+			$address = "12 Riverside Lane\nMarlow, SL7 1AA";
+			$email   = 'hello@clubhouse.example';
+			$phone   = '01628 000 000';
+		}
+
 		if ( self::cshown( $content, 'contact', 'hero' ) ) {
 			$out .= self::anchored( 'contact', 'hero', Blueworx_Clubhouse_Sections::hero( array(
 				'eyebrow'            => self::cget( $content, 'contact', 'hero', 'eyebrow', 'Contact' ),
 				'title_lead'         => self::cget( $content, 'contact', 'hero', 'title_lead', 'We will point you to ' ),
 				'title_highlight'    => self::cget( $content, 'contact', 'hero', 'title_highlight', 'the right person.' ),
 				'lede'               => self::cget( $content, 'contact', 'hero', 'lede', 'Questions about joining, playing, or hiring the clubhouse? Start here.' ),
+				// The two buttons point at the same details as the panel below, so a
+				// club that has left them alone gets its own email and number rather
+				// than the demo ones — and no call button at all without a phone. A
+				// hero button with either half missing is not drawn.
 				'cta_primary'        => self::cget( $content, 'contact', 'hero', 'cta_primary', 'Email the club' ),
-				'cta_primary_href'   => self::cget( $content, 'contact', 'hero', 'cta_primary_href', 'mailto:hello@clubhouse.example' ),
-				'cta_secondary'      => self::cget( $content, 'contact', 'hero', 'cta_secondary', 'Call 01628 000 000' ),
-				'cta_secondary_href' => self::cget( $content, 'contact', 'hero', 'cta_secondary_href', 'tel:01628000000' ),
+				'cta_primary_href'   => self::cget( $content, 'contact', 'hero', 'cta_primary_href', '' !== $email ? 'mailto:' . $email : '' ),
+				'cta_secondary'      => self::cget( $content, 'contact', 'hero', 'cta_secondary', '' !== $phone ? 'Call ' . $phone : '' ),
+				'cta_secondary_href' => self::cget( $content, 'contact', 'hero', 'cta_secondary_href', '' !== $phone ? 'tel:' . preg_replace( '/\s+/', '', $phone ) : '' ),
 				'image'              => self::media_src( (string) self::cget( $content, 'contact', 'hero', 'image', '' ) ), 'image_alt' => '', 'image_caption' => '',
 			) ) );
 		}
@@ -1527,9 +1544,9 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'submit_label'    => self::cget( $content, 'contact', 'form', 'submit_label', 'Send message' ),
 				'info'            => array(
 					'heading' => self::cget( $content, 'contact', 'form', 'info_heading', 'Find us' ),
-					'address' => self::lines( self::cget( $content, 'contact', 'form', 'address', "12 Riverside Lane\nMarlow, SL7 1AA" ) ),
-					'email'   => self::cget( $content, 'contact', 'form', 'email', 'hello@clubhouse.example' ),
-					'phone'   => self::cget( $content, 'contact', 'form', 'phone', '01628 000 000' ),
+					'address' => self::lines( $address ),
+					'email'   => $email,
+					'phone'   => $phone,
 					'map'     => self::media_src( (string) self::cget( $content, 'contact', 'form', 'map_image', '' ) ),
 					'socials' => array(
 						'Facebook'  => $branding->get_facebook_url(),

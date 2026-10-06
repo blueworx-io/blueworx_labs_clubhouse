@@ -5,6 +5,11 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.106.2
+
+- A club with no phone number can leave it blank on the Contact page. The demo number used to come back whenever the field was empty; now the demo address, email and phone only show until the club has entered one of its own. The two buttons at the top of that page follow suit: they use the club's own email and number, and the call button is left out when there is no phone.
+- The club's name in large type across the footer always shows in full. A longer name used to lose its last letters off the edge of the screen; it now shrinks to fit at every screen size.
+
 ## 0.106.1
 
 - The demo look switcher now works for visitors who are not logged in. Before, picking a look reloaded the page but kept the old one on hosts with a server page cache.

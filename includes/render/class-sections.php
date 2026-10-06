@@ -1337,8 +1337,12 @@ final class Blueworx_Clubhouse_Sections {
 
 		// The club's name at poster scale, dropped almost into the background. It
 		// is decoration repeating the name in the brand column directly above, so
-		// it is hidden from screen readers rather than read out twice.
-		$wordmark = '<div class="ch-footer__wordmark" aria-hidden="true">' . self::e( $data['club_name'] ) . '</div>';
+		// it is hidden from screen readers rather than read out twice. The inner
+		// element is the one the look sizes: it reads the line's width off the
+		// outer one, and the name's length off the theme tokens (Theme_Css), so a
+		// long name shrinks to fit instead of losing its last letters off the edge.
+		$wordmark = '<div class="ch-footer__wordmark" aria-hidden="true">'
+			. '<span class="ch-footer__wordmark-text">' . self::e( $data['club_name'] ) . '</span></div>';
 
 		return '<footer class="ch-footer"><div class="ch-wrap">'
 			. '<div class="ch-footer__grid">'
