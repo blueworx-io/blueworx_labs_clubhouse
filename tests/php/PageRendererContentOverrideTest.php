@@ -291,6 +291,31 @@ final class PageRendererContentOverrideTest extends TestCase {
 		$this->assertStringNotContainsString( '12 Riverside Lane', $html );
 	}
 
+	/**
+	 * The buttons at the top of the page follow the club's own details. They
+	 * used to fall back to the demo email and the demo number on their own, so a
+	 * club with no phone had a "Call 01628 000 000" button it could not blank.
+	 */
+	public function test_contact_hero_buttons_follow_the_clubs_own_details(): void {
+		[ $b, $v, $c, $content ] = $this->ctx();
+		$content->set( 'contact', 'form', 'email', 'enquiries@club.test' );
+		$html = Blueworx_Clubhouse_Page_Renderer::contact( $b, $v, $c, '', $content );
+		$this->assertStringContainsString( '<a class="ch-btn ch-btn--accent" href="mailto:enquiries@club.test">Email the club</a>', $html );
+		$this->assertStringNotContainsString( 'ch-btn--ghost', $html, 'no phone, so no call button' );
+		$this->assertStringNotContainsString( '01628', $html );
+		$this->assertStringNotContainsString( 'ch-btn--accent" href="mailto:hello@clubhouse.example"', $html );
+
+		$content->set( 'contact', 'form', 'phone', '01270 000 000' );
+		$html = Blueworx_Clubhouse_Page_Renderer::contact( $b, $v, $c, '', $content );
+		$this->assertStringContainsString( '<a class="ch-btn ch-btn--ghost" href="tel:01270000000">Call 01270 000 000</a>', $html );
+
+		// A button the club has written itself is left exactly as written.
+		$content->set( 'contact', 'hero', 'cta_secondary', 'View membership' );
+		$content->set( 'contact', 'hero', 'cta_secondary_href', '/membership/' );
+		$html = Blueworx_Clubhouse_Page_Renderer::contact( $b, $v, $c, '', $content );
+		$this->assertStringContainsString( '<a class="ch-btn ch-btn--ghost" href="/membership/">View membership</a>', $html );
+	}
+
 	/** A site nobody has filled in yet still shows the whole demo set. */
 	public function test_contact_shows_the_demo_details_until_the_club_gives_one(): void {
 		[ $b, $v, $c, $content ] = $this->ctx();
@@ -298,5 +323,6 @@ final class PageRendererContentOverrideTest extends TestCase {
 		$this->assertStringContainsString( '12 Riverside Lane', $html );
 		$this->assertStringContainsString( 'class="ch-contact__link" href="mailto:hello@clubhouse.example"', $html );
 		$this->assertStringContainsString( 'class="ch-contact__link" href="tel:01628000000"', $html );
+		$this->assertStringContainsString( '<a class="ch-btn ch-btn--ghost" href="tel:01628000000">Call 01628 000 000</a>', $html );
 	}
 }
