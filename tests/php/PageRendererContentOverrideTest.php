@@ -266,4 +266,37 @@ final class PageRendererContentOverrideTest extends TestCase {
 		$this->assertStringContainsString( 'Custom form heading', $html );
 		$this->assertStringContainsString( 'Custom submit label', $html );
 	}
+
+	/**
+	 * Not every club has a phone. Once any of the three details is the club's
+	 * own, a blank one is blank — the demo number used to come back beside a
+	 * real address, and a club had to type "-" to get rid of it.
+	 */
+	public function test_contact_leaves_a_blank_detail_blank_beside_the_clubs_own(): void {
+		[ $b, $v, $c, $content ] = $this->ctx();
+		$content->set( 'contact', 'form', 'address', "1 Club Lane\nWillaston" );
+		$content->set( 'contact', 'form', 'email', 'enquiries@club.test' );
+		$html = Blueworx_Clubhouse_Page_Renderer::contact( $b, $v, $c, '', $content );
+		$this->assertStringContainsString( 'mailto:enquiries@club.test', $html );
+		$this->assertStringNotContainsString( 'class="ch-contact__link" href="tel:', $html );
+	}
+
+	/** The same the other way round: a phone and nothing else leaves no demo address or email. */
+	public function test_contact_with_only_a_phone_shows_only_the_phone(): void {
+		[ $b, $v, $c, $content ] = $this->ctx();
+		$content->set( 'contact', 'form', 'phone', '01270 000 000' );
+		$html = Blueworx_Clubhouse_Page_Renderer::contact( $b, $v, $c, '', $content );
+		$this->assertStringContainsString( 'href="tel:01270000000"', $html );
+		$this->assertStringNotContainsString( 'class="ch-contact__link" href="mailto:', $html );
+		$this->assertStringNotContainsString( '12 Riverside Lane', $html );
+	}
+
+	/** A site nobody has filled in yet still shows the whole demo set. */
+	public function test_contact_shows_the_demo_details_until_the_club_gives_one(): void {
+		[ $b, $v, $c, $content ] = $this->ctx();
+		$html = Blueworx_Clubhouse_Page_Renderer::contact( $b, $v, $c, '', $content );
+		$this->assertStringContainsString( '12 Riverside Lane', $html );
+		$this->assertStringContainsString( 'class="ch-contact__link" href="mailto:hello@clubhouse.example"', $html );
+		$this->assertStringContainsString( 'class="ch-contact__link" href="tel:01628000000"', $html );
+	}
 }

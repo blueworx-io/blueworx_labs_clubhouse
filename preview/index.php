@@ -118,6 +118,12 @@ function blueworx_clubhouse_preview_document(): string {
 	}
 	$registry->set_active( (string) $look_slug );
 	$branding   = new Blueworx_Clubhouse_Branding( $storage );
+	// ?club= stands a real club's name in for the demo one, so anything that
+	// depends on the name itself — the footer wordmark sizes to it — can be
+	// looked at and tested with a long one.
+	if ( isset( $_GET['club'] ) && is_string( $_GET['club'] ) && '' !== trim( $_GET['club'] ) ) {
+		$branding->set_club_name( substr( trim( $_GET['club'] ), 0, 80 ) );
+	}
 	$visibility = new Blueworx_Clubhouse_Visibility( $storage );
 
 	// The preview is a design tool, so integration-backed pages have to be

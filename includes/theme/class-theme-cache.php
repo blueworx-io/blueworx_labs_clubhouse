@@ -75,11 +75,13 @@ final class Blueworx_Clubhouse_Theme_Cache {
 		// both of those are already hashed here — so the derived colour is fully
 		// determined by what is in the signature, and hashing it again would only
 		// re-run the derivation on every request the cache exists to avoid.
+		// The club name is in the signature for the same reason: the footer wordmark
+		// is sized from it, so a renamed club needs the tokens composed again.
 		$version = defined( 'BLUEWORX_LABS_CLUBHOUSE_VERSION' ) ? BLUEWORX_LABS_CLUBHOUSE_VERSION : 'dev';
 		$tokens  = self::serialize_tokens( $look->tokens() );
 		return md5(
 			$look->slug() . '|' . $branding->get_accent() . '|' . $branding->get_secondary()
-			. '|' . $tokens . '|' . $version
+			. '|' . $tokens . '|' . $version . '|' . $branding->get_club_name()
 		);
 	}
 }

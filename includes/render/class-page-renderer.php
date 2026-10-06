@@ -1518,6 +1518,18 @@ final class Blueworx_Clubhouse_Page_Renderer {
 			) ) );
 		}
 		if ( self::cshown( $content, 'contact', 'form' ) ) {
+			// The demo address, email and phone stand in as a set, and only until
+			// the club gives one of its own. Not every club has all three, and a
+			// blank that fell back on its own put the demo phone number beside a
+			// real address — the only way to be rid of it was to type something.
+			$address = (string) self::cget( $content, 'contact', 'form', 'address', '' );
+			$email   = (string) self::cget( $content, 'contact', 'form', 'email', '' );
+			$phone   = (string) self::cget( $content, 'contact', 'form', 'phone', '' );
+			if ( '' === $address && '' === $email && '' === $phone ) {
+				$address = "12 Riverside Lane\nMarlow, SL7 1AA";
+				$email   = 'hello@clubhouse.example';
+				$phone   = '01628 000 000';
+			}
 			$out .= self::anchored( 'contact', 'form', Blueworx_Clubhouse_Sections::contact_form( array(
 				'eyebrow'         => self::cget( $content, 'contact', 'form', 'eyebrow', 'Get in touch' ),
 				'heading'         => self::cget( $content, 'contact', 'form', 'heading', 'Send us a message' ),
@@ -1527,9 +1539,9 @@ final class Blueworx_Clubhouse_Page_Renderer {
 				'submit_label'    => self::cget( $content, 'contact', 'form', 'submit_label', 'Send message' ),
 				'info'            => array(
 					'heading' => self::cget( $content, 'contact', 'form', 'info_heading', 'Find us' ),
-					'address' => self::lines( self::cget( $content, 'contact', 'form', 'address', "12 Riverside Lane\nMarlow, SL7 1AA" ) ),
-					'email'   => self::cget( $content, 'contact', 'form', 'email', 'hello@clubhouse.example' ),
-					'phone'   => self::cget( $content, 'contact', 'form', 'phone', '01628 000 000' ),
+					'address' => self::lines( $address ),
+					'email'   => $email,
+					'phone'   => $phone,
 					'map'     => self::media_src( (string) self::cget( $content, 'contact', 'form', 'map_image', '' ) ),
 					'socials' => array(
 						'Facebook'  => $branding->get_facebook_url(),

@@ -1097,6 +1097,16 @@ final class SectionsTest extends TestCase {
 		$this->assertStringNotContainsString( '>Facebook<', $html );
 	}
 
+	/** The look sizes the inner element against the outer one, so the wordmark needs both. */
+	public function test_footer_wordmark_wraps_the_name_for_the_look_to_size(): void {
+		$data              = $this->footerData();
+		$data['club_name'] = 'Crewe Squash Club';
+		$this->assertStringContainsString(
+			'<div class="ch-footer__wordmark" aria-hidden="true"><span class="ch-footer__wordmark-text">Crewe Squash Club</span></div>',
+			Blueworx_Clubhouse_Sections::footer( $data )
+		);
+	}
+
 	public function test_footer_socials_are_icon_only(): void {
 		$html = Blueworx_Clubhouse_Sections::footer( $this->footerData() );
 		$this->assertSame( 3, substr_count( $html, 'ch-social__link--icon' ) );
