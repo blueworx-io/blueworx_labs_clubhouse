@@ -34,6 +34,7 @@ $GLOBALS['wp_stub_is_404']            = false;
 $GLOBALS['wp_stub_user_meta']          = array();
 
 function wp_stub_reset(): void {
+	$GLOBALS['wp_stub_remote_response'] = null;
 	$GLOBALS['wp_stub_calls']       = array();
 	$GLOBALS['wp_stub_options']     = array();
 	$GLOBALS['wp_stub_posts']       = array();
@@ -593,10 +594,20 @@ function wp_stub_fail_delete( int $id ): void {
 if ( ! class_exists( 'WP_Error' ) ) {
 	class WP_Error {
 		public function __construct( public string $code = '', public string $message = '' ) {}
+		public function get_error_message(): string { return $this->message; }
 	}
 }
 if ( ! function_exists( 'is_wp_error' ) ) {
 	function is_wp_error( $thing ): bool { return $thing instanceof WP_Error; }
+}
+if ( ! function_exists( 'wp_remote_request' ) ) {
+	function wp_remote_request( $url, $args = array() ) {
+		wp_stub_record( 'wp_remote_request', array( $url, $args ) );
+		return $GLOBALS['wp_stub_remote_response'] ?? null;
+	}
+	function wp_remote_retrieve_response_code( $r ) { return $r['response']['code'] ?? ''; }
+	function wp_remote_retrieve_body( $r ) { return $r['body'] ?? ''; }
+	function wp_remote_retrieve_headers( $r ) { return $r['headers'] ?? array(); }
 }
 if ( ! function_exists( 'media_sideload_image' ) ) {
 	function media_sideload_image( string $url, int $post_id = 0, ?string $desc = null, string $return = 'html' ) {

@@ -26,7 +26,15 @@ final class Blueworx_Clubhouse_Playtomic_Wp_Transport implements Blueworx_Clubho
 			throw new Blueworx_Clubhouse_Playtomic_Exception( 'Could not reach Playtomic: ' . $response->get_error_message() . '.' );
 		}
 		$out = array();
-		foreach ( (array) wp_remote_retrieve_headers( $response ) as $name => $value ) {
+		$raw = wp_remote_retrieve_headers( $response );
+		if ( is_object( $raw ) && method_exists( $raw, 'getAll' ) ) {
+			$raw = $raw->getAll();
+		} elseif ( $raw instanceof Traversable ) {
+			$raw = iterator_to_array( $raw );
+		} elseif ( ! is_array( $raw ) ) {
+			$raw = array();
+		}
+		foreach ( $raw as $name => $value ) {
 			$out[ strtolower( (string) $name ) ] = is_array( $value ) ? implode( ', ', $value ) : (string) $value;
 		}
 		return array(
