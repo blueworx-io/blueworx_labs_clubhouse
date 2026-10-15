@@ -60,6 +60,7 @@ require_once __DIR__ . '/profile/class-profile-user-screen.php';
 require_once __DIR__ . '/playtomic/class-playtomic-secret.php';
 require_once __DIR__ . '/playtomic/class-playtomic-settings.php';
 require_once __DIR__ . '/playtomic/class-playtomic-csv.php';
+require_once __DIR__ . '/playtomic/class-playtomic-members.php';
 
 // Theme
 require_once __DIR__ . '/theme/interface-base-look.php';
