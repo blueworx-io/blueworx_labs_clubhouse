@@ -220,3 +220,11 @@ letter spacing, placeholder, icon and disabled colours.
 Custom properties inherit through shadow boundaries, so setting `--sc-*` on an
 ancestor is the supported way to theme the checkout. A renamed token degrades to
 SureCart's default rather than breaking the page.
+
+### Customer ids and the subscriptions route (checked 15 Oct 2026, SureCart 4.9.5)
+
+The member's customer ids sit in user meta `sc_customer_ids`, keyed `live` /
+`test` (older sites may hold a plain list). Listing `/surecart/v1/subscriptions`
+is only allowed for a user without `read_sc_subscriptions` if `customer_ids` is
+a plain list of ids that user owns, so the Playtomic check fails closed when run
+as someone else. `status` and `per_page` are not declared in SureCart's source.

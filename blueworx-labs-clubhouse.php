@@ -92,6 +92,8 @@ require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/admin/class-demo-controller
 require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/admin/class-owner-role.php';
 require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/admin/class-access-controller.php';
 require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/admin/class-seo-controller.php';
+require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/playtomic/class-playtomic-wp-transport.php';
+require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/playtomic/class-playtomic-subscriptions.php';
 require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/admin/class-guides-registrar.php';
 require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/admin/class-changelog-controller.php';
 require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/admin/class-wordpress-pages.php';

@@ -68,6 +68,7 @@ require_once dirname( __DIR__, 2 ) . '/includes/admin/class-demo-controller.php'
 require_once dirname( __DIR__, 2 ) . '/includes/admin/class-owner-role.php';
 require_once dirname( __DIR__, 2 ) . '/includes/admin/class-access-controller.php';
 require_once dirname( __DIR__, 2 ) . '/includes/admin/class-seo-controller.php';
+require_once dirname( __DIR__, 2 ) . '/includes/playtomic/class-playtomic-subscriptions.php';
 require_once dirname( __DIR__, 2 ) . '/includes/admin/class-guides-registrar.php';
 require_once dirname( __DIR__, 2 ) . '/includes/admin/class-wordpress-pages.php';
 require_once dirname( __DIR__, 2 ) . '/includes/import/class-import-applier.php';
