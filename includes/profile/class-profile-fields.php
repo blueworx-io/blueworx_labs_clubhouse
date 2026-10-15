@@ -161,6 +161,13 @@ final class Blueworx_Clubhouse_Profile_Fields {
 	/**
 	 * Every submitted row into a definition list, capped and with unique keys.
 	 *
+	 * A row that already carries a standard key is a custom field a club made
+	 * before the standard fields existed. Its answers are stored under the
+	 * same meta key the standard field reads, so the row is dropped rather
+	 * than re-keyed: re-keying would ask the member the question twice and
+	 * send new answers somewhere else. A new row whose label would make a
+	 * standard key still gets a suffix.
+	 *
 	 * @param array<int,mixed> $rows
 	 * @return array<int,array<string,mixed>>
 	 */
@@ -169,6 +176,9 @@ final class Blueworx_Clubhouse_Profile_Fields {
 		$taken = self::STANDARD_KEYS;
 		foreach ( $rows as $row ) {
 			if ( ! is_array( $row ) ) {
+				continue;
+			}
+			if ( in_array( sanitize_key( (string) ( $row['key'] ?? '' ) ), self::STANDARD_KEYS, true ) ) {
 				continue;
 			}
 			$field = self::sanitise_one( $row, $taken );

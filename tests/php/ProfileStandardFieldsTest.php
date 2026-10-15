@@ -34,8 +34,26 @@ final class ProfileStandardFieldsTest extends TestCase {
 		$fields = Blueworx_Clubhouse_Profile_Fields::sanitise_all(
 			array( array( 'label' => 'Phone', 'type' => 'text' ), array( 'key' => 'gender', 'label' => 'Anything' ) )
 		);
-		$this->assertSame( 'phone_2', $fields[0]['key'] );
-		$this->assertNotSame( 'gender', $fields[1]['key'] );
+		$this->assertSame( array( 'phone_2' ), array_column( $fields, 'key' ) );
+	}
+
+	public function test_an_older_custom_field_on_a_standard_key_gives_way_to_the_standard_one(): void {
+		$storage = new Blueworx_Clubhouse_Fake_Storage();
+		$storage->set( Blueworx_Clubhouse_Profile_Store::OPTION, array(
+			array( 'key' => 'phone', 'label' => 'Phone', 'type' => 'text', 'who' => 'member' ),
+			array( 'key' => 'shirt_size', 'label' => 'Shirt size', 'type' => 'text', 'who' => 'member' ),
+		) );
+		$store = new Blueworx_Clubhouse_Profile_Store( $storage );
+
+		$keys = array_column( $store->fields(), 'key' );
+		$this->assertSame( array( 'phone', 'gender', 'birthdate', 'shirt_size' ), $keys );
+		$this->assertNotContains( 'phone_2', $keys );
+	}
+
+	public function test_a_new_field_labelled_like_a_standard_one_still_gets_a_suffix(): void {
+		$store = new Blueworx_Clubhouse_Profile_Store( new Blueworx_Clubhouse_Fake_Storage() );
+		$store->save_fields( array( array( 'label' => 'Phone', 'type' => 'text', 'who' => 'member' ) ) );
+		$this->assertSame( array( 'phone', 'gender', 'birthdate', 'phone_2' ), array_column( $store->fields(), 'key' ) );
 	}
 
 	public function test_custom_fields_excludes_the_standard_ones(): void {
