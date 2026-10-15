@@ -59,6 +59,7 @@ require_once __DIR__ . '/profile/class-profile-user-screen.php';
 // adapter are loaded by the plugin file, like every other WP-facing class.
 require_once __DIR__ . '/playtomic/class-playtomic-secret.php';
 require_once __DIR__ . '/playtomic/class-playtomic-settings.php';
+require_once __DIR__ . '/playtomic/class-playtomic-csv.php';
 
 // Theme
 require_once __DIR__ . '/theme/interface-base-look.php';
