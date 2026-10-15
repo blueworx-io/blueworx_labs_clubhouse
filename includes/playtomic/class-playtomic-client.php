@@ -19,12 +19,19 @@ final class Blueworx_Clubhouse_Playtomic_Client {
 
 	public const BASE            = 'https://thirdparty.playtomic.io';
 	public const TOKEN_TRANSIENT = 'clubhouse_playtomic_token';
+	public const PLAYERS_PATH          = '/api/v1/venues/%s/players';
+	public const PLAYERS_PATH_SINGULAR = '/api/v1/venue/%s/players';
 
 	/** Refresh this long before Playtomic would reject the token. */
-	private const EARLY = 300;
+	private const EARLY       = 300;
+	private const PAGE_SIZE   = 200;
+	private const CURSOR_SIZE = 100;
 
 	/** @var callable():int */
 	private $now;
+
+	/** Which players path answered last; the docs show both. */
+	private ?string $players_path = null;
 
 	public function __construct(
 		private Blueworx_Clubhouse_Playtomic_Transport $transport,
@@ -70,6 +77,59 @@ final class Blueworx_Clubhouse_Playtomic_Client {
 		return $this->decode( $response, $path );
 	}
 
+	/**
+	 * Every booking at a venue between two UTC moments (YYYY-MM-DDTHH:MM:SS,
+	 * at most 365 days apart; Playtomic keeps three months of the past).
+	 *
+	 * @param array<string,string|array<int,string>> $extra Any other filter the docs list, e.g. status, sport_id.
+	 * @return array<int,array<mixed>>
+	 */
+	public function bookings( string $venue, string $from, string $to, array $extra = array() ): array {
+		foreach ( array( $from, $to ) as $date ) {
+			if ( 1 !== preg_match( '/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/', $date ) ) {
+				throw new Blueworx_Clubhouse_Playtomic_Exception( 'Dates must look like 2026-10-01T00:00:00 (UTC).' );
+			}
+		}
+		$all  = array();
+		$page = 0;
+		do {
+			$batch = $this->get(
+				'/api/v1/bookings',
+				array_merge( $extra, array( 'tenant_id' => $venue, 'start_booking_date' => $from, 'end_booking_date' => $to, 'page' => (string) $page, 'size' => (string) self::PAGE_SIZE ) )
+			);
+			$batch = array_values( array_filter( $batch, 'is_array' ) );
+			$all   = array_merge( $all, $batch );
+			++$page;
+		} while ( count( $batch ) >= self::PAGE_SIZE );
+		return $all;
+	}
+
+	/** Every player registered at a venue. @param array<int,string> $include BENEFITS, SPORTS, WALLETS. @return array<int,array<mixed>> */
+	public function players( string $venue, array $include = array() ): array {
+		$query = array( 'limit' => (string) self::CURSOR_SIZE );
+		if ( array() !== $include ) {
+			$query['include'] = $include;
+		}
+		return $this->cursor_pages( sprintf( $this->players_path(), rawurlencode( $venue ) ), $query, $venue );
+	}
+
+	/** @param array<int,string> $include @return array<mixed> */
+	public function player( string $venue, string $id, array $include = array() ): array {
+		$query = array() === $include ? array() : array( 'include' => $include );
+		return $this->get( sprintf( $this->players_path(), rawurlencode( $venue ) ) . '/' . rawurlencode( $id ), $query );
+	}
+
+	/**
+	 * Every payment at a venue. Filters pass straight through — see the
+	 * Payments page: one date axis only, 13 months at most.
+	 *
+	 * @param array<string,string> $filters
+	 * @return array<int,array<mixed>>
+	 */
+	public function payments( string $venue, array $filters = array() ): array {
+		return $this->cursor_pages( '/api/v1/payments', array_merge( $filters, array( 'tenant_id' => $venue, 'limit' => (string) self::CURSOR_SIZE ) ), null );
+	}
+
 	/** Replace every secret with [hidden]. @param array<int,string> $secrets */
 	public static function scrub( string $text, array $secrets ): string {
 		foreach ( $secrets as $secret ) {
@@ -86,6 +146,43 @@ final class Blueworx_Clubhouse_Playtomic_Client {
 	}
 
 	/* ---------------------------------------------------------------- */
+
+	private function players_path(): string {
+		return $this->players_path ?? self::PLAYERS_PATH;
+	}
+
+	/**
+	 * Follow has_more / next_cursor_id to the end. When $venue is given, a 404
+	 * on the first page tries the docs' singular path once and remembers it.
+	 *
+	 * @param array<string,string|array<int,string>> $query
+	 * @return array<int,array<mixed>>
+	 */
+	private function cursor_pages( string $path, array $query, ?string $venue ): array {
+		$all    = array();
+		$cursor = '';
+		do {
+			$q = $query;
+			if ( '' !== $cursor ) {
+				$q['cursor_id'] = $cursor;
+			}
+			try {
+				$page = $this->get( $path, $q );
+			} catch ( Blueworx_Clubhouse_Playtomic_Exception $e ) {
+				if ( 404 === $e->status() && null !== $venue && '' === $cursor && null === $this->players_path ) {
+					$this->players_path = self::PLAYERS_PATH_SINGULAR;
+					$path               = sprintf( self::PLAYERS_PATH_SINGULAR, rawurlencode( $venue ) );
+					$page               = $this->get( $path, $q );
+				} else {
+					throw $e;
+				}
+			}
+			$data   = is_array( $page['data'] ?? null ) ? array_values( array_filter( $page['data'], 'is_array' ) ) : array();
+			$all    = array_merge( $all, $data );
+			$cursor = ! empty( $page['has_more'] ) ? (string) ( $page['next_cursor_id'] ?? '' ) : '';
+		} while ( '' !== $cursor );
+		return $all;
+	}
 
 	private function fetch_token(): string {
 		if ( '' === $this->client_id || '' === $this->secret ) {

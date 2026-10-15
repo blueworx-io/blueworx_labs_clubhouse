@@ -86,4 +86,77 @@ final class PlaytomicClientTest extends TestCase {
 		$this->assertSame( 'https://thirdparty.playtomic.io/api/v1/anything?a=1&b=x&b=y', $req['url'] );
 		$this->assertStringStartsWith( 'Bearer eyJ', $req['headers']['Authorization'] );
 	}
+
+	public function test_401_refreshes_once_then_gives_up(): void {
+		$this->t->queue[] = $this->token_ok();
+		$this->t->queue[] = array( 'status' => 401, 'body' => '' );
+		$this->t->queue[] = $this->token_ok( array( 'ten-a' ) );
+		$this->t->queue[] = array( 'status' => 401, 'body' => '' );
+		$this->expectExceptionMessage( 'Playtomic refused the request' );
+		try {
+			$this->client()->get( '/api/v1/x' );
+		} finally {
+			$this->assertCount( 4, $this->t->seen, 'token, call, new token, call — and no more' );
+		}
+	}
+
+	public function test_bookings_follows_pages_until_a_short_one(): void {
+		$full = json_encode( array_fill( 0, 200, array( 'booking_id' => 'b' ) ) );
+		$this->t->queue[] = $this->token_ok();
+		$this->t->queue[] = array( 'status' => 200, 'body' => $full );
+		$this->t->queue[] = array( 'status' => 200, 'body' => json_encode( array( array( 'booking_id' => 'last' ) ) ) );
+		$all = $this->client()->bookings( 'ten-a', '2026-10-01T00:00:00', '2026-10-31T23:59:59' );
+		$this->assertCount( 201, $all );
+		$this->assertStringContainsString( 'tenant_id=ten-a', $this->t->seen[1]['url'] );
+		$this->assertStringContainsString( 'start_booking_date=2026-10-01T00%3A00%3A00', $this->t->seen[1]['url'] );
+		$this->assertStringContainsString( 'page=0', $this->t->seen[1]['url'] );
+		$this->assertStringContainsString( 'size=200', $this->t->seen[1]['url'] );
+		$this->assertStringContainsString( 'page=1', $this->t->seen[2]['url'] );
+	}
+
+	public function test_bookings_refuses_a_bad_date_before_calling(): void {
+		$this->expectExceptionMessage( 'Dates must look like 2026-10-01T00:00:00' );
+		$this->client()->bookings( 'ten-a', '2026-10-01', '2026-10-31' );
+		$this->assertSame( array(), $this->t->seen );
+	}
+
+	public function test_players_follows_cursors_and_falls_back_to_the_singular_path(): void {
+		$this->t->queue[] = $this->token_ok();
+		$this->t->queue[] = array( 'status' => 404, 'body' => '' );
+		$this->t->queue[] = array( 'status' => 200, 'body' => json_encode( array( 'has_more' => true, 'next_cursor_id' => 'c2', 'data' => array( array( 'player_id' => '1' ) ) ) ) );
+		$this->t->queue[] = array( 'status' => 200, 'body' => json_encode( array( 'has_more' => false, 'next_cursor_id' => null, 'data' => array( array( 'player_id' => '2' ) ) ) ) );
+		$all = $this->client()->players( 'ten-a', array( 'BENEFITS' ) );
+		$this->assertSame( array( '1', '2' ), array_column( $all, 'player_id' ) );
+		$this->assertStringContainsString( '/api/v1/venues/ten-a/players?', $this->t->seen[1]['url'] );
+		$this->assertStringContainsString( '/api/v1/venue/ten-a/players?', $this->t->seen[2]['url'] );
+		$this->assertStringContainsString( 'include=BENEFITS', $this->t->seen[2]['url'] );
+		$this->assertStringContainsString( 'cursor_id=c2', $this->t->seen[3]['url'] );
+		$this->assertStringContainsString( '/api/v1/venue/', $this->t->seen[3]['url'], 'once the singular path answered, it is kept' );
+	}
+
+	public function test_player_fetches_one(): void {
+		$this->t->queue[] = $this->token_ok();
+		$this->t->queue[] = array( 'status' => 200, 'body' => '{"player_id":"9","name":"Nine"}' );
+		$this->assertSame( 'Nine', $this->client()->player( 'ten-a', '9' )['name'] );
+		$this->assertStringEndsWith( '/api/v1/venues/ten-a/players/9', $this->t->seen[1]['url'] );
+	}
+
+	public function test_payments_follows_cursors_and_says_when_still_preparing(): void {
+		$this->t->queue[] = $this->token_ok();
+		$this->t->queue[] = array( 'status' => 202, 'body' => '{"status":"PROCESSING"}', 'headers' => array( 'retry-after' => '30' ) );
+		try {
+			$this->client()->payments( 'ten-a' );
+			$this->fail( 'expected an exception' );
+		} catch ( Blueworx_Clubhouse_Playtomic_Exception $e ) {
+			$this->assertSame( 202, $e->status() );
+			$this->assertStringContainsString( '30 seconds', $e->getMessage() );
+		}
+
+		$this->t->queue[] = array( 'status' => 200, 'body' => json_encode( array( 'has_more' => true, 'next_cursor_id' => 'n', 'data' => array( array( 'payment_id' => 'p1' ) ) ) ) );
+		$this->t->queue[] = array( 'status' => 200, 'body' => json_encode( array( 'has_more' => false, 'next_cursor_id' => null, 'data' => array( array( 'payment_id' => 'p2' ) ) ) ) );
+		$all = $this->client()->payments( 'ten-a', array( 'start_payment_date' => '2026-09-01T00:00:00Z' ) );
+		$this->assertSame( array( 'p1', 'p2' ), array_column( $all, 'payment_id' ) );
+		$this->assertStringContainsString( 'start_payment_date=', $this->t->seen[2]['url'] );
+		$this->assertStringContainsString( 'limit=100', $this->t->seen[2]['url'] );
+	}
 }
