@@ -159,4 +159,35 @@ final class PlaytomicClientTest extends TestCase {
 		$this->assertStringContainsString( 'start_payment_date=', $this->t->seen[2]['url'] );
 		$this->assertStringContainsString( 'limit=100', $this->t->seen[2]['url'] );
 	}
+
+	public function test_a_repeating_cursor_stops_instead_of_looping(): void {
+		$page = array( 'status' => 200, 'body' => json_encode( array( 'has_more' => true, 'next_cursor_id' => 'same', 'data' => array( array( 'player_id' => '1' ) ) ) ) );
+		$this->t->queue[] = $this->token_ok();
+		$this->t->queue[] = $page;
+		$this->t->queue[] = $page;
+		$this->expectExceptionMessage( 'Playtomic kept returning the same page; stopped after 2 pages.' );
+		try {
+			$this->client()->players( 'ten-a' );
+		} finally {
+			$this->assertCount( 3, $this->t->seen, 'token plus exactly two page calls' );
+		}
+	}
+
+	public function test_more_results_without_a_cursor_is_an_error(): void {
+		$this->t->queue[] = $this->token_ok();
+		$this->t->queue[] = array( 'status' => 200, 'body' => json_encode( array( 'has_more' => true, 'next_cursor_id' => '', 'data' => array( array( 'payment_id' => 'p' ) ) ) ) );
+		$this->expectExceptionMessage( 'Playtomic said there were more results but gave no way to fetch them.' );
+		$this->client()->payments( 'ten-a' );
+	}
+
+	public function test_a_full_bookings_page_with_a_bad_row_still_fetches_the_next(): void {
+		$rows             = array_fill( 0, 199, array( 'booking_id' => 'b' ) );
+		$rows[]           = 'junk';
+		$this->t->queue[] = $this->token_ok();
+		$this->t->queue[] = array( 'status' => 200, 'body' => json_encode( $rows ) );
+		$this->t->queue[] = array( 'status' => 200, 'body' => '[]' );
+		$all              = $this->client()->bookings( 'ten-a', '2026-10-01T00:00:00', '2026-10-31T23:59:59' );
+		$this->assertCount( 199, $all );
+		$this->assertCount( 3, $this->t->seen );
+	}
 }

@@ -26,6 +26,7 @@ final class Blueworx_Clubhouse_Playtomic_Client {
 	private const EARLY       = 300;
 	private const PAGE_SIZE   = 200;
 	private const CURSOR_SIZE = 100;
+	private const MAX_PAGES   = 1000;
 
 	/** @var callable():int */
 	private $now;
@@ -97,10 +98,13 @@ final class Blueworx_Clubhouse_Playtomic_Client {
 				'/api/v1/bookings',
 				array_merge( $extra, array( 'tenant_id' => $venue, 'start_booking_date' => $from, 'end_booking_date' => $to, 'page' => (string) $page, 'size' => (string) self::PAGE_SIZE ) )
 			);
-			$batch = array_values( array_filter( $batch, 'is_array' ) );
-			$all   = array_merge( $all, $batch );
+			if ( array() !== $batch && ! array_is_list( $batch ) ) {
+				throw new Blueworx_Clubhouse_Playtomic_Exception( 'Playtomic answered with something that was not a list of bookings.' );
+			}
+			$raw   = count( $batch );
+			$all   = array_merge( $all, array_values( array_filter( $batch, 'is_array' ) ) );
 			++$page;
-		} while ( count( $batch ) >= self::PAGE_SIZE );
+		} while ( $raw >= self::PAGE_SIZE );
 		return $all;
 	}
 
@@ -161,7 +165,12 @@ final class Blueworx_Clubhouse_Playtomic_Client {
 	private function cursor_pages( string $path, array $query, ?string $venue ): array {
 		$all    = array();
 		$cursor = '';
+		$seen   = array();
 		do {
+			if ( count( $seen ) >= self::MAX_PAGES ) {
+				throw new Blueworx_Clubhouse_Playtomic_Exception( 'Playtomic returned more than ' . self::MAX_PAGES . ' pages; stopped.' );
+			}
+			$seen[] = $cursor;
 			$q = $query;
 			if ( '' !== $cursor ) {
 				$q['cursor_id'] = $cursor;
@@ -179,7 +188,16 @@ final class Blueworx_Clubhouse_Playtomic_Client {
 			}
 			$data   = is_array( $page['data'] ?? null ) ? array_values( array_filter( $page['data'], 'is_array' ) ) : array();
 			$all    = array_merge( $all, $data );
-			$cursor = ! empty( $page['has_more'] ) ? (string) ( $page['next_cursor_id'] ?? '' ) : '';
+			$cursor = '';
+			if ( ! empty( $page['has_more'] ) ) {
+				$cursor = (string) ( $page['next_cursor_id'] ?? '' );
+				if ( '' === $cursor ) {
+					throw new Blueworx_Clubhouse_Playtomic_Exception( 'Playtomic said there were more results but gave no way to fetch them.' );
+				}
+				if ( in_array( $cursor, $seen, true ) ) {
+					throw new Blueworx_Clubhouse_Playtomic_Exception( 'Playtomic kept returning the same page; stopped after ' . count( $seen ) . ' pages.' );
+				}
+			}
 		} while ( '' !== $cursor );
 		return $all;
 	}
