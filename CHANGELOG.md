@@ -5,6 +5,12 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.107.0
+
+- A new Clubhouse → Playtomic screen, for administrators. It builds the file Playtomic Manager imports: tick the members to send, download the file, and they are marked with the date so they are never sent twice by accident. A "Clear export mark" link puts someone back if an import failed. Who counts as a member is a setting: everyone, or only those on the subscriptions you choose.
+- Phone, gender and date of birth are now standard member details on every club, above the club's own questions on a member's Profile page and under Users. Each can be switched off on the Members tab.
+- The site can connect to Playtomic's API with the club's own credentials, with a "Save and test connection" button that lists the venues. Nothing is shown from it yet; the connection is there for what comes next.
+
 ## 0.106.2
 
 - A club with no phone number can leave it blank on the Contact page. The demo number used to come back whenever the field was empty; now the demo address, email and phone only show until the club has entered one of its own. The two buttons at the top of that page follow suit: they use the club's own email and number, and the call button is left out when there is no phone.
