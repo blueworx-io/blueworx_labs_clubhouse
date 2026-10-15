@@ -71,10 +71,11 @@ a switch on that tab if it does not want to ask.
 | Gender | `clubhouse_profile_gender` | string | One of the choices below, or empty |
 | Date of birth | `clubhouse_profile_birthdate` | `YYYY-MM-DD` | Real calendar date, not in the future, or empty |
 
-Gender choices: Male, Female, Other, Prefer not to say — stored as the lowercase
-word (`male`, `female`, `other`, `undisclosed`). Playtomic's own accepted values
-are not documented in the brief; the CSV writes the stored word and this is on
-the pre-import checklist.
+Gender choices: Male, Female, Other, Prefer not to say — stored as the choice
+text, the way every select field stores its answer. The CSV writes `MALE` or
+`FEMALE` (the values Playtomic's own Players API returns) and leaves the other
+two blank. The import's accepted values are not documented, so this is on the
+pre-import checklist.
 
 Standard fields are members' own to fill in (`who = member`). They reuse the
 existing type machinery (`text`, `select`, `date`) through a new
