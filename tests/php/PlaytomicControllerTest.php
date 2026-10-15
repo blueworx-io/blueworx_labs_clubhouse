@@ -33,11 +33,22 @@ final class PlaytomicControllerTest extends TestCase {
 
 	public function test_test_connection_failure_is_plain_and_logged_without_secrets(): void {
 		$t = new Blueworx_Clubhouse_Fake_Playtomic_Transport();
-		$t->queue[] = array( 'status' => 401, 'body' => '{"error":"UNAUTHORIZED","echo":"s"}' );
+		$t->queue[] = array( 'status' => 401, 'body' => '{"error":"UNAUTHORIZED","echo":"top-secret-value"}' );
 		$settings = new Blueworx_Clubhouse_Playtomic_Settings( new Blueworx_Clubhouse_Fake_Storage(), new Blueworx_Clubhouse_Playtomic_Secret( 'k' ) );
-		$client   = new Blueworx_Clubhouse_Playtomic_Client( $t, 'c', 's', fn(): int => 1000 );
+		$client   = new Blueworx_Clubhouse_Playtomic_Client( $t, 'c', 'top-secret-value', fn(): int => 1000 );
 
-		$result = Blueworx_Clubhouse_Playtomic_Controller::test_connection( $client, $settings );
+		$log  = (string) tempnam( sys_get_temp_dir(), 'ch' );
+		$prev = ini_set( 'error_log', $log );
+		try {
+			$result = Blueworx_Clubhouse_Playtomic_Controller::test_connection( $client, $settings );
+		} finally {
+			ini_set( 'error_log', (string) $prev );
+		}
+		$logged = (string) file_get_contents( $log );
+		unlink( $log );
+		$this->assertStringContainsString( 'Test connection failed', $logged );
+		$this->assertStringContainsString( '[hidden]', $logged );
+		$this->assertStringNotContainsString( 'top-secret-value', $logged );
 		$this->assertFalse( $result['ok'] );
 		$this->assertSame( 'Playtomic did not accept the Client ID and Secret.', $result['text'] );
 		$this->assertSame( 'Playtomic did not accept the Client ID and Secret.', $settings->read()['last_error'] );

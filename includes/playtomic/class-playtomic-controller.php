@@ -246,7 +246,7 @@ final class Blueworx_Clubhouse_Playtomic_Controller {
 	}
 
 	/** Back to the screen with a notice, keeping the filter. */
-	private static function back( string $code, string $filter = '' ): void {
+	private static function back( string $code, string $filter = '' ): never {
 		$args = array( 'page' => self::PAGE_SLUG, self::NOTICE_ARG => $code );
 		if ( '' !== $filter ) {
 			$args[ Blueworx_Clubhouse_Playtomic_Screen::FILTER ] = $filter;
