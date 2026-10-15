@@ -2,6 +2,7 @@
 // tests/php/PlaytomicCsvTest.php
 declare(strict_types=1);
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 final class PlaytomicCsvTest extends TestCase {
@@ -23,7 +24,7 @@ final class PlaytomicCsvTest extends TestCase {
 		);
 	}
 
-	/** @dataProvider phones */
+	#[DataProvider('phones')]
 	public function test_phone_variants( string $in, string $out ): void {
 		$this->assertSame( $out, Blueworx_Clubhouse_Playtomic_Csv::phone( $in ) );
 	}
