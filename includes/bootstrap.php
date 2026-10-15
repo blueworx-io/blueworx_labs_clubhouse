@@ -55,6 +55,11 @@ require_once __DIR__ . '/profile/class-profile-panel.php';
 require_once __DIR__ . '/profile/class-profile-form.php';
 require_once __DIR__ . '/profile/class-profile-user-screen.php';
 
+// Playtomic. Pure classes only; the controller, transport and SureCart
+// adapter are loaded by the plugin file, like every other WP-facing class.
+require_once __DIR__ . '/playtomic/class-playtomic-secret.php';
+require_once __DIR__ . '/playtomic/class-playtomic-settings.php';
+
 // Theme
 require_once __DIR__ . '/theme/interface-base-look.php';
 require_once __DIR__ . '/theme/class-base-look-registry.php';
