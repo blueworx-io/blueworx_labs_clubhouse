@@ -98,7 +98,7 @@ final class PlaytomicScreenTest extends TestCase {
 		$m = $this->model( array( 'today' => '2026-10-15' ) );
 		$m['settings']['venues'][0]['club'] = '';
 		$html = Blueworx_Clubhouse_Playtomic_Screen::render( $m );
-		$this->assertSame( 1, substr_count( $html, 'Needs a club name before it can go in the file' ) );
+		$this->assertSame( 1, substr_count( $html, 'Needs a club name' ) );
 		$this->assertStringContainsString( 'bw-badge bw-badge--warning">Needs a club name', $html );
 	}
 
