@@ -40,6 +40,7 @@ final class Blueworx_Clubhouse_Setup_Storage {
 		$branding = new Blueworx_Clubhouse_Branding( $this->storage );
 		$auth     = new Blueworx_Clubhouse_Auth_Settings( $this->storage );
 		$mail     = new Blueworx_Clubhouse_Mail_Settings( $this->storage );
+		$hidden   = ( new Blueworx_Clubhouse_Profile_Store( $this->storage ) )->hidden_standard();
 		$active   = Blueworx_Clubhouse_Frontend::registry( $this->storage )->active();
 
 		$values = array(
@@ -58,6 +59,9 @@ final class Blueworx_Clubhouse_Setup_Storage {
 			'mail_from_name'    => $mail->get_from_name(),
 			'mail_from_address' => $mail->get_from_address(),
 			'menu'              => self::menu_rows( new Blueworx_Clubhouse_Menu( $this->storage ) ),
+			'ask_phone'         => ! in_array( 'phone', $hidden, true ),
+			'ask_gender'        => ! in_array( 'gender', $hidden, true ),
+			'ask_birthdate'     => ! in_array( 'birthdate', $hidden, true ),
 			'profile_fields'    => self::profile_rows( new Blueworx_Clubhouse_Profile_Store( $this->storage ) ),
 			'demo_active'       => ( new Blueworx_Clubhouse_Demo_State( $this->storage ) )->is_on(),
 		);
@@ -138,6 +142,22 @@ final class Blueworx_Clubhouse_Setup_Storage {
 		// Profile_Store::forget() still does that, deliberately, elsewhere.
 		if ( array_key_exists( 'profile_fields', $values ) && is_array( $values['profile_fields'] ) ) {
 			( new Blueworx_Clubhouse_Profile_Store( $this->storage ) )->save_fields( $values['profile_fields'] );
+		}
+
+		$switches = array( 'ask_phone' => 'phone', 'ask_gender' => 'gender', 'ask_birthdate' => 'birthdate' );
+		if ( array() !== array_intersect_key( $values, $switches ) ) {
+			$profile = new Blueworx_Clubhouse_Profile_Store( $this->storage );
+			$hidden  = $profile->hidden_standard();
+			foreach ( $switches as $id => $key ) {
+				if ( ! array_key_exists( $id, $values ) ) {
+					continue;
+				}
+				$hidden = array_values( array_diff( $hidden, array( $key ) ) );
+				if ( ! (bool) $values[ $id ] ) {
+					$hidden[] = $key;
+				}
+			}
+			$profile->set_hidden_standard( $hidden );
 		}
 
 		if ( array_key_exists( 'demo_active', $values ) ) {

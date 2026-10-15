@@ -309,6 +309,16 @@ final class Blueworx_Clubhouse_Setup_Fields {
 			'label'  => 'Members',
 			'panels' => array(
 				array(
+					'id'     => 'standard_fields',
+					'title'  => 'Standard details',
+					'note'   => 'Every club asks for these. Switch one off if you would rather not.',
+					'fields' => array(
+						array( 'id' => 'ask_phone', 'kind' => 'toggle', 'label' => 'Ask for a phone number', 'capability' => self::cap() ),
+						array( 'id' => 'ask_gender', 'kind' => 'toggle', 'label' => 'Ask for gender', 'capability' => self::cap() ),
+						array( 'id' => 'ask_birthdate', 'kind' => 'toggle', 'label' => 'Ask for date of birth', 'capability' => self::cap() ),
+					),
+				),
+				array(
 					'id'     => 'profile_fields',
 					'title'  => 'What you ask your members',
 					'note'   => 'Your club\'s own questions, on top of name and email. Removing one takes it off the form and leaves answers already given alone.',
