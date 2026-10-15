@@ -94,6 +94,7 @@ require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/admin/class-access-controll
 require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/admin/class-seo-controller.php';
 require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/playtomic/class-playtomic-wp-transport.php';
 require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/playtomic/class-playtomic-subscriptions.php';
+require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/playtomic/class-playtomic-controller.php';
 require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/admin/class-guides-registrar.php';
 require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/admin/class-changelog-controller.php';
 require_once BLUEWORX_LABS_CLUBHOUSE_DIR . 'includes/admin/class-wordpress-pages.php';
@@ -136,6 +137,7 @@ function blueworx_labs_clubhouse_init() {
 	Blueworx_Clubhouse_Import_Controller::register();
 	Blueworx_Clubhouse_Access_Controller::register();
 	Blueworx_Clubhouse_Seo_Controller::register();
+	Blueworx_Clubhouse_Playtomic_Controller::register();
 	Blueworx_Clubhouse_Guides_Registrar::register();
 	Blueworx_Clubhouse_Changelog_Controller::register();
 	Blueworx_Clubhouse_SureCart_Products::register();

@@ -81,6 +81,13 @@ final class Blueworx_Clubhouse_Admin_Pages {
 				'description' => 'How each page reads in search results and when it is shared.',
 			),
 			array(
+				'slug'        => Blueworx_Clubhouse_Playtomic_Controller::PAGE_SLUG,
+				'label'       => 'Playtomic',
+				'cap'         => Blueworx_Clubhouse_Playtomic_Controller::CAPABILITY,
+				'menu'        => Blueworx_Clubhouse_Setup_Editor::PAGE_SLUG,
+				'description' => 'Export members to Playtomic Manager, and the connection to Playtomic.',
+			),
+			array(
 				'slug'        => Blueworx_Clubhouse_Collection_Types::CONTENT_SLUG,
 				'label'       => 'Collections',
 				'cap'         => Blueworx_Clubhouse_Collection_Types::CONTENT_CAP,
