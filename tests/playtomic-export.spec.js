@@ -35,7 +35,14 @@ test.describe.serial('playtomic export', () => {
 
     await expect(page.locator('.bw-notice')).toContainText('Settings saved.');
     await expect(page.locator('input[name="clubhouse_playtomic[venues][0][id]"]')).toHaveValue('ten-a');
+    // The repeater: Add a venue stamps a blank second row; Remove takes it away.
+    await expect(page.locator('input[name="clubhouse_playtomic[venues][1][id]"]')).toHaveCount(0);
+    // Forced, like every other click on this screen: the single-threaded
+    // harness keeps the layout shifting while assets arrive.
+    await page.locator('[data-playtomic-add]').click({ force: true });
     await expect(page.locator('input[name="clubhouse_playtomic[venues][1][id]"]')).toHaveValue('');
+    await page.locator('[data-playtomic-venue]').nth(1).locator('[data-playtomic-remove]').click({ force: true });
+    await expect(page.locator('[data-playtomic-venue]')).toHaveCount(1);
   });
 
   test('the member is listed, ticked, downloaded and marked', async ({ page }) => {

@@ -700,7 +700,7 @@ final class Blueworx_Clubhouse_Guides {
 				'Clubhouse → Playtomic',
 				'Playtomic cannot take members from the website directly, so the site makes the file Playtomic Manager imports, and remembers who has already been sent.',
 				array(
-					'Enter the *Client ID* and *Secret* from Playtomic Manager → Settings → Developer tools, then press *Save and test connection*. Your venues appear in the table; give each a name, the club name Playtomic uses for it, and the membership category.',
+					'Enter the *Client ID* and *Secret* from Playtomic Manager → Settings → Developer tools, then press *Save and test connection*. Each venue Playtomic knows about appears under *Venues*; give each a name, the club name Playtomic uses for it, and the membership category. *Add a venue* adds one by hand, and *Remove* takes one away.',
 					'Choose who counts: everyone with a member account, or only members on the subscriptions you tick.',
 					'Under *Review and export*, tick the members to send — tick the box at the top to tick everyone listed — and press *Download Playtomic CSV*.',
 					'In Playtomic Manager go to Customers → Imports → Import new customers and upload the file.',

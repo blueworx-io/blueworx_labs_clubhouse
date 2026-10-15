@@ -109,7 +109,14 @@ final class Blueworx_Clubhouse_Playtomic_Screen {
 
 		$out .= self::row( 'Connection', self::connection_status( $s ), 'Press Save and test connection to check the credentials and read your venues from Playtomic.' );
 		$out .= self::row( 'Who counts as a member', self::who( $model ) );
-		$out .= self::row( 'Venues', self::venues( $s['venues'], (string) ( $model['today'] ?? '' ) ) );
+		// Venues take the full width: a label above the cards, not beside them,
+		// because a row label next to a stack of cards leaves a tall empty column.
+		// Still a form row, so it keeps the rows' rhythm and hairline, but its
+		// one child spans both columns: the label sits above the cards.
+		$out .= '<div class="bw-formrow"><div class="bw-field bw-field--wide">'
+			. '<div class="bw-formrow__label">Venues</div>'
+			. self::venues( $s['venues'], (string) ( $model['today'] ?? '' ) )
+			. '</div></div>';
 
 		$out .= '</div>'
 			. '<div class="bw-card__foot">'
@@ -140,7 +147,10 @@ final class Blueworx_Clubhouse_Playtomic_Screen {
 		$shop = ! empty( $model['shop'] );
 		// The stored rule, even with the shop off, so a Save does not quietly change it.
 		$all = Blueworx_Clubhouse_Playtomic_Settings::WHO_SUBSCRIPTIONS !== (string) $s['who'];
-		$out = '<fieldset class="bw-fields bw-fields--single clubhouse-playtomic__who"><legend class="bw-field__label">Rule</legend>';
+		// A legend sits outside the grid and so outside its gap; a labelled span
+		// inside it gets the same spacing as every other item.
+		$out = '<fieldset class="bw-fields bw-fields--single clubhouse-playtomic__who" aria-labelledby="playtomic-who-label">'
+			. '<span class="bw-field__label" id="playtomic-who-label">Rule</span>';
 		if ( ! $shop && ! $all ) {
 			// A disabled radio is not sent, and the price boxes are not drawn,
 			// so carry the stored rule through. Ticking "Everyone" comes later
@@ -171,61 +181,68 @@ final class Blueworx_Clubhouse_Playtomic_Screen {
 	}
 
 	/**
-	 * One repeater row per venue, plus a blank one for adding the next.
+	 * A repeater: one row per saved venue, an Add button, and a template the
+	 * script stamps new rows from. Without the script a blank row is offered
+	 * instead, and clearing a venue's id drops it on save — so every path
+	 * still adds and removes venues.
 	 *
 	 * @param array<int,array<string,mixed>> $venues
 	 * @param string                         $today  Y-m-d, to flag a fixed expiry already past.
 	 */
 	private static function venues( array $venues, string $today ): string {
-		$saved  = count( $venues );
-		$rows   = array_values( $venues );
-		$rows[] = Blueworx_Clubhouse_Playtomic_Settings::venue_defaults();
-		$out    = '<div class="bw-repeater">';
+		$rows = array_values( $venues );
+		$out  = '<div class="bw-repeater" data-playtomic-venues>';
 		foreach ( $rows as $i => $v ) {
-			$n     = self::FIELD . '[venues][' . $i . ']';
-			$is_new = $i >= $saved;
 			$badges = '';
-			// The blank row at the end is for adding a venue, so it is never flagged.
-			if ( ! $is_new ) {
-				if ( '' === trim( (string) $v['club'] ) ) {
-					$badges .= '<span class="bw-badge bw-badge--warning">Needs a club name</span>';
-				}
-				$date = (string) $v['expiry_date'];
-				if ( Blueworx_Clubhouse_Playtomic_Settings::EXPIRY_DATE === (string) $v['expiry_mode'] && '' !== $date && '' !== $today && $date < $today ) {
-					$badges .= '<span class="bw-badge bw-badge--warning">Expiry date is in the past</span>';
-				}
+			if ( '' === trim( (string) $v['club'] ) ) {
+				$badges .= '<span class="bw-badge bw-badge--warning">Needs a club name</span>';
 			}
-			$title = '' !== trim( (string) $v['name'] ) ? (string) $v['name'] : 'Venue ' . ( $i + 1 );
-			if ( $is_new ) {
-				// The blank row folds away behind a native disclosure, so a club
-				// with its venues in place is not shown an empty form every
-				// visit. Open when there is nothing saved yet, because then it
-				// is the form.
-				$out .= '<details class="bw-accordion"' . ( 0 === $saved ? ' open' : '' ) . '>'
-					. '<summary class="bw-accordion__head"><span class="bw-accordion__title">Add a venue'
-					. '<span class="bw-accordion__sub">Fill this in and save. Save and test connection adds any venue Playtomic knows about by itself.</span></span>'
-					. '<i class="bw-icon bw-icon--18 bw-accordion__chev" data-lucide="chevron-down"></i></summary>'
-					. '<div class="bw-accordion__body"><div class="bw-fields">';
-			} else {
-				$out .= '<div class="bw-repeater__row">'
-					. '<div class="bw-repeater__bar"><p class="bw-card__eyebrow">' . self::e( $title ) . '</p><span class="bw-toolbar__spacer"></span>' . $badges . '</div>'
-					. '<div class="bw-fields">';
+			$date = (string) $v['expiry_date'];
+			if ( Blueworx_Clubhouse_Playtomic_Settings::EXPIRY_DATE === (string) $v['expiry_mode'] && '' !== $date && '' !== $today && $date < $today ) {
+				$badges .= '<span class="bw-badge bw-badge--warning">Expiry date is in the past</span>';
 			}
-			$out .= self::field( $n . '[id]', 'venue-' . $i . '-id', 'Venue id', (string) $v['id'], 'text', $is_new ? 'Filled in by Save and test connection, or paste it from Playtomic.' : '', 'bw-input--mono' )
-				. self::field( $n . '[name]', 'venue-' . $i . '-name', 'Name', (string) $v['name'], 'text', $is_new ? 'For your own reference.' : '' )
-				. self::field( $n . '[club]', 'venue-' . $i . '-club', 'Club name in headers', (string) $v['club'], 'text', 'Part of the file\'s column headers, so it must match what Playtomic Manager calls the venue.' )
-				. self::field( $n . '[category]', 'venue-' . $i . '-category', 'Category', (string) $v['category'], 'text', 'Must match the membership category set up in Playtomic Manager.' )
-				. '<div class="bw-field"><label class="bw-field__label" for="venue-' . $i . '-expiry_mode">Expiry rule</label>'
-					. self::select( $n . '[expiry_mode]', 'Expiry rule', array( 'months' => 'Months from export', 'date' => 'On a date' ), (string) $v['expiry_mode'], 'venue-' . $i . '-expiry_mode' ) . '</div>'
-				. self::field( $n . '[expiry_months]', 'venue-' . $i . '-expiry_months', 'Months from export', (string) (int) $v['expiry_months'], 'number', 'Used by the first rule.' )
-				. self::field( $n . '[expiry_date]', 'venue-' . $i . '-expiry_date', 'Expiry date', (string) $v['expiry_date'], 'date', 'Used by the second rule.' )
-				. self::field( $n . '[price_id]', 'venue-' . $i . '-price_id', 'Price id', (string) $v['price_id'], 'text', 'Optional. The membership price in Playtomic, if one is used.', 'bw-input--mono' )
-				. '<div class="bw-field"><label class="bw-field__label" for="venue-' . $i . '-due_mode">Next payment rule</label>'
-					. self::select( $n . '[due_mode]', 'Next payment rule', array( 'none' => 'Leave blank', 'expiry' => 'Same as expiry', 'months' => 'Months from export' ), (string) $v['due_mode'], 'venue-' . $i . '-due_mode' ) . '</div>'
-				. self::field( $n . '[due_months]', 'venue-' . $i . '-due_months', 'Months until next payment', (string) (int) $v['due_months'], 'number', 'Used only when the rule above is Months from export.' )
-				. ( $is_new ? '</div></div></details>' : '</div></div>' );
+			$out .= self::venue_row( (string) $i, $v, $badges );
 		}
-		return $out . '</div>';
+		if ( array() === $rows ) {
+			// Nothing saved yet: the blank row is the form, script or not.
+			$out .= self::venue_row( '0', Blueworx_Clubhouse_Playtomic_Settings::venue_defaults(), '' );
+		} else {
+			// A blank row for adding the next, only where the script cannot.
+			$out .= '<noscript>' . self::venue_row( (string) count( $rows ), Blueworx_Clubhouse_Playtomic_Settings::venue_defaults(), '' ) . '</noscript>';
+		}
+		$out .= '</div>'
+			. '<template data-playtomic-venue-template>' . self::venue_row( '__i__', Blueworx_Clubhouse_Playtomic_Settings::venue_defaults(), '' ) . '</template>'
+			. '<div class="bw-repeater__foot"><button type="button" class="bw-btn bw-btn--ghost" data-playtomic-add>'
+			. '<i class="bw-icon bw-icon--18" data-lucide="plus"></i>Add a venue</button>'
+			. '<span class="bw-fieldnote">Save and test connection adds any venue Playtomic knows about by itself.</span></div>';
+		return $out;
+	}
+
+	/**
+	 * @param string              $i      The row's index in the posted array, or the template's placeholder.
+	 * @param array<string,mixed> $v
+	 * @param string              $badges Prebuilt warning markup, or ''.
+	 */
+	private static function venue_row( string $i, array $v, string $badges ): string {
+		$n     = self::FIELD . '[venues][' . $i . ']';
+		$title = '' !== trim( (string) $v['name'] ) ? (string) $v['name'] : 'Venue';
+		return '<div class="bw-repeater__row" data-playtomic-venue>'
+			. '<div class="bw-repeater__bar"><p class="bw-card__eyebrow" data-playtomic-venue-title>' . self::e( $title ) . '</p><span class="bw-toolbar__spacer"></span>' . $badges
+			. '<button type="button" class="bw-btn bw-btn--ghost bw-btn--sm" data-playtomic-remove aria-label="Remove this venue"><i class="bw-icon bw-icon--14" data-lucide="trash-2"></i>Remove</button></div>'
+			. '<div class="bw-fields">'
+			. self::field( $n . '[id]', 'venue-' . $i . '-id', 'Venue id', (string) $v['id'], 'text', 'From Playtomic. Clear it to remove this venue when you save.', 'bw-input--mono' )
+			. self::field( $n . '[name]', 'venue-' . $i . '-name', 'Name', (string) $v['name'], 'text', 'For your own reference.' )
+			. self::field( $n . '[club]', 'venue-' . $i . '-club', 'Club name in headers', (string) $v['club'], 'text', 'Part of the file\'s column headers, so it must match what Playtomic Manager calls the venue.' )
+			. self::field( $n . '[category]', 'venue-' . $i . '-category', 'Category', (string) $v['category'], 'text', 'Must match the membership category set up in Playtomic Manager.' )
+			. '<div class="bw-field"><label class="bw-field__label" for="venue-' . $i . '-expiry_mode">Expiry rule</label>'
+				. self::select( $n . '[expiry_mode]', 'Expiry rule', array( 'months' => 'Months from export', 'date' => 'On a date' ), (string) $v['expiry_mode'], 'venue-' . $i . '-expiry_mode' ) . '</div>'
+			. self::field( $n . '[expiry_months]', 'venue-' . $i . '-expiry_months', 'Months from export', (string) (int) $v['expiry_months'], 'number', 'Used by the first rule.' )
+			. self::field( $n . '[expiry_date]', 'venue-' . $i . '-expiry_date', 'Expiry date', (string) $v['expiry_date'], 'date', 'Used by the second rule.' )
+			. self::field( $n . '[price_id]', 'venue-' . $i . '-price_id', 'Price id', (string) $v['price_id'], 'text', 'Optional. The membership price in Playtomic, if one is used.', 'bw-input--mono' )
+			. '<div class="bw-field"><label class="bw-field__label" for="venue-' . $i . '-due_mode">Next payment rule</label>'
+				. self::select( $n . '[due_mode]', 'Next payment rule', array( 'none' => 'Leave blank', 'expiry' => 'Same as expiry', 'months' => 'Months from export' ), (string) $v['due_mode'], 'venue-' . $i . '-due_mode' ) . '</div>'
+			. self::field( $n . '[due_months]', 'venue-' . $i . '-due_months', 'Months until next payment', (string) (int) $v['due_months'], 'number', 'Used only when the rule above is Months from export.' )
+			. '</div></div>';
 	}
 
 	private static function field( string $name, string $id, string $label, string $value, string $type, string $help = '', string $extra = '' ): string {
@@ -276,7 +293,10 @@ final class Blueworx_Clubhouse_Playtomic_Screen {
 			. '<input type="hidden" name="' . self::TO . '" value="' . self::e( (string) $model['to'] ) . '">';
 
 		if ( $empty ) {
-			$out .= '<div class="bw-empty"><i class="bw-icon bw-icon--28 bw-empty__icon" data-lucide="users"></i>'
+			// A single-column grid, so the empty state and the footer below it
+			// get the field gap between them rather than touching.
+			$out .= '<div class="bw-fields bw-fields--single">'
+				. '<div class="bw-empty"><i class="bw-icon bw-icon--28 bw-empty__icon" data-lucide="users"></i>'
 				. '<p class="bw-empty__title">Nobody to export with this filter.</p>'
 				. '<p class="bw-empty__text">Switch to All members to see everyone, including those already sent.</p></div>';
 		} else {
@@ -288,7 +308,7 @@ final class Blueworx_Clubhouse_Playtomic_Screen {
 			. '<span class="bw-bulk__count" data-playtomic-count>' . $ticked . ' of ' . count( $members ) . ' selected</span>'
 			. ( $empty ? '<span class="bw-toolbar__spacer"></span>' : '' )
 			. '<button type="submit" class="bw-btn bw-btn--primary" name="' . self::e( (string) $model['actions']['download'] ) . '" value="1"' . ( $empty ? ' disabled' : '' ) . '><i class="bw-icon bw-icon--18" data-lucide="download"></i>Download Playtomic CSV</button>'
-			. '</div>';
+			. '</div>' . ( $empty ? '</div>' : '' );
 		return $out . '</form></div></div>';
 	}
 
