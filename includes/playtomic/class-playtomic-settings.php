@@ -73,7 +73,9 @@ final class Blueworx_Clubhouse_Playtomic_Settings {
 	public function save( array $raw ): array {
 		$current = $this->read();
 		$plain   = isset( $raw['secret'] ) && is_scalar( $raw['secret'] ) ? trim( (string) $raw['secret'] ) : '';
-		$raw['secret'] = '' === $plain ? $current['secret'] : $this->secret->encrypt( $plain );
+		$sealed  = '' === $plain ? '' : $this->secret->encrypt( $plain );
+		// A secret that could not be sealed keeps the stored one rather than wiping it.
+		$raw['secret'] = '' === $sealed ? $current['secret'] : $sealed;
 		// Only the form's own keys change; the last test and error are kept.
 		$raw['last_test']  = $current['last_test'];
 		$raw['last_error'] = $current['last_error'];

@@ -77,6 +77,10 @@ final class Blueworx_Clubhouse_Playtomic_Csv {
 		}
 		if ( str_starts_with( $digits, self::COUNTRY_CODE ) && strlen( $digits ) > 9 ) {
 			$digits = substr( $digits, strlen( self::COUNTRY_CODE ) );
+			// "+61 (0)412 345 678" carries the trunk zero after the country code.
+			if ( str_starts_with( $digits, '0' ) ) {
+				$digits = substr( $digits, 1 );
+			}
 		}
 		return '+' . self::COUNTRY_CODE . $digits;
 	}

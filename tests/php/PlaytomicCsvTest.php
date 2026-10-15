@@ -38,6 +38,7 @@ final class PlaytomicCsvTest extends TestCase {
 			array( '61412345678', '+61412345678' ),
 			array( '0061412345678', '+61412345678' ),
 			array( '02 6123 4567', '+61261234567' ),
+			array( '+61 (0)412 345 678', '+61412345678' ),
 			array( '', '' ),
 			array( 'n/a', '' ),
 		);
