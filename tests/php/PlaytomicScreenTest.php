@@ -74,6 +74,50 @@ final class PlaytomicScreenTest extends TestCase {
 		$this->assertMatchesRegularExpression( '/value="subscriptions"[^>]*disabled/', $html );
 	}
 
+	public function test_a_stored_subscription_rule_stays_chosen_without_a_shop(): void {
+		$m = $this->model( array( 'shop' => false, 'prices' => array() ) );
+		$m['settings']['who']       = 'subscriptions';
+		$m['settings']['price_ids'] = array( 'p1' );
+		$html = Blueworx_Clubhouse_Playtomic_Screen::render( $m );
+		$this->assertMatchesRegularExpression( '/value="subscriptions" checked disabled/', $html );
+		$this->assertDoesNotMatchRegularExpression( '/value="all"[^>]*checked/', $html );
+		// Carried through a Save, since a disabled radio is not sent.
+		$this->assertStringContainsString( '<input type="hidden" name="clubhouse_playtomic[who]" value="subscriptions">', $html );
+		$this->assertStringContainsString( '<input type="hidden" name="clubhouse_playtomic[price_ids][]" value="p1">', $html );
+		$this->assertLessThan( strpos( $html, 'value="all"' ), strpos( $html, 'type="hidden" name="clubhouse_playtomic[who]"' ) );
+	}
+
+	public function test_no_hidden_rule_when_the_shop_is_running_or_the_rule_is_everyone(): void {
+		$m = $this->model();
+		$m['settings']['who'] = 'subscriptions';
+		$this->assertStringNotContainsString( 'type="hidden" name="clubhouse_playtomic[who]"', Blueworx_Clubhouse_Playtomic_Screen::render( $m ) );
+		$this->assertStringNotContainsString( 'type="hidden" name="clubhouse_playtomic[who]"', Blueworx_Clubhouse_Playtomic_Screen::render( $this->model( array( 'shop' => false, 'prices' => array() ) ) ) );
+	}
+
+	public function test_venue_without_a_club_name_is_flagged(): void {
+		$m = $this->model( array( 'today' => '2026-10-15' ) );
+		$m['settings']['venues'][0]['club'] = '';
+		$html = Blueworx_Clubhouse_Playtomic_Screen::render( $m );
+		$this->assertSame( 1, substr_count( $html, 'Needs a club name before it can go in the file' ) );
+		$this->assertStringContainsString( 'bw-badge bw-badge--warning">Needs a club name', $html );
+	}
+
+	public function test_venue_with_a_past_fixed_expiry_is_flagged(): void {
+		$m = $this->model( array( 'today' => '2026-10-15' ) );
+		$m['settings']['venues'][0]['expiry_mode'] = 'date';
+		$m['settings']['venues'][0]['expiry_date'] = '2026-10-14';
+		$m['settings']['venues'][]                 = array_merge( Blueworx_Clubhouse_Playtomic_Settings::venue_defaults(), array( 'id' => 'ten-b', 'club' => 'South', 'expiry_mode' => 'date', 'expiry_date' => '2026-10-15' ) );
+		$html = Blueworx_Clubhouse_Playtomic_Screen::render( $m );
+		$this->assertSame( 1, substr_count( $html, 'Expiry date is in the past' ) );
+		$this->assertStringContainsString( 'bw-badge bw-badge--warning">Expiry date is in the past', $html );
+	}
+
+	public function test_complete_venues_and_the_blank_row_carry_no_badge(): void {
+		$html = Blueworx_Clubhouse_Playtomic_Screen::render( $this->model( array( 'today' => '2026-10-15' ) ) );
+		$this->assertStringNotContainsString( 'Needs a club name', $html );
+		$this->assertStringNotContainsString( 'Expiry date is in the past', $html );
+	}
+
 	public function test_notice_and_last_test_show(): void {
 		$m = $this->model( array( 'notice' => array( 'type' => 'success', 'text' => 'Connected. Playtomic lists 2 venues.' ) ) );
 		$m['settings']['last_test'] = 'Connected on 2026-10-15: ten-a, ten-b.';

@@ -8,6 +8,83 @@ final class PlaytomicControllerTest extends TestCase {
 
 	protected function setUp(): void {
 		wp_stub_reset();
+		Blueworx_Clubhouse_SureCart_Products::set_active_for_tests( null );
+		Blueworx_Clubhouse_Playtomic_Subscriptions::set_raw_fetcher( null );
+	}
+
+	protected function tearDown(): void {
+		Blueworx_Clubhouse_SureCart_Products::set_active_for_tests( null );
+		Blueworx_Clubhouse_Playtomic_Subscriptions::set_raw_fetcher( null );
+	}
+
+	private function subscription_settings(): Blueworx_Clubhouse_Playtomic_Settings {
+		$settings = new Blueworx_Clubhouse_Playtomic_Settings( new Blueworx_Clubhouse_Fake_Storage(), new Blueworx_Clubhouse_Playtomic_Secret( 'k' ) );
+		$settings->save( array( 'who' => 'subscriptions', 'price_ids' => array( 'p1' ) ) );
+		return $settings;
+	}
+
+	/** @return array<string,mixed> */
+	private function person( int $id, string $email ): array {
+		return array( 'id' => $id, 'first' => 'Member', 'last' => (string) $id, 'display' => '', 'email' => $email, 'registered' => '2026-09-01', 'phone' => '', 'gender' => '', 'birthdate' => '', 'exported' => '' );
+	}
+
+	public function test_subscription_rule_lists_nobody_when_the_shop_is_not_running(): void {
+		Blueworx_Clubhouse_SureCart_Products::set_active_for_tests( false );
+		update_user_meta( 1, 'sc_customer_ids', array( 'live' => 'cust-1' ) );
+		Blueworx_Clubhouse_Playtomic_Subscriptions::set_raw_fetcher( fn( array $ids, int $page ): ?array => array(
+			array( 'id' => 's1', 'status' => 'active', 'price' => 'p1', 'customer' => 'cust-1' ),
+		) );
+		$members = Blueworx_Clubhouse_Playtomic_Controller::members( $this->subscription_settings(), fn(): array => array( $this->person( 1, 'one@example.com' ) ) );
+		$this->assertSame( array(), $members->rows( 'all', '', '' ) );
+		$this->assertSame( array(), $members->exportable( array( 1 ) ) );
+	}
+
+	public function test_subscription_rule_asks_the_shop_once_for_everyone(): void {
+		Blueworx_Clubhouse_SureCart_Products::set_active_for_tests( true );
+		update_user_meta( 1, 'sc_customer_ids', array( 'live' => 'cust-1' ) );
+		update_user_meta( 2, 'sc_customer_ids', array( 'live' => 'cust-2' ) );
+		$calls = 0;
+		Blueworx_Clubhouse_Playtomic_Subscriptions::set_raw_fetcher( function ( array $ids, int $page ) use ( &$calls ): ?array {
+			++$calls;
+			return array( array( 'id' => 's1', 'status' => 'active', 'price' => 'p1', 'customer' => 'cust-2' ) );
+		} );
+		$members = Blueworx_Clubhouse_Playtomic_Controller::members(
+			$this->subscription_settings(),
+			fn(): array => array( $this->person( 1, 'one@example.com' ), $this->person( 2, 'two@example.com' ) )
+		);
+		$this->assertSame( array( 2 ), array_column( $members->rows( 'all', '', '' ), 'id' ) );
+		$this->assertSame( array( 2 ), array_column( $members->exportable( array( 1, 2 ) ), 'id' ) );
+		$this->assertSame( 1, $calls );
+	}
+
+	public function test_page_warns_when_the_rule_needs_a_missing_shop(): void {
+		$notice = Blueworx_Clubhouse_Playtomic_Controller::page_notice( '', array( 'who' => 'subscriptions' ), false );
+		$this->assertSame( 'warning', $notice['type'] );
+		$this->assertStringContainsString( 'needs the shop, which is not running', $notice['text'] );
+		$this->assertSame( 'Settings saved.', Blueworx_Clubhouse_Playtomic_Controller::page_notice( 'saved', array( 'who' => 'subscriptions' ), false )['text'] );
+		$this->assertNull( Blueworx_Clubhouse_Playtomic_Controller::page_notice( '', array( 'who' => 'subscriptions' ), true ) );
+		$this->assertNull( Blueworx_Clubhouse_Playtomic_Controller::page_notice( '', array( 'who' => 'all' ), false ) );
+	}
+
+	public function test_a_venue_without_a_club_name_is_left_out_of_the_file(): void {
+		$members = new Blueworx_Clubhouse_Playtomic_Members( fn(): array => array( $this->person( 1, 'one@example.com' ) ) );
+		$named   = array_merge( Blueworx_Clubhouse_Playtomic_Settings::venue_defaults(), array( 'id' => 't1', 'club' => 'Club North', 'category' => 'Founding' ) );
+		$blank   = array_merge( Blueworx_Clubhouse_Playtomic_Settings::venue_defaults(), array( 'id' => 't2', 'club' => '  ', 'category' => 'Other' ) );
+		$payload = Blueworx_Clubhouse_Playtomic_Controller::download_payload( $members, array( 1 ), array( $blank, $named ), '2026-10-15' );
+		$this->assertNotNull( $payload );
+		$header = explode( "\r\n", $payload['body'] )[0];
+		$this->assertStringContainsString( 'Club North', $header );
+		$this->assertSame( Blueworx_Clubhouse_Playtomic_Csv::build( array(), array( $named ), '2026-10-15' ), $header . "\r\n" );
+		$this->assertStringNotContainsString( 'Other', $payload['body'] );
+	}
+
+	public function test_no_venue_with_a_club_name_means_no_file(): void {
+		$members = new Blueworx_Clubhouse_Playtomic_Members( fn(): array => array( $this->person( 1, 'one@example.com' ) ) );
+		$blank   = array_merge( Blueworx_Clubhouse_Playtomic_Settings::venue_defaults(), array( 'id' => 't2', 'club' => '' ) );
+		$this->assertNull( Blueworx_Clubhouse_Playtomic_Controller::download_payload( $members, array( 1 ), array( $blank ), '2026-10-15' ) );
+		$this->assertNull( Blueworx_Clubhouse_Playtomic_Controller::download_payload( $members, array( 1 ), array(), '2026-10-15' ) );
+		$this->assertSame( 'warning', Blueworx_Clubhouse_Playtomic_Controller::notice_from( 'no-venues' )['type'] );
+		$this->assertSame( 'Give every venue a club name under Settings before downloading.', Blueworx_Clubhouse_Playtomic_Controller::notice_from( 'no-venues' )['text'] );
 	}
 
 	public function test_page_is_in_the_registry_for_administrators_only(): void {

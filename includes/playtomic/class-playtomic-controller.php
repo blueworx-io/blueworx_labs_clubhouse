@@ -66,15 +66,18 @@ final class Blueworx_Clubhouse_Playtomic_Controller {
 		return new Blueworx_Clubhouse_Playtomic_Client( new Blueworx_Clubhouse_Playtomic_Wp_Transport(), $settings->client_id(), $settings->secret() );
 	}
 
-	/** The members source and the qualifying rule, from the saved settings. */
-	public static function members( ?Blueworx_Clubhouse_Playtomic_Settings $settings = null ): Blueworx_Clubhouse_Playtomic_Members {
-		$all       = ( $settings ?? self::settings() )->read();
-		$qualifies = null;
-		if ( Blueworx_Clubhouse_Playtomic_Settings::WHO_SUBSCRIPTIONS === (string) $all['who'] && Blueworx_Clubhouse_Playtomic_Subscriptions::available() ) {
-			$price_ids = (array) $all['price_ids'];
-			$qualifies = static fn( int $user_id ): bool => Blueworx_Clubhouse_Playtomic_Subscriptions::qualifies( $user_id, $price_ids );
-		}
-		$source = static function (): array {
+	/**
+	 * The members source and the qualifying rule, from the saved settings.
+	 *
+	 * The subscription rule fails closed: if it is chosen but the shop is not
+	 * running, nobody qualifies. Subscriptions are looked up once, for
+	 * everyone, the first time anybody is checked.
+	 *
+	 * @param (callable():array<int,array<string,mixed>>)|null $source Who the members are; the site's subscribers when omitted.
+	 */
+	public static function members( ?Blueworx_Clubhouse_Playtomic_Settings $settings = null, ?callable $source = null ): Blueworx_Clubhouse_Playtomic_Members {
+		$all    = ( $settings ?? self::settings() )->read();
+		$read   = $source ?? static function (): array {
 			if ( ! function_exists( 'get_users' ) ) {
 				return array();
 			}
@@ -82,7 +85,62 @@ final class Blueworx_Clubhouse_Playtomic_Controller {
 				get_users( array( 'role' => 'subscriber', 'number' => -1, 'orderby' => 'registered', 'order' => 'DESC' ) )
 			);
 		};
-		return new Blueworx_Clubhouse_Playtomic_Members( $source, $qualifies );
+		$people = null;
+		$cached = static function () use ( &$people, $read ): array {
+			if ( null === $people ) {
+				$people = $read();
+			}
+			return $people;
+		};
+
+		$qualifies = null;
+		if ( Blueworx_Clubhouse_Playtomic_Settings::WHO_SUBSCRIPTIONS === (string) $all['who'] ) {
+			if ( ! Blueworx_Clubhouse_Playtomic_Subscriptions::available() ) {
+				$qualifies = static fn( int $user_id ): bool => false;
+			} else {
+				$price_ids = array_map( 'strval', (array) $all['price_ids'] );
+				$set       = null;
+				$qualifies = static function ( int $user_id ) use ( &$set, $cached, $price_ids ): bool {
+					if ( null === $set ) {
+						$ids = array_map( static fn( array $p ): int => (int) ( $p['id'] ?? 0 ), $cached() );
+						$set = Blueworx_Clubhouse_Playtomic_Subscriptions::qualifying_user_ids( $ids, $price_ids );
+					}
+					return in_array( $user_id, $set, true );
+				};
+			}
+		}
+		return new Blueworx_Clubhouse_Playtomic_Members( $cached, $qualifies );
+	}
+
+	/** True when the saved rule needs the shop and the shop is not running, so nobody is listed. @param array<string,mixed> $settings */
+	public static function shop_missing_for_rule( array $settings, bool $shop ): bool {
+		return Blueworx_Clubhouse_Playtomic_Settings::WHO_SUBSCRIPTIONS === (string) ( $settings['who'] ?? '' ) && ! $shop;
+	}
+
+	/**
+	 * The notice to show: the one the last action asked for, or else the
+	 * warning that the rule needs a shop that is not running.
+	 *
+	 * @param array<string,mixed> $settings
+	 * @return array{type:string,text:string}|null
+	 */
+	public static function page_notice( string $code, array $settings, bool $shop ): ?array {
+		$notice = self::notice_from( $code );
+		if ( null === $notice && self::shop_missing_for_rule( $settings, $shop ) ) {
+			$notice = array( 'type' => 'warning', 'text' => 'Your export rule needs the shop, which is not running, so nobody is listed. Switch the rule to everyone or reinstall SureCart.' );
+		}
+		return $notice;
+	}
+
+	/**
+	 * The venues that can go in the file: those with a club name, since the
+	 * club name is what Playtomic matches the columns on.
+	 *
+	 * @param array<int,array<string,mixed>> $venues
+	 * @return array<int,array<string,mixed>>
+	 */
+	public static function usable_venues( array $venues ): array {
+		return array_values( array_filter( $venues, static fn( array $v ): bool => '' !== trim( (string) ( $v['club'] ?? '' ) ) ) );
 	}
 
 	/** @return array{ok:bool,text:string} */
@@ -97,7 +155,7 @@ final class Blueworx_Clubhouse_Playtomic_Controller {
 		}
 		$settings->merge_venues( $venues );
 		$settings->set_last_error( '' );
-		$settings->set_last_test( 'Connected on ' . gmdate( 'Y-m-d' ) . ': ' . ( array() === $venues ? 'no venues named in the token' : implode( ', ', $venues ) ) . '.' );
+		$settings->set_last_test( 'Connected on ' . self::today() . ': ' . ( array() === $venues ? 'no venues named in the token' : implode( ', ', $venues ) ) . '.' );
 		$n = count( $venues );
 		return array(
 			'ok'   => true,
@@ -106,13 +164,18 @@ final class Blueworx_Clubhouse_Playtomic_Controller {
 	}
 
 	/**
-	 * The file for the ticked ids, or null when nobody valid was ticked.
+	 * The file for the ticked ids, or null when nobody valid was ticked or no
+	 * venue has a club name. Venues without one are left out of the file.
 	 *
 	 * @param array<int,mixed>              $ids
 	 * @param array<int,array<string,mixed>> $venues
 	 * @return array{filename:string,body:string,ids:array<int,int>}|null
 	 */
 	public static function download_payload( Blueworx_Clubhouse_Playtomic_Members $members, array $ids, array $venues, string $today, string $from = '', string $to = '' ): ?array {
+		$venues = self::usable_venues( $venues );
+		if ( array() === $venues ) {
+			return null;
+		}
 		$ids  = array_values( array_filter( array_map( 'intval', array_filter( $ids, 'is_scalar' ) ), static fn( int $id ): bool => $id > 0 ) );
 		$rows = array() === $ids ? array() : $members->exportable( $ids, $from, $to );
 		if ( array() === $rows ) {
@@ -133,6 +196,7 @@ final class Blueworx_Clubhouse_Playtomic_Controller {
 			'test-failed' => array( 'type' => 'danger', 'text' => 'Could not connect. The reason is under the Secret field.' ),
 			'nothing'     => array( 'type' => 'warning', 'text' => 'Tick at least one member with a name and an email address, then download.' ),
 			'cleared'     => array( 'type' => 'success', 'text' => 'Export mark cleared. They will be listed under Not yet exported again.' ),
+			'no-venues'   => array( 'type' => 'warning', 'text' => 'Give every venue a club name under Settings before downloading.' ),
 			default       => null,
 		};
 	}
@@ -177,7 +241,7 @@ final class Blueworx_Clubhouse_Playtomic_Controller {
 			'actions'     => array( 'save' => self::SAVE_ACTION, 'test' => self::TEST_ACTION, 'download' => self::DOWNLOAD_ACTION, 'clear' => self::CLEAR_ACTION ),
 			'clear_urls'  => $clear,
 			'role_tags'   => Blueworx_Clubhouse_Access_Controller::role_chips_for( self::PAGE_SLUG ),
-			'notice'      => self::notice_from( $code ),
+			'notice'      => self::page_notice( $code, $all, Blueworx_Clubhouse_SureCart_Products::is_active() ),
 			'settings'    => $all,
 			'can_encrypt' => Blueworx_Clubhouse_Playtomic_Secret::can_encrypt(),
 			'shop'        => Blueworx_Clubhouse_SureCart_Products::is_active(),
@@ -186,6 +250,7 @@ final class Blueworx_Clubhouse_Playtomic_Controller {
 			'from'        => $from,
 			'to'          => $to,
 			'members'     => $members,
+			'today'       => self::today(),
 		);
 		echo Blueworx_Clubhouse_Playtomic_Screen::render( $model ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped within Playtomic_Screen.
 	}
@@ -211,9 +276,12 @@ final class Blueworx_Clubhouse_Playtomic_Controller {
 		$ids     = (array) wp_unslash( $_POST[ Blueworx_Clubhouse_Playtomic_Screen::IDS ] ?? array() ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput -- reduced to positive ints in download_payload().
 		$from    = self::date_arg( (string) wp_unslash( $_POST[ Blueworx_Clubhouse_Playtomic_Screen::FROM ] ?? '' ) ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput -- date_arg() validates.
 		$to      = self::date_arg( (string) wp_unslash( $_POST[ Blueworx_Clubhouse_Playtomic_Screen::TO ] ?? '' ) ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput -- date_arg() validates.
-		$today   = gmdate( 'Y-m-d' );
+		$today   = self::today();
 		$settings = self::settings();
-		$payload  = self::download_payload( self::members( $settings ), $ids, $settings->venues(), $today, $from, $to );
+		if ( array() === self::usable_venues( $settings->venues() ) ) {
+			self::back( 'no-venues' );
+		}
+		$payload = self::download_payload( self::members( $settings ), $ids, $settings->venues(), $today, $from, $to );
 		if ( null === $payload ) {
 			self::back( 'nothing' );
 		}
@@ -257,5 +325,10 @@ final class Blueworx_Clubhouse_Playtomic_Controller {
 
 	private static function date_arg( string $raw ): string {
 		return Blueworx_Clubhouse_Playtomic_Settings::is_date( $raw ) ? $raw : '';
+	}
+
+	/** Today in the site's own timezone, so a late-evening export is not dated tomorrow. */
+	private static function today(): string {
+		return function_exists( 'wp_date' ) ? (string) wp_date( 'Y-m-d' ) : gmdate( 'Y-m-d' );
 	}
 }

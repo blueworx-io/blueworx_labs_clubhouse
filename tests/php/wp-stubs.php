@@ -684,6 +684,9 @@ if ( ! function_exists( 'wp_safe_redirect' ) ) {
 if ( ! function_exists( 'size_format' ) ) {
 	function size_format( $bytes, int $decimals = 0 ) { return (string) $bytes . ' bytes'; }
 }
+if ( ! function_exists( 'wp_date' ) ) {
+	function wp_date( string $format, ?int $timestamp = null, $timezone = null ) { return gmdate( $format, $timestamp ?? time() ); }
+}
 
 /** Register a fake existing post of a type, with optional meta. */
 function wp_stub_add_post( string $type, int $id, string $title, array $meta = array() ): void {

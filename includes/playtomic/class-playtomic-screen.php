@@ -77,7 +77,7 @@ final class Blueworx_Clubhouse_Playtomic_Screen {
 		}
 
 		$out .= self::who( $model );
-		$out .= self::venues( $s['venues'] );
+		$out .= self::venues( $s['venues'], (string) ( $model['today'] ?? '' ) );
 
 		$out .= '<div class="bw-card__actions clubhouse-playtomic__buttons">'
 			. '<button type="submit" class="bw-btn bw-btn--primary">Save settings</button> '
@@ -100,8 +100,18 @@ final class Blueworx_Clubhouse_Playtomic_Screen {
 		$s      = $model['settings'];
 		$f      = self::FIELD;
 		$shop   = ! empty( $model['shop'] );
-		$all    = Blueworx_Clubhouse_Playtomic_Settings::WHO_ALL === (string) $s['who'] || ! $shop;
+		// The stored rule, even with the shop off, so a Save does not quietly change it.
+		$all    = Blueworx_Clubhouse_Playtomic_Settings::WHO_SUBSCRIPTIONS !== (string) $s['who'];
 		$out    = '<fieldset class="bw-field clubhouse-playtomic__who"><legend class="bw-field__label">Who counts as a member</legend>';
+		if ( ! $shop && ! $all ) {
+			// A disabled radio is not sent, and the price boxes are not drawn,
+			// so carry the stored rule through. Ticking "Everyone" comes later
+			// in the form and wins.
+			$out .= '<input type="hidden" name="' . $f . '[who]" value="subscriptions">';
+			foreach ( (array) $s['price_ids'] as $id ) {
+				$out .= '<input type="hidden" name="' . $f . '[price_ids][]" value="' . self::e( (string) $id ) . '">';
+			}
+		}
 		$out   .= '<label class="bw-check"><input type="radio" name="' . $f . '[who]" value="all"' . ( $all ? ' checked' : '' ) . '> <span class="bw-check__text">Everyone with a member account</span></label>';
 		$out   .= '<label class="bw-check"><input type="radio" name="' . $f . '[who]" value="subscriptions"' . ( $all ? '' : ' checked' ) . ( $shop ? '' : ' disabled' ) . '> <span class="bw-check__text">Only members with one of these subscriptions</span>'
 			. ( $shop ? '' : '<span class="bw-check__help">This needs a shop. Install SureCart and set up your membership prices first.</span>' ) . '</label>';
@@ -119,23 +129,39 @@ final class Blueworx_Clubhouse_Playtomic_Screen {
 		return $out . '</fieldset>';
 	}
 
-	/** @param array<int,array<string,mixed>> $venues */
-	private static function venues( array $venues ): string {
-		$rows = array_values( $venues );
+	/**
+	 * @param array<int,array<string,mixed>> $venues
+	 * @param string                         $today  Y-m-d, to flag a fixed expiry already past.
+	 */
+	private static function venues( array $venues, string $today ): string {
+		$saved  = count( $venues );
+		$rows   = array_values( $venues );
 		$rows[] = Blueworx_Clubhouse_Playtomic_Settings::venue_defaults();
-		$out  = '<h3 class="bw-card__title">Venues</h3><p class="bw-card__note">One row per venue. Press Save and test connection to fill the ids in from Playtomic. The club name becomes part of the file\'s column headers, so it must match what Playtomic Manager calls the venue.</p>';
+		$out    = '<h3 class="bw-card__title">Venues</h3><p class="bw-card__note">One row per venue. Press Save and test connection to fill the ids in from Playtomic. The club name becomes part of the file\'s column headers, so it must match what Playtomic Manager calls the venue.</p>';
 		$out .= '<div class="bw-tablescroll"><table class="bw-table clubhouse-playtomic__venues"><thead><tr>'
 			. '<th>Venue id</th><th>Name</th><th>Club name in headers</th><th>Category</th><th>Expires</th><th>Price id</th><th>Next payment</th></tr></thead><tbody>';
 		foreach ( $rows as $i => $v ) {
-			$n    = self::FIELD . '[venues][' . $i . ']';
+			$n           = self::FIELD . '[venues][' . $i . ']';
+			$club_note   = '';
+			$expiry_note = '';
+			// The blank row at the end is for adding a venue, so it is never flagged.
+			if ( $i < $saved ) {
+				if ( '' === trim( (string) $v['club'] ) ) {
+					$club_note = ' <span class="bw-badge bw-badge--warning">Needs a club name before it can go in the file</span>';
+				}
+				$date = (string) $v['expiry_date'];
+				if ( Blueworx_Clubhouse_Playtomic_Settings::EXPIRY_DATE === (string) $v['expiry_mode'] && '' !== $date && '' !== $today && $date < $today ) {
+					$expiry_note = ' <span class="bw-badge bw-badge--warning">Expiry date is in the past</span>';
+				}
+			}
 			$out .= '<tr>'
 				. '<td><input class="bw-input" type="text" name="' . $n . '[id]" value="' . self::e( (string) $v['id'] ) . '" aria-label="Venue id"></td>'
 				. '<td><input class="bw-input" type="text" name="' . $n . '[name]" value="' . self::e( (string) $v['name'] ) . '" aria-label="Venue name"></td>'
-				. '<td><input class="bw-input" type="text" name="' . $n . '[club]" value="' . self::e( (string) $v['club'] ) . '" aria-label="Club name in headers"></td>'
+				. '<td><input class="bw-input" type="text" name="' . $n . '[club]" value="' . self::e( (string) $v['club'] ) . '" aria-label="Club name in headers">' . $club_note . '</td>'
 				. '<td><input class="bw-input" type="text" name="' . $n . '[category]" value="' . self::e( (string) $v['category'] ) . '" aria-label="Category name"></td>'
 				. '<td>' . self::select( $n . '[expiry_mode]', 'Expiry rule', array( 'months' => 'Months from export', 'date' => 'On a date' ), (string) $v['expiry_mode'] )
 					. ' <input class="bw-input" type="number" min="1" max="120" name="' . $n . '[expiry_months]" value="' . (int) $v['expiry_months'] . '" aria-label="Months until expiry">'
-					. ' <input class="bw-input" type="date" name="' . $n . '[expiry_date]" value="' . self::e( (string) $v['expiry_date'] ) . '" aria-label="Expiry date"></td>'
+					. ' <input class="bw-input" type="date" name="' . $n . '[expiry_date]" value="' . self::e( (string) $v['expiry_date'] ) . '" aria-label="Expiry date">' . $expiry_note . '</td>'
 				. '<td><input class="bw-input" type="text" name="' . $n . '[price_id]" value="' . self::e( (string) $v['price_id'] ) . '" aria-label="Benefit price id"></td>'
 				. '<td>' . self::select( $n . '[due_mode]', 'Next payment rule', array( 'none' => 'Leave blank', 'expiry' => 'Same as expiry', 'months' => 'Months from export' ), (string) $v['due_mode'] )
 					. ' <input class="bw-input" type="number" min="1" max="120" name="' . $n . '[due_months]" value="' . (int) $v['due_months'] . '" aria-label="Months until next payment"></td>'
