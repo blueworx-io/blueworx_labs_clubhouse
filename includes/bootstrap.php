@@ -61,6 +61,9 @@ require_once __DIR__ . '/playtomic/class-playtomic-secret.php';
 require_once __DIR__ . '/playtomic/class-playtomic-settings.php';
 require_once __DIR__ . '/playtomic/class-playtomic-csv.php';
 require_once __DIR__ . '/playtomic/class-playtomic-members.php';
+require_once __DIR__ . '/playtomic/class-playtomic-exception.php';
+require_once __DIR__ . '/playtomic/interface-playtomic-transport.php';
+require_once __DIR__ . '/playtomic/class-playtomic-client.php';
 
 // Theme
 require_once __DIR__ . '/theme/interface-base-look.php';
