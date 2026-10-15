@@ -22,7 +22,8 @@ Clubhouse club on Playtomic can switch it on. PadlX is the first.
 
 ## Goals
 
-- An administrator downloads a Playtomic-ready CSV of members in two clicks.
+- An administrator reviews a table of members, ticks who goes, and downloads a
+  Playtomic-ready CSV of exactly those people.
 - Members already sent are not sent twice, and a failed import can be redone.
 - Phone, gender and date of birth are recorded against every member as
   standard fields, so the CSV can carry them.
@@ -50,7 +51,7 @@ Clubhouse club on Playtomic can switch it on. PadlX is the first.
 | Who qualifies | A setting: *everyone with a member account* or *only members holding chosen SureCart subscriptions* | Decided by Luke: clubs differ, so both, configurable. |
 | Phone, gender, birthdate | New **standard** profile fields on every club | Decided by Luke. Custom fields would mean every club mapping them by hand; standard fields make the export the same everywhere. |
 | Export marker | User meta holding the export date | Same home as the profile answers: survives the plugin, readable by any export tool. |
-| When a member is marked | On download | One click is fewer than two, and the *All* filter plus a per-member *Clear* covers a failed import. |
+| When a member is marked | When they are ticked and downloaded | Decided by Luke: the review table is the final step, and only ticked rows leave the site. The *All* filter plus a per-member *Clear* covers a failed import. |
 | CSV headers | Constants in one class, in the brief's order | One file to edit when the sample arrives. |
 | Venues | Read from the token's `tenant_ids` on Test connection, kept as settings with an admin override | The brief asks for exactly this. Nothing hard-coded. |
 | Secret storage | Encrypted at rest with a key derived from the site's own salts | WordPress has no secret store. Sodium ships with PHP 7.2+, and the salts are already secret per site. Never echoed back after saving. |
@@ -106,14 +107,23 @@ store under one `playtomic` option:
   number of months from the export date), benefit price id (optional), next due
   date rule (none / same as expiry / months from export date).
 
-**Members card** — filter bar then a table:
+**Members card** — filter bar, then a review table, then the download. The
+table is the last step before anything leaves the site: nobody is exported
+without an administrator having seen their row and ticked it.
 
 - Filters: *Not yet exported* (default) / *All*; joined from / to dates.
-- Columns: name, email, phone, joined, exported on. Members missing a name or
-  email are listed with a warning badge and left out of the file.
-- **Download Playtomic CSV** downloads every listed, complete member and stamps
-  them with today's date. A per-row *Clear export mark* link undoes one.
-- Counts above the table: how many will be in the file, how many are skipped.
+- Columns: a checkbox, name, email, phone, joined, exported on. A header
+  checkbox ticks or unticks every row shown; rows can also be ticked one by
+  one. Rows already exported start unticked under *All*, so a re-export is a
+  deliberate tick. Members missing a name or email are listed with a warning
+  badge and cannot be ticked.
+- A live count beside the button: "12 of 40 selected".
+- **Download Playtomic CSV** is disabled until something is ticked. It sends
+  only the ticked members and stamps each with today's date, so they drop out
+  of *Not yet exported* and are never sent twice by accident. A per-row *Clear
+  export mark* link undoes one if an import failed.
+- Works without JavaScript: the checkboxes are a plain form posted to
+  `admin-post`; the select-all header and live count are progressive.
 
 ### Who is a member
 
