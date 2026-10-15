@@ -163,7 +163,7 @@ final class Blueworx_Clubhouse_Setup_Storage {
 	 */
 	private static function profile_rows( Blueworx_Clubhouse_Profile_Store $profile ): array {
 		$rows = array();
-		foreach ( $profile->fields() as $field ) {
+		foreach ( $profile->custom_fields() as $field ) {
 			$field['choices'] = implode( "\n", (array) ( $field['choices'] ?? array() ) );
 			$rows[]           = $field;
 		}

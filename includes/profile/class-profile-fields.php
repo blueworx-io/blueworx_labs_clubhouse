@@ -54,6 +54,30 @@ final class Blueworx_Clubhouse_Profile_Fields {
 	 */
 	public const MAX_FIELDS = 30;
 
+	/** The three fields every club has, in the order they are drawn. */
+	public const STANDARD_KEYS = array( 'phone', 'gender', 'birthdate' );
+
+	/** Stored as the choice text, the way every select field stores its answer. */
+	public const GENDER_CHOICES = array( 'Male', 'Female', 'Other', 'Prefer not to say' );
+
+	/**
+	 * The standard fields as definitions, minus any the club has hidden.
+	 *
+	 * Same shape as sanitise_one() returns, so every surface that draws a
+	 * custom field draws these without a branch.
+	 *
+	 * @param array<int,string> $hidden Standard keys the club switched off.
+	 * @return array<int,array{key:string,label:string,type:string,choices:array<int,string>,help:string,required:bool,who:string,column:bool}>
+	 */
+	public static function standard( array $hidden = array() ): array {
+		$all = array(
+			array( 'key' => 'phone', 'label' => 'Phone', 'type' => 'text', 'choices' => array(), 'help' => 'Mobile preferred.', 'required' => false, 'who' => 'member', 'column' => false ),
+			array( 'key' => 'gender', 'label' => 'Gender', 'type' => 'select', 'choices' => self::GENDER_CHOICES, 'help' => '', 'required' => false, 'who' => 'member', 'column' => false ),
+			array( 'key' => 'birthdate', 'label' => 'Date of birth', 'type' => 'date', 'choices' => array(), 'help' => '', 'required' => false, 'who' => 'member', 'column' => false ),
+		);
+		return array_values( array_filter( $all, static fn( array $f ): bool => ! in_array( $f['key'], $hidden, true ) ) );
+	}
+
 	/** Only the two choice types have choices to offer. */
 	public static function has_choices( string $type ): bool {
 		return in_array( $type, array( 'select', 'multiselect' ), true );
@@ -142,7 +166,7 @@ final class Blueworx_Clubhouse_Profile_Fields {
 	 */
 	public static function sanitise_all( array $rows ): array {
 		$out   = array();
-		$taken = array();
+		$taken = self::STANDARD_KEYS;
 		foreach ( $rows as $row ) {
 			if ( ! is_array( $row ) ) {
 				continue;

@@ -97,7 +97,7 @@ final class SetupStorageTest extends TestCase {
 		$rows[0]['label'] = 'Kit size';
 		$this->bridge( $storage )->write( array( 'profile_fields' => $rows ) );
 
-		$after = $profile->fields();
+		$after = $profile->custom_fields();
 		$this->assertSame( 'Kit size', $after[0]['label'] );
 		$this->assertSame( 'shirt_size', $after[0]['key'] );
 	}
@@ -114,7 +114,7 @@ final class SetupStorageTest extends TestCase {
 
 		$this->bridge( $storage )->write( array( 'profile_fields' => $rows ) );
 
-		$this->assertSame( array( 'Small', 'Large' ), $profile->fields()[0]['choices'] );
+		$this->assertSame( array( 'Small', 'Large' ), $profile->custom_fields()[0]['choices'] );
 	}
 
 	public function test_it_reads_the_clubs_own_member_questions(): void {
@@ -204,7 +204,7 @@ final class SetupStorageTest extends TestCase {
 
 		$this->bridge( $storage )->write( array( 'profile_fields' => array() ) );
 
-		$this->assertSame( array(), $profile->fields() );
+		$this->assertSame( array(), $profile->custom_fields() );
 		$this->assertSame( 'Large', get_user_meta( 7, $profile->meta_key( 'shirt' ), true ) );
 		$this->assertSame( array(), wp_stub_calls( 'delete_metadata' ) );
 	}
