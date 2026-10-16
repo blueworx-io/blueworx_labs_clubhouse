@@ -7,7 +7,7 @@ real call.
 
 ## What exists
 
-- **Clubhouse → Playtomic** (administrators only): credentials, who counts as
+- **Clubhouse → Playtomic** (administrators and Clubhouse Owners): credentials, who counts as
   a member, one row per venue, and the review table that builds the CSV for
   Playtomic Manager's chain import (Customers → Imports → Import new customers).
 - `Blueworx_Clubhouse_Playtomic_Client` — the only class that talks to the

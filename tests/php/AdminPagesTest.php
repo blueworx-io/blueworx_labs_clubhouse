@@ -90,7 +90,7 @@ final class AdminPagesTest extends TestCase {
 	 */
 	public function test_the_owner_reaches_every_page(): void {
 		$this->assertCount(
-			5,
+			6,
 			Blueworx_Clubhouse_Admin_Pages::pages_for_role( Blueworx_Clubhouse_Owner_Capabilities::ROLE )
 		);
 	}

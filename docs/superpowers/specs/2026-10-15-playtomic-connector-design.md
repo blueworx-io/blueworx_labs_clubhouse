@@ -47,7 +47,7 @@ Clubhouse club on Playtomic can switch it on. PadlX is the first.
 
 | Decision | Choice | Rationale |
 |---|---|---|
-| Where it lives | A **Playtomic** screen under the Clubhouse Setup menu, administrators only | Same place as Search & sharing and Import. Admin-only because it holds credentials and exports personal data. |
+| Where it lives | A **Playtomic** screen under the Clubhouse Setup menu, administrators and Clubhouse Owners | Same place and reach as Search & sharing and Import (opened to Owners on 16 Oct 2026; admin-only at first). |
 | Who qualifies | A setting: *everyone with a member account* or *only members holding chosen SureCart subscriptions* | Decided by Luke: clubs differ, so both, configurable. |
 | Phone, gender, birthdate | New **standard** profile fields on every club | Decided by Luke. Custom fields would mean every club mapping them by hand; standard fields make the export the same everywhere. |
 | Export marker | User meta holding the export date | Same home as the profile answers: survives the plugin, readable by any export tool. |
@@ -87,9 +87,8 @@ with no new rendering code. A custom field can never take one of these keys.
 
 ### The screen
 
-`Clubhouse → Playtomic`, slug `clubhouse-playtomic`, capability: administrator
-only (a new `Owner_Capabilities::PLAYTOMIC_CAP` granted to administrators and no
-Clubhouse role). Registered in `Admin_Pages::all()` so the Access screen reports
+`Clubhouse → Playtomic`, slug `clubhouse-playtomic`, capability: `manage_clubhouse`
+(administrators and Clubhouse Owners, the same as Import and Search & sharing). Registered in `Admin_Pages::all()` so the Access screen reports
 it. Two cards, settings first:
 
 **Connection and settings card** — a form that saves to the Clubhouse options

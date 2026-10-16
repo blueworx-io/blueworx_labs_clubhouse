@@ -695,7 +695,7 @@ final class Blueworx_Clubhouse_Guides {
 			self::guide(
 				'members-playtomic',
 				'ch-members',
-				'manage_options',
+				Blueworx_Clubhouse_Owner_Capabilities::SETUP_CAP,
 				'Send members to Playtomic',
 				'Clubhouse → Playtomic',
 				'Playtomic cannot take members from the website directly, so the site makes the file Playtomic Manager imports, and remembers who has already been sent.',

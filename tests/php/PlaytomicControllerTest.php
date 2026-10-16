@@ -87,11 +87,11 @@ final class PlaytomicControllerTest extends TestCase {
 		$this->assertSame( 'Give every venue a club name under Settings before downloading.', Blueworx_Clubhouse_Playtomic_Controller::notice_from( 'no-venues' )['text'] );
 	}
 
-	public function test_page_is_in_the_registry_for_administrators_only(): void {
+	public function test_page_is_in_the_registry_for_administrators_and_owners(): void {
 		$page = Blueworx_Clubhouse_Admin_Pages::find( 'clubhouse-playtomic' );
 		$this->assertNotNull( $page );
-		$this->assertSame( 'manage_options', $page['cap'] );
-		$this->assertSame( array( 'administrator' ), Blueworx_Clubhouse_Admin_Pages::roles_with_access( 'clubhouse-playtomic' ) );
+		$this->assertSame( 'manage_clubhouse', $page['cap'] );
+		$this->assertSame( array( 'administrator', 'clubhouse_owner' ), Blueworx_Clubhouse_Admin_Pages::roles_with_access( 'clubhouse-playtomic' ) );
 	}
 
 	public function test_test_connection_reports_venues_and_merges_them(): void {

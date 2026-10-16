@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 final class Blueworx_Clubhouse_Playtomic_Controller {
 
 	public const PAGE_SLUG  = 'clubhouse-playtomic';
-	public const CAPABILITY = 'manage_options';
+	public const CAPABILITY = Blueworx_Clubhouse_Owner_Capabilities::SETUP_CAP; // Administrators and Clubhouse Owners, like Import.
 	public const NONCE      = 'clubhouse_playtomic';
 	public const NOTICE_ARG = 'playtomic_notice';
 
