@@ -135,4 +135,23 @@ final class PlaytomicScreenTest extends TestCase {
 		$this->assertStringNotContainsString( '<b>x</b>', $html );
 		$this->assertStringContainsString( '&quot;quoted&quot;', $html );
 	}
+	public function test_recipient_field_and_send_button_show_when_an_address_is_saved(): void {
+		$m = $this->model();
+		$m['settings']['email'] = 'imports@playtomic.example';
+		$m['actions']['send']   = 'clubhouse_playtomic_send';
+		$html = Blueworx_Clubhouse_Playtomic_Screen::render( $m );
+		$this->assertStringContainsString( 'name="clubhouse_playtomic[email]" value="imports@playtomic.example"', $html );
+		$this->assertMatchesRegularExpression( '/<button[^>]*name="action" value="clubhouse_playtomic_send"[^>]*>[^<]*(<i[^>]*><\/i>)?Email to Playtomic/', $html );
+		$this->assertStringContainsString( 'imports@playtomic.example', $html );
+	}
+
+	public function test_send_button_is_withheld_without_an_address(): void {
+		$m = $this->model();
+		$m['actions']['send'] = 'clubhouse_playtomic_send';
+		$html = Blueworx_Clubhouse_Playtomic_Screen::render( $m );
+		$this->assertStringNotContainsString( 'value="clubhouse_playtomic_send"', $html );
+		$this->assertStringContainsString( 'Add an address under Settings to email the file', $html );
+		// Download still works on its own.
+		$this->assertStringContainsString( 'Download Playtomic CSV', $html );
+	}
 }

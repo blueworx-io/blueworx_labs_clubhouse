@@ -36,6 +36,7 @@ final class Blueworx_Clubhouse_Playtomic_Settings {
 			'who'        => self::WHO_ALL,
 			'price_ids'  => array(),
 			'venues'     => array(),
+			'email'      => '',
 			'last_test'  => '',
 			'last_error' => '',
 		);
@@ -137,6 +138,10 @@ final class Blueworx_Clubhouse_Playtomic_Settings {
 
 		$out['client_id'] = isset( $raw['client_id'] ) && is_scalar( $raw['client_id'] ) ? sanitize_text_field( (string) $raw['client_id'] ) : '';
 		$out['secret']    = isset( $raw['secret'] ) && is_string( $raw['secret'] ) ? $raw['secret'] : $fallback_secret;
+
+		// Where the file is emailed to. Anything that is not an address is dropped.
+		$email        = isset( $raw['email'] ) && is_scalar( $raw['email'] ) ? sanitize_email( trim( (string) $raw['email'] ) ) : '';
+		$out['email'] = false === is_email( $email ) ? '' : $email;
 
 		$who        = (string) ( $raw['who'] ?? '' );
 		$out['who'] = in_array( $who, array( self::WHO_ALL, self::WHO_SUBSCRIPTIONS ), true ) ? $who : self::WHO_ALL;

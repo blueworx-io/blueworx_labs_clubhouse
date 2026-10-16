@@ -30,11 +30,16 @@ test.describe.serial('playtomic export', () => {
     await page.fill('input[name="clubhouse_playtomic[venues][0][name]"]', 'North');
     await page.fill('input[name="clubhouse_playtomic[venues][0][club]"]', 'Club North');
     await page.fill('input[name="clubhouse_playtomic[venues][0][category]"]', 'Founding');
+    // No address yet, so the review step only offers Download.
+    await expect(page.locator('.clubhouse-playtomic__export button[name="action"]')).toHaveCount(0);
+    await page.fill('#playtomic-email', 'imports@playtomic.example');
     await page.locator('.clubhouse-playtomic__settings button.bw-btn--primary').click({ force: true });
     await page.waitForLoadState('domcontentloaded');
 
     await expect(page.locator('.bw-notice')).toContainText('Settings saved.');
     await expect(page.locator('input[name="clubhouse_playtomic[venues][0][id]"]')).toHaveValue('ten-a');
+    await expect(page.locator('#playtomic-email')).toHaveValue('imports@playtomic.example');
+    await expect(page.locator('.clubhouse-playtomic__export button[value="clubhouse_playtomic_send"]')).toContainText('Email to Playtomic');
     // The repeater: Add a venue stamps a blank second row; Remove takes it away.
     await expect(page.locator('input[name="clubhouse_playtomic[venues][1][id]"]')).toHaveCount(0);
     // Forced, like every other click on this screen: the single-threaded
@@ -43,6 +48,30 @@ test.describe.serial('playtomic export', () => {
     await expect(page.locator('input[name="clubhouse_playtomic[venues][1][id]"]')).toHaveValue('');
     await page.locator('[data-playtomic-venue]').nth(1).locator('[data-playtomic-remove]').click({ force: true });
     await expect(page.locator('[data-playtomic-venue]')).toHaveCount(1);
+  });
+
+  test('emailing the file marks the member only when the mail goes', async ({ page }) => {
+    test.slow();
+    await page.goto(SCREEN, { waitUntil: 'domcontentloaded' });
+    const row = page.locator('.clubhouse-playtomic__members tr', { hasText: 'member@club.test' });
+    await expect(row.locator('input[type="checkbox"]')).toBeChecked();
+    await page.locator('.clubhouse-playtomic__export button[value="clubhouse_playtomic_send"]').click({ force: true });
+    await page.waitForLoadState('domcontentloaded', { timeout: 60_000 });
+
+    // The harness has no mail server, so the honest outcome is usually a
+    // failed send; a box with one still has to leave the member marked.
+    const notice = await page.locator('.bw-notice').textContent();
+    expect(notice).toMatch(/Emailed to Playtomic|could not be sent/);
+    if (/could not be sent/.test(notice)) {
+      expect(notice).toContain('nobody was marked');
+      await expect(page.locator('.clubhouse-playtomic__members tr', { hasText: 'member@club.test' })).toContainText('Not yet');
+    } else {
+      await expect(page.locator('.clubhouse-playtomic__members tr', { hasText: 'member@club.test' })).toHaveCount(0);
+      // Put them back for the download test.
+      await page.goto(SCREEN + '&playtomic_filter=all', { waitUntil: 'domcontentloaded' });
+      await page.locator('.clubhouse-playtomic__members tr', { hasText: 'member@club.test' }).locator('a', { hasText: 'Clear export mark' }).click();
+      await page.waitForLoadState('domcontentloaded');
+    }
   });
 
   test('the member is listed, ticked, downloaded and marked', async ({ page }) => {
@@ -55,7 +84,7 @@ test.describe.serial('playtomic export', () => {
 
     const [download] = await Promise.all([
       page.waitForEvent('download'),
-      page.locator('.clubhouse-playtomic__export button[type="submit"]').click({ force: true }),
+      page.locator('.clubhouse-playtomic__export button[name="clubhouse_playtomic_download"]').click({ force: true }),
     ]);
     expect(download.suggestedFilename()).toMatch(/^playtomic-members-\d{4}-\d{2}-\d{2}\.csv$/);
     const csv = readFileSync(await download.path(), 'utf8');

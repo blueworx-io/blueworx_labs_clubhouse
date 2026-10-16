@@ -108,6 +108,12 @@ final class Blueworx_Clubhouse_Playtomic_Screen {
 		);
 
 		$out .= self::row( 'Connection', self::connection_status( $s ), 'Press Save and test connection to check the credentials and read your venues from Playtomic.' );
+		$out .= self::row(
+			'Send the file to',
+			'<input class="bw-input" type="email" id="playtomic-email" name="' . $f . '[email]" value="' . self::e( (string) ( $s['email'] ?? '' ) ) . '" autocomplete="off">',
+			'Optional. The address Playtomic gave you for member imports. With one saved, the review step can email the file from the site instead of downloading it.',
+			'playtomic-email'
+		);
 		$out .= self::row( 'Who counts as a member', self::who( $model ) );
 		// Venues take the full width: a label above the cards, not beside them,
 		// because a row label next to a stack of cards leaves a tall empty column.
@@ -304,11 +310,19 @@ final class Blueworx_Clubhouse_Playtomic_Screen {
 		}
 
 		$ticked = count( array_filter( $members, static fn( array $m ): bool => ! empty( $m['complete'] ) && '' === (string) $m['exported'] ) );
+		// Emailing needs a saved address; without one the note says where to add it.
+		$email  = (string) ( $model['settings']['email'] ?? '' );
+		$send   = (string) ( $model['actions']['send'] ?? '' );
+		$mail   = '' !== $email && '' !== $send
+			? '<button type="submit" class="bw-btn bw-btn--secondary" name="action" value="' . self::e( $send ) . '"' . ( $empty ? ' disabled' : '' ) . ' title="' . self::e( 'Emails the file to ' . $email ) . '"><i class="bw-icon bw-icon--18" data-lucide="mail"></i>Email to Playtomic</button>'
+			: '<span class="bw-fieldnote">Add an address under Settings to email the file from here.</span>';
 		$out   .= '<div class="' . ( $empty ? 'bw-card__actions' : 'bw-tablefoot' ) . '">'
 			. '<span class="bw-bulk__count" data-playtomic-count>' . $ticked . ' of ' . count( $members ) . ' selected</span>'
 			. ( $empty ? '<span class="bw-toolbar__spacer"></span>' : '' )
+			// The two ways out sit together on the right, with the group's own gap.
+			. '<div class="bw-toolbar__group">' . $mail
 			. '<button type="submit" class="bw-btn bw-btn--primary" name="' . self::e( (string) $model['actions']['download'] ) . '" value="1"' . ( $empty ? ' disabled' : '' ) . '><i class="bw-icon bw-icon--18" data-lucide="download"></i>Download Playtomic CSV</button>'
-			. '</div>' . ( $empty ? '</div>' : '' );
+			. '</div></div>' . ( $empty ? '</div>' : '' );
 		return $out . '</form></div></div>';
 	}
 

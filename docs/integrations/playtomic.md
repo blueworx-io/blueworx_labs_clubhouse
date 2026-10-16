@@ -10,6 +10,9 @@ real call.
 - **Clubhouse → Playtomic** (administrators and Clubhouse Owners): credentials, who counts as
   a member, one row per venue, and the review table that builds the CSV for
   Playtomic Manager's chain import (Customers → Imports → Import new customers).
+  With an address saved under *Send the file to*, the review step can email
+  the file as an attachment through wp_mail instead of downloading it; members
+  are marked only when the send succeeds.
 - `Blueworx_Clubhouse_Playtomic_Client` — the only class that talks to the
   API. Everything else calls it.
 

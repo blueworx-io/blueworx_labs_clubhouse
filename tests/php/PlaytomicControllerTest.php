@@ -160,4 +160,46 @@ final class PlaytomicControllerTest extends TestCase {
 		$this->assertSame( 'success', Blueworx_Clubhouse_Playtomic_Controller::notice_from( 'cleared' )['type'] );
 		$this->assertNull( Blueworx_Clubhouse_Playtomic_Controller::notice_from( 'junk' ) );
 	}
+	/** @return array{filename:string,body:string,ids:array<int,int>} */
+	private function payload(): array {
+		return array( 'filename' => 'playtomic-members-2026-10-16.csv', 'body' => "name,email\r\nAna,ana@example.com\r\n", 'ids' => array( 1 ) );
+	}
+
+	public function test_send_attaches_the_file_and_reports_the_mailers_answer(): void {
+		$seen = array();
+		$ok   = Blueworx_Clubhouse_Playtomic_Controller::send(
+			$this->payload(),
+			'imports@playtomic.example',
+			'PadlX',
+			function ( string $to, string $subject, string $body, array $attachments ) use ( &$seen ): bool {
+				$seen = array( 'to' => $to, 'subject' => $subject, 'body' => $body, 'attachments' => $attachments );
+				$seen['file'] = file_get_contents( $attachments[0] );
+				return true;
+			}
+		);
+		$this->assertTrue( $ok );
+		$this->assertSame( 'imports@playtomic.example', $seen['to'] );
+		$this->assertSame( 'Member import from PadlX — 2026-10-16', $seen['subject'] );
+		$this->assertStringContainsString( '1 member', $seen['body'] );
+		$this->assertStringEndsWith( 'playtomic-members-2026-10-16.csv', $seen['attachments'][0] );
+		$this->assertSame( "name,email\r\nAna,ana@example.com\r\n", $seen['file'] );
+		$this->assertFileDoesNotExist( $seen['attachments'][0] );
+	}
+
+	public function test_send_returns_false_when_the_mailer_fails_and_cleans_up(): void {
+		$path = '';
+		$ok   = Blueworx_Clubhouse_Playtomic_Controller::send( $this->payload(), 'x@example.com', 'Club', function ( string $to, string $subject, string $body, array $attachments ) use ( &$path ): bool {
+			$path = $attachments[0];
+			return false;
+		} );
+		$this->assertFalse( $ok );
+		$this->assertFileDoesNotExist( $path );
+	}
+
+	public function test_send_notices(): void {
+		$this->assertSame( 'success', Blueworx_Clubhouse_Playtomic_Controller::notice_from( 'sent' )['type'] );
+		$this->assertSame( 'danger', Blueworx_Clubhouse_Playtomic_Controller::notice_from( 'send-failed' )['type'] );
+		$this->assertStringContainsString( 'nobody was marked', Blueworx_Clubhouse_Playtomic_Controller::notice_from( 'send-failed' )['text'] );
+		$this->assertSame( 'warning', Blueworx_Clubhouse_Playtomic_Controller::notice_from( 'no-email' )['type'] );
+	}
 }

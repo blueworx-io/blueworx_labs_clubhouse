@@ -25,6 +25,7 @@ final class Blueworx_Clubhouse_Playtomic_Controller {
 	public const TEST_ACTION     = 'clubhouse_playtomic_test';
 	public const DOWNLOAD_ACTION = 'clubhouse_playtomic_download';
 	public const CLEAR_ACTION    = 'clubhouse_playtomic_clear';
+	public const SEND_ACTION     = 'clubhouse_playtomic_send';
 
 	public static function register(): void {
 		add_action( 'admin_menu', array( self::class, 'add_menu' ), 11 );
@@ -33,6 +34,7 @@ final class Blueworx_Clubhouse_Playtomic_Controller {
 		add_action( 'admin_post_' . self::TEST_ACTION, array( self::class, 'handle_test' ) );
 		add_action( 'admin_post_' . self::DOWNLOAD_ACTION, array( self::class, 'handle_download' ) );
 		add_action( 'admin_post_' . self::CLEAR_ACTION, array( self::class, 'handle_clear' ) );
+		add_action( 'admin_post_' . self::SEND_ACTION, array( self::class, 'handle_send' ) );
 	}
 
 	public static function add_menu(): void {
@@ -188,6 +190,40 @@ final class Blueworx_Clubhouse_Playtomic_Controller {
 		);
 	}
 
+	/**
+	 * Email the file as an attachment. The mailer is wp_mail's shape; it is
+	 * handed in so the routine is testable, and whatever it answers, the
+	 * temporary copy of the file is removed.
+	 *
+	 * @param array{filename:string,body:string,ids:array<int,int>}  $payload
+	 * @param callable(string,string,string,array<int,string>):bool $mailer
+	 */
+	public static function send( array $payload, string $to, string $club, callable $mailer ): bool {
+		$dir = function_exists( 'get_temp_dir' ) ? get_temp_dir() : sys_get_temp_dir();
+		$dir = rtrim( $dir, '/\\' ) . DIRECTORY_SEPARATOR . 'clubhouse-playtomic-' . bin2hex( random_bytes( 6 ) );
+		if ( ! @mkdir( $dir, 0700, true ) && ! is_dir( $dir ) ) { // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged,WordPress.WP.AlternativeFunctions.file_system_operations_mkdir -- a private temp folder; a miss is reported as a failed send.
+			return false;
+		}
+		$path = $dir . DIRECTORY_SEPARATOR . $payload['filename'];
+		if ( false === file_put_contents( $path, $payload['body'] ) ) { // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents -- a temp file for the attachment.
+			@rmdir( $dir ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
+			return false;
+		}
+		$n       = count( $payload['ids'] );
+		$date    = substr( $payload['filename'], strlen( Blueworx_Clubhouse_Playtomic_Csv::FILENAME_PREFIX ), 10 );
+		$club    = '' === trim( $club ) ? 'the club' : trim( $club );
+		$subject = 'Member import from ' . $club . ' — ' . $date;
+		$body    = 'Attached is the member file for Playtomic Manager (Customers → Imports → Import new customers): '
+			. $n . ' member' . ( 1 === $n ? '' : 's' ) . ', generated on ' . $date . ' by the ' . $club . ' website.';
+		try {
+			$ok = (bool) $mailer( $to, $subject, $body, array( $path ) );
+		} finally {
+			@unlink( $path ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
+			@rmdir( $dir ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
+		}
+		return $ok;
+	}
+
 	/** @return array{type:string,text:string}|null */
 	public static function notice_from( string $code ): ?array {
 		return match ( $code ) {
@@ -197,6 +233,9 @@ final class Blueworx_Clubhouse_Playtomic_Controller {
 			'nothing'     => array( 'type' => 'warning', 'text' => 'Tick at least one member with a name and an email address, then download.' ),
 			'cleared'     => array( 'type' => 'success', 'text' => 'Export mark cleared. They will be listed under Not yet exported again.' ),
 			'no-venues'   => array( 'type' => 'warning', 'text' => 'Give every venue a club name under Settings before downloading.' ),
+			'sent'        => array( 'type' => 'success', 'text' => 'Emailed to Playtomic. Everyone in the file is marked with the date.' ),
+			'send-failed' => array( 'type' => 'danger', 'text' => 'The email could not be sent, so nobody was marked. Check the site\'s email settings and try again, or download the file instead.' ),
+			'no-email'    => array( 'type' => 'warning', 'text' => 'Add the address to send the file to under Settings first.' ),
 			default       => null,
 		};
 	}
@@ -238,7 +277,7 @@ final class Blueworx_Clubhouse_Playtomic_Controller {
 			'page_url'    => admin_url( 'admin.php?page=' . self::PAGE_SLUG ),
 			'action_url'  => admin_url( 'admin-post.php' ),
 			'nonce_field' => wp_nonce_field( self::NONCE, '_wpnonce', true, false ),
-			'actions'     => array( 'save' => self::SAVE_ACTION, 'test' => self::TEST_ACTION, 'download' => self::DOWNLOAD_ACTION, 'clear' => self::CLEAR_ACTION ),
+			'actions'     => array( 'save' => self::SAVE_ACTION, 'test' => self::TEST_ACTION, 'download' => self::DOWNLOAD_ACTION, 'clear' => self::CLEAR_ACTION, 'send' => self::SEND_ACTION ),
 			'clear_urls'  => $clear,
 			'role_tags'   => Blueworx_Clubhouse_Access_Controller::role_chips_for( self::PAGE_SLUG ),
 			'notice'      => self::page_notice( $code, $all, Blueworx_Clubhouse_SureCart_Products::is_active() ),
@@ -293,6 +332,35 @@ final class Blueworx_Clubhouse_Playtomic_Controller {
 		header( 'Content-Length: ' . strlen( $payload['body'] ) );
 		echo $payload['body']; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- a CSV download, not HTML.
 		exit;
+	}
+
+	/** Email the file to the saved address, and mark the members only if it went. */
+	public static function handle_send(): void {
+		self::guard();
+		$ids      = (array) wp_unslash( $_POST[ Blueworx_Clubhouse_Playtomic_Screen::IDS ] ?? array() ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput -- reduced to positive ints in download_payload().
+		$from     = self::date_arg( (string) wp_unslash( $_POST[ Blueworx_Clubhouse_Playtomic_Screen::FROM ] ?? '' ) ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput -- date_arg() validates.
+		$to_date  = self::date_arg( (string) wp_unslash( $_POST[ Blueworx_Clubhouse_Playtomic_Screen::TO ] ?? '' ) ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput -- date_arg() validates.
+		$today    = self::today();
+		$settings = self::settings();
+		$to       = (string) $settings->read()['email'];
+		if ( '' === $to ) {
+			self::back( 'no-email' );
+		}
+		if ( array() === self::usable_venues( $settings->venues() ) ) {
+			self::back( 'no-venues' );
+		}
+		$payload = self::download_payload( self::members( $settings ), $ids, $settings->venues(), $today, $from, $to_date );
+		if ( null === $payload ) {
+			self::back( 'nothing' );
+		}
+		$club = function_exists( 'get_bloginfo' ) ? (string) get_bloginfo( 'name' ) : '';
+		$sent = self::send( $payload, $to, $club, static fn( string $to, string $subject, string $body, array $files ): bool => (bool) wp_mail( $to, $subject, $body, array(), $files ) );
+		if ( ! $sent ) {
+			Blueworx_Clubhouse_Playtomic_Client::log( 'Email to Playtomic failed: wp_mail returned false for ' . count( $payload['ids'] ) . ' member(s).' );
+			self::back( 'send-failed' );
+		}
+		Blueworx_Clubhouse_Playtomic_Members::mark( $payload['ids'], $today );
+		self::back( 'sent' );
 	}
 
 	public static function handle_clear(): void {

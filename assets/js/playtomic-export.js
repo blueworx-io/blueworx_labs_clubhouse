@@ -51,7 +51,8 @@
   if (!form) return;
   var all = form.querySelector('[data-playtomic-all]');
   var count = form.querySelector('[data-playtomic-count]');
-  var button = form.querySelector('button[type="submit"]');
+  // Download and, with an address saved, Email: both need a tick.
+  var buttons = Array.prototype.slice.call(form.querySelectorAll('button[type="submit"]'));
   var boxes = function () {
     return Array.prototype.slice.call(form.querySelectorAll('input[name="clubhouse_playtomic_ids[]"]:not([disabled])'));
   };
@@ -59,7 +60,7 @@
     var list = boxes();
     var ticked = list.filter(function (b) { return b.checked; }).length;
     if (count) count.textContent = ticked + ' of ' + form.querySelectorAll('input[name="clubhouse_playtomic_ids[]"]').length + ' selected';
-    if (button) button.disabled = ticked === 0;
+    buttons.forEach(function (b) { b.disabled = ticked === 0; });
     if (all) {
       all.checked = list.length > 0 && ticked === list.length;
       all.indeterminate = ticked > 0 && ticked < list.length;

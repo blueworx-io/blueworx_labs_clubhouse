@@ -70,4 +70,12 @@ final class PlaytomicSettingsTest extends TestCase {
 		$s->save( array( 'who' => 'subscriptions', 'price_ids' => array( ' p1 ', '', 'p1', 'p2' ) ) );
 		$this->assertSame( array( 'p1', 'p2' ), $s->read()['price_ids'] );
 	}
+	public function test_recipient_email_is_kept_only_when_valid(): void {
+		$s = $this->settings();
+		$s->save( array( 'email' => ' imports@playtomic.example ' ) );
+		$this->assertSame( 'imports@playtomic.example', $s->read()['email'] );
+		$s->save( array( 'email' => 'not an address' ) );
+		$this->assertSame( '', $s->read()['email'] );
+		$this->assertSame( '', $this->settings()->read()['email'] );
+	}
 }
