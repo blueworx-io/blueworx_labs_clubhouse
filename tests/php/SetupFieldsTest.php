@@ -44,7 +44,7 @@ final class SetupFieldsTest extends TestCase {
 
 	public function test_members_and_settings_are_separate_tabs(): void {
 		$tabs = array_column( $this->tabs(), null, 'id' );
-		$this->assertSame( array( 'profile_fields' ), array_column( $tabs['members']['panels'], 'id' ) );
+		$this->assertSame( array( 'standard_fields', 'profile_fields' ), array_column( $tabs['members']['panels'], 'id' ) );
 		$this->assertSame( array( 'after_sign_in', 'emails' ), array_column( $tabs['settings']['panels'], 'id' ) );
 	}
 

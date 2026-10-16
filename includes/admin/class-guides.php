@@ -692,6 +692,21 @@ final class Blueworx_Clubhouse_Guides {
 				),
 				'Every email the site sends from now on uses them.'
 			),
+			self::guide(
+				'members-playtomic',
+				'ch-members',
+				Blueworx_Clubhouse_Owner_Capabilities::SETUP_CAP,
+				'Send members to Playtomic',
+				'Clubhouse → Playtomic',
+				'Playtomic cannot take members from the website directly, so the site makes the file Playtomic Manager imports, and remembers who has already been sent.',
+				array(
+					'Enter the *Client ID* and *Secret* from Playtomic Manager → Settings → Developer tools, then press *Save and test connection*. Each venue Playtomic knows about appears under *Venues*; give each a name, the club name Playtomic uses for it, and the membership category. *Add a venue* adds one by hand, and *Remove* takes one away.',
+					'Choose who counts: everyone with a member account, or only members on the subscriptions you tick.',
+					'Under *Review and export*, tick the members to send — tick the box at the top to tick everyone listed — and press *Download Playtomic CSV* — or *Email to Playtomic*, which sends the file to the address saved under *Send the file to* and marks everyone only once it has gone.',
+					'In Playtomic Manager go to Customers → Imports → Import new customers and upload the file.',
+				),
+				'Everyone in the file is marked with the date. They drop out of *Not yet exported*; switch to *All members* to see them, and use *Clear export mark* if an import failed and they need to go again.'
+			),
 		);
 
 		if ( $shop ) {

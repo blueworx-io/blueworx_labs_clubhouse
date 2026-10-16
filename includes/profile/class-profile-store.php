@@ -24,13 +24,33 @@ final class Blueworx_Clubhouse_Profile_Store {
 
 	public const OPTION      = 'profile_fields';
 	public const META_PREFIX = 'clubhouse_profile_';
+	public const HIDDEN_OPTION = 'profile_standard_hidden';
 
 	public function __construct( private Blueworx_Clubhouse_Storage $storage ) {}
 
-	/** @return array<int,array<string,mixed>> */
+	/** Standard fields first, then the club's own. @return array<int,array<string,mixed>> */
 	public function fields(): array {
+		return array_merge( Blueworx_Clubhouse_Profile_Fields::standard( $this->hidden_standard() ), $this->custom_fields() );
+	}
+
+	/** Only the club's own fields — what the Members tab edits. @return array<int,array<string,mixed>> */
+	public function custom_fields(): array {
 		$raw = $this->storage->get( self::OPTION, array() );
 		return is_array( $raw ) ? Blueworx_Clubhouse_Profile_Fields::sanitise_all( $raw ) : array();
+	}
+
+	/** @return array<int,string> */
+	public function hidden_standard(): array {
+		$raw = $this->storage->get( self::HIDDEN_OPTION, array() );
+		if ( ! is_array( $raw ) ) {
+			return array();
+		}
+		return array_values( array_intersect( Blueworx_Clubhouse_Profile_Fields::STANDARD_KEYS, array_map( 'strval', $raw ) ) );
+	}
+
+	/** @param array<int,string> $keys */
+	public function set_hidden_standard( array $keys ): void {
+		$this->storage->set( self::HIDDEN_OPTION, array_values( array_intersect( Blueworx_Clubhouse_Profile_Fields::STANDARD_KEYS, array_map( 'strval', $keys ) ) ) );
 	}
 
 	/**

@@ -219,6 +219,15 @@ if ( $member_user instanceof WP_User ) {
 	}
 }
 
+// The Playtomic export (Task 12). Fresh each run: a phone on the member so the
+// file has something to clean, and no export mark so the member is listed
+// under "Not yet exported" whatever the last run did.
+if ( $member_user ) {
+	update_user_meta( $member_user->ID, 'clubhouse_profile_phone', '0412 345 678' );
+	delete_user_meta( $member_user->ID, 'clubhouse_playtomic_exported' );
+}
+delete_option( 'clubhouse_playtomic' );
+
 // A welcome pack for that dashboard to carry, written through the plugin's own
 // store rather than a hand-built option, so the fixture cannot drift from how
 // the admin screen saves.

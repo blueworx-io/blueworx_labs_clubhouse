@@ -70,7 +70,9 @@ final class ProfileFormTest extends TestCase {
 	}
 
 	public function test_a_club_with_no_fields_gets_no_card(): void {
-		$empty = new Blueworx_Clubhouse_Profile_Store( new Blueworx_Clubhouse_Fake_Storage() );
+		// Phone, gender and date of birth are standard, so "no fields" means the club hid all three too.
+		$empty = new Blueworx_Clubhouse_Profile_Store( new Blueworx_Clubhouse_Options_Storage() );
+		$empty->set_hidden_standard( Blueworx_Clubhouse_Profile_Fields::STANDARD_KEYS );
 		$this->assertSame( array(), $empty->fields() );
 		$this->assertSame( '', Blueworx_Clubhouse_Profile_Form::panel( 'profile' ) );
 	}

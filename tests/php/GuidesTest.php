@@ -76,6 +76,7 @@ final class GuidesTest extends TestCase {
 			Blueworx_Clubhouse_Page_Editors::GLOBAL_SLUG      => 'Clubhouse → Global content',
 			Blueworx_Clubhouse_Import_Controller::PAGE_SLUG   => 'Clubhouse → Import',
 			Blueworx_Clubhouse_Seo_Controller::PAGE_SLUG      => 'Clubhouse → Search & sharing',
+			Blueworx_Clubhouse_Playtomic_Controller::PAGE_SLUG => 'Clubhouse → Playtomic',
 			Blueworx_Clubhouse_Collection_Types::CONTENT_SLUG => 'Collections',
 		);
 		foreach ( Blueworx_Clubhouse_Admin_Pages::all() as $page ) {

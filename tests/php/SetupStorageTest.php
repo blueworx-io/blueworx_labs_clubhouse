@@ -97,7 +97,7 @@ final class SetupStorageTest extends TestCase {
 		$rows[0]['label'] = 'Kit size';
 		$this->bridge( $storage )->write( array( 'profile_fields' => $rows ) );
 
-		$after = $profile->fields();
+		$after = $profile->custom_fields();
 		$this->assertSame( 'Kit size', $after[0]['label'] );
 		$this->assertSame( 'shirt_size', $after[0]['key'] );
 	}
@@ -114,7 +114,7 @@ final class SetupStorageTest extends TestCase {
 
 		$this->bridge( $storage )->write( array( 'profile_fields' => $rows ) );
 
-		$this->assertSame( array( 'Small', 'Large' ), $profile->fields()[0]['choices'] );
+		$this->assertSame( array( 'Small', 'Large' ), $profile->custom_fields()[0]['choices'] );
 	}
 
 	public function test_it_reads_the_clubs_own_member_questions(): void {
@@ -204,7 +204,7 @@ final class SetupStorageTest extends TestCase {
 
 		$this->bridge( $storage )->write( array( 'profile_fields' => array() ) );
 
-		$this->assertSame( array(), $profile->fields() );
+		$this->assertSame( array(), $profile->custom_fields() );
 		$this->assertSame( 'Large', get_user_meta( 7, $profile->meta_key( 'shirt' ), true ) );
 		$this->assertSame( array(), wp_stub_calls( 'delete_metadata' ) );
 	}
@@ -230,5 +230,21 @@ final class SetupStorageTest extends TestCase {
 		$this->bridge( $storage )->write( array( 'menu' => array() ) );
 
 		$this->assertTrue( ( new Blueworx_Clubhouse_Demo_State( $storage ) )->is_on() );
+	}
+
+
+	public function test_standard_field_switches_read_as_asked_unless_hidden(): void {
+		$storage = $this->storage();
+		( new Blueworx_Clubhouse_Profile_Store( $storage ) )->set_hidden_standard( array( 'gender' ) );
+		$values = $this->bridge( $storage )->read();
+		$this->assertTrue( $values['ask_phone'] );
+		$this->assertFalse( $values['ask_gender'] );
+		$this->assertTrue( $values['ask_birthdate'] );
+	}
+
+	public function test_switching_a_standard_field_off_hides_it(): void {
+		$storage = $this->storage();
+		$this->bridge( $storage )->write( array( 'ask_phone' => true, 'ask_gender' => false, 'ask_birthdate' => false ) );
+		$this->assertSame( array( 'gender', 'birthdate' ), ( new Blueworx_Clubhouse_Profile_Store( $storage ) )->hidden_standard() );
 	}
 }
