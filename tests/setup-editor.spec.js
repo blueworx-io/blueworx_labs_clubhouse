@@ -215,6 +215,8 @@ test.describe('@wordpress Clubhouse Setup', () => {
         'Global content',
         'Import',
         'Search & sharing',
+        // Owners and administrators alike, like Import.
+        'Playtomic',
         'What’s new',
       ]);
 
